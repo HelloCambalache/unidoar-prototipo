@@ -892,7 +892,7 @@ a:hover{color:#DD553F}
 </div>
 <div style="display:flex;align-items:center;gap:14px">
 <span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#FBD9EC;cursor:pointer" style-hover="background:rgba(255,255,255,.24)" title="Ir a mi perfil" onClick="{{ goDocPerfil }}">Perfil 80%</span>
-<span onClick="{{ goDocNotif }}" style="cursor:pointer;display:inline-flex"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path></svg></span>
+<span style="position:relative;display:inline-flex"><span onClick="{{ toggleNotif }}" style="cursor:pointer;display:inline-flex;position:relative" title="Notificaciones"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path></svg><sc-if value="{{ hayNotifDoc }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#97125F;color:#fff;font:600 10px/16px Inter,sans-serif;text-align:center">{{ notifDocNoLeidas }}</span></sc-if></span><sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:34px;right:0;width:360px;max-width:88vw;background:#fff;border:1px solid #E3E1DC;border-radius:12px;box-shadow:0 16px 40px rgba(31,36,33,.22);z-index:60;overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px"><span style="font:600 17px/1.2 Inter,sans-serif;color:#1F2421;letter-spacing:-.01em">Notificaciones</span><span onClick="{{ marcarNotifsLeidas }}" style="cursor:pointer;font:500 12.5px/1 Inter,sans-serif;color:#97125F">Marcar todas como leídas</span></div><div style="display:flex;gap:18px;padding:0 18px;border-bottom:1px solid #E3E1DC"><span onClick="{{ setNotifTabTodas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabTodasStyle }}">Todas</span><span onClick="{{ setNotifTabNoLeidas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabNoLeidasStyle }}">No leídas ({{ notifDocNoLeidas }})</span></div><div style="max-height:340px;overflow:auto"><sc-for list="{{ notifDocList }}" as="n" hint-placeholder-count="3"><div onClick="{{ n.onOpen }}" style="cursor:pointer;display:flex;gap:11px;align-items:flex-start;padding:13px 18px;border-bottom:1px solid #F0EFEA;{{ n.filaStyle }}" style-hover="background:#F0EFEA"><span style="flex:none;width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif;{{ n.avatarStyle }}">{{ n.ini }}</span><div style="flex:1;min-width:0"><div style="font:400 13px/1.45 Inter,sans-serif;color:#3D423E"><b style="font-weight:600;color:#1F2421">{{ n.titulo }}</b> {{ n.texto }}</div><div style="margin-top:3px;font:400 11.5px/1 Inter,sans-serif;color:#9AA09B">{{ n.cuando }}</div></div><span style="flex:none;margin-top:6px;{{ n.puntoStyle }}"></span></div></sc-for><sc-if value="{{ notifDocVacio }}" hint-placeholder-val="{{ false }}"><div style="padding:28px 18px;text-align:center;font:400 13px/1.5 Inter,sans-serif;color:#9AA09B">No te queda ninguna sin leer.</div></sc-if></div><div onClick="{{ goDocNotif }}" style="cursor:pointer;padding:12px 18px;text-align:center;font:600 13px/1 Inter,sans-serif;color:#97125F;border-top:1px solid #E3E1DC">Ver todas las notificaciones</div></div></sc-if></span>
 <span style="width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">LP</span>
 </div>
 </div>
@@ -1533,7 +1533,7 @@ a:hover{color:#DD553F}
 <div onClick="{{ goLanding }}" style="cursor:pointer;display:flex;align-items:center;gap:8px"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:34px;width:auto;object-fit:contain"></div>
 <div class="udoar-inst-name-badge" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,.09);border-radius:8px;font:500 13px/1 Inter,sans-serif;color:rgba(255,255,255,.9);max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">Colegio San Andrés del Norte</div>
 </div>
-<div style="display:flex;align-items:center;gap:14px"><span class="udoar-plan-badge cbl-badge" style="background:rgba(255,255,255,.12);color:#D6DEF9;cursor:pointer" style-hover="background:rgba(255,255,255,.22)" title="Ver plan y facturación" onClick="{{ goInstPlan }}">Plan Fundador</span><span style="width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">EG</span></div>
+<div style="display:flex;align-items:center;gap:14px"><span class="udoar-plan-badge cbl-badge" style="background:rgba(255,255,255,.12);color:#D6DEF9;cursor:pointer" style-hover="background:rgba(255,255,255,.22)" title="Ver plan y facturación" onClick="{{ goInstPlan }}">Plan Fundador</span><span style="position:relative;display:inline-flex"><span onClick="{{ toggleNotif }}" style="cursor:pointer;display:inline-flex;position:relative" title="Notificaciones"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path></svg><sc-if value="{{ hayNotifInst }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#DD553F;color:#fff;font:600 10px/16px Inter,sans-serif;text-align:center">{{ notifInstNoLeidas }}</span></sc-if></span><sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:34px;right:0;width:360px;max-width:88vw;background:#fff;border:1px solid #E3E1DC;border-radius:12px;box-shadow:0 16px 40px rgba(31,36,33,.22);z-index:60;overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px"><span style="font:600 17px/1.2 Inter,sans-serif;color:#1F2421;letter-spacing:-.01em">Notificaciones</span><span onClick="{{ marcarNotifsLeidas }}" style="cursor:pointer;font:500 12.5px/1 Inter,sans-serif;color:#DD553F">Marcar todas como leídas</span></div><div style="display:flex;gap:18px;padding:0 18px;border-bottom:1px solid #E3E1DC"><span onClick="{{ setNotifTabTodas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabTodasStyle }}">Todas</span><span onClick="{{ setNotifTabNoLeidas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabNoLeidasStyle }}">No leídas ({{ notifInstNoLeidas }})</span></div><div style="max-height:340px;overflow:auto"><sc-for list="{{ notifInstList }}" as="n" hint-placeholder-count="3"><div onClick="{{ n.onOpen }}" style="cursor:pointer;display:flex;gap:11px;align-items:flex-start;padding:13px 18px;border-bottom:1px solid #F0EFEA;{{ n.filaStyle }}" style-hover="background:#F0EFEA"><span style="flex:none;width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif;{{ n.avatarStyle }}">{{ n.ini }}</span><div style="flex:1;min-width:0"><div style="font:400 13px/1.45 Inter,sans-serif;color:#3D423E"><b style="font-weight:600;color:#1F2421">{{ n.titulo }}</b> {{ n.texto }}</div><div style="margin-top:3px;font:400 11.5px/1 Inter,sans-serif;color:#9AA09B">{{ n.cuando }}</div></div><span style="flex:none;margin-top:6px;{{ n.puntoStyle }}"></span></div></sc-for><sc-if value="{{ notifInstVacio }}" hint-placeholder-val="{{ false }}"><div style="padding:28px 18px;text-align:center;font:400 13px/1.5 Inter,sans-serif;color:#9AA09B">No te queda ninguna sin leer.</div></sc-if></div></div></sc-if></span><span style="width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">EG</span></div>
 </div>
 <div style="flex:1;display:flex;min-height:0;position:relative">
 <sc-if value="{{ appSidebarOpen }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleAppSidebar }}" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:44"></div></sc-if>
@@ -3968,6 +3968,21 @@ class Component extends DCLogic {
     appToastMsg: '',
     testimonialIdx: 0,
     selectedSearch: 'edfisica', pipelineView: 'kanban', cursoModalEditIdx: null, docCursosTab: 'disponibles',
+    notifOpen: false, notifTab: 'todas',
+    notifsDoc: [
+      { id: 'd1', ini: 'SA', color: '#E5E9FB;color:#16214F', titulo: 'Colegio San Andrés del Norte', texto: 'te invitó a postularte a Ed. Física — Primario.', cuando: 'hace 2 min', leida: false },
+      { id: 'd2', ini: 'CR', color: '#FBE0EF;color:#97125F', titulo: 'Club Atlético Ribera', texto: 'agendó una entrevista para el jueves 10 a las 16 hs.', cuando: 'hace 1 h', leida: false },
+      { id: 'd3', ini: '⚡', color: '#FDE9E1;color:#8A2F1A', titulo: 'Suplencia urgente', texto: 'Matemática en Vicente López, hay que responder en 18 hs.', cuando: 'hace 3 h', leida: false },
+      { id: 'd4', ini: 'JA', color: '#E7F5EF;color:#1E7A4C', titulo: 'Jardín Los Aromos', texto: 'vio tu perfil.', cuando: 'ayer', leida: true },
+      { id: 'd5', ini: 'UD', color: '#F0EFEA;color:#3D423E', titulo: 'Unidoar', texto: 'tu título docente quedó verificado.', cuando: 'ayer', leida: true },
+    ],
+    notifsInst: [
+      { id: 'i1', ini: 'MA', color: '#FBE0EF;color:#97125F', titulo: 'Martina Alsina', texto: 'se postuló a Ed. Física — Primario.', cuando: 'hace 5 min', leida: false },
+      { id: 'i2', ini: 'LP', color: '#E5E9FB;color:#16214F', titulo: 'Luciana Prieto', texto: 'aceptó la invitación a postularse.', cuando: 'hace 40 min', leida: false },
+      { id: 'i3', ini: '⚡', color: '#FDE9E1;color:#8A2F1A', titulo: 'Suplencia Matemática', texto: 'vence en 18 hs y todavía no tiene postulantes.', cuando: 'hace 2 h', leida: false },
+      { id: 'i4', ini: 'NB', color: '#E7F5EF;color:#1E7A4C', titulo: 'Nicolás Bravo', texto: 'subió el certificado de antecedentes.', cuando: 'ayer', leida: true },
+      { id: 'i5', ini: 'UD', color: '#F0EFEA;color:#3D423E', titulo: 'Unidoar', texto: 'tu plan Fundador se renueva el 12/09.', cuando: 'ayer', leida: true },
+    ],
     misCursosHechos: [
       { titulo: 'RCP y primeros auxilios', institucion: 'Colegio San Andrés del Norte', periodo: 'Mar 2026', estado: 'Completado', horas: '8 hs', certificado: true, progreso: 100 },
       { titulo: 'Natación para docentes — nivel 1', institucion: 'Club Atlético Ribera', periodo: 'Nov 2025', estado: 'Completado', horas: '16 hs', certificado: true, progreso: 100 },
@@ -4136,6 +4151,18 @@ class Component extends DCLogic {
       cursoModalModalidad: c.modalidad || 'Presencial', cursoModalProfesor: c.profesor || '',
       cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
       cursoModalHorario: c.horario || '', cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
+  }
+  toggleNotif() { this.setState(s => ({ notifOpen: !s.notifOpen, notifTab: 'todas' })); }
+  setNotifTab(t) { this.setState({ notifTab: t }); }
+  marcarNotifsLeidas() {
+    this.setState(s => ({
+      notifsDoc: s.notifsDoc.map(n => ({ ...n, leida: true })),
+      notifsInst: s.notifsInst.map(n => ({ ...n, leida: true })),
+    }));
+  }
+  abrirNotif(n) {
+    const campo = this.state.screen.indexOf('inst') === 0 ? 'notifsInst' : 'notifsDoc';
+    this.setState(s => ({ [campo]: s[campo].map(x => x.id === n.id ? { ...x, leida: true } : x) }));
   }
   setDocCursosTab(t) { this.setState({ docCursosTab: t }); }
   openCursoModal() { this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: null, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '' }); }
@@ -4523,6 +4550,31 @@ class Component extends DCLogic {
       isEditandoCurso: this.state.cursoModalEditIdx !== null,
       isCreandoCurso: this.state.cursoModalEditIdx === null,
       cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
+      notifOpen: this.state.notifOpen,
+      toggleNotif: () => this.toggleNotif(),
+      marcarNotifsLeidas: () => this.marcarNotifsLeidas(),
+      setNotifTabTodas: () => this.setNotifTab('todas'),
+      setNotifTabNoLeidas: () => this.setNotifTab('noleidas'),
+      notifTabTodasStyle: this.state.notifTab === 'todas' ? 'color:#1F2421;border-bottom:2px solid #97125F' : 'color:#9AA09B;border-bottom:2px solid transparent',
+      notifTabNoLeidasStyle: this.state.notifTab === 'noleidas' ? 'color:#1F2421;border-bottom:2px solid #97125F' : 'color:#9AA09B;border-bottom:2px solid transparent',
+      notifDocNoLeidas: this.state.notifsDoc.filter(n => !n.leida).length,
+      hayNotifDoc: this.state.notifsDoc.some(n => !n.leida),
+      notifDocList: (this.state.notifTab === 'noleidas' ? this.state.notifsDoc.filter(n => !n.leida) : this.state.notifsDoc).map(n => ({ ...n,
+        avatarStyle: 'background:' + n.color,
+        filaStyle: n.leida ? 'background:#fff' : 'background:#FAFAF8',
+        puntoStyle: n.leida ? 'display:none' : 'display:inline-block;width:7px;height:7px;border-radius:999px;background:#97125F',
+        onOpen: () => this.abrirNotif(n),
+      })),
+      notifDocVacio: (this.state.notifTab === 'noleidas' ? this.state.notifsDoc.filter(n => !n.leida) : this.state.notifsDoc).length === 0,
+      notifInstNoLeidas: this.state.notifsInst.filter(n => !n.leida).length,
+      hayNotifInst: this.state.notifsInst.some(n => !n.leida),
+      notifInstList: (this.state.notifTab === 'noleidas' ? this.state.notifsInst.filter(n => !n.leida) : this.state.notifsInst).map(n => ({ ...n,
+        avatarStyle: 'background:' + n.color,
+        filaStyle: n.leida ? 'background:#fff' : 'background:#FAFAF8',
+        puntoStyle: n.leida ? 'display:none' : 'display:inline-block;width:7px;height:7px;border-radius:999px;background:#DD553F',
+        onOpen: () => this.abrirNotif(n),
+      })),
+      notifInstVacio: (this.state.notifTab === 'noleidas' ? this.state.notifsInst.filter(n => !n.leida) : this.state.notifsInst).length === 0,
       isDocCursosDisponibles: this.state.docCursosTab === 'disponibles',
       isDocCursosHistorial: this.state.docCursosTab === 'historial',
       setDocCursosTabDisp: () => this.setDocCursosTab('disponibles'),
