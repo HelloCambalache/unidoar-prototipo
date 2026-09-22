@@ -1407,9 +1407,9 @@ a:hover{color:#DD553F}
 <sc-if value="{{ appSidebarOpen }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleAppSidebar }}" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:44"></div></sc-if>
 <div class="{{ appSidebarClass }}" style="flex:none;width:214px;background:#fff;border-right:1px solid #E3E1DC;padding:16px 12px;display:flex;flex-direction:column;gap:2px">
 <div onClick="{{ goInstDashboard }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navInicioStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>Dashboard</div>
-<div onClick="{{ goInstHistorial }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navHistorialStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"></path></svg>Mis búsquedas</div>
+<div onClick="{{ goInstHistorial }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navHistorialStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"></path></svg>Publicaciones</div>
 <div onClick="{{ goInstBuscador }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBuscadorStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Buscar docentes</div>
-<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path><path d="M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"></path></svg>Base de docentes</div>
+<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path><path d="M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"></path></svg>Docentes</div>
 <div onClick="{{ goInstVitrina }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navVitrinaStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V9l9-6 9 6v12"></path><path d="M9 21v-7h6v7"></path></svg>Mi perfil</div>
 <div onClick="{{ goInstCursos }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navCursosStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>Mis cursos</div>
 <div onClick="{{ goInstEquipo }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navEquipoStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.4"></circle><path d="M2 20c0-3.4 3.1-5.4 7-5.4s7 2 7 5.4"></path><circle cx="18" cy="9" r="2.4"></circle><path d="M15.5 20c0-2.4 1.2-3.6 2.5-3.6s2.5 1.2 2.5 3.6"></path></svg>Equipo</div>
@@ -1816,7 +1816,7 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ isInstPipeline }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span onClick="{{ goInstHistorial }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ goInstHistorial }}" style="cursor:pointer">Mis búsquedas</span> → <span style="color:#1F2421;font-weight:500">{{ pipelineBreadcrumb }}</span></span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span onClick="{{ goInstHistorial }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ goInstHistorial }}" style="cursor:pointer">Publicaciones</span> → <span style="color:#1F2421;font-weight:500">{{ pipelineBreadcrumb }}</span></span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ pipelineBreadcrumb }}</h1><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Activa</span><span style="font:400 14px/1 Inter,sans-serif;color:#6B706C">{{ totalPostulantesCount }} postulantes · publicada hace 2 días</span></div>
 <div style="display:flex;gap:8px;flex-wrap:nowrap">
@@ -2052,7 +2052,7 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ isInstBase }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Base de docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
 <sc-for list="{{ baseStats }}" as="st" hint-placeholder-count="4">
@@ -2247,8 +2247,11 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div class="cbl-field" style="margin-bottom:10px"><span class="cbl-label">Dirección</span><input class="cbl-input" value="Av. de los Fresnos 2140, Villa Adelina"></div>
 <div class="cbl-field"><span class="cbl-label">Horario de administración</span><input class="cbl-input" value="8 a 16 hs"></div>
 </div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F">Guardar cambios</button>
 </div>
+</div>
+<div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #E3E1DC">
+<span style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los cambios se publican en tu vitrina pública.</span>
+<button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px">Guardar cambios</button>
 </div>
 </sc-if>
 
@@ -2297,7 +2300,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 
 <sc-if value="{{ isInstHistorial }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Mis búsquedas</h1><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ goInstPublicar }}">Iniciar búsqueda</button></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Publicaciones</h1><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ goInstPublicar }}">Iniciar búsqueda</button></div>
 <div style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap">
 <input class="cbl-input" style="max-width:280px" placeholder="Buscar por puesto o docente">
 <select class="cbl-select" style="max-width:160px" value="{{ filtroHistEstado }}" onChange="{{ updateFiltroHistEstado }}"><option>Todos los estados</option><option>Activa</option><option>Rápida</option></select>
@@ -3369,7 +3372,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 
 <sc-if value="{{ isInstAppTabBusquedas }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h2 style="margin:0;font:600 19px/1.2 Inter,sans-serif;color:#1F2421">Mis búsquedas</h2><span onClick="{{ goInstAppDocentes }}" style="cursor:pointer;font:600 12px/1 Inter,sans-serif;color:#DD553F">+ Nueva</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h2 style="margin:0;font:600 19px/1.2 Inter,sans-serif;color:#1F2421">Publicaciones</h2><span onClick="{{ goInstAppDocentes }}" style="cursor:pointer;font:600 12px/1 Inter,sans-serif;color:#DD553F">+ Nueva</span></div>
 <div style="display:flex;flex-direction:column;gap:10px">
 <div onClick="{{ goInstAppPostulantes }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font:600 14px/1.3 Inter,sans-serif">Profe de Ed. Física — Primario</span><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Activa</span></div><div style="font:400 12px/1.4 Inter,sans-serif;color:#6B706C">7 postulantes · publicada hace 5 días</div></div>
 <div onClick="{{ goInstAppPostulantes }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font:600 14px/1.3 Inter,sans-serif">Suplencia Matemática</span><span class="cbl-badge" style="background:#FEE2E2;color:#DC2626">Rápida</span></div><div style="font:400 12px/1.4 Inter,sans-serif;color:#6B706C">3 postulantes · publicada hace 1 día</div></div>
@@ -3533,7 +3536,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 
 <sc-if value="{{ isInstAppTabPostulantes }}" hint-placeholder-val="{{ false }}">
-<div style="font:400 12px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:4px"><span onClick="{{ goInstAppBusquedas }}" style="cursor:pointer">Mis búsquedas</span> → <span style="color:#1F2421;font-weight:500">Profe de Ed. Física — Primario</span></div>
+<div style="font:400 12px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:4px"><span onClick="{{ goInstAppBusquedas }}" style="cursor:pointer">Publicaciones</span> → <span style="color:#1F2421;font-weight:500">Profe de Ed. Física — Primario</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font:600 19px/1.2 Inter,sans-serif;color:#1F2421">Postulantes</h2>
 <div style="display:flex;background:#F0EFEA;border-radius:8px;padding:2px"><button style="border:none;background:none;padding:6px 10px;border-radius:6px;font:500 12px/1 Inter,sans-serif;cursor:pointer;{{ viewKanbanStyle }}" onClick="{{ selectViewKanban }}">Kanban</button><button style="border:none;background:none;padding:6px 10px;border-radius:6px;font:500 12px/1 Inter,sans-serif;cursor:pointer;{{ viewTablaStyle }}" onClick="{{ selectViewTabla }}">Tabla</button></div>
 </div>
@@ -4958,7 +4961,7 @@ class Component extends DCLogic {
       navEquipoStyle: s === 'instEquipo' ? navOn : navOff,
       navBaseStyle: s === 'instBase' ? navOn : navOff,
       perfilBack: () => this.go(this.state.perfilFrom === 'instBase' ? 'instBase' : 'instBuscador'),
-      perfilBackLabel: this.state.perfilFrom === 'instBase' ? 'Base de docentes' : 'Buscar docentes',
+      perfilBackLabel: this.state.perfilFrom === 'instBase' ? 'Docentes' : 'Buscar docentes',
       ...(() => {
         const origenStyles = { 'Se postuló': 'background:#E5E9FB;color:#16214F', 'Envió CV': 'background:#FDEBD8;color:#8A4A10', 'Cargado manualmente': 'background:#F0EFEA;color:#3D423E' };
         const seed = [
