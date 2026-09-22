@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -891,22 +891,61 @@ a:hover{color:#DD553F}
 <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,.1);border-radius:8px;font:500 13px/1 Inter,sans-serif;color:rgba(255,255,255,.9)">Luciana Prieto</div>
 </div>
 <div style="display:flex;align-items:center;gap:14px">
-<span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#FBD9EC">Perfil 80%</span>
+<span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#FBD9EC;cursor:pointer" style-hover="background:rgba(255,255,255,.24)" title="Ir a mi perfil" onClick="{{ goDocPerfil }}">Perfil 80%</span>
 <span onClick="{{ goDocNotif }}" style="cursor:pointer;display:inline-flex"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path></svg></span>
 <span style="width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">LP</span>
-<span onClick="{{ goLanding }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:rgba(255,255,255,.65)">‹ Salir</span>
 </div>
 </div>
 <div style="flex:1;display:flex;min-height:0;position:relative">
 <sc-if value="{{ appSidebarOpen }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleAppSidebar }}" style="position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:44"></div></sc-if>
 <div class="{{ appSidebarClass }}" style="flex:none;width:214px;background:#fff;border-right:1px solid #E3E1DC;padding:16px 12px;display:flex;flex-direction:column;gap:2px">
+<div onClick="{{ goDocDashboard }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocDashboardStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>Dashboard</div>
 <div onClick="{{ goDocOportunidades }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocBuscarStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Buscar trabajo</div>
 <div onClick="{{ goDocInstituciones }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocInstitucionesStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Instituciones</div>
 <div onClick="{{ goDocCursos2 }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocCursosStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>Cursos</div>
 <div onClick="{{ goDocPostulaciones }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocPostulStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path></svg>Postulaciones</div>
 <div onClick="{{ goDocPerfil }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocPerfilStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.6"></circle><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path></svg>Mi perfil</div>
+<div onClick="{{ goLanding }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:auto;padding:9px 10px;border-radius:8px;font:500 13px/1 Inter,sans-serif;color:#6B706C;transition:background .15s,color .15s" style-hover="background:#FBE0EF;color:#97125F"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>Cerrar sesión</div>
 </div>
 <div style="flex:1;padding:32px 40px;overflow:auto">
+
+<sc-if value="{{ isDocDashboard }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Buenas, Luciana</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Hay 9 búsquedas nuevas en tus zonas y una institución vio tu perfil ayer.</p></div>
+<span style="font:400 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap">Semana del 24 al 30 de agosto</span>
+</div>
+<div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Búsquedas nuevas</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">9</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">en Vicente López, Núñez y Tigre</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Postulaciones activas</div><div style="font:600 28px/1 Inter,sans-serif;color:#97125F">3</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">1 con entrevista agendada</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Vieron tu perfil</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">7</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">instituciones, últimos 30 días</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Suplencias abiertas</div><div style="font:600 28px/1 Inter,sans-serif;color:#DD553F">2</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">una vence en 18 hs</div></div>
+</div>
+<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+<div style="flex:1;min-width:320px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h2 style="margin:0;font:600 16px/1.2 Inter,sans-serif">Tus postulaciones</h2><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span></div>
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Ed. Física — Primario</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Colegio San Andrés del Norte · postulada el 21/08</div></div><span class="cbl-badge" style="background:#FBE0EF;color:#97125F">Entrevista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Maestra de sala de 3</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Jardín Los Aromos · postulada el 18/08</div></div><span class="cbl-badge" style="background:#F0EFEA;color:#3D423E">En revisión</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Natación — escuela de verano</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Club Atlético Ribera · postulada el 12/08</div></div><span class="cbl-badge" style="background:#E5E9FB;color:#16214F">Vista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
+</div>
+<div style="flex:none;width:300px;display:flex;flex-direction:column;gap:14px">
+<div style="background:#FBE0EF;border-radius:8px;padding:16px">
+<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Completá tu perfil</span><span style="font:600 12px/1 Inter,sans-serif;color:#97125F">80%</span></div>
+<div style="height:6px;border-radius:999px;background:rgba(151,18,95,.15);overflow:hidden;margin-bottom:10px"><div style="width:80%;height:6px;background:#97125F"></div></div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#97125F;margin-bottom:12px">Te falta subir la foto de perfil. Los perfiles con foto reciben el doble de invitaciones.</div>
+<button class="cbl-btn cbl-btn--block" style="background:#97125F;color:#fff" onClick="{{ goDocPerfil }}">Completar perfil</button>
+</div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Accesos rápidos</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocOportunidades }}">Buscar trabajo</button>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocRapidas }}">Ver suplencias</button>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocInstituciones }}">Instituciones</button>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocCursos2 }}">Cursos</button>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
 
 <sc-if value="{{ isDocOportunidades }}" hint-placeholder-val="{{ false }}">
 <h1 style="margin:0 0 6px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">9 búsquedas nuevas cerca tuyo</h1>
@@ -917,6 +956,44 @@ a:hover{color:#DD553F}
 <button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabRapidaStyle }}" onClick="{{ setDocBuscarTabRapida }}">⚡ Suplencias</button>
 <button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabFavoritosStyle }}" onClick="{{ setDocBuscarTabFavoritos }}">★ Favoritos</button>
 </div>
+<div class="udoar-inst-buscador-row" style="display:flex;gap:24px;align-items:flex-start">
+<div class="udoar-inst-buscador-filters" style="flex:none;width:250px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font:600 14px/1 Inter,sans-serif">Filtros</span><span style="font:500 12px/1 Inter,sans-serif;color:#DD553F;cursor:pointer" onClick="{{ clearFilters }}">Limpiar</span></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Categoría</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px">
+<sc-for list="{{ filtroCategoriaOptions }}" as="c" hint-placeholder-count="4"><span onClick="{{ c.onPick }}" style="cursor:pointer;padding:6px 12px;border-radius:999px;font:600 12px/1 Inter,sans-serif;{{ c.style }}">{{ c.label }}</span></sc-for>
+</div>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<details class="udoar-filter-group">
+<summary class="udoar-filter-sum">Subcategoría<svg class="udoar-filter-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></summary>
+<div class="udoar-filter-body" style="display:flex;flex-direction:column;gap:8px;padding-top:10px;max-height:264px;overflow:auto">
+<sc-for list="{{ disciplinaFilterList }}" as="d" hint-placeholder-count="5">
+<label class="cbl-checkbox" style="cursor:pointer" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.checked }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.label }}<span style="margin-left:auto;font:400 12px/1 Inter,sans-serif;color:#9AA09B">{{ d.count }}</span></label>
+</sc-for>
+</div>
+</details>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Zona de trabajo</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ zonaFilterList }}" as="z" hint-placeholder-count="3"><span class="cbl-badge" style="background:#E5E9FB;color:#16214F;cursor:pointer" onClick="{{ z.onRemove }}">{{ z.label }} ×</span></sc-for>
+</div>
+<sc-if value="{{ addingZonaFilter }}" hint-placeholder-val="{{ false }}"><input class="cbl-input" autoFocus="{{ true }}" style="font-size:13px;padding:8px 10px" value="{{ addingZonaFilterVal }}" onChange="{{ updateAddingZonaFilter }}" onKeyDown="{{ handleZonaFilterKeyDown }}" onBlur="{{ confirmZonaFilter }}"></sc-if>
+<sc-if value="{{ addingZonaFilterNot }}" hint-placeholder-val="{{ true }}"><input class="cbl-input" placeholder="Agregar partido o barrio" style="font-size:13px;padding:8px 10px" onFocus="{{ startAddingZonaFilter }}" readOnly="{{ true }}"></sc-if>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Disponibilidad</span>
+<sc-for list="{{ disponibilidadFilterList }}" as="d" hint-placeholder-count="3">
+<label class="cbl-checkbox" style="cursor:pointer" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.checked }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.label }}</label>
+</sc-for>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onClick="{{ toggleSoloVerificados }}"><span style="font:500 13px/1 Inter,sans-serif">Solo instituciones verificadas</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloVerificadosTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloVerificadosDotStyle }}"></span></span></div>
+</div>
+<div style="flex:1;min-width:0">
 <sc-if value="{{ isDocBuscarTabTodas }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
 <input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
@@ -1008,12 +1085,60 @@ a:hover{color:#DD553F}
 </div>
 </div>
 </sc-if>
+</div>
+</div>
 </sc-if>
 
 <sc-if value="{{ isDocCursos2 }}" hint-placeholder-val="{{ false }}">
 <sc-if value="{{ isDocCursosLista }}" hint-placeholder-val="{{ true }}">
 <h1 style="margin:0 0 6px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Cursos</h1>
-<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Cursos cortos y certificaciones que ofrecen las instituciones de tu zona.</p>
+<p style="margin:0 0 18px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Cursos cortos y certificaciones que ofrecen las instituciones de tu zona, y los que ya hiciste.</p>
+<div style="display:flex;gap:8px;margin-bottom:20px">
+<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docCursosTabDispStyle }}" onClick="{{ setDocCursosTabDisp }}">Disponibles</button>
+<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docCursosTabHistStyle }}" onClick="{{ setDocCursosTabHist }}">Mis cursos · {{ misCursosHechosCount }}</button>
+</div>
+<sc-if value="{{ isDocCursosHistorial }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+<div style="flex:1;min-width:340px;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ misCursosHechosList }}" as="h" hint-placeholder-count="3">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px 18px">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+<div style="flex:1;min-width:180px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px"><span style="font:600 15px/1.3 Inter,sans-serif">{{ h.titulo }}</span><span class="cbl-badge" style="{{ h.estadoStyle }}">{{ h.estado }}</span></div>
+<div style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">{{ h.institucion }} · {{ h.periodo }} · {{ h.horas }}</div>
+</div>
+<span style="font:600 13px/1 Inter,sans-serif;color:#3D423E">{{ h.progresoLabel }}</span>
+</div>
+<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:12px"><div style="{{ h.barraStyle }}"></div></div>
+<span style="font:500 13px/1 Inter,sans-serif;{{ h.certStyle }}">{{ h.certLabel }}</span>
+</div>
+</sc-for>
+</div>
+<div style="flex:none;width:280px;display:flex;flex-direction:column;gap:14px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:20px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:14px">Tu formación</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Cursos completados</span><span style="font:600 18px/1 Inter,sans-serif;color:#1E7A4C">{{ misCursosCompletados }}</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Horas de formación</span><span style="font:600 18px/1 Inter,sans-serif;color:#1F2421">{{ misCursosHoras }}</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Certificados</span><span style="font:600 18px/1 Inter,sans-serif;color:#97125F">{{ misCursosCertificados }}</span></div>
+</div>
+</div>
+<div style="background:#FBE0EF;border-radius:10px;padding:18px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#97125F;margin-bottom:10px">Seguí donde dejaste</div>
+<div style="font:600 15px/1.3 Inter,sans-serif;color:#97125F;margin-bottom:4px">{{ cursoEnCurso.titulo }}</div>
+<div style="font:400 12.5px/1.4 Inter,sans-serif;color:#97125F;margin-bottom:12px">{{ cursoEnCurso.institucion }} · {{ cursoEnCurso.periodo }}</div>
+<div style="height:6px;border-radius:999px;background:rgba(151,18,95,.18);overflow:hidden;margin-bottom:14px"><div style="width:45%;height:6px;background:#97125F"></div></div>
+<button class="cbl-btn cbl-btn--block" style="background:#97125F;color:#fff">Continuar curso</button>
+</div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:18px">
+<div style="font:600 13px/1.3 Inter,sans-serif;margin-bottom:6px">Los cursos suman en tu perfil</div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:12px">Las instituciones ven tus certificaciones cuando revisan tu perfil.</div>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocPerfil }}">Ver mi perfil</button>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isDocCursosDisponibles }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="2">
 <div onClick="{{ cu.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
@@ -1026,6 +1151,7 @@ a:hover{color:#DD553F}
 </div>
 </sc-for>
 </div>
+</sc-if>
 </sc-if>
 <sc-if value="{{ selectedCurso }}" hint-placeholder-val="{{ false }}">
 <span onClick="{{ closeCurso }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px">‹ Volver a cursos</span>
@@ -1377,9 +1503,11 @@ a:hover{color:#DD553F}
 </div>
 <div style="flex:none;width:280px;display:flex;flex-direction:column;gap:16px">
 <div style="background:#E7F5EF;border-radius:8px;padding:16px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px/1 Inter,sans-serif;color:#1E7A4C">Tu perfil está completo</span><span style="font:600 12px/1 Inter,sans-serif;color:#1E7A4C">100%</span></div><div style="height:6px;border-radius:999px;background:rgba(30,122,76,.15);overflow:hidden;margin-bottom:10px"><div style="width:100%;height:6px;background:#1E7A4C"></div></div><div style="font:400 13px/1.5 Inter,sans-serif;color:#1E7A4C">Con DNI y título verificados entrás en las búsquedas que piden "solo verificados".</div></div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#16214F" onClick="{{ saveProfile }}">Guardar</button>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goLanding }}">Cerrar sesión</button>
 </div>
+</div>
+<div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #E3E1DC">
+<span style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los cambios se ven en las instituciones que te buscan.</span>
+<button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#16214F;min-width:200px" onClick="{{ saveProfile }}">Guardar</button>
 </div>
 </sc-if>
 
@@ -3839,7 +3967,13 @@ class Component extends DCLogic {
     instAppTab: 'dashboard', instAppOnboarded: false, instAppStep: 1, instAppMoreOpen: false, instAppMasScreen: 'perfil', instAppFiltersOpen: false, instAppDocentesRapida: false, instAppInviteOpen: false,
     appToastMsg: '',
     testimonialIdx: 0,
-    selectedSearch: 'edfisica', pipelineView: 'kanban', cursoModalEditIdx: null,
+    selectedSearch: 'edfisica', pipelineView: 'kanban', cursoModalEditIdx: null, docCursosTab: 'disponibles',
+    misCursosHechos: [
+      { titulo: 'RCP y primeros auxilios', institucion: 'Colegio San Andrés del Norte', periodo: 'Mar 2026', estado: 'Completado', horas: '8 hs', certificado: true, progreso: 100 },
+      { titulo: 'Natación para docentes — nivel 1', institucion: 'Club Atlético Ribera', periodo: 'Nov 2025', estado: 'Completado', horas: '16 hs', certificado: true, progreso: 100 },
+      { titulo: 'Estimulación temprana en sala', institucion: 'Jardín Los Aromos', periodo: 'En curso · termina 12/10', estado: 'En curso', horas: '12 hs', certificado: false, progreso: 45 },
+      { titulo: 'Educación emocional en el aula', institucion: 'Instituto Vicente López', periodo: 'Jul 2025', estado: 'Completado', horas: '10 hs', certificado: true, progreso: 100 },
+    ],
     cargoCategoria: 'profesor', cargoEspecialidad: 'Ed. Física',
     cargoCategoriaSimple: 'docente', cargoEspecialidadOtroVal: '',
     boAsigCategoria: 'profesor',
@@ -4003,6 +4137,7 @@ class Component extends DCLogic {
       cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
       cursoModalHorario: c.horario || '', cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
   }
+  setDocCursosTab(t) { this.setState({ docCursosTab: t }); }
   openCursoModal() { this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: null, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '' }); }
   closeCursoModal() { this.setState({ screen: 'instCursos' }); }
   formatFechas(inicio, fin) {
@@ -4274,7 +4409,7 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#DC2626' : '#E3E1DC',
     }));
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
-      'docOnb1','docOnb2','docOnb3','docOnb4','docOnb5','docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
+      'docOnb1','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
       'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','contacto',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
@@ -4293,7 +4428,7 @@ class Component extends DCLogic {
     const isCat = ['educadores', 'entrenadores', 'guardavidas'].includes(s);
     const cat = catInfo[s] || catInfo.educadores;
 
-    const isDoc = ['docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
+    const isDoc = ['docDashboard', 'docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
     const isDocOnb = ['docOnb1', 'docOnb2', 'docOnb3', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
@@ -4320,6 +4455,7 @@ class Component extends DCLogic {
       onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/onboarding-bg-3.jpg' : 'assets/onboarding-bg-1.jpg',
       isDocOnbPage: isDocOnb,
       docOnbBgUrl: s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
+      navDocDashboardStyle: s === 'docDashboard' ? docNavOn : docNavOff,
       navDocBuscarStyle: s === 'docOportunidades' ? docNavOn : docNavOff,
       navDocRapidasStyle: s === 'docRapidas' ? docNavOn : docNavOff,
       navDocInstitucionesStyle: (s === 'docInstituciones' || s === 'docInstPerfil') ? docNavOn : docNavOff,
@@ -4387,6 +4523,24 @@ class Component extends DCLogic {
       isEditandoCurso: this.state.cursoModalEditIdx !== null,
       isCreandoCurso: this.state.cursoModalEditIdx === null,
       cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
+      isDocCursosDisponibles: this.state.docCursosTab === 'disponibles',
+      isDocCursosHistorial: this.state.docCursosTab === 'historial',
+      setDocCursosTabDisp: () => this.setDocCursosTab('disponibles'),
+      setDocCursosTabHist: () => this.setDocCursosTab('historial'),
+      docCursosTabDispStyle: this.state.docCursosTab === 'disponibles' ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+      docCursosTabHistStyle: this.state.docCursosTab === 'historial' ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+      misCursosCompletados: this.state.misCursosHechos.filter(c => c.estado === 'Completado').length,
+      misCursosHoras: this.state.misCursosHechos.reduce((n, c) => n + parseInt(c.horas, 10), 0) + ' hs',
+      misCursosCertificados: this.state.misCursosHechos.filter(c => c.certificado).length,
+      cursoEnCurso: this.state.misCursosHechos.find(c => c.estado === 'En curso') || null,
+      misCursosHechosCount: this.state.misCursosHechos.length,
+      misCursosHechosList: this.state.misCursosHechos.map(c => ({ ...c,
+        estadoStyle: c.estado === 'Completado' ? 'background:#E7F5EF;color:#1E7A4C' : 'background:#FDE9E1;color:#8A2F1A',
+        certLabel: c.certificado ? 'Descargar certificado' : 'Certificado al finalizar',
+        certStyle: c.certificado ? 'color:#97125F;cursor:pointer' : 'color:#9AA09B',
+        barraStyle: 'width:' + c.progreso + '%;height:6px;background:' + (c.progreso === 100 ? '#1E7A4C' : '#97125F'),
+        progresoLabel: c.progreso + '%',
+      })),
       addCursoDetallado: () => this.addCursoDetallado(),
       showCursoModal: this.state.showCursoModal,
       openCursoModal: () => this.openCursoModal(),

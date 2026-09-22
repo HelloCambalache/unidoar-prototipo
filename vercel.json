@@ -5,6 +5,10 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/docente/dashboard",
+      "destination": "/index.html"
+    },
+    {
       "source": "/educadores",
       "destination": "/index.html"
     },
