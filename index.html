@@ -103,6 +103,10 @@ a:hover{color:#DD553F}
 .udoar-filter-group[open]>.udoar-filter-sum .udoar-filter-chev{transform:rotate(180deg)}
 .udoar-filter-body::-webkit-scrollbar{width:6px}
 .udoar-filter-body::-webkit-scrollbar-thumb{background:#E3E1DC;border-radius:3px}
+/* El DS no define font-size en .cbl-btn base: los botones sin variante de tamaño
+   caían al default del navegador (13.33px) y no coincidían con los que sí lo declaran.
+   Se normaliza solo a los que no tienen variante, para no pisar --sm/--md/--lg. */
+.cbl-btn:not(.cbl-btn--sm):not(.cbl-btn--md):not(.cbl-btn--lg){font-size:14px;font-family:Inter,system-ui,sans-serif;font-weight:600}
 .udoar-landing-hamburger{display:none}
 @media (max-width:760px){
 .udoar-nav-links,.udoar-nav-actions{display:none !important}
@@ -1726,7 +1730,7 @@ a:hover{color:#DD553F}
 <sc-if value="{{ isInstDocPerfil }}" hint-placeholder-val="{{ false }}">
 <sc-if value="{{ showInviteToast }}" hint-placeholder-val="{{ false }}"><div style="position:fixed;top:20px;right:24px;z-index:60;background:#1F2421;color:#fff;padding:14px 20px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;font:500 14px/1 Inter,sans-serif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#82D8E9" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg>Invitación enviada a Martina Alsina</div></sc-if>
 <sc-if value="{{ showFavoritoToast }}" hint-placeholder-val="{{ false }}"><div style="position:fixed;top:20px;right:24px;z-index:60;background:#1F2421;color:#fff;padding:14px 20px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;font:500 14px/1 Inter,sans-serif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#82D8E9" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg>{{ favoritoToastText }}</div></sc-if>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span onClick="{{ perfilBack }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ perfilBack }}" style="cursor:pointer">{{ perfilBackLabel }}</span> → Educación Física → <span style="color:#1F2421;font-weight:500">Martina Alsina</span></span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span onClick="{{ perfilBack }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ perfilBack }}" style="cursor:pointer">{{ perfilBackLabel }}</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span>Educación Física<span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">Martina Alsina</span></span></div>
 <div style="display:flex;gap:24px;align-items:flex-start">
 <div style="flex:1;min-width:0">
 
@@ -1816,7 +1820,7 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ isInstPipeline }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span onClick="{{ goInstHistorial }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ goInstHistorial }}" style="cursor:pointer">Publicaciones</span> → <span style="color:#1F2421;font-weight:500">{{ pipelineBreadcrumb }}</span></span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span onClick="{{ goInstHistorial }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ goInstHistorial }}" style="cursor:pointer">Publicaciones</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ pipelineBreadcrumb }}</span></span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ pipelineBreadcrumb }}</h1><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Activa</span><span style="font:400 14px/1 Inter,sans-serif;color:#6B706C">{{ totalPostulantesCount }} postulantes · publicada hace 2 días</span></div>
 <div style="display:flex;gap:8px;flex-wrap:nowrap">
@@ -1906,7 +1910,7 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ showCvFullPage }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span onClick="{{ closeCv }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCv }}" style="cursor:pointer">Volver al pipeline</span> → <span style="color:#1F2421;font-weight:500">{{ selectedCv.name }}</span></span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span onClick="{{ closeCv }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCv }}" style="cursor:pointer">Volver al pipeline</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ selectedCv.name }}</span></span></div>
 <div style="display:flex;gap:24px;align-items:flex-start">
 <div style="flex:1;min-width:0">
 
@@ -2019,6 +2023,10 @@ a:hover{color:#DD553F}
 <div style="flex:none;width:170px;border-left:1px solid #E3E1DC;padding-left:16px">
 <div style="font:600 13px/1 Inter,sans-serif;color:#16214F;margin-bottom:6px">{{ cu.inscritosCount }} inscritos</div>
 <sc-if value="{{ cu.hasInscritos }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:3px"><sc-for list="{{ cu.inscritosList }}" as="n" hint-placeholder-count="1"><span style="font:400 12.5px/1.4 Inter,sans-serif;color:#3D423E">{{ n }}</span></sc-for></div></sc-if>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #E3E1DC">
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ cu.onVer }}">Ver curso</button>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ cu.onEditar }}">Editar curso</button>
+</div>
 </div>
 </div>
 </sc-for>
@@ -2026,8 +2034,8 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ isInstCrearCurso }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCursoModal }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;flex:none" style-hover="background:#F0EFEA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCursoModal }}" style="cursor:pointer">Mis cursos</span> → <span style="color:#1F2421;font-weight:500">Crear curso</span></span></div>
-<h1 style="margin:0 0 20px;font:600 26px/1.2 Inter,sans-serif;letter-spacing:-.02em">Crear curso</h1>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCursoModal }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCursoModal }}" style="cursor:pointer">Mis cursos</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ cursoFormTitulo }}</span></span></div>
+<h1 style="margin:0 0 20px;font:600 26px/1.2 Inter,sans-serif;letter-spacing:-.02em">{{ cursoFormTitulo }}</h1>
 <div style="max-width:640px">
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Foto del curso</span><image-slot id="cursoModalFoto" shape="rounded" style="width:100%;height:170px" placeholder="Foto del curso"></image-slot></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Título</span><input class="cbl-input" placeholder="Ej. Curso de RCP y primeros auxilios" value="{{ cursoModalTitulo }}" onChange="{{ updateCursoModalTitulo }}"></div>
@@ -3536,7 +3544,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 
 <sc-if value="{{ isInstAppTabPostulantes }}" hint-placeholder-val="{{ false }}">
-<div style="font:400 12px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:4px"><span onClick="{{ goInstAppBusquedas }}" style="cursor:pointer">Publicaciones</span> → <span style="color:#1F2421;font-weight:500">Profe de Ed. Física — Primario</span></div>
+<div style="font:400 12px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:4px"><span onClick="{{ goInstAppBusquedas }}" style="cursor:pointer">Publicaciones</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">Profe de Ed. Física — Primario</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h2 style="margin:0;font:600 19px/1.2 Inter,sans-serif;color:#1F2421">Postulantes</h2>
 <div style="display:flex;background:#F0EFEA;border-radius:8px;padding:2px"><button style="border:none;background:none;padding:6px 10px;border-radius:6px;font:500 12px/1 Inter,sans-serif;cursor:pointer;{{ viewKanbanStyle }}" onClick="{{ selectViewKanban }}">Kanban</button><button style="border:none;background:none;padding:6px 10px;border-radius:6px;font:500 12px/1 Inter,sans-serif;cursor:pointer;{{ viewTablaStyle }}" onClick="{{ selectViewTabla }}">Tabla</button></div>
 </div>
@@ -3831,7 +3839,7 @@ class Component extends DCLogic {
     instAppTab: 'dashboard', instAppOnboarded: false, instAppStep: 1, instAppMoreOpen: false, instAppMasScreen: 'perfil', instAppFiltersOpen: false, instAppDocentesRapida: false, instAppInviteOpen: false,
     appToastMsg: '',
     testimonialIdx: 0,
-    selectedSearch: 'edfisica', pipelineView: 'kanban',
+    selectedSearch: 'edfisica', pipelineView: 'kanban', cursoModalEditIdx: null,
     cargoCategoria: 'profesor', cargoEspecialidad: 'Ed. Física',
     cargoCategoriaSimple: 'docente', cargoEspecialidadOtroVal: '',
     boAsigCategoria: 'profesor',
@@ -3987,7 +3995,15 @@ class Component extends DCLogic {
   removeCurso(v) { this.setState(s => ({ docCursos: s.docCursos.filter(x => x !== v) })); }
   updateCursoDetallado(i, field, val) { this.setState(s => { const list = s.cursosDetallados.map((c, idx) => idx === i ? { ...c, [field]: val } : c); return { cursosDetallados: list }; }); }
   addCursoDetallado() { this.setState(s => ({ cursosDetallados: [...s.cursosDetallados, { fotoId: 'curso' + (s.cursosDetallados.length + 1), titulo: 'Nuevo curso', descripcion: '' }] })); }
-  openCursoModal() { this.setState({ screen: 'instCrearCurso', cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '' }); }
+  editCursoDetallado(i) {
+    const c = this.state.cursosDetallados[i] || {};
+    this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: i,
+      cursoModalTitulo: c.titulo || '', cursoModalSubtitulo: c.subtitulo || '', cursoModalTexto: c.descripcion || '',
+      cursoModalModalidad: c.modalidad || 'Presencial', cursoModalProfesor: c.profesor || '',
+      cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
+      cursoModalHorario: c.horario || '', cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
+  }
+  openCursoModal() { this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: null, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '' }); }
   closeCursoModal() { this.setState({ screen: 'instCursos' }); }
   formatFechas(inicio, fin) {
     if (!inicio) return 'Fecha a confirmar';
@@ -4021,10 +4037,19 @@ class Component extends DCLogic {
   }
   removeTeamMember(key) { this.setState(s => ({ teamMembers: s.teamMembers.filter(m => m.key !== key) })); }
   saveCursoModal() {
-    this.setState(s => ({
-      cursosDetallados: [...s.cursosDetallados, { fotoId: 'curso' + (s.cursosDetallados.length + 1) + '_' + Date.now(), titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: s.cursoModalHorario, link: s.cursoModalLink, direccion: s.cursoModalDireccion, inscritos: [] }],
-      screen: 'instCursos',
-    }));
+    this.setState(s => {
+      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: s.cursoModalHorario, link: s.cursoModalLink, direccion: s.cursoModalDireccion };
+      const i = s.cursoModalEditIdx;
+      if (i !== null && s.cursosDetallados[i]) {
+        const lista = s.cursosDetallados.slice();
+        lista[i] = { ...lista[i], ...campos };
+        return { cursosDetallados: lista, screen: 'instCursos', cursoModalEditIdx: null };
+      }
+      return {
+        cursosDetallados: [...s.cursosDetallados, { fotoId: 'curso' + (s.cursosDetallados.length + 1) + '_' + Date.now(), ...campos, inscritos: [] }],
+        screen: 'instCursos', cursoModalEditIdx: null,
+      };
+    });
   }
   toggleDocNivel(k) { this.setState(s => ({ docNiveles: { ...s.docNiveles, [k]: !s.docNiveles[k] } })); }
   cycleDispCell(rowIdx, cellIdx) {
@@ -4358,7 +4383,10 @@ class Component extends DCLogic {
       cursoInputVal: this.state.cursoInputVal,
       updateCursoInput: (e) => this.setState({ cursoInputVal: e.target.value }),
       keyCursoInput: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addCurso(); } },
-      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
+      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, onVer: () => this.go('instVitrina'), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
+      isEditandoCurso: this.state.cursoModalEditIdx !== null,
+      isCreandoCurso: this.state.cursoModalEditIdx === null,
+      cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
       addCursoDetallado: () => this.addCursoDetallado(),
       showCursoModal: this.state.showCursoModal,
       openCursoModal: () => this.openCursoModal(),
