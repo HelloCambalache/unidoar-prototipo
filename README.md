@@ -30,6 +30,18 @@ Algunos ejemplos:
 Navegar dentro del prototipo también actualiza la barra de direcciones, y el
 botón atrás del navegador funciona.
 
+### Pantallas que no se pueden linkear enteras
+
+Seis pantallas de detalle abren vacías por URL directa, porque en el prototipo
+se llega a ellas eligiendo un registro y esa selección no viaja en la dirección:
+`/backoffice/docentes/detalle`, `/backoffice/instituciones/detalle`,
+`/backoffice/cobros/detalle`, `/docente/instituciones/perfil`,
+`/docente/oferta` y `/institucion/contratar`.
+
+Están marcadas en `/mapa.html` con un atajo a la pantalla desde donde se entra.
+No se rellenaron con datos inventados a propósito: el prototipo es la fuente de
+verdad de diseño y meterle registros de relleno lo desalinearía del original.
+
 **Cómo está hecho:** el prototipo sigue siendo una sola máquina de estados en un
 archivo. Un router de ~30 líneas inyectado en `index.html` traduce ruta ↔
 `state.screen` en los dos sentidos: lee `location.pathname` al arrancar,
