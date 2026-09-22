@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+@media (max-width:760px){.udoar-footer-grid{grid-template-columns:1fr 1fr !important}}
+@media (max-width:460px){.udoar-footer-grid{grid-template-columns:1fr !important}}
+</style></helmet>
+<div style="padding:56px 24px 26px;background:#1F2421">
+<div class="udoar-footer-grid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;max-width:1200px;margin:0 auto 36px">
+<div>
+<div onClick="{{ goLanding }}" style="cursor:pointer;margin-bottom:14px">
+<img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:34px;width:auto;object-fit:contain">
+</div>
+<p style="margin:0 0 18px;font:400 13px/1.6 Inter,sans-serif;color:rgba(255,255,255,.55);max-width:26ch">Red y conexión educativa: docentes verificados de tu zona, sin comisión por contratación.</p>
+<div style="display:flex;gap:10px">
+<a href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08)" style-hover="background:rgba(130,216,233,.25)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1"></circle></svg></a>
+<a href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08)" style-hover="background:rgba(130,216,233,.25)"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M4.98 3.5C4.98 4.6 4.1 5.5 3 5.5s-1.98-.9-1.98-2S1.9 1.5 3 1.5s1.98.9 1.98 2zM1.5 8.5h3v14h-3v-14zM8.5 8.5h2.9v1.9h.04c.4-.76 1.4-1.9 3.1-1.9 3.3 0 3.9 2.2 3.9 5v8h-3v-7.1c0-1.7 0-3.9-2.4-3.9-2.4 0-2.8 1.9-2.8 3.8v7.2h-3v-14z"></path></svg></a>
+<a href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.08)" style-hover="background:rgba(130,216,233,.25)"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M22.68 0H1.32C.59 0 0 .59 0 1.32v21.36C0 23.41.59 24 1.32 24h11.5v-9.3H9.7v-3.62h3.12V8.4c0-3.1 1.9-4.79 4.65-4.79 1.32 0 2.45.1 2.78.14v3.23h-1.9c-1.5 0-1.8.72-1.8 1.76v2.3h3.6l-.47 3.62h-3.13V24h6.13c.73 0 1.32-.59 1.32-1.32V1.32C24 .59 23.41 0 22.68 0z"></path></svg></a>
+</div>
+</div>
+<div>
+<div style="font:600 12px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px">Categorías</div>
+<div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1 Inter,sans-serif;color:rgba(255,255,255,.65)">
+<span onClick="{{ goEducadores }}" style="cursor:pointer" style-hover="color:#fff">Docentes</span>
+<span onClick="{{ goEntrenadores }}" style="cursor:pointer" style-hover="color:#fff">Entrenadores</span>
+<span onClick="{{ goGuardavidas }}" style="cursor:pointer" style-hover="color:#fff">Guardavidas</span>
+</div>
+</div>
+<div>
+<div style="font:600 12px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px">Producto</div>
+<div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1 Inter,sans-serif;color:rgba(255,255,255,.65)">
+<span onClick="{{ goLanding }}" style="cursor:pointer" style-hover="color:#fff">Cómo funciona</span>
+<span onClick="{{ goPlanes }}" style="cursor:pointer" style-hover="color:#fff">Planes</span>
+<span onClick="{{ goQuienesSomos }}" style="cursor:pointer" style-hover="color:#fff">Nosotros</span>
+<span onClick="{{ goContacto }}" style="cursor:pointer" style-hover="color:#fff">Contacto</span>
+</div>
+</div>
+<div>
+<div style="font:600 12px/1 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px">Plataforma</div>
+<div style="display:flex;flex-direction:column;gap:12px;font:500 13px/1 Inter,sans-serif;color:#fff">
+<span onClick="{{ goDoc }}" style="cursor:pointer" style-hover="color:#82D8E9">Flujo docente</span>
+<span onClick="{{ goInst }}" style="cursor:pointer" style-hover="color:#82D8E9">Flujo institución</span>
+<span onClick="{{ goBo }}" style="cursor:pointer" style-hover="color:#82D8E9">Backoffice</span>
+<span onClick="{{ goDocApp }}" style="cursor:pointer" style-hover="color:#82D8E9">App docente</span>
+<span onClick="{{ goInstApp }}" style="cursor:pointer" style-hover="color:#82D8E9">App institución</span>
+</div>
+</div>
+</div>
+<div style="border-top:1px solid rgba(255,255,255,.12);padding-top:18px;max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font:400 12px/1 Inter,sans-serif;color:rgba(255,255,255,.45)">
+<span>© 2026 Unidoar. Todos los derechos reservados.</span>
+<div style="display:flex;gap:20px"><span onClick="{{ goTerminos }}" style="cursor:pointer" style-hover="color:#fff">Términos</span><span style="cursor:pointer" style-hover="color:#fff">Privacidad</span></div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;goLanding&quot;:{&quot;editor&quot;:null},&quot;goEducadores&quot;:{&quot;editor&quot;:null},&quot;goEntrenadores&quot;:{&quot;editor&quot;:null},&quot;goGuardavidas&quot;:{&quot;editor&quot;:null},&quot;goDoc&quot;:{&quot;editor&quot;:null},&quot;goInst&quot;:{&quot;editor&quot;:null},&quot;goBo&quot;:{&quot;editor&quot;:null},&quot;goDocApp&quot;:{&quot;editor&quot;:null},&quot;goInstApp&quot;:{&quot;editor&quot;:null},&quot;goPlanes&quot;:{&quot;editor&quot;:null},&quot;goQuienesSomos&quot;:{&quot;editor&quot;:null},&quot;goTerminos&quot;:{&quot;editor&quot;:null},&quot;goContacto&quot;:{&quot;editor&quot;:null}}"></script>
+</body>
+</html>
