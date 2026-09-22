@@ -739,7 +739,7 @@ a:hover{color:#DD553F}
 <div style="font:400 15px/1.5 Inter,sans-serif;color:rgba(255,255,255,.8);max-width:34ch">Publicás una vez y ves quién está cerca, verificado y disponible.</div>
 </div>
 </div>
-<div class="udoar-onb-form" style="flex:1;min-width:380px;max-width:560px;background:#EDEBE5;display:flex;flex-direction:column">
+<div class="udoar-onb-form" style="flex:1;min-width:380px;max-width:720px;background:#EDEBE5;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid #E3E1DC">
 <span style="font:600 13px/1 Inter,sans-serif;color:#1F2421">{{ instOnbStepLabel }}</span>
 <span style="font:500 12px/1 Inter,sans-serif;color:#9AA09B;cursor:pointer" onClick="{{ goLanding }}">Guardar y salir</span>
@@ -810,7 +810,7 @@ a:hover{color:#DD553F}
 <div style="font:400 15px/1.5 Inter,sans-serif;color:rgba(255,255,255,.8);max-width:34ch">Elegí las zonas donde te movés y postulate en dos toques. Gratis siempre.</div>
 </div>
 </div>
-<div class="udoar-onb-form" style="flex:1;min-width:380px;max-width:560px;background:#EDEBE5;display:flex;flex-direction:column">
+<div class="udoar-onb-form" style="flex:1;min-width:380px;max-width:720px;background:#EDEBE5;display:flex;flex-direction:column">
 <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid #E3E1DC">
 <span style="font:600 13px/1 Inter,sans-serif;color:#1F2421">{{ docOnbStepLabel }}</span>
 <span style="font:500 12px/1 Inter,sans-serif;color:#9AA09B;cursor:pointer" onClick="{{ goLanding }}">Guardar y salir</span>
@@ -924,8 +924,8 @@ a:hover{color:#DD553F}
 </sc-if>
 
 <sc-if value="{{ isDocOnb4 }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-onb-4-row" style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
-<div style="flex:1;min-width:0">
+<div class="udoar-onb-4-row" style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+<div style="flex:1 1 340px;min-width:320px">
 <h1 style="margin:0 0 8px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Subí tu documentación</h1>
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong style="color:#1F2421">Sin verificar</strong> hasta que revisemos la documentación — normalmente en menos de 48 horas.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
@@ -937,7 +937,7 @@ a:hover{color:#DD553F}
 <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="cbl-btn cbl-btn--secondary" onClick="{{ goDocOportunidades }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOportunidades }}">Terminar y empezar a postularme</button></div>
 </div>
 </div>
-<div style="flex:none;width:260px;background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
+<div style="flex:1 1 260px;min-width:240px;background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
 <div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Nivel de tu perfil</div>
 <div style="font:600 17px/1.2 Inter,sans-serif;margin-bottom:6px">Completo <span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;font-size:10px">✓ verificado</span></div>
 <div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:16px"><div style="width:100%;height:100%;background:#1E7A4C"></div></div>
@@ -977,7 +977,7 @@ a:hover{color:#DD553F}
 <div onClick="{{ goDocInstituciones }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocInstitucionesStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path></svg>Instituciones</div>
 <div onClick="{{ goDocCursos2 }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocCursosStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>Cursos</div>
 <div onClick="{{ goDocPostulaciones }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocPostulStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path></svg>Postulaciones</div>
-<div onClick="{{ goDocPerfil }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocPerfilStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.6"></circle><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path></svg>Mi perfil</div>
+<div onClick="{{ goDocPerfil }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navDocPerfilStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="8" r="3.6"></circle><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path></svg>Mi perfil</div>
 <div onClick="{{ goLanding }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:auto;padding:9px 10px;border-radius:8px;font:500 13px/1 Inter,sans-serif;color:#6B706C;transition:background .15s,color .15s" style-hover="background:#FBE0EF;color:#97125F"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>Cerrar sesión</div>
 </div>
 <div style="flex:1;padding:32px 40px;overflow:auto">
@@ -1615,8 +1615,8 @@ a:hover{color:#DD553F}
 <div onClick="{{ goInstDashboard }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navInicioStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>Dashboard</div>
 <div onClick="{{ goInstHistorial }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navHistorialStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"></path></svg>Publicaciones</div>
 <div onClick="{{ goInstBuscador }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBuscadorStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Buscar docentes</div>
-<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path><path d="M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"></path></svg>Docentes</div>
-<div onClick="{{ goInstVitrina }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navVitrinaStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21V9l9-6 9 6v12"></path><path d="M9 21v-7h6v7"></path></svg>Mi perfil</div>
+<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect><circle cx="9" cy="10.5" r="2.3"></circle><path d="M5.4 16.2c.5-1.7 1.9-2.6 3.6-2.6s3.1.9 3.6 2.6"></path><path d="M15.5 9.5H19"></path><path d="M15.5 13H19"></path></svg>Docentes</div>
+<div onClick="{{ goInstVitrina }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navVitrinaStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.2 4.5h17.6l1.2 4.2a3.2 3.2 0 0 1-6.2 1.1 3.2 3.2 0 0 1-6.2 0 3.2 3.2 0 0 1-6.2-1.1z"></path><path d="M4.6 10.6V20h14.8v-9.4"></path><path d="M9.6 20v-5.2h4.8V20"></path></svg>Mi perfil</div>
 <div onClick="{{ goInstCursos }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navCursosStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>Mis cursos</div>
 <div onClick="{{ goInstEquipo }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navEquipoStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.4"></circle><path d="M2 20c0-3.4 3.1-5.4 7-5.4s7 2 7 5.4"></path><circle cx="18" cy="9" r="2.4"></circle><path d="M15.5 20c0-2.4 1.2-3.6 2.5-3.6s2.5 1.2 2.5 3.6"></path></svg>Equipo</div>
 <div onClick="{{ goInstPlan }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navPlanStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>Plan</div>
