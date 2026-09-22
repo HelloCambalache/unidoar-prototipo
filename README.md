@@ -10,6 +10,36 @@ cual, sin reescribir: sirve como fuente de verdad visual y de copy para el MVP.
 > El MVP productivo vive en [`HelloCambalache/unidoar`](https://github.com/HelloCambalache/unidoar).
 > Este repo es **solo la referencia de diseño**.
 
+## URLs por pantalla
+
+Cada una de las 52 pantallas tiene su propia dirección, así se puede linkear una
+sola sin tener que navegar hasta ella. **El índice completo está en [`/mapa`](https://unidoar-prototipo.vercel.app/mapa.html).**
+
+Algunos ejemplos:
+
+| Pantalla | URL |
+|---|---|
+| Landing | `/` |
+| Landing Educadores | `/educadores` |
+| Onboarding docente, paso 2 | `/onboarding/docente/2` |
+| Buscar docentes (institución) | `/institucion/buscar-docentes` |
+| Postulantes, Kanban | `/institucion/postulantes` |
+| Cola de verificación (backoffice) | `/backoffice/verificacion` |
+| App docente (mobile) | `/app/docente` |
+
+Navegar dentro del prototipo también actualiza la barra de direcciones, y el
+botón atrás del navegador funciona.
+
+**Cómo está hecho:** el prototipo sigue siendo una sola máquina de estados en un
+archivo. Un router de ~30 líneas inyectado en `index.html` traduce ruta ↔
+`state.screen` en los dos sentidos: lee `location.pathname` al arrancar,
+y un `componentDidUpdate` hace `pushState` cuando la pantalla cambia. Las rutas
+se sirven por `rewrites` en `vercel.json`, todas apuntando a `index.html`.
+No hay 52 copias del archivo: hay una sola.
+
+Si se agregan pantallas al prototipo, hay que sumarlas al mapa del router en
+`index.html` **y** a los `rewrites` de `vercel.json`, o la URL directa da 404.
+
 ## Correr en local
 
 Cualquier servidor estático sirve. No abras `index.html` con `file://`: el

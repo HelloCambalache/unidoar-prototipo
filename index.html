@@ -5,6 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Unidoar — Prototipo navegable</title>
 <meta name="robots" content="noindex, nofollow">
+<script>
+/* Router de URLs del prototipo Unidoar.
+   Mapea cada pantalla del state machine a una ruta real, para poder linkear
+   pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
+(function () {
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
+
+  function norm(p) {
+    try { p = decodeURIComponent(p || '/'); } catch (e) {}
+    if (p.length > 1) p = p.replace(/\/+$/, '');
+    return p || '/';
+  }
+  function screenOf(p) { return REV[norm(p)] || null; }
+
+  window.__UD_ROUTES = MAP;
+  window.__udInitialScreen = screenOf(location.pathname);
+  window.__udSkipPush = false;
+
+  window.__udSyncUrl = function (screen) {
+    if (!screen || !MAP[screen]) return;
+    if (window.__udSkipPush) { window.__udSkipPush = false; return; }
+    var target = MAP[screen];
+    if (norm(location.pathname) === norm(target)) return;
+    try { history.pushState({ screen: screen }, '', target + location.search); } catch (e) {}
+  };
+
+  window.addEventListener('popstate', function () {
+    var sc = screenOf(location.pathname) || 'landing';
+    var inst = window.__udInst;
+    if (!inst) { location.reload(); return; }
+    window.__udSkipPush = true;
+    inst.setState({ screen: sc });
+    window.scrollTo(0, 0);
+  });
+})();
+</script>
+
 <script src="./support.js"></script>
 </head>
 <body>
@@ -3761,7 +3799,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = {
-    screen: 'landing', showPlanPicker: false, showInvite: false, selectedMember: null, searchesTab: 'activas', tipoBusqueda: 'titular', urgente: false,
+    screen: (window.__udInitialScreen || 'landing'), showPlanPicker: false, showInvite: false, selectedMember: null, searchesTab: 'activas', tipoBusqueda: 'titular', urgente: false,
     instTipo: 'Colegio privado', instBuscadorTab: 'todos', buscadorOrden: 'Recomendados', filtroHistEstado: 'Todos los estados', favoritosInst: [], buscadorSearchQuery: '', showContactoToast: false, editingBusquedaKey: null,
     inviteEmailVal: '', inviteRoleVal: 'Administrador/a', filtroInstTexto: '', filtroInstTipo: 'Todos los tipos', filtroInstZona: 'Todas las zonas', cvSentTo: [], filtroInstFavoritas: false, docBuscarFavoritos: [],
     teamMembers: [
@@ -4124,6 +4162,7 @@ class Component extends DCLogic {
   selectMember(m) { this.setState({ selectedMember: m }); }
   closeMember() { this.setState({ selectedMember: null }); }
 
+  componentDidUpdate() { window.__udInst = this; if (window.__udSyncUrl) window.__udSyncUrl(this.state.screen); }
   go(s) { this.setState(st => ({ screen: s, selectedCv: null, perfilFrom: s === 'instDocPerfil' ? st.screen : st.perfilFrom })); }
   showAppToast(msg) { this.setState({ appToastMsg: msg }); clearTimeout(this._appToastTimer); this._appToastTimer = setTimeout(() => this.setState({ appToastMsg: '' }), 2200); }
   selectInstitucion() { this.setState({ screen: 'instOnb1' }); }
@@ -4153,6 +4192,7 @@ class Component extends DCLogic {
   }
 
   renderVals() {
+    window.__udInst = this;
     const s = this.state.screen;
     const testimonials = [
       { quote: 'Cubrimos una licencia de Matemática en dos días. Antes tardábamos semanas.', author: 'Marina Costa, Vicedirectora · Colegio San Andrés del Norte' },
