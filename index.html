@@ -107,6 +107,8 @@ a:hover{color:#DD553F}
    caían al default del navegador (13.33px) y no coincidían con los que sí lo declaran.
    Se normaliza solo a los que no tienen variante, para no pisar --sm/--md/--lg. */
 .cbl-btn:not(.cbl-btn--sm):not(.cbl-btn--md):not(.cbl-btn--lg){font-size:14px;font-family:Inter,system-ui,sans-serif;font-weight:600}
+/* Botones de tarjeta: más chicos y menos "botonudos" (pedido de Clara). */
+.cbl-btn--sm{min-height:34px !important;height:34px;padding-top:0;padding-bottom:0;font-size:12.5px}
 .udoar-landing-hamburger{display:none}
 @media (max-width:760px){
 .udoar-nav-links,.udoar-nav-actions{display:none !important}
@@ -1009,16 +1011,17 @@ a:hover{color:#DD553F}
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>Vicente López</div>
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Mañana, 8 a 12 hs · sólo mañana</div>
 </div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;margin-top:auto" onClick="{{ openOportEdfisica }}">Ver y postularme</button>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm cbl-btn--block" style="background:#DD553F;margin-top:auto" onClick="{{ openOportEdfisica }}">Ver y postularme</button>
 </div>
 <sc-for list="{{ oportunidadesMasList }}" as="o" hint-placeholder-count="7">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column">
-<div style="display:flex;gap:12px;margin-bottom:12px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ o.logo }});background-size:cover;background-position:center"></span><div style="flex:1;min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div><span onClick="{{ o.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;{{ o.favStyle }}">★</span></div>
+<div onClick="{{ o.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s" style-hover="border-color:#C9C6C0;box-shadow:0 6px 16px rgba(31,36,33,.08)">
+<div style="display:flex;gap:12px;margin-bottom:10px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ o.logo }});background-size:cover;background-position:center"></span><div style="flex:1;min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div><span onClick="{{ o.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;{{ o.favStyle }}">★</span></div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:12px">{{ o.descripcion }}</div>
 <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
 </div>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="height:44px;border-color:#E3E1DC;color:#16214F;margin-top:auto" style-hover="background:#16214F;color:#fff;border-color:#16214F" onClick="{{ o.onClick }}">Ver oferta</button>
+<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Ver oferta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
 </div>
 </sc-for>
 </div>
@@ -1033,7 +1036,7 @@ a:hover{color:#DD553F}
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
 </div>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="height:44px;border-color:#E3E1DC;color:#16214F;margin-top:auto" onClick="{{ o.onClick }}">Ver oferta</button>
+<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Ver oferta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
 </div>
 </sc-for>
 </div>
@@ -1053,7 +1056,7 @@ a:hover{color:#DD553F}
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
 <div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
 </div>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="height:44px;border-color:#E3E1DC;color:#16214F" style-hover="background:#16214F;color:#fff;border-color:#16214F" onClick="{{ o.onClick }}">Ver oferta</button>
+<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Ver oferta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
 </div>
 </sc-for>
 </div>
@@ -1757,7 +1760,7 @@ a:hover{color:#DD553F}
 </div>
 <div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ doc.zona }}<br>{{ doc.horario }}</div>
 <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#F5F5F1;border-radius:8px;margin-bottom:14px;font:500 12px/1 Inter,sans-serif;color:{{ doc.coincideColor }}">★ Coincide en {{ doc.coincide }} de 6 criterios</div>
-<div style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
+<div style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
 </div>
 </sc-for>
 <sc-for list="{{ buscadorDocentesList }}" as="doc" hint-placeholder-count="6">
@@ -1832,7 +1835,7 @@ a:hover{color:#DD553F}
 </div>
 <div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ doc.zona }}<br>{{ doc.horario }}</div>
 <div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#F5F5F1;border-radius:8px;margin-bottom:14px;font:500 12px/1 Inter,sans-serif;color:{{ doc.coincideColor }}">★ Coincide en {{ doc.coincide }} de 6 criterios</div>
-<div style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
+<div style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
 </div>
 </sc-for>
 </div>
@@ -4817,11 +4820,11 @@ class Component extends DCLogic {
         (this.state.filtroOportNivel === 'Todos los niveles' || o.nivel === this.state.filtroOportNivel) &&
         (this.state.filtroOportTurno === 'Todos los turnos' || o.turno === this.state.filtroOportTurno) &&
         (!this.state.filtroOportTexto || (o.title + ' ' + o.inst).toLowerCase().includes(this.state.filtroOportTexto.toLowerCase()))
-      ).map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: () => this.toggleDocBuscarFavorito(o.title), favStyle: this.state.docBuscarFavoritos.includes(o.title) ? 'color:#F0B400' : 'color:#D8D6CE' })),
+      ).map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleDocBuscarFavorito(o.title); }, favStyle: this.state.docBuscarFavoritos.includes(o.title) ? 'color:#F0B400' : 'color:#D8D6CE' })),
       isDocBuscarTabFavoritos: this.state.docBuscarTab === 'favoritos',
       setDocBuscarTabFavoritos: () => this.setDocBuscarTab('favoritos'),
       docBuscarTabFavoritosStyle: this.state.docBuscarTab === 'favoritos' ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
-      docBuscarFavoritosList: this.state.oportunidadesMas.filter(o => this.state.docBuscarFavoritos.includes(o.title)).map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: () => this.toggleDocBuscarFavorito(o.title) })),
+      docBuscarFavoritosList: this.state.oportunidadesMas.filter(o => this.state.docBuscarFavoritos.includes(o.title)).map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleDocBuscarFavorito(o.title); } })),
       docBuscarFavoritosEmpty: this.state.docBuscarFavoritos.length === 0,
       updateFiltroOportTexto: (e) => this.setState({ filtroOportTexto: e.target.value }),
       updateFiltroOportCategoria: (e) => this.setState({ filtroOportCategoria: e.target.value }),
