@@ -277,8 +277,22 @@ a:hover{color:#DD553F}
 @media (max-width:1100px){
 .udoar-btn-row{flex-wrap:wrap}
 .udoar-btn-row>.cbl-btn{flex:1 1 auto}
-/* en el buscador la lista pasa a una sola columna antes de que las tarjetas se aprieten */
-.udoar-inst-buscador-row .udoar-grid-2,.udoar-inst-buscador-row .udoar-grid-3{grid-template-columns:1fr !important}
+}
+/* Las listas del buscador se acomodan al ancho disponible en vez de forzar 2 o 3
+   columnas: con el sidebar y el panel de filtros las tarjetas quedaban de 220px
+   y los títulos se partían palabra por palabra. */
+.udoar-inst-buscador-row .udoar-grid-2,
+.udoar-inst-buscador-row .udoar-grid-3{grid-template-columns:repeat(auto-fill,minmax(258px,1fr)) !important}
+@media (max-width:620px){
+.udoar-inst-buscador-row .udoar-grid-2,
+.udoar-inst-buscador-row .udoar-grid-3{grid-template-columns:1fr !important}
+}
+.udoar-mapa{height:540px}
+@media (max-width:860px){.udoar-mapa{height:460px}.udoar-mapa-card{padding:12px !important}}
+/* En pantalla chica la leyenda ocupaba casi todo el ancho y tapaba los pines del norte. */
+@media (max-width:620px){
+.udoar-mapa-leyenda{gap:9px !important;padding:6px 10px !important;top:10px !important;right:10px !important}
+.udoar-mapa-leyenda span{font-size:10px !important}
 }
 </style>
 </helmet>
@@ -1263,6 +1277,11 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
 <select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
 </div>
+<div class="udoar-btn-row" style="display:flex;gap:6px;margin-bottom:16px;background:#fff;border:1px solid #E3E1DC;border-radius:999px;padding:4px;width:max-content">
+<span onClick="{{ verBuscarLista }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ buscarVistaListaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>Lista</span>
+<span onClick="{{ verBuscarMapa }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ buscarVistaMapaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9 3L3 5.5v15L9 18l6 3 6-2.5v-15L15 6z"></path><path d="M9 3v15M15 6v15"></path></svg>Mapa</span>
+</div>
+<sc-if value="{{ esVistaLista }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch">
 <div style="background:#fff;border:1.5px solid #DD553F;border-radius:8px;padding:18px;display:flex;flex-direction:column">
 <span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:12px;align-self:flex-start">Rápida · responder en 40 min</span>
@@ -1285,6 +1304,45 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </sc-for>
 </div>
+</sc-if>
+<sc-if value="{{ esVistaMapa }}" hint-placeholder-val="{{ false }}">
+<div class="udoar-mapa" style="position:relative;background:#EDEBE5;border:1px solid #E3E1DC;border-radius:12px;overflow:hidden">
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true">
+<path d="M100 0 L100 100 L66 100 C74 74 84 50 100 34 Z" fill="#D9E8F0"></path>
+<path d="M100 0 L100 34 C84 50 74 74 66 100 L60 100 C69 72 80 47 100 28 Z" fill="#C9DEEA"></path>
+<path d="M0 62 C22 58 44 66 62 86" stroke="#DCDAD3" stroke-width="1.1" fill="none"></path>
+<path d="M30 0 C34 30 40 58 55 100" stroke="#DCDAD3" stroke-width="1.1" fill="none"></path>
+</svg>
+<div class="udoar-hero-grid-bg" style="position:absolute;inset:0;opacity:.5;pointer-events:none"></div>
+<sc-for list="{{ mapaZonas }}" as="z" hint-placeholder-count="6">
+<span style="position:absolute;transform:translate(-50%,-50%);font:600 10px/1 Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#A7A49C;white-space:nowrap;pointer-events:none;{{ z.style }}">{{ z.nombre }}</span>
+</sc-for>
+<sc-for list="{{ mapaPines }}" as="p" hint-placeholder-count="6">
+<span onClick="{{ p.onClick }}" title="{{ p.titulo }}" style="position:absolute;transform:translate(-50%,-100%);cursor:pointer;display:block;width:26px;height:26px;border-radius:999px 999px 999px 2px;rotate:45deg;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(31,36,33,.3);{{ p.style }}"></span>
+</sc-for>
+<div class="udoar-mapa-leyenda" style="position:absolute;right:14px;top:14px;display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.93);border:1px solid #E3E1DC;border-radius:999px;padding:8px 14px;pointer-events:none">
+<sc-for list="{{ mapaLeyenda }}" as="l" hint-placeholder-count="3">
+<span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span>{{ l.label }}</span>
+</sc-for>
+</div>
+<sc-if value="{{ mapaSel }}" hint-placeholder-val="{{ false }}">
+<div class="udoar-mapa-card" style="position:absolute;left:14px;right:14px;bottom:14px;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px 16px;box-shadow:0 10px 28px rgba(31,36,33,.18);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<img src="{{ mapaSel.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<div style="flex:1 1 200px;min-width:0">
+<div style="font:600 15px/1.3 Inter,sans-serif">{{ mapaSel.title }}</div>
+<div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">{{ mapaSel.inst }} · {{ mapaSel.zona }} · {{ mapaSel.horario }}</div>
+</div>
+<div class="udoar-btn-row" style="display:flex;gap:8px;flex:none">
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm" onClick="{{ cerrarMapaSel }}">Cerrar</button>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ mapaSel.onClick }}">Ver oferta</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ mapaSinSel }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:14px;right:14px;bottom:14px;text-align:center;font:500 12.5px/1.4 Inter,sans-serif;color:#6B706C;background:rgba(255,255,255,.9);border-radius:8px;padding:9px;pointer-events:none">Tocá un punto para ver la búsqueda</div>
+</sc-if>
+</div>
+</sc-if>
 </sc-if>
 <sc-if value="{{ isDocBuscarTabFavoritos }}" hint-placeholder-val="{{ false }}">
 <sc-if value="{{ docBuscarFavoritosEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:40px;text-align:center;color:#6B706C;font:400 14px/1.5 Inter,sans-serif">Todavía no guardaste ninguna oferta. Tocá la ★ en una tarjeta para guardarla.</div></sc-if>
@@ -1407,7 +1465,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="2">
 <div onClick="{{ cu.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
-<image-slot id="{{ cu.fotoId }}" shape="rect" style="width:100%;height:180px" placeholder="Foto del curso"></image-slot>
+<sc-if value="{{ cu.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ cu.fotoUrl }}" alt="" style="width:100%;height:180px;object-fit:cover;display:block;"></sc-if><sc-if value="{{ cu.sinFoto }}" hint-placeholder-val="{{ true }}"><div style="width:100%;height:180px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
 <div style="padding:18px">
 <div style="font:600 17px/1.3 Inter,sans-serif;margin-bottom:3px">{{ cu.titulo }}</div>
 <sc-if value="{{ cu.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:500 13px/1.3 Inter,sans-serif;color:#16214F;margin-bottom:6px">{{ cu.subtitulo }}</div></sc-if>
@@ -1421,7 +1479,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ selectedCurso }}" hint-placeholder-val="{{ false }}">
 <span onClick="{{ closeCurso }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px">‹ Volver a cursos</span>
 <div style="max-width:1000px">
-<image-slot id="{{ selectedCurso.fotoId }}" shape="rounded" style="width:100%;height:380px" placeholder="Foto del curso"></image-slot>
+<sc-if value="{{ selectedCurso.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ selectedCurso.fotoUrl }}" alt="" style="width:100%;height:380px;object-fit:cover;display:block;border-radius:10px;"></sc-if><sc-if value="{{ selectedCurso.sinFoto }}" hint-placeholder-val="{{ true }}"><div style="width:100%;height:380px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0;border-radius:10px;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
 <div style="margin-top:22px">
 <h1 style="margin:0 0 4px;font:600 28px/1.25 Inter,sans-serif;letter-spacing:-.018em">{{ selectedCurso.titulo }}</h1>
 <sc-if value="{{ selectedCurso.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:500 15px/1.3 Inter,sans-serif;color:#16214F;margin-bottom:18px">{{ selectedCurso.subtitulo }}</div></sc-if>
@@ -1521,7 +1579,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
 <div style="flex:2;min-width:340px">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden;margin-bottom:16px">
-<image-slot id="{{ selectedInst.key }}-portada" shape="rect" style="width:100%;height:160px" placeholder="Foto de portada del edificio"></image-slot>
+<sc-if value="{{ selectedInst.tienePortada }}" hint-placeholder-val="{{ true }}"><img src="{{ selectedInst.portadaUrl }}" alt="Foto de la institución" style="width:100%;height:190px;object-fit:cover;display:block"></sc-if><sc-if value="{{ selectedInst.sinPortada }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:190px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
 <div style="padding:20px 24px;position:relative">
 <div style="display:flex;gap:14px;align-items:center;margin-top:-40px;margin-bottom:14px;position:relative;z-index:2">
 <span style="flex:none;width:64px;height:64px;border-radius:10px;border:3px solid #fff;background-color:#E5E9FB;background-image:url({{ selectedInst.logo }});background-size:cover;background-position:center;box-shadow:0 2px 6px rgba(0,0,0,.15)"></span>
@@ -3480,7 +3538,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="display:flex;gap:10px;overflow-x:auto;margin:0 -18px 16px;padding:0 18px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="2">
 <div onClick="{{ cu.onClick }}" style="cursor:pointer;flex:none;width:160px;background:#fff;border:1px solid #E3E1DC;border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(31,36,33,.06)">
-<image-slot id="{{ cu.fotoId }}" shape="rect" style="width:100%;height:90px" placeholder="Foto del curso"></image-slot>
+<sc-if value="{{ cu.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ cu.fotoUrl }}" alt="" style="width:100%;height:90px;object-fit:cover;display:block;"></sc-if><sc-if value="{{ cu.sinFoto }}" hint-placeholder-val="{{ true }}"><div style="width:100%;height:90px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
 <div style="padding:10px">
 <div style="font:600 12.5px/1.3 Inter,sans-serif;margin-bottom:2px">{{ cu.titulo }}</div>
 <sc-if value="{{ cu.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.3 Inter,sans-serif;color:#16214F">{{ cu.subtitulo }}</div></sc-if>
@@ -4231,7 +4289,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="display:flex;flex-direction:column;gap:12px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="2">
 <div onClick="{{ cu.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden">
-<image-slot id="{{ cu.fotoId }}" shape="rect" style="width:100%;height:130px" placeholder="Foto del curso"></image-slot>
+<sc-if value="{{ cu.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ cu.fotoUrl }}" alt="" style="width:100%;height:130px;object-fit:cover;display:block;"></sc-if><sc-if value="{{ cu.sinFoto }}" hint-placeholder-val="{{ true }}"><div style="width:100%;height:130px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
 <div style="padding:14px">
 <div style="font:600 14px/1.3 Inter,sans-serif;margin-bottom:2px">{{ cu.titulo }}</div>
 <sc-if value="{{ cu.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:500 12px/1.3 Inter,sans-serif;color:#16214F;margin-bottom:4px">{{ cu.subtitulo }}</div></sc-if>
@@ -4410,22 +4468,22 @@ class Component extends DCLogic {
     ],
     filtroOportCategoria: 'Todas las categorías', filtroOportNivel: 'Todos los niveles', filtroOportTurno: 'Todos los turnos', filtroOportTexto: '',
     institucionesList: [
-      { key: 'sanandres', nombre: 'Colegio San Andrés del Norte', tipo: 'Colegio privado', zona: 'Villa Adelina, Vicente López', logo: 'assets/inst-logo-sanandres.png', direccion: 'Av. de los Fresnos 2140, Villa Adelina', desc: 'Colegio bilingüe de Nivel Inicial, Primario y Secundario en Vicente López. 340 alumnos.', verificada: true, busquedas: 3, saved: false, alumnos: 640, niveles: 'Inicial · Primario · Secundario', turnos: 'Mañana y tarde', docentesPlanta: 48, busquedasList: [
+      { key: 'sanandres', portada: 'assets/sanandres-portada-fixed.jpg', nombre: 'Colegio San Andrés del Norte', tipo: 'Colegio privado', zona: 'Villa Adelina, Vicente López', logo: 'assets/inst-logo-sanandres.png', direccion: 'Av. de los Fresnos 2140, Villa Adelina', desc: 'Colegio bilingüe de Nivel Inicial, Primario y Secundario en Vicente López. 340 alumnos.', verificada: true, busquedas: 3, saved: false, alumnos: 640, niveles: 'Inicial · Primario · Secundario', turnos: 'Mañana y tarde', docentesPlanta: 48, busquedasList: [
         { puesto: 'Ed. Física — Primario', tipo: 'Titular · 18 hs semanales', turno: 'Mañana' },
         { puesto: 'Maestra de sala de 4', tipo: 'Suplencia', turno: 'Turno tarde' },
         { puesto: 'Profe de Inglés — Secundario', tipo: 'Titular · 12 hs', turno: 'Turno mañana' },
       ] },
-      { key: 'ribera', nombre: 'Club Atlético Ribera', tipo: 'Club deportivo', zona: 'Núñez', logo: 'assets/inst-logo-ribera.png', direccion: 'Av. del Libertador 4800, Núñez', desc: 'Club social y deportivo con escuela de natación activa todo el año y colonia de verano.', verificada: true, busquedas: 1, saved: false, alumnos: 1200, niveles: 'Todas las edades', turnos: 'Mañana, tarde y fin de semana', docentesPlanta: 22, busquedasList: [
+      { key: 'ribera', portada: '', nombre: 'Club Atlético Ribera', tipo: 'Club deportivo', zona: 'Núñez', logo: 'assets/inst-logo-ribera.png', direccion: 'Av. del Libertador 4800, Núñez', desc: 'Club social y deportivo con escuela de natación activa todo el año y colonia de verano.', verificada: true, busquedas: 1, saved: false, alumnos: 1200, niveles: 'Todas las edades', turnos: 'Mañana, tarde y fin de semana', docentesPlanta: 22, busquedasList: [
         { puesto: 'Natación — escuela de verano', tipo: 'Temporada', turno: 'Turno mañana' },
       ] },
-      { key: 'vicentelopez', nombre: 'Instituto Vicente López', tipo: 'Instituto privado', zona: 'Vicente López', logo: 'assets/inst-logo-vicentelopez.png', direccion: 'Av. Maipú 1620, Vicente López', desc: 'Instituto de Nivel Secundario y Terciario con orientación en ciencias sociales.', verificada: true, busquedas: 2, saved: false, alumnos: 410, niveles: 'Secundario · Terciario', turnos: 'Mañana y tarde', docentesPlanta: 35, busquedasList: [
+      { key: 'vicentelopez', portada: '', nombre: 'Instituto Vicente López', tipo: 'Instituto privado', zona: 'Vicente López', logo: 'assets/inst-logo-vicentelopez.png', direccion: 'Av. Maipú 1620, Vicente López', desc: 'Instituto de Nivel Secundario y Terciario con orientación en ciencias sociales.', verificada: true, busquedas: 2, saved: false, alumnos: 410, niveles: 'Secundario · Terciario', turnos: 'Mañana y tarde', docentesPlanta: 35, busquedasList: [
         { puesto: 'Ed. Física — Secundario', tipo: 'Titular · 12 hs semanales', turno: 'Turno tarde' },
         { puesto: 'Profe de Historia', tipo: 'Titular · 8 hs', turno: 'Turno mañana' },
       ] },
-      { key: 'fullbody', nombre: 'Full Body Olivos', tipo: 'Gimnasio', zona: 'Olivos', logo: 'assets/inst-logo-fullbody.png', direccion: 'Av. Maipú 3200, Olivos', desc: 'Gimnasio de barrio con clases grupales y entrenamiento funcional.', verificada: false, busquedas: 1, saved: false, alumnos: 380, niveles: 'Adultos', turnos: 'Mañana, tarde y noche', docentesPlanta: 9, busquedasList: [
+      { key: 'fullbody', portada: '', nombre: 'Full Body Olivos', tipo: 'Gimnasio', zona: 'Olivos', logo: 'assets/inst-logo-fullbody.png', direccion: 'Av. Maipú 3200, Olivos', desc: 'Gimnasio de barrio con clases grupales y entrenamiento funcional.', verificada: false, busquedas: 1, saved: false, alumnos: 380, niveles: 'Adultos', turnos: 'Mañana, tarde y noche', docentesPlanta: 9, busquedasList: [
         { puesto: 'Profe de sala — Gimnasio', tipo: 'Rápida · hoy', turno: 'Turno tarde' },
       ] },
-      { key: 'aromos', nombre: 'Jardín Los Aromos', tipo: 'Jardín de infantes', zona: 'Nordelta', logo: 'assets/inst-logo-aromos.png', direccion: 'Av. de los Lagos 800, Nordelta', desc: 'Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.', verificada: true, busquedas: 0, saved: false, alumnos: 120, niveles: 'Maternal · Inicial', turnos: 'Jornada simple y extendida', docentesPlanta: 14, busquedasList: [] },
+      { key: 'aromos', portada: '', nombre: 'Jardín Los Aromos', tipo: 'Jardín de infantes', zona: 'Nordelta', logo: 'assets/inst-logo-aromos.png', direccion: 'Av. de los Lagos 800, Nordelta', desc: 'Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.', verificada: true, busquedas: 0, saved: false, alumnos: 120, niveles: 'Maternal · Inicial', turnos: 'Jornada simple y extendida', docentesPlanta: 14, busquedasList: [] },
     ],
     selectedInstKey: null,
     docAsigQuery: '', docZonaQuery: '',
@@ -4454,6 +4512,7 @@ class Component extends DCLogic {
       { fotoId: 'curso1', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
+    docBuscarVista: 'lista', mapaOfertaIdx: null,
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
@@ -4690,6 +4749,10 @@ class Component extends DCLogic {
     if (!salida.length) return { filas: [], descartadas, error: 'No encontré ninguna fila con nombre cargado.' };
     return { filas: salida, descartadas, error: '' };
   }
+  // Foto guardada de un curso, para las pantallas donde se muestra pero no se edita.
+  fotoDeSlot(id) {
+    try { return (window.udImageSlots && window.udImageSlots.get(id)) || ''; } catch (e) { return ''; }
+  }
   fechaDeHoy() {
     const d = new Date();
     const dd = String(d.getDate()).padStart(2, '0');
@@ -4728,6 +4791,33 @@ class Component extends DCLogic {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+  // ── Vista mapa del buscador del docente ────────────────────────────────
+  // Mapa esquemático de Zona Norte: cada zona tiene una posición fija en
+  // porcentajes y las ofertas se clavan ahí, separadas entre sí cuando varias
+  // caen en la misma zona. No es cartografía, es orientación.
+  ZONAS_MAPA = {
+    'Nordelta': [19, 13], 'Tigre': [11, 26], 'Boulogne': [27, 42], 'San Isidro': [39, 31],
+    'Martínez': [48, 41], 'Villa Adelina': [35, 53], 'Munro': [46, 62], 'Olivos': [57, 51],
+    'Florida': [55, 65], 'Vicente López': [64, 64], 'Núñez': [74, 75], 'Belgrano': [83, 84],
+    'Palermo': [90, 92],
+  };
+  colorDeCategoria(cat) {
+    if (cat === 'Entrenador/a') return '#F0B400';
+    if (cat === 'Guardavidas') return '#82D8E9';
+    return '#DD553F';
+  }
+  // Mismo recorte que usa la lista, para que el mapa muestre lo mismo.
+  oportunidadesFiltradas() {
+    return this.state.oportunidadesMas.filter(o =>
+      (this.state.filtroOportCategoria === 'Todas las categorías' || o.categoria === this.state.filtroOportCategoria) &&
+      (this.state.filtroOportNivel === 'Todos los niveles' || o.nivel === this.state.filtroOportNivel) &&
+      (this.state.filtroOportTurno === 'Todos los turnos' || o.turno === this.state.filtroOportTurno) &&
+      (!this.state.filtroOportTexto || (o.title + ' ' + o.inst).toLowerCase().includes(this.state.filtroOportTexto.toLowerCase()))
+    );
+  }
+  setVistaBuscar(v) { this.setState({ docBuscarVista: v, mapaOfertaIdx: null }); }
+  seleccionarEnMapa(i) { this.setState(st => ({ mapaOfertaIdx: st.mapaOfertaIdx === i ? null : i })); }
+  cerrarMapaSel() { this.setState({ mapaOfertaIdx: null }); }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
   confirmarBajaCuenta() { this.setState({ showBajaCuenta: false }); this.avisoCuenta('Baja registrada. Tu plan sigue activo hasta el 10 de octubre.'); }
@@ -5129,7 +5219,7 @@ class Component extends DCLogic {
       cursoInputVal: this.state.cursoInputVal,
       updateCursoInput: (e) => this.setState({ cursoInputVal: e.target.value }),
       keyCursoInput: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addCurso(); } },
-      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, onVer: () => this.openCurso(c), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
+      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, fotoUrl: this.fotoDeSlot(c.fotoId), tieneFoto: !!this.fotoDeSlot(c.fotoId), sinFoto: !this.fotoDeSlot(c.fotoId), onVer: () => this.openCurso(c), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
       isEditandoCurso: this.state.cursoModalEditIdx !== null,
       isCreandoCurso: this.state.cursoModalEditIdx === null,
       cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
@@ -5419,12 +5509,46 @@ class Component extends DCLogic {
       goToPostulacionesFromOport: () => { this.closeOport(); this.go('docPostulaciones'); },
       showMyCv: this.state.showMyCv,
       toggleMyCv: () => this.toggleMyCv(),
-      oportunidadesMasList: this.state.oportunidadesMas.filter(o =>
-        (this.state.filtroOportCategoria === 'Todas las categorías' || o.categoria === this.state.filtroOportCategoria) &&
-        (this.state.filtroOportNivel === 'Todos los niveles' || o.nivel === this.state.filtroOportNivel) &&
-        (this.state.filtroOportTurno === 'Todos los turnos' || o.turno === this.state.filtroOportTurno) &&
-        (!this.state.filtroOportTexto || (o.title + ' ' + o.inst).toLowerCase().includes(this.state.filtroOportTexto.toLowerCase()))
-      ).map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleDocBuscarFavorito(o.title); }, favStyle: this.state.docBuscarFavoritos.includes(o.title) ? 'color:#F0B400' : 'color:#D8D6CE' })),
+      esVistaLista: this.state.docBuscarVista !== 'mapa',
+      esVistaMapa: this.state.docBuscarVista === 'mapa',
+      verBuscarLista: () => this.setVistaBuscar('lista'),
+      verBuscarMapa: () => this.setVistaBuscar('mapa'),
+      cerrarMapaSel: () => this.cerrarMapaSel(),
+      buscarVistaListaStyle: this.state.docBuscarVista !== 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
+      buscarVistaMapaStyle: this.state.docBuscarVista === 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
+      mapaLeyenda: [
+        { label: 'Docentes', color: '#DD553F' },
+        { label: 'Entrenadores', color: '#F0B400' },
+        { label: 'Guardavidas', color: '#82D8E9' },
+      ],
+      mapaZonas: Object.keys(this.ZONAS_MAPA).map(n => ({
+        nombre: n,
+        style: 'left:' + this.ZONAS_MAPA[n][0] + '%;top:' + (this.ZONAS_MAPA[n][1] + 6) + '%',
+      })),
+      mapaPines: (() => {
+        const usadas = {};
+        return this.oportunidadesFiltradas().map((o, i) => {
+          const base = this.ZONAS_MAPA[o.zona] || [50, 50];
+          const n = usadas[o.zona] = (usadas[o.zona] || 0) + 1;
+          // Varias ofertas en la misma zona se abren en abanico alrededor del punto.
+          const ang = (n - 1) * 2.4;
+          const rad = n === 1 ? 0 : 4.4;
+          const x = base[0] + Math.cos(ang) * rad;
+          const y = base[1] + Math.sin(ang) * rad;
+          const sel = this.state.mapaOfertaIdx === i;
+          return {
+            titulo: o.title + ' · ' + o.inst,
+            onClick: () => this.seleccionarEnMapa(i),
+            style: 'left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%;background:' + this.colorDeCategoria(o.categoria)
+              + (sel ? ';outline:3px solid rgba(22,33,79,.3);z-index:5' : ';z-index:2'),
+          };
+        });
+      })(),
+      mapaSel: this.state.mapaOfertaIdx != null
+        ? (() => { const o = this.oportunidadesFiltradas()[this.state.mapaOfertaIdx]; return o ? { ...o, onClick: () => this.openOport(o) } : null; })()
+        : null,
+      mapaSinSel: this.state.mapaOfertaIdx == null,
+      oportunidadesMasList: this.oportunidadesFiltradas().map(o => ({ ...o, onClick: () => this.openOport(o), onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleDocBuscarFavorito(o.title); }, favStyle: this.state.docBuscarFavoritos.includes(o.title) ? 'color:#F0B400' : 'color:#D8D6CE' })),
       isDocBuscarTabFavoritos: this.state.docBuscarTab === 'favoritos',
       setDocBuscarTabFavoritos: () => this.setDocBuscarTab('favoritos'),
       docBuscarTabFavoritosStyle: this.state.docBuscarTab === 'favoritos' ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
@@ -5434,7 +5558,7 @@ class Component extends DCLogic {
       updateFiltroOportCategoria: (e) => this.setState({ filtroOportCategoria: e.target.value }),
       updateFiltroOportNivel: (e) => this.setState({ filtroOportNivel: e.target.value }),
       updateFiltroOportTurno: (e) => this.setState({ filtroOportTurno: e.target.value }),
-      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link, hasDireccion: !!this.state.selectedCurso.direccion, inscritosCount: (this.state.selectedCurso.inscritos || []).length, hasInscritos: (this.state.selectedCurso.inscritos || []).length > 0, sinInscritos: (this.state.selectedCurso.inscritos || []).length === 0, inscritosList: (this.state.selectedCurso.inscritos || []).map(n => ({ nombre: n, iniciales: String(n).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() })), onEditarCurso: () => this.editCursoDetallado(this.state.cursosDetallados.findIndex(c => c.fotoId === this.state.selectedCurso.fotoId)), inscripto: this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), notInscripto: !this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), onToggleInscripcion: () => this.toggleInscripcion(this.state.selectedCurso.fotoId) } : null,
+      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fotoUrl: this.fotoDeSlot(this.state.selectedCurso.fotoId), tieneFoto: !!this.fotoDeSlot(this.state.selectedCurso.fotoId), sinFoto: !this.fotoDeSlot(this.state.selectedCurso.fotoId), fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link, hasDireccion: !!this.state.selectedCurso.direccion, inscritosCount: (this.state.selectedCurso.inscritos || []).length, hasInscritos: (this.state.selectedCurso.inscritos || []).length > 0, sinInscritos: (this.state.selectedCurso.inscritos || []).length === 0, inscritosList: (this.state.selectedCurso.inscritos || []).map(n => ({ nombre: n, iniciales: String(n).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() })), onEditarCurso: () => this.editCursoDetallado(this.state.cursosDetallados.findIndex(c => c.fotoId === this.state.selectedCurso.fotoId)), inscripto: this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), notInscripto: !this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), onToggleInscripcion: () => this.toggleInscripcion(this.state.selectedCurso.fotoId) } : null,
       closeCurso: () => this.closeCurso(),
       appSidebarOpen: this.state.appSidebarOpen,
       toggleAppSidebar: () => this.toggleAppSidebar(),
@@ -5561,7 +5685,8 @@ class Component extends DCLogic {
       selectedInst: (() => {
         const i = this.state.institucionesList.find(x => x.key === this.state.selectedInstKey);
         if (!i) return null;
-        return { ...i, iniciales: i.nombre.split(' ').filter(w => w.length > 2 || /[A-Z]/.test(w[0])).slice(0, 2).map(w => w[0]).join('').toUpperCase(), sinBusquedas: i.busquedasList.length === 0, busquedasPlural: i.busquedas === 1 ? '' : 's', onToggleSaved: () => this.toggleSavedInst(i.key), savedLabel: i.saved ? '★ Guardada' : '☆ Guardar',
+        const portadaUrl = this.fotoDeSlot(i.key + '-portada') || i.portada || '';
+        return { ...i, portadaUrl, tienePortada: !!portadaUrl, sinPortada: !portadaUrl, iniciales: i.nombre.split(' ').filter(w => w.length > 2 || /[A-Z]/.test(w[0])).slice(0, 2).map(w => w[0]).join('').toUpperCase(), sinBusquedas: i.busquedasList.length === 0, busquedasPlural: i.busquedas === 1 ? '' : 's', onToggleSaved: () => this.toggleSavedInst(i.key), savedLabel: i.saved ? '★ Guardada' : '☆ Guardar',
           cvSent: this.state.cvSentTo.includes(i.key),
           cvSentLabel: this.state.cvSentTo.includes(i.key) ? '✓ CV enviado' : 'Enviar mi CV',
           cvSentStyle: this.state.cvSentTo.includes(i.key) ? 'background:#E7F5EF;color:#1E7A4C' : 'background:#DD553F',

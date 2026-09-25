@@ -33,6 +33,32 @@
     };
   }
 
+  // Lectura para la propia app: pantallas donde la foto se muestra pero no se
+  // edita (un docente ve el curso que cargó la institución) usan un <img>
+  // común en vez de un <image-slot>, y necesitan la URL guardada.
+  // La caché se invalida comparando el texto crudo, no con una bandera: el
+  // runtime ejecuta este script dos veces y cada copia tendría su propia
+  // bandera, así que una escritura no limpiaba la caché de la otra.
+  var cacheRaw = null;
+  var cacheObj = {};
+  function leerTodo() {
+    var raw = '';
+    try { raw = localStorage.getItem(CLAVE) || ''; } catch (e) {}
+    if (raw === cacheRaw) return cacheObj;
+    cacheRaw = raw;
+    try { cacheObj = raw ? JSON.parse(raw) : {}; } catch (e) { cacheObj = {}; }
+    return cacheObj;
+  }
+  window.udImageSlots = {
+    get: function (id) {
+      if (!id) return null;
+      var v = leerTodo()[id];
+      if (!v) return null;
+      var url = typeof v === 'string' ? v : v.u;
+      return typeof url === 'string' && url.indexOf('data:image/') === 0 ? url : null;
+    },
+  };
+
   var fetchOriginal = window.fetch.bind(window);
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
