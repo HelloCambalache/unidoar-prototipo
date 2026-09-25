@@ -2481,10 +2481,22 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Fecha de finalización</span><input class="cbl-input" type="date" value="{{ cursoModalFechaFinal }}" onChange="{{ updateCursoModalFechaFinal }}"></div>
 </div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Horario</span>
-<div class="udoar-btn-row" style="display:flex;gap:8px">
-<select class="cbl-select" style="flex:1 1 170px;min-width:0" value="{{ cursoModalDias }}" onChange="{{ updateCursoModalDias }}"><option value="">Días</option><option>Lunes a viernes</option><option>Lunes y miércoles</option><option>Martes y jueves</option><option>Miércoles</option><option>Viernes</option><option>Sábados</option><option>Domingos</option><option>Sábados y domingos</option><option>A confirmar</option></select>
-<select class="cbl-select" style="flex:1 1 170px;min-width:0" value="{{ cursoModalFranja }}" onChange="{{ updateCursoModalFranja }}"><option value="">Franja horaria</option><option>8:00 a 10:00</option><option>9:00 a 11:00</option><option>10:00 a 12:00</option><option>11:00 a 13:00</option><option>14:00 a 16:00</option><option>15:00 a 17:00</option><option>16:00 a 18:00</option><option>17:00 a 19:00</option><option>18:00 a 20:00</option><option>19:00 a 21:00</option></select>
+<sc-if value="{{ cursoSinFechas }}" hint-placeholder-val="{{ true }}"><div style="border:1px dashed #C9C6C0;border-radius:8px;padding:14px 16px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Elegí la fecha de inicio y la de finalización: los días del curso se cargan solos y después ponés el horario de cada uno.</div></sc-if>
+<sc-if value="{{ cursoConFechas }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid #E3E1DC;border-radius:8px;background:#fff;overflow:hidden">
+<sc-for list="{{ cursoDiasList }}" as="d" hint-placeholder-count="3">
+<div class="udoar-dia-row" style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #E3E1DC;flex-wrap:wrap">
+<label class="cbl-checkbox" style="cursor:pointer;flex:1 1 140px;min-width:0;margin:0" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.activo }}" hint-placeholder-val="{{ true }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.nombre }}</label>
+<div style="display:flex;align-items:center;gap:8px;{{ d.controlesStyle }}">
+<select class="cbl-select" style="flex:0 1 118px;min-width:0" value="{{ d.desde }}" onChange="{{ d.onDesde }}"><option>7:00</option><option>7:30</option><option>8:00</option><option>8:30</option><option>9:00</option><option>9:30</option><option>10:00</option><option>10:30</option><option>11:00</option><option>11:30</option><option>12:00</option><option>12:30</option><option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option><option>17:00</option><option>17:30</option><option>18:00</option><option>18:30</option><option>19:00</option><option>19:30</option><option>20:00</option><option>20:30</option><option>21:00</option><option>21:30</option><option>22:00</option></select>
+<span style="font:400 13px/1 Inter,sans-serif;color:#6B706C;flex:none">a</span>
+<select class="cbl-select" style="flex:0 1 118px;min-width:0" value="{{ d.hasta }}" onChange="{{ d.onHasta }}"><option>7:00</option><option>7:30</option><option>8:00</option><option>8:30</option><option>9:00</option><option>9:30</option><option>10:00</option><option>10:30</option><option>11:00</option><option>11:30</option><option>12:00</option><option>12:30</option><option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option><option>17:00</option><option>17:30</option><option>18:00</option><option>18:30</option><option>19:00</option><option>19:30</option><option>20:00</option><option>20:30</option><option>21:00</option><option>21:30</option><option>22:00</option></select>
 </div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:8px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">Queda como: <b style="color:#3D423E;font-weight:600">{{ cursoHorarioResumen }}</b></div>
+</sc-if>
 </div>
 <sc-if value="{{ isCursoModalPresencial }}" hint-placeholder-val="{{ true }}"><div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Dirección</span><input class="cbl-input" placeholder="Ej. Av. Maipú 1234, Vicente López" value="{{ cursoModalDireccion }}" onChange="{{ updateCursoModalDireccion }}"></div></sc-if>
 <sc-if value="{{ isCursoModalOnline }}" hint-placeholder-val="{{ false }}"><div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Link para conectarse</span><input class="cbl-input" placeholder="Ej. https://meet.google.com/..." value="{{ cursoModalLink }}" onChange="{{ updateCursoModalLink }}"></div></sc-if>
@@ -4400,7 +4412,7 @@ class Component extends DCLogic {
       { fotoId: 'curso1', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
-    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', cursoModalHorario: '', cursoModalDias: '', cursoModalFranja: '', cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
+    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
       { fecha: '12 AGO', titulo: 'Abrimos inscripción a Nivel Inicial 2027', texto: 'Sala de 3, 4 y 5 con jornada extendida. Las entrevistas con familias arrancan en septiembre; vamos a necesitar dos maestras más para febrero.' },
@@ -4490,9 +4502,85 @@ class Component extends DCLogic {
       cursoModalTitulo: c.titulo || '', cursoModalSubtitulo: c.subtitulo || '', cursoModalTexto: c.descripcion || '',
       cursoModalModalidad: c.modalidad || 'Presencial', cursoModalProfesor: c.profesor || '',
       cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
-      cursoModalHorario: c.horario || '', cursoModalDias: this.partirHorario(c.horario).dias, cursoModalFranja: this.partirHorario(c.horario).franja,
+      cursoModalHorario: c.horario || '',
+      cursoModalDias: c.diasHorario || this.recalcularDiasCurso(c.fechaInicio, c.fechaFinal, null, this.horarioPorDefecto(c.horario)),
       cursoModalFotoId: c.fotoId || this.nuevoFotoId(),
       cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
+  }
+  // ── Horario del curso ──────────────────────────────────────────────────
+  // Los días salen del rango de fechas: se recorre día por día (hasta una
+  // semana, que ya cubre todos los casos) y se queda con los de la semana
+  // que caen adentro, en orden lunes → domingo.
+  diasDelRango(inicio, fin) {
+    if (!inicio) return [];
+    const d1 = new Date(inicio + 'T00:00:00');
+    const d2 = new Date((fin || inicio) + 'T00:00:00');
+    if (isNaN(d1) || isNaN(d2) || d2 < d1) return [];
+    const vistos = new Set();
+    const cursor = new Date(d1);
+    while (cursor <= d2 && vistos.size < 7) {
+      vistos.add(cursor.getDay());
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return [1, 2, 3, 4, 5, 6, 0].filter(n => vistos.has(n));
+  }
+  // Mantiene lo que ya eligió la persona para los días que siguen en el rango
+  // y da de alta los nuevos con el horario por defecto.
+  recalcularDiasCurso(inicio, fin, previos, defecto) {
+    const base = defecto || { desde: '9:00', hasta: '11:00' };
+    const anterior = previos || {};
+    const dias = {};
+    for (const n of this.diasDelRango(inicio, fin)) {
+      dias[n] = anterior[n] || { activo: true, desde: base.desde, hasta: base.hasta };
+    }
+    return dias;
+  }
+  NOMBRES_DIA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  // "Lunes a viernes 9:00 a 11:00 · Sábados 10:00 a 12:00"
+  armarHorario(dias) {
+    const activos = [1, 2, 3, 4, 5, 6, 0].filter(n => dias[n] && dias[n].activo);
+    if (!activos.length) return 'A confirmar';
+    const grupos = [];
+    for (const n of activos) {
+      const rango = dias[n].desde + ' a ' + dias[n].hasta;
+      const g = grupos.find(x => x.rango === rango);
+      if (g) g.dias.push(n); else grupos.push({ rango, dias: [n] });
+    }
+    return grupos.map(g => {
+      const set = g.dias.join(',');
+      let etiqueta;
+      if (set === '1,2,3,4,5') etiqueta = 'Lunes a viernes';
+      else if (set === '1,2,3,4,5,6') etiqueta = 'Lunes a sábado';
+      else if (set === '1,2,3,4,5,6,0') etiqueta = 'Todos los días';
+      else if (set === '6,0') etiqueta = 'Sábados y domingos';
+      else {
+        // En castellano los días van en minúscula; sólo arranca en mayúscula
+        // el primero, porque abre la frase.
+        const nombres = g.dias.map((n, idx) => idx === 0 ? this.NOMBRES_DIA[n] : this.NOMBRES_DIA[n].toLowerCase());
+        etiqueta = nombres.length === 1 ? nombres[0]
+          : nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1];
+      }
+      return etiqueta + ' ' + g.rango;
+    }).join(' · ');
+  }
+  // Al editar un curso viejo no hay días guardados: se reconstruyen desde las
+  // fechas y se hereda la franja que tuviera el texto ("17:00 a 19:00").
+  horarioPorDefecto(horario) {
+    const m = /(\d{1,2}:\d{2})\s*a\s*(\d{1,2}:\d{2})/.exec(horario || '');
+    return m ? { desde: m[1], hasta: m[2] } : { desde: '9:00', hasta: '11:00' };
+  }
+  setCursoFecha(campo, valor) {
+    this.setState(st => {
+      const inicio = campo === 'cursoModalFechaInicio' ? valor : st.cursoModalFechaInicio;
+      const fin = campo === 'cursoModalFechaFinal' ? valor : st.cursoModalFechaFinal;
+      return { [campo]: valor, cursoModalDias: this.recalcularDiasCurso(inicio, fin, st.cursoModalDias) };
+    });
+  }
+  toggleDiaCurso(n) {
+    this.setState(st => ({ cursoModalDias: { ...st.cursoModalDias, [n]: { ...st.cursoModalDias[n], activo: !st.cursoModalDias[n].activo } } }));
+  }
+  setHoraDiaCurso(n, campo, valor) {
+    this.setState(st => ({ cursoModalDias: { ...st.cursoModalDias, [n]: { ...st.cursoModalDias[n], [campo]: valor } } }));
   }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
@@ -4514,15 +4602,7 @@ class Component extends DCLogic {
   // El id de la foto se reserva al abrir el formulario, así el <image-slot> del
   // alta y el de la tarjeta guardada apuntan al mismo lugar y la foto se ve.
   nuevoFotoId() { return 'curso_' + Date.now(); }
-  partirHorario(h) {
-    const franjas = ['8:00 a 10:00','9:00 a 11:00','10:00 a 12:00','11:00 a 13:00','14:00 a 16:00','15:00 a 17:00','16:00 a 18:00','17:00 a 19:00','18:00 a 20:00','19:00 a 21:00'];
-    const texto = (h || '').trim();
-    const franja = franjas.find(f => texto.endsWith(f)) || '';
-    const dias = franja ? texto.slice(0, texto.length - franja.length).trim() : texto;
-    return { dias, franja };
-  }
-  armarHorario(dias, franja) { return [dias, franja].filter(Boolean).join(' '); }
-  openCursoModal() { this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: null, cursoModalFotoId: this.nuevoFotoId(), cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalDias: '', cursoModalFranja: '', cursoModalLink: '', cursoModalDireccion: '' }); }
+  openCursoModal() { this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: null, cursoModalFotoId: this.nuevoFotoId(), cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalLink: '', cursoModalDireccion: '' }); }
   closeCursoModal() { this.setState({ screen: 'instCursos' }); }
   formatFechas(inicio, fin) {
     if (!inicio) return 'Fecha a confirmar';
@@ -4557,7 +4637,7 @@ class Component extends DCLogic {
   removeTeamMember(key) { this.setState(s => ({ teamMembers: s.teamMembers.filter(m => m.key !== key) })); }
   saveCursoModal() {
     this.setState(s => {
-      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: this.armarHorario(s.cursoModalDias, s.cursoModalFranja), fotoId: s.cursoModalFotoId || this.nuevoFotoId(), link: s.cursoModalLink, direccion: s.cursoModalDireccion };
+      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: this.armarHorario(s.cursoModalDias), diasHorario: s.cursoModalDias, fotoId: s.cursoModalFotoId || this.nuevoFotoId(), link: s.cursoModalLink, direccion: s.cursoModalDireccion };
       const i = s.cursoModalEditIdx;
       if (i !== null && s.cursosDetallados[i]) {
         const lista = s.cursosDetallados.slice();
@@ -4965,8 +5045,8 @@ class Component extends DCLogic {
       cursoModalPresencialStyle: this.state.cursoModalModalidad === 'Presencial' ? 'background:#16214F;color:#fff' : 'background:#F0EFEA;color:#6B706C',
       cursoModalOnlineStyle: this.state.cursoModalModalidad === 'Online' ? 'background:#16214F;color:#fff' : 'background:#F0EFEA;color:#6B706C',
       cursoModalProfesor: this.state.cursoModalProfesor, updateCursoModalProfesor: (e) => this.setState({ cursoModalProfesor: e.target.value }),
-      cursoModalFechaInicio: this.state.cursoModalFechaInicio, updateCursoModalFechaInicio: (e) => this.setState({ cursoModalFechaInicio: e.target.value }),
-      cursoModalFechaFinal: this.state.cursoModalFechaFinal, updateCursoModalFechaFinal: (e) => this.setState({ cursoModalFechaFinal: e.target.value }),
+      cursoModalFechaInicio: this.state.cursoModalFechaInicio, updateCursoModalFechaInicio: (e) => this.setCursoFecha('cursoModalFechaInicio', e.target.value),
+      cursoModalFechaFinal: this.state.cursoModalFechaFinal, updateCursoModalFechaFinal: (e) => this.setCursoFecha('cursoModalFechaFinal', e.target.value),
       cursoModalHorario: this.state.cursoModalHorario, updateCursoModalHorario: (e) => this.setState({ cursoModalHorario: e.target.value }),
       cuentaNombre: this.state.cuentaNombre, updateCuentaNombre: (e) => this.setState({ cuentaNombre: e.target.value }),
       cuentaApellido: this.state.cuentaApellido, updateCuentaApellido: (e) => this.setState({ cuentaApellido: e.target.value }),
@@ -4980,8 +5060,18 @@ class Component extends DCLogic {
       confirmarBajaCuenta: () => this.confirmarBajaCuenta(),
       guardarCuenta: () => this.guardarCuenta(),
       cursoModalFotoId: this.state.cursoModalFotoId,
-      cursoModalDias: this.state.cursoModalDias, updateCursoModalDias: (e) => this.setState({ cursoModalDias: e.target.value }),
-      cursoModalFranja: this.state.cursoModalFranja, updateCursoModalFranja: (e) => this.setState({ cursoModalFranja: e.target.value }),
+      cursoSinFechas: Object.keys(this.state.cursoModalDias || {}).length === 0,
+      cursoConFechas: Object.keys(this.state.cursoModalDias || {}).length > 0,
+      cursoHorarioResumen: this.armarHorario(this.state.cursoModalDias || {}),
+      cursoDiasList: [1, 2, 3, 4, 5, 6, 0].filter(n => (this.state.cursoModalDias || {})[n]).map(n => {
+        const d = this.state.cursoModalDias[n];
+        return { nombre: this.NOMBRES_DIA[n], activo: !!d.activo, desde: d.desde, hasta: d.hasta,
+          boxStyle: d.activo ? 'background:#16214F;border-color:#16214F;color:#fff' : '',
+          controlesStyle: d.activo ? '' : 'opacity:.4;pointer-events:none',
+          onToggle: () => this.toggleDiaCurso(n),
+          onDesde: (e) => this.setHoraDiaCurso(n, 'desde', e.target.value),
+          onHasta: (e) => this.setHoraDiaCurso(n, 'hasta', e.target.value) };
+      }),
       sinCursoSeleccionado: !this.state.selectedCurso,
       cursoModalLink: this.state.cursoModalLink, updateCursoModalLink: (e) => this.setState({ cursoModalLink: e.target.value }),
       sendInviteEquipo: () => this.sendInviteEquipo(),
