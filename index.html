@@ -1141,9 +1141,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <h1 style="margin:0 0 8px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Subí tu documentación</h1>
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong style="color:#1F2421">Sin verificar</strong> hasta que revisemos la documentación — normalmente en menos de 48 horas.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
-<div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">DNI — frente y dorso</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">dni-frente.jpg · dni-dorso.jpg</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
-<div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ docCredencial }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">{{ docCredencialDetalle }}</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
-<div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">Certificado de buena conducta</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">buena-conducta.pdf · vence a los 6 meses de emitido</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
+<sc-for list="{{ docDocsList }}" as="d" hint-placeholder-count="3">
+<div class="udoar-doc-row" style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px;flex-wrap:wrap"><span style="width:30px;height:30px;flex:none;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1 1 160px;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalle }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">Cargado</span></sc-if><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ d.onSubir }}">{{ d.boton }}</button></div>
+</sc-for>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
 <span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnb3 }}">← Volver al paso 3</span>
@@ -1152,12 +1152,12 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 <div style="flex:1 1 260px;min-width:240px;background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
 <div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Nivel de tu perfil</div>
-<div style="font:600 17px/1.2 Inter,sans-serif;margin-bottom:6px">Completo <span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;font-size:10px">✓ verificado</span></div>
-<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:16px"><div style="width:100%;height:100%;background:#1E7A4C"></div></div>
+<div style="font:600 17px/1.2 Inter,sans-serif;margin-bottom:6px">{{ docNivelPerfil }} <span class="cbl-badge" style="{{ docNivelBadgeStyle }}">{{ docNivelBadge }}</span></div>
+<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:16px"><div style="height:100%;background:#1E7A4C;{{ docNivelBarraStyle }}"></div></div>
 <div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1.45 Inter,sans-serif">
-<div class="udoar-btn-row" style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Básico</strong><br><span style="color:#6B706C">Podés postularte y las instituciones te ven en el catálogo.</span></div></div>
-<div class="udoar-btn-row" style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Completo</strong><br><span style="color:#6B706C">Con experiencia, zonas y disponibilidad cargadas aparecés más arriba en las búsquedas.</span></div></div>
-<div class="udoar-btn-row" style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Verificado</strong><br><span style="color:#6B706C">Con DNI y título validados entrás en las búsquedas que piden "solo verificados".</span></div></div>
+<div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Básico</strong><br><span style="color:#6B706C">Podés postularte y las instituciones te ven en el catálogo.</span></div></div>
+<div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Completo</strong><br><span style="color:#6B706C">Con experiencia, zonas y disponibilidad cargadas aparecés más arriba en las búsquedas.</span></div></div>
+<div style="display:flex;gap:8px"><span style="{{ docVerificadoTickStyle }}">{{ docVerificadoTick }}</span><div><strong style="color:#1F2421">Verificado</strong><br><span style="color:#6B706C">Con el DNI y {{ docCredencialMin }} validados entrás en las búsquedas que piden "solo verificados".</span></div></div>
 </div>
 </div>
 </div>
@@ -3504,18 +3504,18 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <h1 style="margin:0 0 6px;font:600 19px/1.25 Inter,sans-serif;letter-spacing:-.018em">Subí tu documentación</h1>
 <p style="margin:0 0 16px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil se muestra como <b>Sin verificar</b> hasta que revisemos la documentación.</p>
 <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-<div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">DNI — frente y dorso</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
-<div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10L12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">{{ docCredencial }}</div><div style="font:400 11px/1.3 Inter,sans-serif;color:#6B706C">{{ docCredencialDetalleCorto }}</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
-<div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">Certificado de buena conducta</div><div style="font:400 11px/1.3 Inter,sans-serif;color:#6B706C">Vence a los 6 meses de emitido</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
+<sc-for list="{{ docDocsList }}" as="d" hint-placeholder-count="3">
+<div onClick="{{ d.onSubir }}" style="cursor:pointer;border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10L12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 11px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalleCorto }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge cbl-badge--success" style="font-size:10px;flex:none">Cargado</span></sc-if><sc-if value="{{ d.vacio }}" hint-placeholder-val="{{ true }}"><span class="cbl-badge" style="font-size:10px;flex:none;background:#F0EFEA;color:#6B706C">Subir</span></sc-if></div>
+</sc-for>
 </div>
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:10px;padding:14px;margin-bottom:18px">
 <div style="font:600 10.5px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:8px">Nivel de tu perfil</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font:700 15px/1 Inter,sans-serif">Completo</span><span class="cbl-badge" style="background:#F0EFEA;color:#6B706C;font-size:10px">falta 1 documento</span></div>
-<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:10px"><div style="width:80%;height:100%;background:#4A9B6E"></div></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font:700 15px/1 Inter,sans-serif">{{ docNivelPerfil }}</span><span class="cbl-badge" style="{{ docNivelBadgeStyle }}">{{ docNivelFaltan }}</span></div>
+<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:10px"><div style="height:100%;background:#4A9B6E;{{ docNivelBarraStyle }}"></div></div>
 <div style="display:flex;flex-direction:column;gap:6px;font:400 12px/1.4 Inter,sans-serif;color:#3D423E">
 <div>✓ <b>Básico</b> — postulate y las instituciones te ven en el catálogo.</div>
 <div>✓ <b>Completo</b> — aparecés más arriba en las búsquedas.</div>
-<div style="color:#9AA09B">○ <b>Verificado</b> — con el certificado entrás en búsquedas "solo verificados".</div>
+<div style="{{ docVerificadoTickStyle }}">{{ docVerificadoTick }} <b>Verificado</b> — con la documentación validada entrás en búsquedas "solo verificados".</div>
 </div>
 </div>
 <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto">
@@ -4531,6 +4531,7 @@ class Component extends DCLogic {
     ],
     docBuscarVista: 'lista', mapaOfertaIdx: null,
     docCategoria: 'Docente',
+    docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
@@ -4839,16 +4840,19 @@ class Component extends DCLogic {
   // La categoría general del docente define qué credencial se le pide.
   CREDENCIALES = {
     'Docente': {
+      vacio: 'PDF del título o certificado analítico',
       nombre: 'Título docente',
       detalle: 'titulo-profesorado.pdf · la institución lo valida al contratarte',
       corto: 'La institución lo valida al contratarte',
     },
     'Entrenador/a': {
+      vacio: 'PDF de la certificación vigente',
       nombre: 'Certificación deportiva',
       detalle: 'certificacion-deportiva.pdf · de la federación o entidad que la emitió',
       corto: 'De la federación o entidad que la emitió',
     },
     'Guardavidas': {
+      vacio: 'PDF del carnet con la reválida del año',
       nombre: 'Carnet de guardavidas con reválida',
       detalle: 'revalida-2026.pdf · la reválida vence al cierre de la temporada',
       corto: 'La reválida vence al cierre de la temporada',
@@ -4856,6 +4860,18 @@ class Component extends DCLogic {
   };
   credencialDoc() { return this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente']; }
   setDocCategoria(c) { this.setState({ docCategoria: c }); }
+  // Documentación del alta: arranca vacía y se va cargando.
+  DOCS_ALTA = [
+    { key: 'dni', nombre: 'DNI — frente y dorso',
+      vacio: 'Foto o PDF del frente y del dorso',
+      archivo: 'dni-frente.jpg · dni-dorso.jpg' },
+    { key: 'credencial' },
+    { key: 'conducta', nombre: 'Certificado de buena conducta',
+      vacio: 'Lo emite el Registro Nacional de Reincidencia',
+      archivo: 'buena-conducta.pdf · vence a los 6 meses de emitido' },
+  ];
+  subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
+  docsAltaCompletos() { const d = this.state.docDocs; return !!(d.dni && d.credencial && d.conducta); }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
   confirmarBajaCuenta() { this.setState({ showBajaCuenta: false }); this.avisoCuenta('Baja registrada. Tu plan sigue activo hasta el 10 de octubre.'); }
@@ -5547,6 +5563,37 @@ class Component extends DCLogic {
       goToPostulacionesFromOport: () => { this.closeOport(); this.go('docPostulaciones'); },
       showMyCv: this.state.showMyCv,
       toggleMyCv: () => this.toggleMyCv(),
+      docCredencialMin: this.credencialDoc().nombre.charAt(0).toLowerCase() + this.credencialDoc().nombre.slice(1),
+      docDocsList: this.DOCS_ALTA.map(doc => {
+        const cred = this.credencialDoc();
+        const nombre = doc.key === 'credencial' ? cred.nombre : doc.nombre;
+        const vacio = doc.key === 'credencial' ? cred.vacio : doc.vacio;
+        const archivo = doc.key === 'credencial' ? cred.detalle : doc.archivo;
+        const cargado = !!this.state.docDocs[doc.key];
+        return {
+          nombre, cargado,
+          esDni: doc.key === 'dni', esCredencial: doc.key === 'credencial', esConducta: doc.key === 'conducta',
+          detalle: cargado ? archivo : vacio,
+          detalleCorto: cargado ? (doc.key === 'credencial' ? cred.corto : archivo) : vacio,
+          vacio: !cargado,
+          iconoStyle: cargado ? 'background:#E7F5EF;color:#1E7A4C' : 'background:#F3F2EE;color:#9AA09B',
+          boton: cargado ? 'Reemplazar' : 'Subir archivo',
+          onSubir: () => this.subirDocAlta(doc.key),
+        };
+      }),
+      docNivelPerfil: this.docsAltaCompletos() ? 'Completo' : 'Básico',
+      docNivelBadge: this.docsAltaCompletos() ? '✓ verificado' : 'sin verificar',
+      docNivelFaltan: (() => {
+        const faltan = ['dni', 'credencial', 'conducta'].filter(k => !this.state.docDocs[k]).length;
+        if (!faltan) return '✓ verificado';
+        return faltan === 1 ? 'falta 1 documento' : 'faltan ' + faltan + ' documentos';
+      })(),
+      docNivelBadgeStyle: this.docsAltaCompletos()
+        ? 'background:#E7F5EF;color:#1E7A4C;font-size:10px'
+        : 'background:#F0EFEA;color:#6B706C;font-size:10px',
+      docNivelBarraStyle: this.docsAltaCompletos() ? 'width:100%' : 'width:60%',
+      docVerificadoTick: this.docsAltaCompletos() ? '✓' : '○',
+      docVerificadoTickStyle: this.docsAltaCompletos() ? 'color:#1E7A4C' : 'color:#C9C6C0',
       docCredencial: this.credencialDoc().nombre,
       docCredencialDetalle: this.credencialDoc().detalle,
       docCredencialDetalleCorto: this.credencialDoc().corto,
