@@ -161,6 +161,21 @@ a:hover{color:#DD553F}
 .udoar-fade-a{animation:udoarTestiA .55s cubic-bezier(.22,.7,.3,1) both}
 .udoar-fade-b{animation:udoarTestiB .55s cubic-bezier(.22,.7,.3,1) both}
 @media (prefers-reduced-motion:reduce){.udoar-fade-a,.udoar-fade-b{animation:none}}
+@media (max-width:900px){
+.udoar-cat-nav{padding:0 20px !important}
+.udoar-cat-card{position:relative !important;right:auto !important;top:auto !important;width:auto !important;transform:none !important;margin-top:26px}
+.udoar-cat-ctas .cbl-btn{flex:1 1 auto;min-width:210px}
+.udoar-cat-grad{background:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.93) 55%,rgba(255,255,255,.7) 100%) !important}
+.udoar-cat-navlinks{display:none !important}
+.udoar-cat-pills{padding:12px 20px !important}
+.udoar-cat-hero{padding:44px 20px 56px !important;min-height:0 !important}
+.udoar-cat-herotext{max-width:100% !important}
+.udoar-cat-h1{font-size:34px !important}
+}
+@media (max-width:560px){
+.udoar-cat-h1{font-size:27px !important}
+.udoar-cat-nav img{height:40px !important}
+}
 .udoar-landing-hamburger{display:none}
 @media (max-width:760px){
 .udoar-nav-links,.udoar-nav-actions{display:none !important}
@@ -493,9 +508,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isEducadores }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #02042D">
+<div class="udoar-cat-nav" style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #02042D">
 <div style="display:flex;align-items:center;gap:9px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:52px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-cat-navlinks" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
 <div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
 <div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
@@ -504,17 +519,17 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
-<div style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
+<div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
 <span onClick="{{ goEducadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#DD553F;color:#fff;border:1px solid #DD553F;transition:background .15s">Docentes</span>
 <span onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Entrenadores</span>
 <span onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Guardavidas</span>
 </div>
-<div style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
+<div class="udoar-cat-hero" style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
 <div style="position:absolute;inset:0;z-index:0;background:url(&quot;assets/bgProfesores.png&quot;) center / cover no-repeat"></div>
-<div style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
-<div style="position:relative;z-index:1;max-width:calc(100% - 460px)">
+<div class="udoar-cat-grad" style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
+<div class="udoar-cat-herotext" style="position:relative;z-index:1;max-width:calc(100% - 460px)">
 <div style="display:flex;align-items:center;gap:9px;margin-bottom:20px"><span style="width:7px;height:7px;border-radius:999px;background:#DD553F"></span><span style="font:600 12px/1 Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#8A2F1A">Categoría · Educadores</span></div>
-<h1 style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Necesitás un profesor de Matemática o una maestra de grado para el lunes. No tres semanas de WhatsApp.</h1>
+<h1 class="udoar-cat-h1" style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Necesitás un profesor de Matemática o una maestra de grado para el lunes. No tres semanas de WhatsApp.</h1>
 <p style="margin:0 0 22px;font:400 17px/1.6 Inter,sans-serif;color:#3D423E;max-width:50ch">Unidoar es el catálogo de docentes de tu zona —de Nivel Inicial a Terciario—, con identidad y título verificados, ordenados por afinidad. Sin comisión por contratación.</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px">
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Nivel Inicial</span>
@@ -525,9 +540,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Matemática</span>
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Idiomas</span>
 </div>
-<div style="display:flex;gap:12px"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F" onClick="{{ goSignup }}">Ver docentes de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
+<div class="udoar-cat-ctas" style="display:flex;gap:12px;flex-wrap:wrap"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F" onClick="{{ goSignup }}">Ver docentes de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
 </div>
-<div style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
+<div class="udoar-cat-card" style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:20px;box-shadow:0 6px 26px rgba(31,36,33,.07)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:9px;font:600 13px/1 Inter,sans-serif;color:#16214F"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Matemática · Secundario</div><span class="cbl-badge cbl-badge--success">19 en tu zona</span></div>
 <div style="display:flex;flex-direction:column;gap:10px">
@@ -594,9 +609,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isEntrenadores }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #04062F">
+<div class="udoar-cat-nav" style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #04062F">
 <div style="display:flex;align-items:center;gap:9px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:52px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-cat-navlinks" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
 <div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
 <div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
@@ -605,17 +620,17 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#F0B400;color:#1F2421" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
-<div style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
+<div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
 <span onClick="{{ goEducadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Profesores</span>
 <span onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#F0B400;color:#1F2421;border:1px solid #F0B400;transition:background .15s">Entrenadores</span>
 <span onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Guardavidas</span>
 </div>
-<div style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
+<div class="udoar-cat-hero" style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
 <div style="position:absolute;inset:0;z-index:0;background:url(&quot;assets/bgEntrenadores-fixed.jpg&quot;) center / cover no-repeat"></div>
-<div style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
-<div style="position:relative;z-index:1;max-width:calc(100% - 460px)">
+<div class="udoar-cat-grad" style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
+<div class="udoar-cat-herotext" style="position:relative;z-index:1;max-width:calc(100% - 460px)">
 <div style="display:flex;align-items:center;gap:9px;margin-bottom:20px"><span style="width:7px;height:7px;border-radius:999px;background:#F0B400"></span><span style="font:600 12px/1 Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#7A5900">Categoría · Entrenadores</span></div>
-<h1 style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Se te va un profe de sala el sábado. No tenés hasta el lunes.</h1>
+<h1 class="udoar-cat-h1" style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Se te va un profe de sala el sábado. No tenés hasta el lunes.</h1>
 <p style="margin:0 0 22px;font:400 17px/1.6 Inter,sans-serif;color:#3D423E;max-width:50ch">Unidoar conecta a tu gimnasio o club con entrenadores y profes de disciplina verificados de tu zona, disponibles por turno o por temporada.</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px">
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Personal trainer</span>
@@ -625,9 +640,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Yoga y pilates</span>
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Deportes de equipo</span>
 </div>
-<div style="display:flex;gap:12px"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#F0B400;color:#1F2421" onClick="{{ goSignup }}">Ver entrenadores de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
+<div class="udoar-cat-ctas" style="display:flex;gap:12px;flex-wrap:wrap"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#F0B400;color:#1F2421" onClick="{{ goSignup }}">Ver entrenadores de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
 </div>
-<div style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
+<div class="udoar-cat-card" style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:20px;box-shadow:0 6px 26px rgba(31,36,33,.07)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:9px;font:600 13px/1 Inter,sans-serif;color:#16214F"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Personal Trainer · San Isidro</div><span class="cbl-badge cbl-badge--success">15 en tu zona</span></div>
 <div style="display:flex;flex-direction:column;gap:10px">
@@ -694,9 +709,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isGuardavidas }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #04062F">
+<div class="udoar-cat-nav" style="display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; background-color: #04062F">
 <div style="display:flex;align-items:center;gap:9px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:52px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-cat-navlinks" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
 <div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
 <div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
@@ -705,17 +720,17 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DC2626;color:#fff" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
-<div style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
+<div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
 <span onClick="{{ goEducadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Profesores</span>
 <span onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#fff;color:#3D423E;border:1px solid #E3E1DC;transition:background .15s">Entrenadores</span>
 <span onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:8px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;background:#DC2626;color:#fff;border:1px solid #DC2626;transition:background .15s">Guardavidas</span>
 </div>
-<div style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
+<div class="udoar-cat-hero" style="padding:60px 40px 90px;position:relative;overflow:hidden;min-height:540px">
 <div style="position:absolute;inset:0;z-index:0;background:url(&quot;assets/bgGuardavidas-fixed.jpg&quot;) center / cover no-repeat"></div>
-<div style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
-<div style="position:relative;z-index:1;max-width:calc(100% - 460px)">
+<div class="udoar-cat-grad" style="position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,#fff 0%,rgba(255,255,255,.88) 30%,rgba(255,255,255,.45) 52%,rgba(255,255,255,0) 78%);pointer-events:none"></div>
+<div class="udoar-cat-herotext" style="position:relative;z-index:1;max-width:calc(100% - 460px)">
 <div style="display:flex;align-items:center;gap:9px;margin-bottom:20px"><span style="width:7px;height:7px;border-radius:999px;background:#DC2626"></span><span style="font:600 12px/1 Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#B91C1C">Categoría · Guardavidas</span></div>
-<h1 style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Abre la pileta el sábado y falta un guardavidas habilitado.</h1>
+<h1 class="udoar-cat-h1" style="margin:0 0 18px;font:600 46px/1.1 Inter,sans-serif;letter-spacing:-.026em;text-wrap:balance">Abre la pileta el sábado y falta un guardavidas habilitado.</h1>
 <p style="margin:0 0 22px;font:400 17px/1.6 Inter,sans-serif;color:#3D423E;max-width:50ch">Unidoar verifica la habilitación y la identidad de cada guardavidas y profesor de natación antes de mostrártelo. Perfiles listos para temporada corta.</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px">
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Pileta</span>
@@ -724,9 +739,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Mar</span>
 <span style="padding:6px 14px;border-radius:999px;font:600 12px/1 Inter,sans-serif;background:#fff;border:1px solid #E3E1DC;color:#3D423E">Profesor de natación</span>
 </div>
-<div style="display:flex;gap:12px"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DC2626;color:#fff" onClick="{{ goSignup }}">Ver guardavidas de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
+<div class="udoar-cat-ctas" style="display:flex;gap:12px;flex-wrap:wrap"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DC2626;color:#fff" onClick="{{ goSignup }}">Ver guardavidas de mi zona</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ goSignup }}">Hablar con un socio</button></div>
 </div>
-<div style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
+<div class="udoar-cat-card" style="position:absolute;top:50%;right:40px;width:380px;z-index:2;transform:translateY(-50%)">
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:20px;box-shadow:0 6px 26px rgba(31,36,33,.07)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="display:flex;align-items:center;gap:9px;font:600 13px/1 Inter,sans-serif;color:#16214F"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Guardavidas · Escobar</div><span class="cbl-badge cbl-badge--success">9 en tu zona</span></div>
 <div style="display:flex;flex-direction:column;gap:10px">
