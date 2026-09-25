@@ -153,6 +153,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/institucion/cuenta",
+      "destination": "/index.html"
+    },
+    {
       "source": "/institucion/busquedas",
       "destination": "/index.html"
     },

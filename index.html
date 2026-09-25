@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -53,6 +53,7 @@
 <datalist id="zonasSuggestions"><option value="Vicente López"></option><option value="Olivos"></option><option value="Martínez"></option><option value="San Isidro"></option><option value="Boulogne"></option><option value="Núñez"></option><option value="Tigre"></option><option value="Nordelta"></option><option value="Munro"></option><option value="Florida"></option><option value="Villa Adelina"></option><option value="Palermo"></option><option value="Belgrano"></option></datalist>
 <link rel="stylesheet" href="_ds/design-system-f87763ef-190c-425f-b703-e11a0398c0b2/styles.css">
 <script src="_ds/design-system-f87763ef-190c-425f-b703-e11a0398c0b2/_ds_bundle.js"></script>
+<script src="./image-slot-store.js"></script>
 <script src="./image-slot.js"></script>
 <style>
 body{margin:0;background:#EDEBE5;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -1420,7 +1421,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ selectedCurso }}" hint-placeholder-val="{{ false }}">
 <span onClick="{{ closeCurso }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px">‹ Volver a cursos</span>
 <div style="max-width:1000px">
-<image-slot id="{{ selectedCurso.fotoId }}-full" shape="rounded" style="width:100%;height:380px" placeholder="Foto del curso"></image-slot>
+<image-slot id="{{ selectedCurso.fotoId }}" shape="rounded" style="width:100%;height:380px" placeholder="Foto del curso"></image-slot>
 <div style="margin-top:22px">
 <h1 style="margin:0 0 4px;font:600 28px/1.25 Inter,sans-serif;letter-spacing:-.018em">{{ selectedCurso.titulo }}</h1>
 <sc-if value="{{ selectedCurso.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:500 15px/1.3 Inter,sans-serif;color:#16214F;margin-bottom:18px">{{ selectedCurso.subtitulo }}</div></sc-if>
@@ -1814,6 +1815,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="font:600 13px/1.3 Inter,sans-serif;margin-bottom:5px">Plan Fundador</div>
 <div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C">Búsquedas ilimitadas. Renueva el 12/09.</div>
 </div>
+<div onClick="{{ goInstCuenta }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 10px;border-radius:8px;{{ navCuentaStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"></path></svg>Mi cuenta</div>
 <div onClick="{{ goLanding }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 10px;border-radius:8px;font:500 13px/1 Inter,sans-serif;color:#6B706C;transition:background .15s,color .15s" style-hover="background:#F3E6E3;color:#DD553F"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>Cerrar sesión</div>
 </div>
 <div class="udoar-app-main" style="flex:1;padding:26px 28px;overflow:auto;display:flex;flex-direction:column">
@@ -2405,6 +2407,35 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-if>
 
 <sc-if value="{{ isInstCursos }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ selectedCurso }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCurso }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCurso }}" style="cursor:pointer">Mis cursos</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ selectedCurso.titulo }}</span></span></div>
+<div style="max-width:1000px">
+<image-slot id="{{ selectedCurso.fotoId }}" shape="rounded" style="width:100%;height:320px" placeholder="Foto del curso"></image-slot>
+<div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:22px;margin-bottom:18px">
+<div>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1 style="margin:0;font:600 28px/1.25 Inter,sans-serif;letter-spacing:-.018em">{{ selectedCurso.titulo }}</h1><span class="cbl-badge" style="{{ selectedCurso.modalidadStyle }}">{{ selectedCurso.modalidad }}</span></div>
+<sc-if value="{{ selectedCurso.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="margin-top:4px;font:500 15px/1.3 Inter,sans-serif;color:#16214F">{{ selectedCurso.subtitulo }}</div></sc-if>
+</div>
+<button class="cbl-btn cbl-btn--secondary" onClick="{{ selectedCurso.onEditarCurso }}">Editar curso</button>
+</div>
+<div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#9AA09B;margin-bottom:6px">Modalidad</div><div style="font:600 15px/1.3 Inter,sans-serif">{{ selectedCurso.modalidad }}</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#9AA09B;margin-bottom:6px">Dicta</div><div style="font:600 15px/1.3 Inter,sans-serif">{{ selectedCurso.profesor }}</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#9AA09B;margin-bottom:6px">Fechas</div><div style="font:600 15px/1.3 Inter,sans-serif">{{ selectedCurso.fechasLabel }}</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.05em;text-transform:uppercase;color:#9AA09B;margin-bottom:6px">Horario</div><div style="font:600 15px/1.3 Inter,sans-serif">{{ selectedCurso.horario }}</div></div>
+</div>
+<sc-if value="{{ selectedCurso.hasDireccion }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:14px;font:400 14px/1.5 Inter,sans-serif;color:#3D423E"><b style="font-weight:600">Dirección:</b> {{ selectedCurso.direccion }}</div></sc-if>
+<sc-if value="{{ selectedCurso.hasLink }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:14px;font:400 14px/1.5 Inter,sans-serif;color:#3D423E"><b style="font-weight:600">Link:</b> {{ selectedCurso.link }}</div></sc-if>
+<p style="margin:0 0 24px;font:400 15px/1.6 Inter,sans-serif;color:#3D423E;max-width:70ch">{{ selectedCurso.descripcion }}</p>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px;max-width:420px">
+<div style="font:600 15px/1 Inter,sans-serif;margin-bottom:12px">{{ selectedCurso.inscritosCount }} inscritos</div>
+<sc-if value="{{ selectedCurso.hasInscritos }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ selectedCurso.inscritosList }}" as="n" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:10px;font:400 14px/1.4 Inter,sans-serif;color:#3D423E"><span style="width:30px;height:30px;border-radius:999px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif;flex:none">{{ n.iniciales }}</span>{{ n.nombre }}</div></sc-for></div></sc-if>
+<sc-if value="{{ selectedCurso.sinInscritos }}" hint-placeholder-val="{{ true }}"><div style="font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todavía no se anotó nadie. Los docentes lo ven cuando entran a tu vitrina.</div></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sinCursoSeleccionado }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Mis cursos</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Cursos cortos o certificaciones que ofrecés. Los docentes los ven cuando entran a tu vitrina.</p></div><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ openCursoModal }}">+ Crear curso</button></div>
 <div style="display:flex;flex-direction:column;gap:14px;max-width:860px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="1">
@@ -2428,12 +2459,13 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-for>
 </div>
 </sc-if>
+</sc-if>
 
 <sc-if value="{{ isInstCrearCurso }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCursoModal }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCursoModal }}" style="cursor:pointer">Mis cursos</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ cursoFormTitulo }}</span></span></div>
 <h1 style="margin:0 0 20px;font:600 26px/1.2 Inter,sans-serif;letter-spacing:-.02em">{{ cursoFormTitulo }}</h1>
 <div style="max-width:640px">
-<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Foto del curso</span><image-slot id="cursoModalFoto" shape="rounded" style="width:100%;height:170px" placeholder="Foto del curso"></image-slot></div>
+<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Foto del curso</span><image-slot id="{{ cursoModalFotoId }}" shape="rounded" style="width:100%;height:170px" placeholder="Foto del curso"></image-slot></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Título</span><input class="cbl-input" placeholder="Ej. Curso de RCP y primeros auxilios" value="{{ cursoModalTitulo }}" onChange="{{ updateCursoModalTitulo }}"></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Subtítulo</span><input class="cbl-input" placeholder="Ej. Certificación con Cruz Roja" value="{{ cursoModalSubtitulo }}" onChange="{{ updateCursoModalSubtitulo }}"></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Descripción</span><textarea class="cbl-textarea" style="width:100%;min-height:90px" placeholder="Contá de qué se trata el curso" value="{{ cursoModalTexto }}" onChange="{{ updateCursoModalTexto }}"></textarea></div>
@@ -2448,7 +2480,12 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Fecha de inicio</span><input class="cbl-input" type="date" value="{{ cursoModalFechaInicio }}" onChange="{{ updateCursoModalFechaInicio }}"></div>
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Fecha de finalización</span><input class="cbl-input" type="date" value="{{ cursoModalFechaFinal }}" onChange="{{ updateCursoModalFechaFinal }}"></div>
 </div>
-<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Horario</span><input class="cbl-input" placeholder="Ej. Sábados 10:00 a 12:00" value="{{ cursoModalHorario }}" onChange="{{ updateCursoModalHorario }}"></div>
+<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Horario</span>
+<div class="udoar-btn-row" style="display:flex;gap:8px">
+<select class="cbl-select" style="flex:1 1 170px;min-width:0" value="{{ cursoModalDias }}" onChange="{{ updateCursoModalDias }}"><option value="">Días</option><option>Lunes a viernes</option><option>Lunes y miércoles</option><option>Martes y jueves</option><option>Miércoles</option><option>Viernes</option><option>Sábados</option><option>Domingos</option><option>Sábados y domingos</option><option>A confirmar</option></select>
+<select class="cbl-select" style="flex:1 1 170px;min-width:0" value="{{ cursoModalFranja }}" onChange="{{ updateCursoModalFranja }}"><option value="">Franja horaria</option><option>8:00 a 10:00</option><option>9:00 a 11:00</option><option>10:00 a 12:00</option><option>11:00 a 13:00</option><option>14:00 a 16:00</option><option>15:00 a 17:00</option><option>16:00 a 18:00</option><option>17:00 a 19:00</option><option>18:00 a 20:00</option><option>19:00 a 21:00</option></select>
+</div>
+</div>
 <sc-if value="{{ isCursoModalPresencial }}" hint-placeholder-val="{{ true }}"><div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Dirección</span><input class="cbl-input" placeholder="Ej. Av. Maipú 1234, Vicente López" value="{{ cursoModalDireccion }}" onChange="{{ updateCursoModalDireccion }}"></div></sc-if>
 <sc-if value="{{ isCursoModalOnline }}" hint-placeholder-val="{{ false }}"><div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Link para conectarse</span><input class="cbl-input" placeholder="Ej. https://meet.google.com/..." value="{{ cursoModalLink }}" onChange="{{ updateCursoModalLink }}"></div></sc-if>
 <div style="display:flex;gap:10px;margin-top:6px"><button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ closeCursoModal }}">Cancelar</button><button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F" onClick="{{ saveCursoModal }}">Guardar curso</button></div>
@@ -2657,6 +2694,42 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <span style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los cambios se publican en tu vitrina pública.</span>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px">Guardar cambios</button>
 </div>
+</sc-if>
+
+<sc-if value="{{ isInstCuenta }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ cuentaToastMsg }}" hint-placeholder-val="{{ false }}"><div style="position:fixed;top:20px;right:24px;z-index:70;background:#1F2421;color:#fff;padding:14px 20px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);font:500 13px/1.4 Inter,sans-serif;max-width:min(420px,90vw)">{{ cuentaToastMsg }}</div></sc-if>
+<h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Mi cuenta</h1>
+<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tus datos personales como responsable de la institución. No se muestran en la vitrina pública.</p>
+
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:640px;margin-bottom:16px">
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+<span style="width:52px;height:52px;border-radius:999px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 17px/1 Inter,sans-serif;flex:none">{{ cuentaIniciales }}</span>
+<div><div style="font:600 17px/1.2 Inter,sans-serif">{{ cuentaNombreCompleto }}</div><span class="cbl-badge cbl-badge--neutral" style="margin-top:4px">Dueño de la cuenta</span></div>
+</div>
+<div class="udoar-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+<div class="cbl-field"><span class="cbl-label">Nombre</span><input class="cbl-input" value="{{ cuentaNombre }}" onChange="{{ updateCuentaNombre }}"></div>
+<div class="cbl-field"><span class="cbl-label">Apellido</span><input class="cbl-input" value="{{ cuentaApellido }}" onChange="{{ updateCuentaApellido }}"></div>
+</div>
+<div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" value="{{ cuentaEmail }}" onChange="{{ updateCuentaEmail }}"></div>
+<div class="cbl-field" style="margin-bottom:18px"><span class="cbl-label">Teléfono</span><input class="cbl-input" type="tel" value="{{ cuentaTelefono }}" onChange="{{ updateCuentaTelefono }}"></div>
+<button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px" onClick="{{ guardarCuenta }}">Guardar cambios</button>
+</div>
+
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:640px">
+<div style="font:600 16px/1 Inter,sans-serif;margin-bottom:6px">Darse de baja</div>
+<p style="margin:0 0 16px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Se cancela la suscripción al final del período pagado, se despublican tus búsquedas y la vitrina deja de verse. Podés volver cuando quieras.</p>
+<button class="cbl-btn cbl-btn--secondary" style="border-color:#DC2626;color:#DC2626" style-hover="background:#DC2626;color:#fff" onClick="{{ toggleBajaCuenta }}">Darme de baja</button>
+</div>
+
+<sc-if value="{{ showBajaCuenta }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ toggleBajaCuenta }}" style="position:fixed;inset:0;background:rgba(22,33,79,.4);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+<div onClick="{{ stopPropagation }}" style="background:#fff;border-radius:10px;width:460px;max-width:100%;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.3)">
+<h2 style="margin:0 0 10px;font:600 18px/1.2 Inter,sans-serif">¿Querés darte de baja?</h2>
+<p style="margin:0 0 20px;font:400 14px/1.6 Inter,sans-serif;color:#6B706C">Tu plan sigue activo hasta el 10 de octubre. Después de esa fecha se despublican las 3 búsquedas abiertas y tu vitrina deja de aparecer en Unidoar.</p>
+<div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ toggleBajaCuenta }}">Mejor no</button><button class="cbl-btn cbl-btn--block" style="background:#DC2626;color:#fff" onClick="{{ confirmarBajaCuenta }}">Confirmar baja</button></div>
+</div>
+</div>
+</sc-if>
 </sc-if>
 
 <sc-if value="{{ isInstPlan }}" hint-placeholder-val="{{ false }}">
@@ -4327,7 +4400,7 @@ class Component extends DCLogic {
       { fotoId: 'curso1', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
-    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
+    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', cursoModalHorario: '', cursoModalDias: '', cursoModalFranja: '', cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
       { fecha: '12 AGO', titulo: 'Abrimos inscripción a Nivel Inicial 2027', texto: 'Sala de 3, 4 y 5 con jornada extendida. Las entrevistas con familias arrancan en septiembre; vamos a necesitar dos maestras más para febrero.' },
@@ -4413,12 +4486,18 @@ class Component extends DCLogic {
   addCursoDetallado() { this.setState(s => ({ cursosDetallados: [...s.cursosDetallados, { fotoId: 'curso' + (s.cursosDetallados.length + 1), titulo: 'Nuevo curso', descripcion: '' }] })); }
   editCursoDetallado(i) {
     const c = this.state.cursosDetallados[i] || {};
-    this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: i,
+    this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: i,
       cursoModalTitulo: c.titulo || '', cursoModalSubtitulo: c.subtitulo || '', cursoModalTexto: c.descripcion || '',
       cursoModalModalidad: c.modalidad || 'Presencial', cursoModalProfesor: c.profesor || '',
       cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
-      cursoModalHorario: c.horario || '', cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
+      cursoModalHorario: c.horario || '', cursoModalDias: this.partirHorario(c.horario).dias, cursoModalFranja: this.partirHorario(c.horario).franja,
+      cursoModalFotoId: c.fotoId || this.nuevoFotoId(),
+      cursoModalLink: c.link || '', cursoModalDireccion: c.direccion || '' });
   }
+  toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
+  avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
+  confirmarBajaCuenta() { this.setState({ showBajaCuenta: false }); this.avisoCuenta('Baja registrada. Tu plan sigue activo hasta el 10 de octubre.'); }
+  guardarCuenta() { this.avisoCuenta('Datos guardados'); }
   toggleNotif() { this.setState(s => ({ notifOpen: !s.notifOpen, notifTab: 'todas' })); }
   setNotifTab(t) { this.setState({ notifTab: t }); }
   marcarNotifsLeidas() {
@@ -4432,7 +4511,18 @@ class Component extends DCLogic {
     this.setState(s => ({ [campo]: s[campo].map(x => x.id === n.id ? { ...x, leida: true } : x) }));
   }
   setDocCursosTab(t) { this.setState({ docCursosTab: t }); }
-  openCursoModal() { this.setState({ screen: 'instCrearCurso', cursoModalEditIdx: null, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalLink: '' }); }
+  // El id de la foto se reserva al abrir el formulario, así el <image-slot> del
+  // alta y el de la tarjeta guardada apuntan al mismo lugar y la foto se ve.
+  nuevoFotoId() { return 'curso_' + Date.now(); }
+  partirHorario(h) {
+    const franjas = ['8:00 a 10:00','9:00 a 11:00','10:00 a 12:00','11:00 a 13:00','14:00 a 16:00','15:00 a 17:00','16:00 a 18:00','17:00 a 19:00','18:00 a 20:00','19:00 a 21:00'];
+    const texto = (h || '').trim();
+    const franja = franjas.find(f => texto.endsWith(f)) || '';
+    const dias = franja ? texto.slice(0, texto.length - franja.length).trim() : texto;
+    return { dias, franja };
+  }
+  armarHorario(dias, franja) { return [dias, franja].filter(Boolean).join(' '); }
+  openCursoModal() { this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: null, cursoModalFotoId: this.nuevoFotoId(), cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalDias: '', cursoModalFranja: '', cursoModalLink: '', cursoModalDireccion: '' }); }
   closeCursoModal() { this.setState({ screen: 'instCursos' }); }
   formatFechas(inicio, fin) {
     if (!inicio) return 'Fecha a confirmar';
@@ -4467,7 +4557,7 @@ class Component extends DCLogic {
   removeTeamMember(key) { this.setState(s => ({ teamMembers: s.teamMembers.filter(m => m.key !== key) })); }
   saveCursoModal() {
     this.setState(s => {
-      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: s.cursoModalHorario, link: s.cursoModalLink, direccion: s.cursoModalDireccion };
+      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: this.armarHorario(s.cursoModalDias, s.cursoModalFranja), fotoId: s.cursoModalFotoId || this.nuevoFotoId(), link: s.cursoModalLink, direccion: s.cursoModalDireccion };
       const i = s.cursoModalEditIdx;
       if (i !== null && s.cursosDetallados[i]) {
         const lista = s.cursosDetallados.slice();
@@ -4475,7 +4565,7 @@ class Component extends DCLogic {
         return { cursosDetallados: lista, screen: 'instCursos', cursoModalEditIdx: null };
       }
       return {
-        cursosDetallados: [...s.cursosDetallados, { fotoId: 'curso' + (s.cursosDetallados.length + 1) + '_' + Date.now(), ...campos, inscritos: [] }],
+        cursosDetallados: [...s.cursosDetallados, { ...campos, inscritos: [] }],
         screen: 'instCursos', cursoModalEditIdx: null,
       };
     });
@@ -4638,7 +4728,7 @@ class Component extends DCLogic {
   closeMember() { this.setState({ selectedMember: null }); }
 
   componentDidUpdate() { window.__udInst = this; if (window.__udSyncUrl) window.__udSyncUrl(this.state.screen); }
-  go(s) { this.setState(st => ({ screen: s, selectedCv: null, perfilFrom: s === 'instDocPerfil' ? st.screen : st.perfilFrom })); }
+  go(s) { this.setState(st => ({ screen: s, selectedCv: null, selectedCurso: null, perfilFrom: s === 'instDocPerfil' ? st.screen : st.perfilFrom })); }
   showAppToast(msg) { this.setState({ appToastMsg: msg }); clearTimeout(this._appToastTimer); this._appToastTimer = setTimeout(() => this.setState({ appToastMsg: '' }), 2200); }
   selectInstitucion() { this.setState({ screen: 'instOnb1' }); }
   selectDocente() { this.setState({ screen: 'docOnb1' }); }
@@ -4705,7 +4795,7 @@ class Component extends DCLogic {
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
       'docOnb1','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
-      'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','contacto',
+      'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','instCuenta','contacto',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
     const vals = {};
     for (const t of targets) {
@@ -4726,7 +4816,7 @@ class Component extends DCLogic {
     const isDocOnb = ['docOnb1', 'docOnb2', 'docOnb3', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
-    const isInst = ['instDashboard', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos', 'instCrearCurso', 'instBase'].includes(s);
+    const isInst = ['instDashboard', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos', 'instCrearCurso', 'instBase', 'instCuenta'].includes(s);
     const isInstOnb = ['instOnb1', 'instOnb2', 'instOnb3'].includes(s);
     const isBo = ['boVerif', 'boInst', 'boDocentes', 'boCobros', 'boOperacion', 'boDocDetalle', 'boInstDetalle', 'boCategorias', 'boCobroDetalle'].includes(s);
 
@@ -4813,7 +4903,7 @@ class Component extends DCLogic {
       cursoInputVal: this.state.cursoInputVal,
       updateCursoInput: (e) => this.setState({ cursoInputVal: e.target.value }),
       keyCursoInput: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addCurso(); } },
-      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, onVer: () => this.go('instVitrina'), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
+      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, onVer: () => this.openCurso(c), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
       isEditandoCurso: this.state.cursoModalEditIdx !== null,
       isCreandoCurso: this.state.cursoModalEditIdx === null,
       cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
@@ -4878,6 +4968,21 @@ class Component extends DCLogic {
       cursoModalFechaInicio: this.state.cursoModalFechaInicio, updateCursoModalFechaInicio: (e) => this.setState({ cursoModalFechaInicio: e.target.value }),
       cursoModalFechaFinal: this.state.cursoModalFechaFinal, updateCursoModalFechaFinal: (e) => this.setState({ cursoModalFechaFinal: e.target.value }),
       cursoModalHorario: this.state.cursoModalHorario, updateCursoModalHorario: (e) => this.setState({ cursoModalHorario: e.target.value }),
+      cuentaNombre: this.state.cuentaNombre, updateCuentaNombre: (e) => this.setState({ cuentaNombre: e.target.value }),
+      cuentaApellido: this.state.cuentaApellido, updateCuentaApellido: (e) => this.setState({ cuentaApellido: e.target.value }),
+      cuentaEmail: this.state.cuentaEmail, updateCuentaEmail: (e) => this.setState({ cuentaEmail: e.target.value }),
+      cuentaTelefono: this.state.cuentaTelefono, updateCuentaTelefono: (e) => this.setState({ cuentaTelefono: e.target.value }),
+      cuentaNombreCompleto: (this.state.cuentaNombre + ' ' + this.state.cuentaApellido).trim(),
+      cuentaIniciales: ((this.state.cuentaNombre[0] || '') + (this.state.cuentaApellido[0] || '')).toUpperCase(),
+      showBajaCuenta: this.state.showBajaCuenta,
+      cuentaToastMsg: this.state.cuentaToastMsg,
+      toggleBajaCuenta: () => this.toggleBajaCuenta(),
+      confirmarBajaCuenta: () => this.confirmarBajaCuenta(),
+      guardarCuenta: () => this.guardarCuenta(),
+      cursoModalFotoId: this.state.cursoModalFotoId,
+      cursoModalDias: this.state.cursoModalDias, updateCursoModalDias: (e) => this.setState({ cursoModalDias: e.target.value }),
+      cursoModalFranja: this.state.cursoModalFranja, updateCursoModalFranja: (e) => this.setState({ cursoModalFranja: e.target.value }),
+      sinCursoSeleccionado: !this.state.selectedCurso,
       cursoModalLink: this.state.cursoModalLink, updateCursoModalLink: (e) => this.setState({ cursoModalLink: e.target.value }),
       sendInviteEquipo: () => this.sendInviteEquipo(),
       showInviteToast2: this.state.showInviteToast2,
@@ -5093,7 +5198,7 @@ class Component extends DCLogic {
       updateFiltroOportCategoria: (e) => this.setState({ filtroOportCategoria: e.target.value }),
       updateFiltroOportNivel: (e) => this.setState({ filtroOportNivel: e.target.value }),
       updateFiltroOportTurno: (e) => this.setState({ filtroOportTurno: e.target.value }),
-      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link, inscripto: this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), notInscripto: !this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), onToggleInscripcion: () => this.toggleInscripcion(this.state.selectedCurso.fotoId) } : null,
+      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link, hasDireccion: !!this.state.selectedCurso.direccion, inscritosCount: (this.state.selectedCurso.inscritos || []).length, hasInscritos: (this.state.selectedCurso.inscritos || []).length > 0, sinInscritos: (this.state.selectedCurso.inscritos || []).length === 0, inscritosList: (this.state.selectedCurso.inscritos || []).map(n => ({ nombre: n, iniciales: String(n).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() })), onEditarCurso: () => this.editCursoDetallado(this.state.cursosDetallados.findIndex(c => c.fotoId === this.state.selectedCurso.fotoId)), inscripto: this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), notInscripto: !this.state.docInscripciones.includes(this.state.selectedCurso.fotoId), onToggleInscripcion: () => this.toggleInscripcion(this.state.selectedCurso.fotoId) } : null,
       closeCurso: () => this.closeCurso(),
       appSidebarOpen: this.state.appSidebarOpen,
       toggleAppSidebar: () => this.toggleAppSidebar(),
@@ -5514,6 +5619,7 @@ class Component extends DCLogic {
         };
       })(),
       navPlanStyle: s === 'instPlan' ? navOn : navOff,
+      navCuentaStyle: s === 'instCuenta' ? navOn : navOff,
       tabVerifColor: s === 'boVerif' ? '#fff' : 'rgba(255,255,255,.7)',
       tabInstColor: s === 'boInst' ? '#fff' : 'rgba(255,255,255,.7)',
       tabOpColor: s === 'boOperacion' ? '#fff' : 'rgba(255,255,255,.7)',
