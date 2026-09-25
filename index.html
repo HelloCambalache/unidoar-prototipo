@@ -1063,8 +1063,18 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-if>
 
 <sc-if value="{{ isDocOnb3 }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Revisá lo que cargamos</h1><span style="font:500 12px/1 Inter,sans-serif;color:#1E7A4C">9 de 11 campos completos</span></div>
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Revisá lo que cargamos</h1><span style="font:500 12px/1 Inter,sans-serif;color:#1E7A4C">9 de 12 campos completos</span></div>
 <p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tocá cualquier campo para corregirlo. Los campos con * son obligatorios.</p>
+<div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
+<div style="font:600 13px/1 Inter,sans-serif;margin-bottom:4px">¿Qué sos? *</div>
+<p style="margin:0 0 12px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">De esto depende qué documentación te vamos a pedir en el próximo paso.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{ docCategoriasList }}" as="c" hint-placeholder-count="3">
+<span onClick="{{ c.onPick }}" style="cursor:pointer;padding:9px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ c.style }}">{{ c.label }}</span>
+</sc-for>
+</div>
+<div style="margin-top:12px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">Te vamos a pedir <b style="color:#3D423E;font-weight:600">{{ docCredencial }}</b>.</div>
+</div>
 <div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
 <div style="font:600 13px/1 Inter,sans-serif;margin-bottom:14px">Datos personales</div>
 <div class="udoar-onb-2col" style="display:flex;gap:14px;margin-bottom:12px">
@@ -1132,7 +1142,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong style="color:#1F2421">Sin verificar</strong> hasta que revisemos la documentación — normalmente en menos de 48 horas.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
 <div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">DNI — frente y dorso</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">dni-frente.jpg · dni-dorso.jpg</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
-<div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">Título docente</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">titulo-profesorado.pdf · la institución lo valida al contratarte</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
+<div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ docCredencial }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">{{ docCredencialDetalle }}</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
 <div style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;background:#E7F5EF;display:inline-flex;align-items:center;justify-content:center;color:#1E7A4C"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">Certificado de buena conducta</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">buena-conducta.pdf · vence a los 6 meses de emitido</div></div><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Cargado</span><button class="cbl-btn cbl-btn--secondary cbl-btn--sm">Reemplazar</button></div>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
@@ -1763,7 +1773,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="display:flex;gap:26px;flex-wrap:wrap;font:400 13px/1 Inter,sans-serif">
 <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Identidad (DNI)</div>
 
-<div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Título docente</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>{{ docCredencial }}</div>
 <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Certificado de buena conducta</div>
 </div>
 </div>
@@ -3495,7 +3505,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <p style="margin:0 0 16px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil se muestra como <b>Sin verificar</b> hasta que revisemos la documentación.</p>
 <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
 <div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">DNI — frente y dorso</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
-<div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10L12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">Título docente</div><div style="font:400 11px/1.3 Inter,sans-serif;color:#6B706C">La institución lo valida al contratarte</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
+<div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10L12 5 2 10l10 5 10-5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">{{ docCredencial }}</div><div style="font:400 11px/1.3 Inter,sans-serif;color:#6B706C">{{ docCredencialDetalleCorto }}</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
 <div style="border:1px solid #E3E1DC;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;flex:none;border-radius:8px;background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></span><div style="flex:1;min-width:0"><div style="font:600 12.5px/1.3 Inter,sans-serif">Certificado de buena conducta</div><div style="font:400 11px/1.3 Inter,sans-serif;color:#6B706C">Vence a los 6 meses de emitido</div></div><span class="cbl-badge cbl-badge--success" style="font-size:10px">Cargado</span></div>
 </div>
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:10px;padding:14px;margin-bottom:18px">
@@ -3706,7 +3716,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="display:flex;flex-direction:column;gap:8px;font:400 12.5px/1.3 Inter,sans-serif">
 <div style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Identidad (DNI)</div>
 <div style="display:flex;align-items:center;gap:8px;color:#9A4A12"><span style="width:16px;height:16px;border-radius:999px;background:#F59332;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none;font:700 10px/1 Inter,sans-serif">!</span>Certificado de buena conducta <span onClick="{{ toggleMyCv }}" style="cursor:pointer;text-decoration:underline">· subir</span></div>
-<div style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Título docente</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:16px;height:16px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>{{ docCredencial }}</div>
 </div>
 </div>
 </div>
@@ -4520,6 +4530,7 @@ class Component extends DCLogic {
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
     docBuscarVista: 'lista', mapaOfertaIdx: null,
+    docCategoria: 'Docente',
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
@@ -4825,6 +4836,26 @@ class Component extends DCLogic {
   setVistaBuscar(v) { this.setState({ docBuscarVista: v, mapaOfertaIdx: null }); }
   seleccionarEnMapa(i) { this.setState(st => ({ mapaOfertaIdx: st.mapaOfertaIdx === i ? null : i })); }
   cerrarMapaSel() { this.setState({ mapaOfertaIdx: null }); }
+  // La categoría general del docente define qué credencial se le pide.
+  CREDENCIALES = {
+    'Docente': {
+      nombre: 'Título docente',
+      detalle: 'titulo-profesorado.pdf · la institución lo valida al contratarte',
+      corto: 'La institución lo valida al contratarte',
+    },
+    'Entrenador/a': {
+      nombre: 'Certificación deportiva',
+      detalle: 'certificacion-deportiva.pdf · de la federación o entidad que la emitió',
+      corto: 'De la federación o entidad que la emitió',
+    },
+    'Guardavidas': {
+      nombre: 'Carnet de guardavidas con reválida',
+      detalle: 'revalida-2026.pdf · la reválida vence al cierre de la temporada',
+      corto: 'La reválida vence al cierre de la temporada',
+    },
+  };
+  credencialDoc() { return this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente']; }
+  setDocCategoria(c) { this.setState({ docCategoria: c }); }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
   confirmarBajaCuenta() { this.setState({ showBajaCuenta: false }); this.avisoCuenta('Baja registrada. Tu plan sigue activo hasta el 10 de octubre.'); }
@@ -5516,6 +5547,16 @@ class Component extends DCLogic {
       goToPostulacionesFromOport: () => { this.closeOport(); this.go('docPostulaciones'); },
       showMyCv: this.state.showMyCv,
       toggleMyCv: () => this.toggleMyCv(),
+      docCredencial: this.credencialDoc().nombre,
+      docCredencialDetalle: this.credencialDoc().detalle,
+      docCredencialDetalleCorto: this.credencialDoc().corto,
+      docCategoriasList: Object.keys(this.CREDENCIALES).map(c => ({
+        label: c,
+        style: this.state.docCategoria === c
+          ? 'background:#16214F;color:#fff'
+          : 'background:#F0EFEA;color:#3D423E',
+        onPick: () => this.setDocCategoria(c),
+      })),
       esVistaLista: this.state.docBuscarVista !== 'mapa',
       esVistaMapa: this.state.docBuscarVista === 'mapa',
       verBuscarLista: () => this.setVistaBuscar('lista'),
