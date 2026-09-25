@@ -2505,7 +2505,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-if>
 
 <sc-if value="{{ isInstBase }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div>
+<div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleImportCsv }}">Importar CSV</button><button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:11px 18px;font-size:14px" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div></div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
 <sc-for list="{{ baseStats }}" as="st" hint-placeholder-count="4">
@@ -2531,6 +2531,48 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </table>
 <sc-if value="{{ baseEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px;text-align:center;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">No hay perfiles que coincidan.</div></sc-if>
 </div>
+
+<sc-if value="{{ showImportCsv }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ toggleImportCsv }}" style="position:fixed;inset:0;background:rgba(22,33,79,.4);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+<div onClick="{{ stopPropagation }}" style="background:#fff;border-radius:10px;width:620px;max-width:100%;max-height:88vh;overflow:auto;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.3)">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><h2 style="margin:0;font:600 18px/1.2 Inter,sans-serif">Importar docentes desde CSV</h2><span onClick="{{ toggleImportCsv }}" style="cursor:pointer;color:#9AA09B">✕</span></div>
+<p style="margin:0 0 16px;font:400 13.5px/1.6 Inter,sans-serif;color:#6B706C">Una fila por docente. La primera fila son los títulos de columna: <b style="color:#3D423E;font-weight:600">nombre</b>, <b style="color:#3D423E;font-weight:600">email</b>, <b style="color:#3D423E;font-weight:600">disciplina</b> y, si querés, <b style="color:#3D423E;font-weight:600">origen</b> y <b style="color:#3D423E;font-weight:600">estado</b>. Acepta separador coma o punto y coma.</p>
+<div style="margin-bottom:16px"><span onClick="{{ descargarPlantillaCsv }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#16214F;border-bottom:1px solid #C9D3F0">Descargar plantilla de ejemplo</span></div>
+
+<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px dashed #C9C6BF;border-radius:8px;padding:26px 16px;margin-bottom:16px;cursor:pointer;text-align:center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16214F" stroke-width="1.7"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path><path d="M17 8l-5-5-5 5"></path><path d="M12 3v12"></path></svg>
+<span style="font:600 14px/1.3 Inter,sans-serif;color:#16214F">{{ csvEtiquetaArchivo }}</span>
+<span style="font:400 12.5px/1.4 Inter,sans-serif;color:#9AA09B">Archivo .csv</span>
+<input type="file" accept=".csv,text/csv" style="display:none" onChange="{{ leerArchivoCsv }}">
+</label>
+
+<sc-if value="{{ csvError }}" hint-placeholder-val="{{ false }}">
+<div style="background:#FDECEA;border:1px solid #F4C7C0;border-radius:8px;padding:12px 14px;margin-bottom:16px;font:400 13px/1.5 Inter,sans-serif;color:#B3261E">{{ csvError }}</div>
+</sc-if>
+
+<sc-if value="{{ csvTienePreview }}" hint-placeholder-val="{{ false }}">
+<div style="font:600 13px/1 Inter,sans-serif;margin-bottom:8px">{{ csvResumen }}</div>
+<div class="udoar-table-wrap" style="border:1px solid #E3E1DC;border-radius:8px;overflow:auto;margin-bottom:8px">
+<table class="cbl-table" style="min-width:520px">
+<thead><tr><th>Nombre</th><th>Email</th><th>Disciplina</th><th>Origen</th></tr></thead>
+<tbody>
+<sc-for list="{{ csvPreview }}" as="f" hint-placeholder-count="3">
+<tr><td style="font-weight:600">{{ f.name }}</td><td style="color:#6B706C">{{ f.email }}</td><td>{{ f.disciplina }}</td><td style="color:#6B706C">{{ f.origen }}</td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{ csvHayMas }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:16px;font:400 12.5px/1.4 Inter,sans-serif;color:#9AA09B">{{ csvHayMas }}</div></sc-if>
+<sc-if value="{{ csvHayDescartadas }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:16px;font:400 12.5px/1.4 Inter,sans-serif;color:#A8641F">{{ csvHayDescartadas }}</div></sc-if>
+</sc-if>
+
+<div class="udoar-btn-row" style="display:flex;gap:8px;margin-top:6px">
+<button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:11px 20px;font-size:14px;{{ csvImportarStyle }}" onClick="{{ importarCsv }}">{{ csvImportarLabel }}</button>
+<button class="cbl-btn cbl-btn--secondary" style="padding:11px 20px;font-size:14px" onClick="{{ toggleImportCsv }}">Cancelar</button>
+</div>
+</div>
+</div>
+</sc-if>
 
 <sc-if value="{{ showAddBase }}" hint-placeholder-val="{{ false }}">
 <div onClick="{{ toggleAddBase }}" style="position:fixed;inset:0;background:rgba(22,33,79,.4);z-index:60;display:flex;align-items:center;justify-content:center">
@@ -4412,7 +4454,7 @@ class Component extends DCLogic {
       { fotoId: 'curso1', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
-    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
+    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
       { fecha: '12 AGO', titulo: 'Abrimos inscripción a Nivel Inicial 2027', texto: 'Sala de 3, 4 y 5 con jornada extendida. Las entrevistas con familias arrancan en septiembre; vamos a necesitar dos maestras más para febrero.' },
@@ -4581,6 +4623,110 @@ class Component extends DCLogic {
   }
   setHoraDiaCurso(n, campo, valor) {
     this.setState(st => ({ cursoModalDias: { ...st.cursoModalDias, [n]: { ...st.cursoModalDias[n], [campo]: valor } } }));
+  }
+  // ── Importación de docentes por CSV ────────────────────────────────────
+  // Parser propio, chico a propósito: separador coma o punto y coma, comillas
+  // dobles con "" como escape, y BOM de Excel.
+  parsearCsv(texto) {
+    const limpio = String(texto || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').trim();
+    if (!limpio) return { filas: [], descartadas: 0, error: 'El archivo está vacío.' };
+    const primera = limpio.split('\n')[0];
+    const sep = (primera.split(';').length > primera.split(',').length) ? ';' : ',';
+
+    const filas = [];
+    let campo = '', fila = [], entreComillas = false;
+    for (let i = 0; i < limpio.length; i++) {
+      const c = limpio[i];
+      if (entreComillas) {
+        if (c === '"') {
+          if (limpio[i + 1] === '"') { campo += '"'; i++; } else entreComillas = false;
+        } else campo += c;
+      } else if (c === '"') entreComillas = true;
+      else if (c === sep) { fila.push(campo); campo = ''; }
+      else if (c === '\n') { fila.push(campo); filas.push(fila); fila = []; campo = ''; }
+      else campo += c;
+    }
+    fila.push(campo); filas.push(fila);
+
+    const normalizar = (t) => String(t || '').trim().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const alias = {
+      name: ['nombre', 'nombre y apellido', 'nombre completo', 'docente', 'apellido y nombre'],
+      email: ['email', 'mail', 'correo', 'correo electronico', 'e-mail'],
+      disciplina: ['disciplina', 'materia', 'asignatura', 'especialidad'],
+      origen: ['origen', 'procedencia'],
+      estado: ['estado', 'situacion'],
+    };
+    const cabecera = (filas.shift() || []).map(normalizar);
+    const col = {};
+    for (const campoDestino in alias) {
+      col[campoDestino] = cabecera.findIndex(h => alias[campoDestino].includes(h));
+    }
+    if (col.name < 0) {
+      return { filas: [], descartadas: 0, error: 'No encontré la columna "nombre" en la primera fila del archivo.' };
+    }
+
+    const origenesValidos = ['Se postuló', 'Envió CV', 'Cargado manualmente'];
+    const dato = (f, i) => (i >= 0 && f[i] != null ? String(f[i]).trim() : '');
+    const salida = [];
+    let descartadas = 0;
+    for (const f of filas) {
+      if (!f.length || f.every(x => !String(x || '').trim())) continue;
+      const nombre = dato(f, col.name);
+      if (!nombre) { descartadas++; continue; }
+      const origenCrudo = dato(f, col.origen);
+      const origen = origenesValidos.find(o => normalizar(o) === normalizar(origenCrudo)) || 'Cargado manualmente';
+      salida.push({
+        name: nombre,
+        email: dato(f, col.email) || '—',
+        disciplina: dato(f, col.disciplina) || '—',
+        origen,
+        estado: dato(f, col.estado) || 'Sin contactar',
+        busqueda: '—',
+        fecha: this.fechaDeHoy(),
+        photo: 'assets/hero-docente.jpg',
+      });
+    }
+    if (!salida.length) return { filas: [], descartadas, error: 'No encontré ninguna fila con nombre cargado.' };
+    return { filas: salida, descartadas, error: '' };
+  }
+  fechaDeHoy() {
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return dd + '/' + mm + '/' + d.getFullYear();
+  }
+  toggleImportCsv() {
+    this.setState(st => ({ showImportCsv: !st.showImportCsv, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '' }));
+  }
+  leerArchivoCsv(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      const r = this.parsearCsv(lector.result);
+      this.setState({ csvFilas: r.filas, csvDescartadas: r.descartadas, csvError: r.error, csvArchivo: file.name });
+    };
+    lector.onerror = () => this.setState({ csvError: 'No se pudo leer el archivo.', csvArchivo: file.name });
+    lector.readAsText(file, 'utf-8');
+  }
+  importarCsv() {
+    const filas = this.state.csvFilas || [];
+    if (!filas.length) return;
+    this.setState(st => ({
+      baseExtra: [...filas, ...(st.baseExtra || [])],
+      showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', baseTab: 'Todos',
+    }));
+  }
+  descargarPlantillaCsv() {
+    const csv = 'nombre,email,disciplina,origen,estado\n'
+      + 'Laura Gómez,laura.gomez@mail.com,Matemática,Cargado manualmente,Sin contactar\n'
+      + 'Juan Pérez,juan.perez@mail.com,Inglés,Envió CV,Nuevo\n';
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = 'plantilla-docentes.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
@@ -5690,6 +5836,20 @@ class Component extends DCLogic {
           baseEmpty: list.length === 0,
           baseQuery: this.state.baseQuery || '',
           updateBaseQuery: e => this.setState({ baseQuery: e.target.value }),
+          showImportCsv: !!this.state.showImportCsv,
+          toggleImportCsv: () => this.toggleImportCsv(),
+          leerArchivoCsv: (e) => this.leerArchivoCsv(e),
+          importarCsv: () => this.importarCsv(),
+          descargarPlantillaCsv: () => this.descargarPlantillaCsv(),
+          csvEtiquetaArchivo: this.state.csvArchivo || 'Elegí el archivo',
+          csvError: this.state.csvError || '',
+          csvTienePreview: (this.state.csvFilas || []).length > 0,
+          csvPreview: (this.state.csvFilas || []).slice(0, 5),
+          csvResumen: (this.state.csvFilas || []).length === 1 ? 'Se va a importar 1 docente' : 'Se van a importar ' + (this.state.csvFilas || []).length + ' docentes',
+          csvHayMas: (this.state.csvFilas || []).length > 5 ? 'Y ' + ((this.state.csvFilas || []).length - 5) + ' más.' : '',
+          csvHayDescartadas: this.state.csvDescartadas ? this.state.csvDescartadas + (this.state.csvDescartadas === 1 ? ' fila se descarta porque no tiene nombre.' : ' filas se descartan porque no tienen nombre.') : '',
+          csvImportarLabel: (this.state.csvFilas || []).length ? 'Importar ' + (this.state.csvFilas || []).length + ' docentes' : 'Importar',
+          csvImportarStyle: (this.state.csvFilas || []).length ? '' : 'opacity:.45;pointer-events:none',
           showAddBase: !!this.state.showAddBase,
           toggleAddBase: () => this.setState(st => ({ showAddBase: !st.showAddBase })),
           baseNewName: this.state.baseNewName || '',
