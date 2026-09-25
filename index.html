@@ -155,6 +155,12 @@ a:hover{color:#DD553F}
 .udoar-dark-grid-bg{background-image:linear-gradient(rgba(255,255,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.09) 1px,transparent 1px);background-size:46px 46px;mask-image:radial-gradient(ellipse 85% 70% at 50% 0%,#000 35%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 85% 70% at 50% 0%,#000 35%,transparent 100%)}
 .udoar-sec-dark .udoar-tipos-marquee{-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
 @media (max-width:900px){.udoar-sec-dark{padding:52px 24px !important}.udoar-sec-dark h2{font-size:30px !important}}
+.udoar-testi{will-change:opacity,transform}
+@keyframes udoarTestiA{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes udoarTestiB{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.udoar-fade-a{animation:udoarTestiA .55s cubic-bezier(.22,.7,.3,1) both}
+.udoar-fade-b{animation:udoarTestiB .55s cubic-bezier(.22,.7,.3,1) both}
+@media (prefers-reduced-motion:reduce){.udoar-fade-a,.udoar-fade-b{animation:none}}
 .udoar-landing-hamburger{display:none}
 @media (max-width:760px){
 .udoar-nav-links,.udoar-nav-actions{display:none !important}
@@ -562,13 +568,21 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </div>
 <div style="padding:60px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC">
-<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #E3E1DC;border-radius:16px;padding:44px 48px;text-align:center;box-shadow:0 10px 30px rgba(31,36,33,.08);position:relative">
-<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#DD553F;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 4px 10px rgba(221,85,63,.35)">"</span>
-<span style="width:56px;height:56px;margin:8px auto 18px;border-radius:999px;background-image:url({{ testimonial.foto }});background-size:cover;background-position:center;display:inline-block;flex:none"></span>
-<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:16px">"{{ testimonial.quote }}"</div>
-<div style="font:600 13px/1 Inter,sans-serif;color:#6B706C;margin-bottom:22px">{{ testimonial.author }}</div>
+<div style="position:relative;max-width:640px;margin:0 auto">
+<div style="position:absolute;left:26px;right:26px;top:16px;bottom:-16px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.45"></div>
+<div style="position:absolute;left:13px;right:13px;top:8px;bottom:-8px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.75"></div>
+<div style="position:relative;background:#fff;border:1px solid #E3E1DC;border-radius:18px;padding:42px 46px 30px;text-align:center;box-shadow:0 16px 38px rgba(31,36,33,.10)">
+<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#DD553F;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 6px 14px #DD553F59">"</span>
+<div class="{{ testimonialAnim }}">
+<span style="width:60px;height:60px;margin:6px auto 14px;border-radius:999px;background-image:url({{ testimonial.foto }});background-size:cover;background-position:center;display:block;box-shadow:0 4px 12px rgba(31,36,33,.14)"></span>
+<div style="font:700 15px/1.2 Sora,Inter,sans-serif;letter-spacing:-.01em;color:#DD553F;margin-bottom:6px">{{ testimonial.name }}</div>
+<div style="display:flex;justify-content:center;gap:3px;margin-bottom:16px"><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg></div>
+<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:12px;text-wrap:balance">"{{ testimonial.quote }}"</div>
+<div style="font:400 13px/1.4 Inter,sans-serif;color:#9AA09B;margin-bottom:22px">{{ testimonial.role }}</div>
+</div>
 <div style="display:flex;justify-content:center;gap:8px">
 <sc-for list="{{ testimonialDots }}" as="d" hint-placeholder-count="3"><span onClick="{{ d.onClick }}" style="cursor:pointer;width:{{ d.size }};height:8px;border-radius:999px;background:{{ d.color }};transition:width .25s,background .25s"></span></sc-for>
+</div>
 </div>
 </div>
 </div>
@@ -630,13 +644,21 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="flex:1;padding:36px 32px;text-align:center"><div style="width:44px;height:44px;border-radius:50%;background:#7A59001a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7A5900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.8"></path></svg></div><div style="font:700 34px/1 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#7A5900">100%</div><div style="width:28px;height:3px;border-radius:2px;background:#7A5900;margin:10px auto 12px"></div><div style="font:400 14px/1.5 Inter,sans-serif;color:#6B706C">con DNI y título revisados a mano</div></div>
 </div>
 <div style="padding:60px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC">
-<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #E3E1DC;border-radius:16px;padding:44px 48px;text-align:center;box-shadow:0 10px 30px rgba(31,36,33,.08);position:relative">
-<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#F0B400;color:#1F2421;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 4px 10px rgba(240,180,0,.35)">"</span>
-<span style="width:56px;height:56px;margin:8px auto 18px;border-radius:999px;background-image:url({{ testimonialEntrenadores.foto }});background-size:cover;background-position:center;display:inline-block;flex:none"></span>
-<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:16px">"{{ testimonialEntrenadores.quote }}"</div>
-<div style="font:600 13px/1 Inter,sans-serif;color:#6B706C;margin-bottom:22px">{{ testimonialEntrenadores.author }}</div>
+<div style="position:relative;max-width:640px;margin:0 auto">
+<div style="position:absolute;left:26px;right:26px;top:16px;bottom:-16px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.45"></div>
+<div style="position:absolute;left:13px;right:13px;top:8px;bottom:-8px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.75"></div>
+<div style="position:relative;background:#fff;border:1px solid #E3E1DC;border-radius:18px;padding:42px 46px 30px;text-align:center;box-shadow:0 16px 38px rgba(31,36,33,.10)">
+<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#F0B400;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 6px 14px #F0B40059">"</span>
+<div class="{{ testimonialAnim }}">
+<span style="width:60px;height:60px;margin:6px auto 14px;border-radius:999px;background-image:url({{ testimonialEntrenadores.foto }});background-size:cover;background-position:center;display:block;box-shadow:0 4px 12px rgba(31,36,33,.14)"></span>
+<div style="font:700 15px/1.2 Sora,Inter,sans-serif;letter-spacing:-.01em;color:#F0B400;margin-bottom:6px">{{ testimonialEntrenadores.name }}</div>
+<div style="display:flex;justify-content:center;gap:3px;margin-bottom:16px"><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg></div>
+<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:12px;text-wrap:balance">"{{ testimonialEntrenadores.quote }}"</div>
+<div style="font:400 13px/1.4 Inter,sans-serif;color:#9AA09B;margin-bottom:22px">{{ testimonialEntrenadores.role }}</div>
+</div>
 <div style="display:flex;justify-content:center;gap:8px">
 <sc-for list="{{ testimonialDotsEntrenadores }}" as="d" hint-placeholder-count="3"><span onClick="{{ d.onClick }}" style="cursor:pointer;width:{{ d.size }};height:8px;border-radius:999px;background:{{ d.color }};transition:width .25s,background .25s"></span></sc-for>
+</div>
 </div>
 </div>
 </div>
@@ -721,13 +743,21 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="flex:1;padding:36px 32px;text-align:center"><div style="width:44px;height:44px;border-radius:50%;background:#DC26261a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.2l2.4 2.4 4.6-4.8"></path></svg></div><div style="font:700 34px/1 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#DC2626">100%</div><div style="width:28px;height:3px;border-radius:2px;background:#DC2626;margin:10px auto 12px"></div><div style="font:400 14px/1.5 Inter,sans-serif;color:#6B706C">con habilitación e identidad revisadas a mano</div></div>
 </div>
 <div style="padding:60px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC">
-<div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #E3E1DC;border-radius:16px;padding:44px 48px;text-align:center;box-shadow:0 10px 30px rgba(31,36,33,.08);position:relative">
-<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#DC2626;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 4px 10px rgba(220,38,38,.35)">"</span>
-<span style="width:56px;height:56px;margin:8px auto 18px;border-radius:999px;background-image:url({{ testimonialGuardavidas.foto }});background-size:cover;background-position:center;display:inline-block;flex:none"></span>
-<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:16px">"{{ testimonialGuardavidas.quote }}"</div>
-<div style="font:600 13px/1 Inter,sans-serif;color:#6B706C;margin-bottom:22px">{{ testimonialGuardavidas.author }}</div>
+<div style="position:relative;max-width:640px;margin:0 auto">
+<div style="position:absolute;left:26px;right:26px;top:16px;bottom:-16px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.45"></div>
+<div style="position:absolute;left:13px;right:13px;top:8px;bottom:-8px;background:#fff;border:1px solid #E3E1DC;border-radius:18px;opacity:.75"></div>
+<div style="position:relative;background:#fff;border:1px solid #E3E1DC;border-radius:18px;padding:42px 46px 30px;text-align:center;box-shadow:0 16px 38px rgba(31,36,33,.10)">
+<span style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:999px;background:#DC2626;color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 26px/1 Georgia,serif;box-shadow:0 6px 14px #DC262659">"</span>
+<div class="{{ testimonialAnim }}">
+<span style="width:60px;height:60px;margin:6px auto 14px;border-radius:999px;background-image:url({{ testimonialGuardavidas.foto }});background-size:cover;background-position:center;display:block;box-shadow:0 4px 12px rgba(31,36,33,.14)"></span>
+<div style="font:700 15px/1.2 Sora,Inter,sans-serif;letter-spacing:-.01em;color:#DC2626;margin-bottom:6px">{{ testimonialGuardavidas.name }}</div>
+<div style="display:flex;justify-content:center;gap:3px;margin-bottom:16px"><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="#F59332"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5-5.8-3.05-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"></path></svg></div>
+<div style="font:400 20px/1.5 Inter,sans-serif;color:#1F2421;margin-bottom:12px;text-wrap:balance">"{{ testimonialGuardavidas.quote }}"</div>
+<div style="font:400 13px/1.4 Inter,sans-serif;color:#9AA09B;margin-bottom:22px">{{ testimonialGuardavidas.role }}</div>
+</div>
 <div style="display:flex;justify-content:center;gap:8px">
 <sc-for list="{{ testimonialDotsGuardavidas }}" as="d" hint-placeholder-count="3"><span onClick="{{ d.onClick }}" style="cursor:pointer;width:{{ d.size }};height:8px;border-radius:999px;background:{{ d.color }};transition:width .25s,background .25s"></span></sc-for>
+</div>
 </div>
 </div>
 </div>
@@ -4530,9 +4560,9 @@ class Component extends DCLogic {
     window.__udInst = this;
     const s = this.state.screen;
     const testimonials = [
-      { quote: 'Cubrimos una licencia de Matemática en dos días. Antes tardábamos semanas.', author: 'Marina Costa, Vicedirectora · Colegio San Andrés del Norte', foto: 'assets/persona-f5.jpg' },
-      { quote: 'Publicamos la búsqueda un lunes y el jueves ya teníamos entrevistas agendadas.', author: 'Esteban Roldán, Director · Instituto Vicente López', foto: 'assets/persona-m4.jpg' },
-      { quote: 'Nos sirvió sobre todo para las suplencias urgentes: antes eran puro WhatsApp.', author: 'Carla Núñez, Coordinadora · Colegio del Árbol', foto: 'assets/persona-f1.jpg' },
+      { quote: 'Cubrimos una licencia de Matemática en dos días. Antes tardábamos semanas.', name: 'Marina Costa', role: 'Vicedirectora · Colegio San Andrés del Norte', author: 'Marina Costa, Vicedirectora · Colegio San Andrés del Norte', foto: 'assets/persona-f5.jpg' },
+      { quote: 'Publicamos la búsqueda un lunes y el jueves ya teníamos entrevistas agendadas.', name: 'Esteban Roldán', role: 'Director · Instituto Vicente López', author: 'Esteban Roldán, Director · Instituto Vicente López', foto: 'assets/persona-m4.jpg' },
+      { quote: 'Nos sirvió sobre todo para las suplencias urgentes: antes eran puro WhatsApp.', name: 'Carla Núñez', role: 'Coordinadora · Colegio del Árbol', author: 'Carla Núñez, Coordinadora · Colegio del Árbol', foto: 'assets/persona-f1.jpg' },
     ];
     const testimonial = testimonials[this.state.testimonialIdx];
     const testimonialDots = testimonials.map((t, i) => ({
@@ -4541,9 +4571,9 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#DD553F' : '#E3E1DC',
     }));
     const testimonialsEntrenadores = [
-      { quote: 'Cubrimos un profe de sala en tres días, con dos opciones para elegir.', author: 'Rodrigo Ianni, Director deportivo · Club Náutico Olivos', foto: 'assets/persona-m1.jpg' },
-      { quote: 'Nos sirvió sobre todo para las bajas de último momento antes de temporada.', author: 'Vanina Pardo, Coordinadora · Gimnasio Full Body', foto: 'assets/persona-f2.jpg' },
-      { quote: 'Vimos títulos y certificaciones antes de la primera entrevista.', author: 'Martín Curcio, Encargado · Club Atlético Ribera', foto: 'assets/persona-m3.jpg' },
+      { quote: 'Cubrimos un profe de sala en tres días, con dos opciones para elegir.', name: 'Rodrigo Ianni', role: 'Director deportivo · Club Náutico Olivos', author: 'Rodrigo Ianni, Director deportivo · Club Náutico Olivos', foto: 'assets/persona-m1.jpg' },
+      { quote: 'Nos sirvió sobre todo para las bajas de último momento antes de temporada.', name: 'Vanina Pardo', role: 'Coordinadora · Gimnasio Full Body', author: 'Vanina Pardo, Coordinadora · Gimnasio Full Body', foto: 'assets/persona-f2.jpg' },
+      { quote: 'Vimos títulos y certificaciones antes de la primera entrevista.', name: 'Martín Curcio', role: 'Encargado · Club Atlético Ribera', author: 'Martín Curcio, Encargado · Club Atlético Ribera', foto: 'assets/persona-m3.jpg' },
     ];
     const testimonialEntrenadores = testimonialsEntrenadores[this.state.testimonialIdx];
     const testimonialDotsEntrenadores = testimonialsEntrenadores.map((t, i) => ({
@@ -4552,9 +4582,9 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#F0B400' : '#E3E1DC',
     }));
     const testimonialsGuardavidas = [
-      { quote: 'Encontramos un guardavidas habilitado dos días antes de abrir la pileta.', author: 'Lucía Ferrer, Encargada · Natatorio Sol de Mayo', foto: 'assets/persona-f3.jpg' },
-      { quote: 'La verificación de habilitación nos ahorró un dolor de cabeza en plena temporada.', author: 'Gonzalo Prat, Director · Club San Fernando', foto: 'assets/persona-m2.jpg' },
-      { quote: 'Cubrimos los tres turnos de fin de semana sin depender de un solo contacto.', author: 'Marina Suárez, Coordinadora · Colonia Vicente López', foto: 'assets/persona-f4.jpg' },
+      { quote: 'Encontramos un guardavidas habilitado dos días antes de abrir la pileta.', name: 'Lucía Ferrer', role: 'Encargada · Natatorio Sol de Mayo', author: 'Lucía Ferrer, Encargada · Natatorio Sol de Mayo', foto: 'assets/persona-f3.jpg' },
+      { quote: 'La verificación de habilitación nos ahorró un dolor de cabeza en plena temporada.', name: 'Gonzalo Prat', role: 'Director · Club San Fernando', author: 'Gonzalo Prat, Director · Club San Fernando', foto: 'assets/persona-m2.jpg' },
+      { quote: 'Cubrimos los tres turnos de fin de semana sin depender de un solo contacto.', name: 'Marina Suárez', role: 'Coordinadora · Colonia Vicente López', author: 'Marina Suárez, Coordinadora · Colonia Vicente López', foto: 'assets/persona-f4.jpg' },
     ];
     const testimonialGuardavidas = testimonialsGuardavidas[this.state.testimonialIdx];
     const testimonialDotsGuardavidas = testimonialsGuardavidas.map((t, i) => ({
@@ -4720,6 +4750,7 @@ class Component extends DCLogic {
         barraStyle: 'width:' + c.progreso + '%;height:6px;background:' + (c.progreso === 100 ? '#1E7A4C' : '#97125F'),
         progresoLabel: c.progreso + '%',
       })),
+      testimonialAnim: this.state.testimonialIdx % 2 === 0 ? 'udoar-testi udoar-fade-a' : 'udoar-testi udoar-fade-b',
       addCursoDetallado: () => this.addCursoDetallado(),
       showCursoModal: this.state.showCursoModal,
       openCursoModal: () => this.openCursoModal(),
