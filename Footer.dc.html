@@ -47,8 +47,10 @@
 <span onClick="{{ goDoc }}" style="cursor:pointer" style-hover="color:#82D8E9">Flujo docente</span>
 <span onClick="{{ goInst }}" style="cursor:pointer" style-hover="color:#82D8E9">Flujo institución</span>
 <span onClick="{{ goBo }}" style="cursor:pointer" style-hover="color:#82D8E9">Backoffice</span>
-<span onClick="{{ goDocApp }}" style="cursor:pointer" style-hover="color:#82D8E9">App docente</span>
-<span onClick="{{ goInstApp }}" style="cursor:pointer" style-hover="color:#82D8E9">App institución</span>
+<!-- Ocultos por pedido de Clara (2026-09-25): los items "App docente" y "App institucion"
+     de esta columna. Para restaurarlos, agregar dos spans con onClick goDocApp y goInstApp,
+     iguales en estilo a los de arriba. Ojo: no alcanza con comentarlos ni con display:none,
+     el runtime renderea igual el contenido de los comentarios y descarta ese style. -->
 </div>
 </div>
 </div>
