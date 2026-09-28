@@ -1249,12 +1249,6 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isDocOportunidades }}" hint-placeholder-val="{{ false }}">
 <h1 style="margin:0 0 6px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">9 búsquedas nuevas cerca tuyo</h1>
 <p style="margin:0 0 18px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Educación Física · Vicente López, Núñez, Tigre</p>
-<div class="udoar-tabs-row" style="display:flex;gap:8px;margin-bottom:18px">
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabTodasStyle }}" onClick="{{ setDocBuscarTabTodas }}">Todas</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabTodosStyle }}" onClick="{{ setDocBuscarTabTodos }}">Buscar trabajo</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabRapidaStyle }}" onClick="{{ setDocBuscarTabRapida }}">⚡ Suplencias</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ docBuscarTabFavoritosStyle }}" onClick="{{ setDocBuscarTabFavoritos }}">★ Favoritos</button>
-</div>
 <div class="udoar-inst-buscador-row udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
 <details class="udoar-inst-buscador-filters" style="flex:none;width:250px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
 <summary class="udoar-filters-sum">Filtros<svg class="udoar-filter-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></summary>
@@ -1293,6 +1287,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-for>
 </div>
 <div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px" onClick="{{ toggleDocSoloRapidas }}"><span style="font:500 13px/1 Inter,sans-serif">⚡ Sólo suplencias</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ docSoloRapidasTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ docSoloRapidasDotStyle }}"></span></span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onClick="{{ toggleSoloVerificados }}"><span style="font:500 13px/1 Inter,sans-serif">Solo instituciones verificadas</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloVerificadosTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloVerificadosDotStyle }}"></span></span></div>
 </div>
 </details>
@@ -1301,6 +1296,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
 <input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
 <select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
+<select class="cbl-select" style="max-width:150px" value="{{ filtroOportNivel }}" onChange="{{ updateFiltroOportNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Secundario</option><option>Adultos</option></select>
+<select class="cbl-select" style="max-width:150px" value="{{ filtroOportTurno }}" onChange="{{ updateFiltroOportTurno }}"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Mañana y tarde</option></select>
+<span onClick="{{ toggleDocSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docSoloFavoritosStyle }}">★ Favoritos</span>
 </div>
 <div class="udoar-btn-row" style="display:flex;gap:6px;margin-bottom:16px;background:#fff;border:1px solid #E3E1DC;border-radius:999px;padding:4px;width:max-content">
 <span onClick="{{ verBuscarLista }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ buscarVistaListaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>Lista</span>
@@ -1357,70 +1355,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </sc-if>
 </sc-if>
-<sc-if value="{{ isDocBuscarTabFavoritos }}" hint-placeholder-val="{{ false }}">
-<sc-if value="{{ docBuscarFavoritosEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:40px;text-align:center;color:#6B706C;font:400 14px/1.5 Inter,sans-serif">Todavía no guardaste ninguna oferta. Tocá la ★ en una tarjeta para guardarla.</div></sc-if>
-<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-<sc-for list="{{ docBuscarFavoritosList }}" as="o" hint-placeholder-count="0">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column">
-<div style="display:flex;gap:12px;margin-bottom:12px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ o.logo }});background-size:cover;background-position:center"></span><div style="flex:1;min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div><span onClick="{{ o.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;color:#F0B400">★</span></div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
-</div>
-<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Ver oferta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
-</div>
-</sc-for>
-</div>
-</sc-if>
-<sc-if value="{{ isDocBuscarTabTodos }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-<input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
-<select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
-<select class="cbl-select" style="max-width:150px" value="{{ filtroOportNivel }}" onChange="{{ updateFiltroOportNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Secundario</option><option>Adultos</option></select>
-<select class="cbl-select" style="max-width:150px" value="{{ filtroOportTurno }}" onChange="{{ updateFiltroOportTurno }}"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Mañana y tarde</option></select>
-</div>
-<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px">
-<sc-for list="{{ oportunidadesMasList }}" as="o" hint-placeholder-count="7">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
-<div style="display:flex;gap:12px;margin-bottom:12px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ o.logo }});background-size:cover;background-position:center"></span><div><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div></div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
-</div>
-<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Ver oferta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
-</div>
-</sc-for>
-</div>
-</sc-if>
-<sc-if value="{{ isDocBuscarTabRapida }}" hint-placeholder-val="{{ false }}">
-<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Suplencias e imprevistos que la institución necesita cubrir en las próximas horas. Postulate rápido: suelen responder antes.</p>
-<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-<input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia">
-<select class="cbl-select" style="max-width:170px"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
-<select class="cbl-select" style="max-width:150px"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
-<select class="cbl-select" style="max-width:150px"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Contraturno</option></select>
-</div>
-<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-<div style="background:#fff;border:1.5px solid #DD553F;border-radius:8px;padding:18px;display:flex;flex-direction:column">
-<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:12px;align-self:flex-start">Rápida · responder en 40 min</span>
-<div style="display:flex;gap:12px;margin-bottom:12px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 13px/1 Inter,sans-serif">SA</span><div><div style="font:600 15px/1.3 Inter,sans-serif">Ed. Física — Primario</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">Colegio San Andrés del Norte</div></div></div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>Vicente López</div>
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Mañana, 8 a 12 hs · sólo mañana</div>
-</div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F" onClick="{{ openOportEdfisica }}">Ver y postularme</button>
-</div>
-<div style="background:#fff;border:1.5px solid #F0B400;border-radius:8px;padding:18px;display:flex;flex-direction:column">
-<span class="cbl-badge" style="background:#FDF1C7;color:#7A5900;margin-bottom:12px;align-self:flex-start">Rápida · responder hoy</span>
-<div style="display:flex;gap:12px;margin-bottom:12px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background:#FDF1C7;color:#7A5900;display:inline-flex;align-items:center;justify-content:center;font:600 13px/1 Inter,sans-serif">FB</span><div><div style="font:600 15px/1.3 Inter,sans-serif">Profe de sala — Gimnasio</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">Full Body Olivos</div></div></div>
-<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>Olivos</div>
-<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Hoy, turno tarde · 3 hs</div>
-</div>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block">Ver y postularme</button>
-</div>
-</div>
-</sc-if>
+
 </div>
 </div>
 </sc-if>
@@ -1617,8 +1552,27 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por nombre" value="{{ filtroInstTexto }}" onChange="{{ updateFiltroInstTexto }}">
 <select class="cbl-select" style="max-width:190px" value="{{ filtroInstTipo }}" onChange="{{ updateFiltroInstTipo }}"><option>Todos los tipos</option><option>Colegio privado</option><option>Instituto privado</option><option>Club deportivo</option><option>Gimnasio</option><option>Jardín de infantes</option></select>
 <select class="cbl-select" style="max-width:170px" value="{{ filtroInstZona }}" onChange="{{ updateFiltroInstZona }}"><option>Todas las zonas</option><option>Vicente López</option><option>Núñez</option><option>Olivos</option><option>Nordelta</option></select>
-<span onClick="{{ toggleFiltroInstFavoritas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;border-radius:8px;font:600 14px/1 Inter,sans-serif;{{ filtroInstFavoritasStyle }}">★ Favoritas</span>
+<span onClick="{{ toggleFiltroInstFavoritas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;border-radius:8px;font:600 14px/1 Inter,sans-serif;{{ filtroInstFavoritasStyle }}">★ Favoritas</span></div>
+<div class="udoar-btn-row" style="display:flex;gap:6px;margin-bottom:18px;background:#fff;border:1px solid #E3E1DC;border-radius:999px;padding:4px;width:max-content">
+<span onClick="{{ verInstLista }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ instVistaListaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>Lista</span>
+<span onClick="{{ verInstMapa }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ instVistaMapaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M9 3L3 5.5v15L9 18l6 3 6-2.5v-15L15 6z"></path><path d="M9 3v15M15 6v15"></path></svg>Mapa</span>
 </div>
+<sc-if value="{{ esInstVistaMapa }}" hint-placeholder-val="{{ false }}">
+<div class="udoar-mapa" style="position:relative;background:#EDEBE5;border:1px solid #E3E1DC;border-radius:12px;overflow:hidden;margin-bottom:18px">
+<div id="udoar-mapa-host" style="position:absolute;inset:0"></div>
+<sc-if value="{{ mapaInstSel }}" hint-placeholder-val="{{ false }}">
+<div class="udoar-mapa-card" style="position:absolute;left:14px;right:14px;bottom:14px;z-index:500;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px 16px;box-shadow:0 10px 28px rgba(31,36,33,.18);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<img src="{{ mapaInstSel.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<div style="flex:1 1 200px;min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ mapaInstSel.nombre }}</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">{{ mapaInstSel.tipo }} · {{ mapaInstSel.zona }} · {{ mapaInstSel.busquedasLabel }}</div></div>
+<div class="udoar-btn-row" style="display:flex;gap:8px;flex:none"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" onClick="{{ cerrarMapaInst }}">Cerrar</button><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#16214F" onClick="{{ mapaInstSel.onVer }}">Ver perfil</button></div>
+</div>
+</sc-if>
+<sc-if value="{{ mapaInstSinSel }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:14px;right:14px;bottom:14px;z-index:500;text-align:center;font:500 12.5px/1.4 Inter,sans-serif;color:#6B706C;background:rgba(255,255,255,.9);border-radius:8px;padding:9px;pointer-events:none">Tocá un punto para ver la institución</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ esInstVistaLista }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
 <sc-for list="{{ institucionesCards }}" as="i" hint-placeholder-count="3">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
@@ -1636,6 +1590,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </sc-for>
 </div>
+</sc-if>
 </sc-if>
 
 <sc-if value="{{ isDocInstPerfil }}" hint-placeholder-val="{{ false }}">
@@ -1747,7 +1702,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <svg width="100%" height="100%" viewBox="0 0 400 220" preserveAspectRatio="none" style="position:absolute;inset:0"><path d="M0 60 H400 M0 130 H400 M60 0 V220 M180 0 V220 M300 0 V220" stroke="#D3DDE3" stroke-width="1.5"></path></svg>
 <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%)"><svg width="30" height="30" viewBox="0 0 24 24" fill="#DD553F" stroke="#fff" stroke-width="1"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4" fill="#fff"></circle></svg></div>
 </div>
-<div style="margin-top:10px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">{{ selectedOport.zona }}</div>
+<div style="margin-top:10px;display:flex;align-items:flex-start;gap:7px;font:400 13px/1.45 Inter,sans-serif;color:#3D423E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none;margin-top:2px"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg><span><b style="font-weight:600">{{ selectedOport.direccion }}</b><br><span style="color:#6B706C">{{ selectedOport.zona }}</span></span></div>
 </div>
 </div>
 <div style="flex:1;min-width:300px;position:sticky;top:0">
@@ -4559,9 +4514,9 @@ class Component extends DCLogic {
       { initials: 'JA', title: 'Maestra de sala de 3', inst: 'Jardín Los Aromos', logo: 'assets/inst-logo-aromos.png', zona: 'Nordelta', horario: 'Turno mañana · jornada simple', tipoContrato: 'Titular', cargaHoraria: '20 hs semanales', turno: 'Mañana', nivel: 'Inicial', asignatura: 'Sala de 3', inicio: '1 de marzo de 2027', categoria: 'Maestro/a', descripcion: 'A cargo de sala de 3, jornada simple, con foco en estimulación temprana.', requisitos: ['Título de Nivel Inicial'], beneficios: ['Capacitación interna anual'] },
       { initials: 'FB', title: 'Entrenador funcional', inst: 'Full Body Olivos', logo: 'assets/inst-logo-fullbody.png', zona: 'Olivos', horario: 'Turno tarde · 15 hs semanales', tipoContrato: 'Freelance', cargaHoraria: '15 hs semanales', turno: 'Tarde', nivel: 'Adultos', asignatura: 'Entrenamiento funcional', inicio: 'Inmediato', categoria: 'Entrenador/a', descripcion: 'Clases grupales de entrenamiento funcional para adultos, turno tarde.', requisitos: ['Título de profesor de Educación Física'], beneficios: ['Acceso a instalaciones del gimnasio'] },
       { initials: 'SA', title: 'Profe de Vóley — Secundario', inst: 'Colegio San Andrés del Norte', logo: 'assets/inst-logo-sanandres.png', zona: 'Vicente López', horario: 'Martes y jueves 16 a 18 hs', tipoContrato: 'Titular', cargaHoraria: '6 hs semanales', turno: 'Tarde', nivel: 'Secundario', asignatura: 'Vóley', inicio: '2 de marzo de 2027', categoria: 'Profesor/a', descripcion: 'Coordinación del equipo de vóley femenino, dos entrenamientos semanales.', requisitos: ['Experiencia en deportes de equipo'], beneficios: ['Viáticos incluidos'] },
-      { initials: 'IV', title: 'Profe de Historia', inst: 'Instituto Vicente López', logo: 'assets/inst-logo-vicentelopez.png', zona: 'Vicente López', horario: 'Turno mañana · 8 hs semanales', tipoContrato: 'Titular', cargaHoraria: '8 hs semanales', turno: 'Mañana', nivel: 'Secundario', asignatura: 'Historia', inicio: '10 de marzo de 2027', categoria: 'Profesor/a', descripcion: 'Clases de Historia en 4.º y 5.º año de Secundario.', requisitos: ['Título docente vigente'], beneficios: ['Posibilidad de ampliar horas'] },
-      { initials: 'CR', title: 'Guardavidas — pileta climatizada', inst: 'Club Atlético Ribera', logo: 'assets/inst-logo-ribera.png', zona: 'Núñez', horario: 'Fines de semana · 8 hs', tipoContrato: 'Suplencia', cargaHoraria: '8 hs por fin de semana', turno: 'Mañana y tarde', nivel: '—', asignatura: 'Guardavidas', inicio: 'Inmediato', categoria: 'Guardavidas', descripcion: 'Cobertura de guardavidas en pileta climatizada, fines de semana.', requisitos: ['Habilitación de guardavidas vigente'], beneficios: ['Pago semanal'] },
-      { initials: 'JA', title: 'Profesor de Música', inst: 'Jardín Los Aromos', logo: 'assets/inst-logo-aromos.png', zona: 'Nordelta', horario: 'Turno tarde · 4 hs semanales', tipoContrato: 'Titular', cargaHoraria: '4 hs semanales', turno: 'Tarde', nivel: 'Inicial', asignatura: 'Música', inicio: '1 de marzo de 2027', categoria: 'Profesor/a', descripcion: 'Clases de expresión musical para salas de 2 a 5 años.', requisitos: ['Título de profesor de Música'], beneficios: ['Capacitación interna anual'] },
+      { initials: 'IV', title: 'Profe de Historia', rapida: true, inst: 'Instituto Vicente López', logo: 'assets/inst-logo-vicentelopez.png', zona: 'Vicente López', horario: 'Turno mañana · 8 hs semanales', tipoContrato: 'Titular', cargaHoraria: '8 hs semanales', turno: 'Mañana', nivel: 'Secundario', asignatura: 'Historia', inicio: '10 de marzo de 2027', categoria: 'Profesor/a', descripcion: 'Clases de Historia en 4.º y 5.º año de Secundario.', requisitos: ['Título docente vigente'], beneficios: ['Posibilidad de ampliar horas'] },
+      { initials: 'CR', title: 'Guardavidas — pileta climatizada', rapida: true, inst: 'Club Atlético Ribera', logo: 'assets/inst-logo-ribera.png', zona: 'Núñez', horario: 'Fines de semana · 8 hs', tipoContrato: 'Suplencia', cargaHoraria: '8 hs por fin de semana', turno: 'Mañana y tarde', nivel: '—', asignatura: 'Guardavidas', inicio: 'Inmediato', categoria: 'Guardavidas', descripcion: 'Cobertura de guardavidas en pileta climatizada, fines de semana.', requisitos: ['Habilitación de guardavidas vigente'], beneficios: ['Pago semanal'] },
+      { initials: 'JA', title: 'Profesor de Música', rapida: true, inst: 'Jardín Los Aromos', logo: 'assets/inst-logo-aromos.png', zona: 'Nordelta', horario: 'Turno tarde · 4 hs semanales', tipoContrato: 'Titular', cargaHoraria: '4 hs semanales', turno: 'Tarde', nivel: 'Inicial', asignatura: 'Música', inicio: '1 de marzo de 2027', categoria: 'Profesor/a', descripcion: 'Clases de expresión musical para salas de 2 a 5 años.', requisitos: ['Título de profesor de Música'], beneficios: ['Capacitación interna anual'] },
       { initials: 'FS', title: 'Profe de musculación', inst: 'Fitness Sport Center', logo: 'assets/inst-logo-fitness.png', zona: 'Vicente López', horario: 'Turno mañana · 20 hs semanales', tipoContrato: 'Titular', cargaHoraria: '20 hs semanales', turno: 'Mañana', nivel: 'Adultos', asignatura: 'Musculación', inicio: 'Inmediato', categoria: 'Entrenador/a', descripcion: 'Asistencia y planificación de rutinas en sala de musculación, turno mañana.', requisitos: ['Título de profesor de Educación Física'], beneficios: ['Acceso a instalaciones del gimnasio'] },
     ],
     filtroOportCategoria: 'Todas las categorías', filtroOportNivel: 'Todos los niveles', filtroOportTurno: 'Todos los turnos', filtroOportTexto: '',
@@ -4617,6 +4572,8 @@ class Component extends DCLogic {
     docBuscarVista: 'lista', mapaOfertaIdx: null,
     buscadorSoloRapidas: false, buscadorSoloFavoritos: false,
     docCursoQuery: '', docCursoModalidad: 'Todas las modalidades', docCursoSoloInscripta: false,
+    docSoloRapidas: false, docSoloFavoritos: false,
+    instVista: 'lista', mapaInstIdx: null,
     docCategoria: 'Docente',
     docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
@@ -4918,6 +4875,8 @@ class Component extends DCLogic {
   // Mismo recorte que usa la lista, para que el mapa muestre lo mismo.
   oportunidadesFiltradas() {
     return this.state.oportunidadesMas.filter(o =>
+      (!this.state.docSoloRapidas || !!o.rapida) &&
+      (!this.state.docSoloFavoritos || this.state.docBuscarFavoritos.includes(o.title)) &&
       (this.state.filtroOportCategoria === 'Todas las categorías' || o.categoria === this.state.filtroOportCategoria) &&
       (this.state.filtroOportNivel === 'Todos los niveles' || o.nivel === this.state.filtroOportNivel) &&
       (this.state.filtroOportTurno === 'Todos los turnos' || o.turno === this.state.filtroOportTurno) &&
@@ -5048,6 +5007,26 @@ class Component extends DCLogic {
     if (franjas.disponible.length) salida.push({ titulo: 'Disponible', color: '#16214F', texto: frase(franjas.disponible) });
     if (franjas.convenir.length) salida.push({ titulo: 'A convenir', color: '#8CA9BE', texto: frase(franjas.convenir) });
     return salida;
+  }
+  // Mismo recorte que usa la grilla, para que el mapa muestre lo mismo.
+  institucionesFiltradas() {
+    return this.state.institucionesList.filter(i => {
+      const q = this.normalizeTxt(this.state.filtroInstTexto || '');
+      if (q && !this.normalizeTxt(i.nombre).includes(q)) return false;
+      if (this.state.filtroInstTipo && this.state.filtroInstTipo !== 'Todos los tipos' && i.tipo !== this.state.filtroInstTipo) return false;
+      if (this.state.filtroInstZona && this.state.filtroInstZona !== 'Todas las zonas' && !this.normalizeTxt(i.zona).includes(this.normalizeTxt(this.state.filtroInstZona))) return false;
+      if (this.state.filtroInstFavoritas && !i.saved) return false;
+      return true;
+    });
+  }
+  setVistaInst(v) { this.setState({ instVista: v, mapaInstIdx: null }); }
+  seleccionarInstEnMapa(i) { this.setState(st => ({ mapaInstIdx: st.mapaInstIdx === i ? null : i })); }
+  // La zona de una institución puede venir como "Villa Adelina, Vicente López":
+  // se usa la primera que exista en el mapa.
+  coordsDeZona(zona) {
+    const partes = String(zona || '').split(',').map(x => x.trim());
+    for (const p of partes) if (this.ZONAS_MAPA[p]) return this.ZONAS_MAPA[p];
+    return null;
   }
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
@@ -5277,7 +5256,10 @@ class Component extends DCLogic {
   componentDidUpdate() {
     // El mapa de Leaflet vive fuera de la plantilla: se le pasan los pines por acá.
     try {
-      window.__udMapaDatos = { pines: this._valsMapa || [], sel: this.state.mapaOfertaIdx };
+      const enInst = this.state.screen === 'docInstituciones' && this.state.instVista === 'mapa';
+      window.__udMapaDatos = enInst
+        ? { pines: this._pinesInst || [], sel: this.state.mapaInstIdx, tipo: 'inst' }
+        : { pines: this._valsMapa || [], sel: this.state.mapaOfertaIdx, tipo: 'oferta' };
     } catch (e) {} window.__udInst = this; if (window.__udSyncUrl) window.__udSyncUrl(this.state.screen); }
   go(s) { this.setState(st => ({ screen: s, selectedCv: null, selectedCurso: null, perfilFrom: s === 'instDocPerfil' ? st.screen : st.perfilFrom })); }
   showAppToast(msg) { this.setState({ appToastMsg: msg }); clearTimeout(this._appToastTimer); this._appToastTimer = setTimeout(() => this.setState({ appToastMsg: '' }), 2200); }
@@ -5780,7 +5762,11 @@ class Component extends DCLogic {
         { key: 'oferta', label: 'Oferta enviada', onPick: () => this.moveCvToStage('oferta') },
         { key: 'contratado', label: 'Contratado', onPick: () => this.moveCvToStage('contratado') },
       ],
-      selectedOport: this.state.selectedOport,
+      selectedOport: this.state.selectedOport ? {
+        ...this.state.selectedOport,
+        // La dirección la pone la institución que publica la búsqueda.
+        direccion: (this.state.institucionesList.find(x => x.nombre === this.state.selectedOport.inst) || {}).direccion || 'Dirección a confirmar',
+      } : null,
       oportConfirmed: this.state.oportConfirmed,
       oportConfirmedNot: !this.state.oportConfirmed,
       closeOport: () => this.closeOport(),
@@ -5829,6 +5815,31 @@ class Component extends DCLogic {
           : 'background:#F0EFEA;color:#3D423E',
         onPick: () => this.setDocCategoria(c),
       })),
+      esInstVistaLista: this.state.instVista !== 'mapa',
+      esInstVistaMapa: this.state.instVista === 'mapa',
+      verInstLista: () => this.setVistaInst('lista'),
+      verInstMapa: () => this.setVistaInst('mapa'),
+      cerrarMapaInst: () => this.setState({ mapaInstIdx: null }),
+      instVistaListaStyle: this.state.instVista !== 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
+      instVistaMapaStyle: this.state.instVista === 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
+      mapaInstPines: this._pinesInst = this.institucionesFiltradas().map((inst, i) => {
+        const c = this.coordsDeZona(inst.zona) || [-34.52, -58.50];
+        const sel = this.state.mapaInstIdx === i;
+        return { titulo: inst.nombre, lat: c[0], lng: c[1], color: sel ? '#16214F' : '#DD553F' };
+      }),
+      mapaInstSel: (() => {
+        const inst = this.state.mapaInstIdx != null ? this.institucionesFiltradas()[this.state.mapaInstIdx] : null;
+        if (!inst) return null;
+        return { ...inst, busquedasLabel: inst.busquedas === 1 ? '1 búsqueda activa' : inst.busquedas + ' búsquedas activas', onVer: () => this.openInstPerfil(inst.key) };
+      })(),
+      mapaInstSinSel: this.state.mapaInstIdx == null,
+      toggleDocSoloRapidas: () => this.setState(st => ({ docSoloRapidas: !st.docSoloRapidas })),
+      toggleDocSoloFavoritos: () => this.setState(st => ({ docSoloFavoritos: !st.docSoloFavoritos })),
+      docSoloRapidasTrackStyle: this.state.docSoloRapidas ? 'background:#DD553F' : 'background:#CFCCC5',
+      docSoloRapidasDotStyle: this.state.docSoloRapidas ? 'right:2px' : 'left:2px',
+      docSoloFavoritosStyle: this.state.docSoloFavoritos
+        ? 'background:#16214F;color:#fff'
+        : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
       esVistaLista: this.state.docBuscarVista !== 'mapa',
       esVistaMapa: this.state.docBuscarVista === 'mapa',
       verBuscarLista: () => this.setVistaBuscar('lista'),
@@ -5983,14 +5994,7 @@ class Component extends DCLogic {
           .sort((a, b) => f.orden === 'busquedas' ? b.busquedas - a.busquedas : a.nombre.localeCompare(b.nombre))
           .map(i => ({ ...i, onClick: () => this.openBoInst(i) }));
       })(),
-      institucionesCards: this.state.institucionesList.filter(i => {
-        const q = this.normalizeTxt(this.state.filtroInstTexto || '');
-        if (q && !this.normalizeTxt(i.nombre).includes(q)) return false;
-        if (this.state.filtroInstTipo && this.state.filtroInstTipo !== 'Todos los tipos' && i.tipo !== this.state.filtroInstTipo) return false;
-        if (this.state.filtroInstZona && this.state.filtroInstZona !== 'Todas las zonas' && !this.normalizeTxt(i.zona).includes(this.normalizeTxt(this.state.filtroInstZona))) return false;
-        if (this.state.filtroInstFavoritas && !i.saved) return false;
-        return true;
-      }).map(i => ({
+      institucionesCards: this.institucionesFiltradas().map(i => ({
         ...i,
         iniciales: i.nombre.split(' ').filter(w => w.length > 2 || /[A-Z]/.test(w[0])).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
         busquedasColor: i.busquedas > 0 ? '#1E7A4C' : '#9AA09B',

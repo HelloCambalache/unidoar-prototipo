@@ -69,7 +69,9 @@
         riseOnHover: true,
       });
       m.on('click', function () {
-        if (window.__udInst) window.__udInst.seleccionarEnMapa(i);
+        if (!window.__udInst) return;
+        if (datos.tipo === 'inst') window.__udInst.seleccionarInstEnMapa(i);
+        else window.__udInst.seleccionarEnMapa(i);
       });
       capaPines.addLayer(m);
     });
