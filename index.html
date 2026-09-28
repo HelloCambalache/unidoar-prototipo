@@ -23,6 +23,8 @@
 
   window.__UD_ROUTES = MAP;
   window.__udInitialScreen = screenOf(location.pathname);
+  // ?inst=<clave> permite abrir el perfil público de una institución en una pestaña nueva.
+  try { window.__udInitialInst = new URLSearchParams(location.search).get('inst') || null; } catch (e) { window.__udInitialInst = null; }
   window.__udSkipPush = false;
 
   window.__udSyncUrl = function (screen) {
@@ -295,6 +297,8 @@ a:hover{color:#DD553F}
 .udoar-mapa-leyenda{gap:9px !important;padding:6px 10px !important;top:10px !important;right:10px !important}
 .udoar-mapa-leyenda span{font-size:10px !important}
 }
+/* El contenido de la app respira a lo ancho, con un tope para que no se estire de más. */
+.udoar-app-main>*{max-width:1320px}
 </style>
 </helmet>
 
@@ -1142,12 +1146,12 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong style="color:#1F2421">Sin verificar</strong> hasta que revisemos la documentación — normalmente en menos de 48 horas.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
 <sc-for list="{{ docDocsList }}" as="d" hint-placeholder-count="3">
-<div class="udoar-doc-row" style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px;flex-wrap:wrap"><span style="width:30px;height:30px;flex:none;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1 1 160px;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalle }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">Cargado</span></sc-if><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ d.onSubir }}">{{ d.boton }}</button></div>
+<div class="udoar-doc-row" style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1 1 0;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalle }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">Cargado</span></sc-if><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ d.onSubir }}">{{ d.boton }}</button></div>
 </sc-for>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
 <span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnb3 }}">← Volver al paso 3</span>
-<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="cbl-btn cbl-btn--secondary" onClick="{{ goDocOportunidades }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOportunidades }}">Terminar y empezar a postularme</button></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;flex:1 1 320px;justify-content:flex-end"><button class="cbl-btn cbl-btn--secondary" style="flex:1 1 auto" onClick="{{ goDocOportunidades }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="flex:1 1 auto;background:#DD553F" onClick="{{ goDocOportunidades }}">Terminar y empezar a postularme</button></div>
 </div>
 </div>
 <div style="flex:1 1 260px;min-width:240px;background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
@@ -1895,7 +1899,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isEditingBusqueda }}" hint-placeholder-val="{{ false }}"><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Editar búsqueda</h1><p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Actualizá los datos de la búsqueda publicada.</p></sc-if>
 <sc-if value="{{ isCreatingBusqueda }}" hint-placeholder-val="{{ true }}"><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Publicá una búsqueda</h1><p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Un solo paso. Los docentes de tu zona la ven en el momento en que la publicás.</p></sc-if>
 <div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
-<div style="flex:1;max-width:780px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:16px">
+<div style="flex:1;max-width:980px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:16px">
 <div class="cbl-field"><span class="cbl-label">Puesto</span><input class="cbl-input" value="{{ nuevoPuestoVal }}" onChange="{{ updateNuevoPuesto }}"></div>
 <div class="cbl-field"><span class="cbl-label">Categoría</span><select class="cbl-select" onChange="{{ selectCargoCategoriaSimple }}" value="{{ cargoCategoriaSimple }}">
 <sc-for list="{{ cargoCategoriaSimpleOptions }}" as="c" hint-placeholder-count="3">
@@ -2198,6 +2202,22 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">En tus búsquedas</div>
+<sc-if value="{{ hayBusquedasDelDocente }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ busquedasDelDocente }}" as="b" hint-placeholder-count="2">
+<div onClick="{{ b.onOpen }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid #F0EFEA">
+<div style="min-width:0"><div style="font:600 13px/1.3 Inter,sans-serif">{{ b.puesto }}</div><div style="margin-top:2px;font:400 12px/1.3 Inter,sans-serif;color:#9AA09B">{{ b.desde }}</div></div>
+<span class="cbl-badge" style="flex:none;{{ b.etapaStyle }}">{{ b.etapa }}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ sinBusquedasDelDocente }}" hint-placeholder-val="{{ false }}">
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Todavía no la sumaste a ninguna búsqueda. Invitala a postularse y aparece acá.</div>
+</sc-if>
+</div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
 <div style="font:600 14px/1 Inter,sans-serif;margin-bottom:14px">Referencias de instituciones</div>
 <div style="display:flex;flex-direction:column;gap:16px">
 <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="width:26px;height:26px;border-radius:999px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 10px/1 Inter,sans-serif;flex:none">LT</span><div><div style="font:600 13px/1.2 Inter,sans-serif">Colegio Los Tilos</div><div style="font:400 11px/1.2 Inter,sans-serif;color:#9AA09B">Olivos · 2020-2026</div></div></div><p style="margin:0;font:400 13px/1.5 Inter,sans-serif;color:#3D423E">"Se hizo cargo del vóley cuando no teníamos equipo femenino. Muy prolija con los informes y con las familias."</p></div>
@@ -2400,7 +2420,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isInstCursos }}" hint-placeholder-val="{{ false }}">
 <sc-if value="{{ selectedCurso }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCurso }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCurso }}" style="cursor:pointer">Mis cursos</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ selectedCurso.titulo }}</span></span></div>
-<div style="max-width:1000px">
+<div style="max-width:1180px">
 <image-slot id="{{ selectedCurso.fotoId }}" shape="rounded" style="width:100%;height:320px" placeholder="Foto del curso"></image-slot>
 <div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:22px;margin-bottom:18px">
 <div>
@@ -2428,7 +2448,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ sinCursoSeleccionado }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Mis cursos</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Cursos cortos o certificaciones que ofrecés. Los docentes los ven cuando entran a tu vitrina.</p></div><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ openCursoModal }}">+ Crear curso</button></div>
-<div style="display:flex;flex-direction:column;gap:14px;max-width:860px">
+<div style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ cursosDetalladosList }}" as="cu" hint-placeholder-count="1">
 <div class="udoar-card-row" style="display:flex;gap:16px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
 <image-slot id="{{ cu.fotoId }}" shape="rounded" style="width:150px;height:110px;flex:none" placeholder="Foto del curso"></image-slot>
@@ -2455,7 +2475,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isInstCrearCurso }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span onClick="{{ closeCursoModal }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ closeCursoModal }}" style="cursor:pointer">Mis cursos</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ cursoFormTitulo }}</span></span></div>
 <h1 style="margin:0 0 20px;font:600 26px/1.2 Inter,sans-serif;letter-spacing:-.02em">{{ cursoFormTitulo }}</h1>
-<div style="max-width:640px">
+<div style="max-width:900px">
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Foto del curso</span><image-slot id="{{ cursoModalFotoId }}" shape="rounded" style="width:100%;height:170px" placeholder="Foto del curso"></image-slot></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Título</span><input class="cbl-input" placeholder="Ej. Curso de RCP y primeros auxilios" value="{{ cursoModalTitulo }}" onChange="{{ updateCursoModalTitulo }}"></div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Subtítulo</span><input class="cbl-input" placeholder="Ej. Certificación con Cruz Roja" value="{{ cursoModalSubtitulo }}" onChange="{{ updateCursoModalSubtitulo }}"></div>
@@ -2588,7 +2608,8 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div onClick="{{ stopPropagation }}" style="background:#fff;border-radius:10px;width:480px;max-width:92vw;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.3)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><h2 style="margin:0;font:600 18px/1.2 Inter,sans-serif">Invitar a alguien</h2><span onClick="{{ toggleInvite }}" style="cursor:pointer;color:#9AA09B">✕</span></div>
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" placeholder="nombre@colegio.edu.ar" value="{{ inviteEmailVal }}" onChange="{{ updateInviteEmail }}"></div>
-<div class="cbl-field" style="margin-bottom:18px"><span class="cbl-label">Rol</span><select class="cbl-select" value="{{ inviteRoleVal }}" onChange="{{ updateInviteRole }}"><option>Administrador/a</option><option>Solo lectura</option></select></div>
+<div class="cbl-field" style="margin-bottom:10px"><span class="cbl-label">Rol</span><select class="cbl-select" value="{{ inviteRoleVal }}" onChange="{{ updateInviteRole }}"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option></select></div>
+<div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:12px 14px;margin-bottom:18px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">{{ inviteRoleDesc }}</div>
 <div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ sendInviteEquipo }}">Enviar invitación</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ toggleInvite }}">Cancelar</button></div>
 </div>
 </div>
@@ -2597,7 +2618,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ showInviteToast2 }}" hint-placeholder-val="{{ false }}"><div style="position:fixed;top:20px;right:24px;z-index:60;background:#1F2421;color:#fff;padding:14px 20px;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;font:500 14px/1 Inter,sans-serif"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#82D8E9" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg>Invitación enviada</div></sc-if>
 
 <sc-if value="{{ selectedMember }}" hint-placeholder-val="{{ false }}">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;margin-bottom:20px;max-width:480px;position:relative">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;margin-bottom:20px;max-width:680px;position:relative">
 <span onClick="{{ closeMember }}" style="position:absolute;top:16px;right:16px;cursor:pointer;color:#9AA09B">✕</span>
 <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><span style="width:48px;height:48px;border-radius:999px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 15px/1 Inter,sans-serif">{{ selectedMember.initials }}</span><div><div style="font:600 17px/1.2 Inter,sans-serif">{{ selectedMember.name }}</div><span class="cbl-badge cbl-badge--neutral" style="margin-top:4px">{{ selectedMember.role }}</span></div></div>
 <div style="display:flex;flex-direction:column;gap:8px;font:400 14px/1.5 Inter,sans-serif;color:#3D423E">
@@ -2618,6 +2639,22 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </tbody>
 </table>
 </div>
+
+<div style="font:600 16px/1.2 Inter,sans-serif;margin:26px 0 4px">Qué puede hacer cada rol</div>
+<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Los permisos se aplican a toda la institución. El dueño de la cuenta es único y es el que paga el plan.</p>
+<div class="udoar-table-wrap" style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden">
+<table class="cbl-table">
+<thead><tr><th>Permiso</th><sc-for list="{{ rolesEquipo }}" as="r" hint-placeholder-count="4"><th style="text-align:center">{{ r.corto }}</th></sc-for></tr></thead>
+<tbody>
+<sc-for list="{{ permisosEquipo }}" as="p" hint-placeholder-count="6">
+<tr><td><div style="font-weight:600">{{ p.nombre }}</div><div style="font:400 12px/1.4 Inter,sans-serif;color:#9AA09B">{{ p.detalle }}</div></td>
+<sc-for list="{{ p.celdas }}" as="c" hint-placeholder-count="4"><td style="text-align:center;font:600 14px/1 Inter,sans-serif;{{ c.style }}">{{ c.marca }}</td></sc-for>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
 </sc-if>
 
 <sc-if value="{{ isInstVitrina }}" hint-placeholder-val="{{ false }}">
@@ -2737,6 +2774,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </div>
 <div class="udoar-save-bar" style="display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #E3E1DC">
 <span style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los cambios se publican en tu vitrina pública.</span>
+<a href="/docente/instituciones/perfil?inst=sanandres" target="_blank" rel="noopener" class="cbl-btn cbl-btn--secondary" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:600 14px/1 Inter,sans-serif;color:#1F2421"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"></path></svg>Ver perfil público</a>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px">Guardar cambios</button>
 </div>
 </sc-if>
@@ -2746,7 +2784,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Mi cuenta</h1>
 <p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tus datos personales como responsable de la institución. No se muestran en la vitrina pública.</p>
 
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:640px;margin-bottom:16px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:980px;margin-bottom:16px">
 <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
 <span style="width:52px;height:52px;border-radius:999px;background:#E5E9FB;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:600 17px/1 Inter,sans-serif;flex:none">{{ cuentaIniciales }}</span>
 <div><div style="font:600 17px/1.2 Inter,sans-serif">{{ cuentaNombreCompleto }}</div><span class="cbl-badge cbl-badge--neutral" style="margin-top:4px">Dueño de la cuenta</span></div>
@@ -2755,12 +2793,11 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div class="cbl-field"><span class="cbl-label">Nombre</span><input class="cbl-input" value="{{ cuentaNombre }}" onChange="{{ updateCuentaNombre }}"></div>
 <div class="cbl-field"><span class="cbl-label">Apellido</span><input class="cbl-input" value="{{ cuentaApellido }}" onChange="{{ updateCuentaApellido }}"></div>
 </div>
-<div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" value="{{ cuentaEmail }}" onChange="{{ updateCuentaEmail }}"></div>
-<div class="cbl-field" style="margin-bottom:18px"><span class="cbl-label">Teléfono</span><input class="cbl-input" type="tel" value="{{ cuentaTelefono }}" onChange="{{ updateCuentaTelefono }}"></div>
+<div class="udoar-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px"><div class="cbl-field"><span class="cbl-label">Email</span><input class="cbl-input" type="email" value="{{ cuentaEmail }}" onChange="{{ updateCuentaEmail }}"></div><div class="cbl-field"><span class="cbl-label">Teléfono</span><input class="cbl-input" type="tel" value="{{ cuentaTelefono }}" onChange="{{ updateCuentaTelefono }}"></div></div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px" onClick="{{ guardarCuenta }}">Guardar cambios</button>
 </div>
 
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:640px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;max-width:980px">
 <div style="font:600 16px/1 Inter,sans-serif;margin-bottom:6px">Darse de baja</div>
 <p style="margin:0 0 16px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Se cancela la suscripción al final del período pagado, se despublican tus búsquedas y la vitrina deja de verse. Podés volver cuando quieras.</p>
 <button class="cbl-btn cbl-btn--secondary" style="border-color:#DC2626;color:#DC2626" style-hover="background:#DC2626;color:#fff" onClick="{{ toggleBajaCuenta }}">Darme de baja</button>
@@ -2780,13 +2817,13 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <sc-if value="{{ isInstPlan }}" hint-placeholder-val="{{ false }}">
 <h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Plan y facturación</h1>
 <p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tu plan, el medio de pago y las facturas anteriores.</p>
-<div class="udoar-plan-hero" style="background:#16214F;border-radius:8px;padding:24px;color:#fff;max-width:640px;display:flex;align-items:center;justify-content:space-between">
+<div class="udoar-plan-hero" style="background:#16214F;border-radius:8px;padding:24px;color:#fff;max-width:980px;display:flex;align-items:center;justify-content:space-between">
 <div><span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#D6DEF9;margin-bottom:10px;display:inline-block">Plan Fundador</span><div style="font:600 26px/1.2 Inter,sans-serif">$ 54.000<span style="font:400 14px/1 Inter,sans-serif;color:rgba(255,255,255,.6)">/mes</span></div><div style="margin-top:6px;font:400 13px/1.5 Inter,sans-serif;color:rgba(255,255,255,.65)">Se renueva el 10 de octubre</div></div>
 <button class="cbl-btn" style="background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff" onClick="{{ togglePlanPicker }}">Cambiar de plan</button>
 </div>
 
 <sc-if value="{{ showPlanPicker }}" hint-placeholder-val="{{ false }}">
-<div style="margin-top:20px;max-width:900px;display:flex;gap:16px;flex-wrap:wrap">
+<div style="margin-top:20px;max-width:1180px;display:flex;gap:16px;flex-wrap:wrap">
 <div style="flex:1;min-width:220px;background:#fff;border:2px solid #16214F;border-radius:8px;padding:20px">
 <span class="cbl-badge cbl-badge--primary" style="margin-bottom:10px">Actual</span>
 <div style="font:600 16px/1.2 Inter,sans-serif;margin-bottom:4px">Plan Fundador</div>
@@ -2809,7 +2846,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 
 <h2 style="margin:28px 0 12px;font:600 16px/1.2 Inter,sans-serif;letter-spacing:-.01em">Historial de facturación</h2>
-<div class="udoar-table-wrap" style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden;max-width:640px">
+<div class="udoar-table-wrap" style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden;max-width:980px">
 <table class="cbl-table cbl-table--hover">
 <thead><tr><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
 <tbody>
@@ -3001,7 +3038,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="flex:none;width:300px;max-width:100%;display:flex;flex-direction:column;gap:16px">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Contacto</div><div style="font:400 14px/1.6 Inter,sans-serif;color:#3D423E">{{ boSelectedInst.contacto }}</div></div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Próximo cobro</div><div style="font:400 14px/1.6 Inter,sans-serif;color:#3D423E">{{ boSelectedInst.proximoCobro }}</div></div>
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Equipo</div><div style="display:flex;flex-direction:column;gap:8px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E"><div style="display:flex;justify-content:space-between"><span>Esteban Gómez</span><span style="color:#6B706C">Administrador/a</span></div><div style="display:flex;justify-content:space-between"><span>Paula Ríos</span><span style="color:#6B706C">Solo lectura</span></div></div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Equipo</div><div style="display:flex;flex-direction:column;gap:8px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E"><div style="display:flex;justify-content:space-between"><span>Esteban Gómez</span><span style="color:#6B706C">Administrador/a</span></div><div style="display:flex;justify-content:space-between"><span>Paula Ríos</span><span style="color:#6B706C">Coordinadora de área</span></div></div></div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;display:flex;flex-direction:column;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-12.4 7.4L3 20.5l1.6-5.4A8.4 8.4 0 1121 11.5z"></path></svg>Contactar por WhatsApp</button><button class="cbl-btn cbl-btn--block" style="padding:11px 16px;color:#8F3D28">Suspender cuenta</button></div>
 </div>
 </div>
@@ -4213,7 +4250,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <sc-if value="{{ instAppInviteOpen }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;margin-bottom:14px">
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" placeholder="nombre@colegio.edu.ar"></div>
-<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Rol</span><select class="cbl-select"><option>Administrador/a</option><option>Reclutamiento</option><option>Solo lectura</option></select></div>
+<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Rol</span><select class="cbl-select"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option></select></div>
 <div style="display:flex;gap:10px">
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;flex:1" onClick="{{ sendInstAppInvite }}">Enviar invitación</button>
 <button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="flex:1" onClick="{{ closeInstAppInvite }}">Cancelar</button>
@@ -4429,7 +4466,7 @@ class Component extends DCLogic {
       ] },
       { key: 'aromos', portada: '', nombre: 'Jardín Los Aromos', tipo: 'Jardín de infantes', zona: 'Nordelta', logo: 'assets/inst-logo-aromos.png', direccion: 'Av. de los Lagos 800, Nordelta', desc: 'Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.', verificada: true, busquedas: 0, saved: false, alumnos: 120, niveles: 'Maternal · Inicial', turnos: 'Jornada simple y extendida', docentesPlanta: 14, busquedasList: [] },
     ],
-    selectedInstKey: null,
+    selectedInstKey: (window.__udInitialInst || null),
     docAsigQuery: '', docZonaQuery: '',
     addAsigOpen: false, addAsigVal: '', addDispOpen: false, addDispVal: '', addZonaOpen: false, addZonaVal: '',
     instZonas: ['Vicente López'], instZonaOpen: false, instZonaVal: '',
@@ -4800,6 +4837,27 @@ class Component extends DCLogic {
   ];
   subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
   docsAltaCompletos() { const d = this.state.docDocs; return !!(d.dni && d.credencial && d.conducta); }
+  // ── Roles del equipo ───────────────────────────────────────────────────
+  ROLES_EQUIPO = [
+    { nombre: 'Dueño de la cuenta', corto: 'Dueño',
+      desc: 'Acceso total, incluido el plan y la facturación. Es único y no se puede invitar: se transfiere.' },
+    { nombre: 'Administrador/a', corto: 'Admin',
+      desc: 'Hace todo salvo tocar el plan y la facturación: publica, contrata, edita la vitrina y maneja el equipo.' },
+    { nombre: 'Reclutador/a', corto: 'Reclutador',
+      desc: 'Publica búsquedas, mueve postulantes y contrata. No accede al equipo, al plan ni a la vitrina.' },
+    { nombre: 'Coordinador/a de área', corto: 'Coordinador',
+      desc: 'Ve las búsquedas de su área y deja comentarios en los postulantes. No publica ni contrata.' },
+  ];
+  // d = dueño, a = admin, r = reclutador, c = coordinador
+  PERMISOS_EQUIPO = [
+    { nombre: 'Publicar y editar búsquedas', detalle: 'Crear, editar y cerrar publicaciones', quienes: 'dar' },
+    { nombre: 'Mover postulantes', detalle: 'Arrastrar en el tablero y agendar entrevistas', quienes: 'dar' },
+    { nombre: 'Ver y comentar postulantes', detalle: 'Leer el CV y dejar notas internas', quienes: 'darc' },
+    { nombre: 'Confirmar una contratación', detalle: 'Cerrar la búsqueda con un docente asignado', quienes: 'dar' },
+    { nombre: 'Editar la vitrina y los cursos', detalle: 'Perfil público, fotos y cursos', quienes: 'da' },
+    { nombre: 'Invitar y sacar gente del equipo', detalle: 'Administrar roles', quienes: 'da' },
+    { nombre: 'Plan y facturación', detalle: 'Cambiar de plan, medio de pago y facturas', quienes: 'd' },
+  ];
   toggleBajaCuenta() { this.setState(s => ({ showBajaCuenta: !s.showBajaCuenta })); }
   avisoCuenta(msg) { this.setState({ cuentaToastMsg: msg }); clearTimeout(this._cuentaToastTimer); this._cuentaToastTimer = setTimeout(() => this.setState({ cuentaToastMsg: '' }), 3200); }
   confirmarBajaCuenta() { this.setState({ showBajaCuenta: false }); this.avisoCuenta('Baja registrada. Tu plan sigue activo hasta el 10 de octubre.'); }
@@ -4845,7 +4903,7 @@ class Component extends DCLogic {
       const namePart = email.split('@')[0].replace(/[._]/g, ' ');
       const name = namePart.split(' ').filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || email;
       const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-      const roleLabel = this.state.inviteRoleVal === 'Solo lectura' ? 'Solo lectura' : 'Administrador/a';
+      const roleLabel = this.state.inviteRoleVal || 'Administrador/a';
       const nuevo = { key: 'm' + Date.now(), initials, name, role: roleLabel, email, status: 'Invitación enviada', since: 'Ahora' };
       this.setState(s => ({ teamMembers: [...s.teamMembers, nuevo] }));
     }
@@ -5830,6 +5888,16 @@ class Component extends DCLogic {
         ? 'background:#16214F;color:#fff'
         : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
       // Con "sólo suplencias" se esconde el catálogo y queda la tira de disponibles ya.
+      hayBusquedasDelDocente: this.state.busquedas.some(b => (this.state.stages[b.key] || []).some(f => f.name === 'Martina Alsina')),
+      sinBusquedasDelDocente: !this.state.busquedas.some(b => (this.state.stages[b.key] || []).some(f => f.name === 'Martina Alsina')),
+      rolesEquipo: this.ROLES_EQUIPO.map(r => ({ corto: r.corto })),
+      permisosEquipo: this.PERMISOS_EQUIPO.map(p => ({
+        nombre: p.nombre, detalle: p.detalle,
+        celdas: ['d', 'a', 'r', 'c'].map(k => p.quienes.includes(k)
+          ? { marca: '✓', style: 'color:#1E7A4C' }
+          : { marca: '—', style: 'color:#C9C6C0' }),
+      })),
+      inviteRoleDesc: (this.ROLES_EQUIPO.find(r => r.nombre === this.state.inviteRoleVal) || this.ROLES_EQUIPO[1]).desc,
       mostrarRapidos: true,
       mostrarCatalogo: !this.state.buscadorSoloRapidas,
       buscadorTitulo: this.state.buscadorSoloRapidas
@@ -5840,6 +5908,28 @@ class Component extends DCLogic {
         : (this.state.buscadorSoloFavoritos
             ? 'Docentes que fuiste guardando para tener a mano.'
             : 'Catálogo completo + disponibles para suplencias · Vicente López, Olivos, Martínez'),
+      // En qué búsquedas de la institución está cargado el docente que se está viendo,
+      // leyendo el tablero de postulantes.
+      busquedasDelDocente: (() => {
+        const nombre = 'Martina Alsina';
+        const etapas = {
+          nuevos: ['Nueva', 'background:#E5E9FB;color:#16214F'],
+          preseleccionados: ['Preseleccionada', 'background:#E5E9FB;color:#16214F'],
+          entrevista: ['En entrevista', 'background:#FDF0E1;color:#8A5A12'],
+          oferta: ['Oferta enviada', 'background:#FDE9E1;color:#8A2F1A'],
+          contratado: ['Contratada', 'background:#E7F5EF;color:#1E7A4C'],
+        };
+        return this.state.busquedas.map(b => {
+          const ficha = (this.state.stages[b.key] || []).find(f => f.name === nombre);
+          if (!ficha) return null;
+          const et = etapas[ficha.stage] || ['En proceso', 'background:#F0EFEA;color:#3D423E'];
+          return {
+            puesto: b.puesto, etapa: et[0], etapaStyle: et[1],
+            desde: ficha.daysAgo ? 'Se sumó ' + ficha.daysAgo : 'En el tablero',
+            onOpen: () => { this.selectSearch(b.key); this.go('instPipeline'); },
+          };
+        }).filter(Boolean);
+      })(),
       soloVerificadosTrackStyle: this.state.filtroSoloVerificados ? 'background:#16214F' : 'background:#CFCCC5',
       soloVerificadosDotStyle: this.state.filtroSoloVerificados ? 'right:2px' : 'left:2px',
       clearFilters: () => this.clearFilters(),
