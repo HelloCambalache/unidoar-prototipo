@@ -2291,9 +2291,8 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isInstPipeline }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span onClick="{{ goInstHistorial }}" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;flex:none;background:#fff;border:1px solid #E3E1DC;box-shadow:0 1px 2px rgba(31,36,33,.06);transition:background .15s,border-color .15s" style-hover="background:#F0EFEA;border-color:#C9C6C0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D423E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C"><span onClick="{{ goInstHistorial }}" style="cursor:pointer">Publicaciones</span><span style="color:#C9C6C0;padding:0 7px;font-weight:400">/</span><span style="color:#1F2421;font-weight:500">{{ pipelineBreadcrumb }}</span></span></div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
-<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ pipelineBreadcrumb }}</h1><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Activa</span><span style="font:400 14px/1 Inter,sans-serif;color:#6B706C">{{ totalPostulantesCount }} postulantes · publicada hace 2 días</span></div>
-<div class="udoar-pipe-tools" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ pipelineBreadcrumb }}</h1><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C">Activa</span><span style="font:400 14px/1 Inter,sans-serif;color:#6B706C">{{ totalPostulantesCount }} postulantes · publicada hace 2 días</span></div>
+<div class="udoar-pipe-tools" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
 <select class="cbl-select" style="flex:none;max-width:160px"><option>Solo verificados</option><option>Todos</option></select>
 <select class="cbl-select" style="flex:none;max-width:120px"><option>Zona</option><option>Vicente López</option><option>Olivos</option></select>
 <select class="cbl-select" style="flex:none;max-width:170px"><option>Ordenar: Score ↓</option><option>Más recientes</option><option>Nombre A-Z</option></select>
@@ -2301,10 +2300,9 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isCurrentBusquedaCerrada }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn cbl-btn--sm" style="flex:none;background:#E7F5EF;color:#1E7A4C;border-color:#B7DFC9" disabled="{{ true }}">✓ Búsqueda cerrada</button></sc-if>
 <sc-if value="{{ isCurrentBusquedaAbierta }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none;color:#1E7A4C;border-color:#B7DFC9" onClick="{{ closeCurrentBusqueda }}">✓ Cerrar búsqueda</button></sc-if>
 <button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ editCurrentBusqueda }}">✎ Editar búsqueda</button>
-<div style="display:flex;background:#F0EFEA;border-radius:8px;padding:3px;gap:2px;flex:none;margin-left:4px">
+<div class="udoar-pipe-vista" style="display:flex;background:#F0EFEA;border-radius:8px;padding:3px;gap:2px;flex:none;margin-left:auto">
 <span onClick="{{ selectViewKanban }}" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:6px;font:600 13px/1 Inter,sans-serif;transition:background .15s,color .15s;{{ viewKanbanStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect></svg>Kanban</span>
 <span onClick="{{ selectViewTabla }}" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:6px;font:600 13px/1 Inter,sans-serif;transition:background .15s,color .15s;{{ viewTablaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="1.5"></rect><path d="M3 10h18M9 10v10"></path></svg>Tabla</span>
-</div>
 </div>
 </div>
 <p style="margin:0 0 22px;font:400 13px/1.5 Inter,sans-serif;color:#9AA09B">Arrastrá una tarjeta para moverla de etapa · doble clic para abrir la ficha.</p>
@@ -2905,6 +2903,15 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <sc-if value="{{ isInstHistorial }}" hint-placeholder-val="{{ false }}">
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Publicaciones</h1><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ goInstPublicar }}">Publicar</button></div>
+<div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px">
+<sc-for list="{{ metricasPublicaciones }}" as="m" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px 18px">
+<div style="font:500 12px/1.3 Inter,sans-serif;color:#6B706C;margin-bottom:8px">{{ m.label }}</div>
+<div style="font:600 24px/1 Inter,sans-serif;color:#16214F;margin-bottom:6px">{{ m.valor }}</div>
+<div style="font:400 12px/1.4 Inter,sans-serif;color:#9AA09B">{{ m.nota }}</div>
+</div>
+</sc-for>
+</div>
 <div style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap">
 <input class="cbl-input" style="max-width:280px" placeholder="Buscar por puesto o docente">
 <select class="cbl-select" style="max-width:160px" value="{{ filtroHistEstado }}" onChange="{{ updateFiltroHistEstado }}"><option>Todos los estados</option><option>Activa</option><option>Rápida</option></select>
@@ -5387,6 +5394,23 @@ class Component extends DCLogic {
       filtroHistEstado: this.state.filtroHistEstado,
       updateFiltroHistEstado: (e) => this.setState({ filtroHistEstado: e.target.value }),
       busquedasRapidasList: this.state.busquedas.filter(b => b.urgente).map(b => ({ ...b, badgeStyle: 'background:rgba(221,85,63,.18);color:#8A2F1A' })),
+      metricasPublicaciones: (() => {
+        const activas = this.state.busquedas.filter(b => b.estado !== 'Cerrada');
+        const rapidas = activas.filter(b => b.urgente).length;
+        // Postulantes de las búsquedas activas, según en qué etapa del tablero están.
+        const fichas = activas.flatMap(b => this.state.stages[b.key] || []);
+        const enEtapa = (k) => fichas.filter(f => f.stage === k).length;
+        const cerradas = this.state.busquedas.filter(b => b.estado === 'Cerrada').length + 3;
+        return [
+          { label: 'Búsquedas activas', valor: activas.length,
+            nota: rapidas ? rapidas + (rapidas === 1 ? ' es rápida' : ' son rápidas') : 'ninguna urgente' },
+          { label: 'Postulantes en proceso', valor: fichas.length,
+            nota: enEtapa('nuevos') + ' sin abrir todavía' },
+          { label: 'En entrevista', valor: enEtapa('entrevista'),
+            nota: enEtapa('oferta') + ' con oferta enviada' },
+          { label: 'Cerradas', valor: cerradas, nota: 'con contratación confirmada' },
+        ];
+      })(),
       busquedasActivasCount: this.state.busquedas.filter(b => b.estado !== 'Cerrada').length,
       busquedasCerradasCount: this.state.busquedas.filter(b => b.estado === 'Cerrada').length + 3,
       goSearchesActivas: () => this.setSearchesTab('activas'),
