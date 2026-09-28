@@ -2060,19 +2060,14 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-for>
 </div>
 <div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px" onClick="{{ toggleSoloRapidas }}"><span style="font:500 13px/1 Inter,sans-serif">⚡ Sólo suplencias</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloRapidasTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloRapidasDotStyle }}"></span></span></div>
 <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onClick="{{ toggleSoloVerificados }}"><span style="font:500 13px/1 Inter,sans-serif">Solo verificados</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloVerificadosTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloVerificadosDotStyle }}"></span></span></div>
 </div>
 </details>
 <div style="flex:1;min-width:0">
-<div class="udoar-tabs-row" style="display:flex;gap:8px;margin-bottom:18px">
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ buscadorTabTodosStyle }}" onClick="{{ setBuscadorTabTodos }}">Todos</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ buscadorTabCatalogoStyle }}" onClick="{{ setBuscadorTabCatalogo }}">Búsqueda</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ buscadorTabRapidaStyle }}" onClick="{{ setBuscadorTabRapida }}">⚡ Suplencias</button>
-<button style="border:none;border-radius:999px;padding:9px 18px;font:600 13px/1 Inter,sans-serif;cursor:pointer;{{ buscadorTabFavoritosStyle }}" onClick="{{ setBuscadorTabFavoritos }}">★ Favoritos</button>
-</div>
 <sc-if value="{{ isBuscadorTabTodos }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px">
-<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Todos los docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Catálogo completo + disponibles para suplencias · Vicente López, Olivos, Martínez</p></div>
+<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ buscadorTitulo }}</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">{{ buscadorBajada }}</p></div>
 </div>
 <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
 <div style="position:relative;max-width:260px;flex:1;min-width:200px">
@@ -2085,8 +2080,10 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 <select class="cbl-select" style="max-width:150px" value="{{ buscadorFiltroNivel }}" onChange="{{ updateBuscadorFiltroNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
 <select class="cbl-select" style="max-width:170px" value="{{ buscadorFiltroTipo }}" onChange="{{ updateBuscadorFiltroTipo }}"><option>Todos los tipos</option><option>Titular</option><option>Suplencia</option><option>Suplencia rápida</option></select>
+<span onClick="{{ toggleSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloFavoritosStyle }}">★ Favoritos</span>
 </div>
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<sc-if value="{{ mostrarRapidos }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ buscadorDocentesRapidosList }}" as="doc" hint-placeholder-count="2">
 <div style="background:#fff;border:1.5px solid #DD553F;border-radius:8px;padding:18px">
 <span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:10px">Disponible para suplencia rápida</span>
@@ -2099,6 +2096,8 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
 </div>
 </sc-for>
+</sc-if>
+<sc-if value="{{ mostrarCatalogo }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ buscadorDocentesList }}" as="doc" hint-placeholder-count="6">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
 <div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="flex:1;min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if><sc-if value="{{ doc.notVerified }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge cbl-badge--neutral" style="font-size:10px">Sin verificar</span></sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div><span onClick="{{ doc.onToggleFavorito }}" style="cursor:pointer;font-size:17px;flex:none;{{ doc.favStarStyle }}">★</span></div>
@@ -2110,86 +2109,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn cbl-btn--sm" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
 </div>
 </sc-for>
-</div>
 </sc-if>
-<sc-if value="{{ isBuscadorTabCatalogo }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px">
-<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">34 docentes en tu zona</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Educación Física · Primario y Secundario · Vicente López, Olivos, Martínez</p></div>
-</div>
-<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-<div style="position:relative;max-width:260px;flex:1;min-width:200px">
-<input class="cbl-input" style="width:100%" placeholder="Buscar por nombre o disciplina" value="{{ buscadorSearchQuery }}" onChange="{{ updateBuscadorSearchQuery }}">
-<sc-if value="{{ hasBuscadorSearchSuggestions }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E3E1DC;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.1);margin-top:4px;z-index:5;overflow:hidden">
-<sc-for list="{{ buscadorSearchSuggestions }}" as="opt" hint-placeholder-count="3"><div onClick="{{ opt.onPick }}" style="padding:9px 14px;font:400 13px/1 Inter,sans-serif;cursor:pointer" style-hover="background:#F5F4F0">{{ opt.label }}</div></sc-for>
-</div>
-</sc-if>
-</div>
-<select class="cbl-select" style="max-width:150px" value="{{ buscadorFiltroNivel }}" onChange="{{ updateBuscadorFiltroNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
-<select class="cbl-select" style="max-width:170px" value="{{ buscadorFiltroTipo }}" onChange="{{ updateBuscadorFiltroTipo }}"><option>Todos los tipos</option><option>Titular</option><option>Suplencia</option><option>Suplencia rápida</option></select>
-</div>
-<sc-if value="{{ buscadorNoResults }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:40px;text-align:center;color:#6B706C;font:400 14px/1.5 Inter,sans-serif">Ningún docente coincide con estos filtros. Probá destildar alguno.</div></sc-if>
-<div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
-<sc-for list="{{ buscadorDocentesList }}" as="doc" hint-placeholder-count="6">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
-<div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="flex:1;min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if><sc-if value="{{ doc.notVerified }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge cbl-badge--neutral" style="font-size:10px">Sin verificar</span></sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div><span onClick="{{ doc.onToggleFavorito }}" style="cursor:pointer;font-size:17px;flex:none;{{ doc.favStarStyle }}">★</span></div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-<sc-for list="{{ doc.tags }}" as="t" hint-placeholder-count="2"><span class="cbl-badge cbl-badge--neutral">{{ t }}</span></sc-for>
-</div>
-<div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ doc.zona }}<br>{{ doc.horario }}</div>
-<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#F5F5F1;border-radius:8px;margin-bottom:14px;font:500 12px/1 Inter,sans-serif;color:{{ doc.coincideColor }}">★ Coincide en {{ doc.coincide }} de 6 criterios</div>
-<div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn cbl-btn--sm" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
-</div>
-</sc-for>
-</div>
-</sc-if>
-<sc-if value="{{ isBuscadorTabRapida }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px">
-<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Suplencias</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C;max-width:56ch">Docentes disponibles ya para cubrir suplencias e imprevistos.</p></div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F" onClick="{{ goInstPublicar }}">+ Publicar suplencia</button>
-</div>
-<div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-<div style="position:relative;max-width:260px;flex:1;min-width:200px">
-<input class="cbl-input" style="width:100%" placeholder="Buscar por nombre o disciplina" value="{{ buscadorSearchQuery }}" onChange="{{ updateBuscadorSearchQuery }}">
-<sc-if value="{{ hasBuscadorSearchSuggestions }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E3E1DC;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.1);margin-top:4px;z-index:5;overflow:hidden">
-<sc-for list="{{ buscadorSearchSuggestions }}" as="opt" hint-placeholder-count="3"><div onClick="{{ opt.onPick }}" style="padding:9px 14px;font:400 13px/1 Inter,sans-serif;cursor:pointer" style-hover="background:#F5F4F0">{{ opt.label }}</div></sc-for>
-</div>
-</sc-if>
-</div>
-<select class="cbl-select" style="max-width:150px" value="{{ buscadorFiltroNivel }}" onChange="{{ updateBuscadorFiltroNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
-<select class="cbl-select" style="max-width:170px" value="{{ buscadorFiltroTipo }}" onChange="{{ updateBuscadorFiltroTipo }}"><option>Todos los tipos</option><option>Titular</option><option>Suplencia</option><option>Suplencia rápida</option></select>
-</div>
-<sc-if value="{{ buscadorRapidosNoResults }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:40px;text-align:center;color:#6B706C;font:400 14px/1.5 Inter,sans-serif">Nadie disponible para suplencia rápida con estos filtros.</div></sc-if>
-<div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
-<sc-for list="{{ buscadorDocentesRapidosList }}" as="doc" hint-placeholder-count="2">
-<div style="background:#fff;border:1.5px solid #DD553F;border-radius:8px;padding:18px">
-<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:10px">Disponible para suplencia rápida</span>
-<div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="flex:1;min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div><span onClick="{{ doc.onToggleFavorito }}" style="cursor:pointer;font-size:17px;flex:none;{{ doc.favStarStyle }}">★</span></div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-<sc-for list="{{ doc.tags }}" as="t" hint-placeholder-count="2"><span class="cbl-badge cbl-badge--neutral">{{ t }}</span></sc-for>
-</div>
-<div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ doc.zona }}<br>{{ doc.horario }}</div>
-<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#F5F5F1;border-radius:8px;margin-bottom:14px;font:500 12px/1 Inter,sans-serif;color:{{ doc.coincideColor }}">★ Coincide en {{ doc.coincide }} de 6 criterios</div>
-<div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
-</div>
-</sc-for>
-</div>
-</sc-if>
-<sc-if value="{{ isBuscadorTabFavoritos }}" hint-placeholder-val="{{ false }}">
-<div style="margin-bottom:14px"><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Favoritos</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Docentes que fuiste guardando para tener a mano.</p></div>
-<sc-if value="{{ buscadorFavoritosEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:40px;text-align:center;color:#6B706C;font:400 14px/1.5 Inter,sans-serif">Todavía no guardaste ningún docente como favorito. Tocá la ★ en una tarjeta para guardarla.</div></sc-if>
-<div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
-<sc-for list="{{ buscadorFavoritosList }}" as="doc" hint-placeholder-count="2">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
-<div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="flex:1;min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div><span onClick="{{ doc.onToggleFavorito }}" style="cursor:pointer;color:#F0B400;font-size:18px;flex:none">★</span></div>
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-<sc-for list="{{ doc.tags }}" as="t" hint-placeholder-count="2"><span class="cbl-badge cbl-badge--neutral">{{ t }}</span></sc-for>
-</div>
-<div style="font:400 12px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:14px">{{ doc.zona }}<br>{{ doc.horario }}</div>
-<div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1" onClick="{{ goInstDocPerfil }}">Ver perfil</button><sc-if value="{{ doc.invited }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn cbl-btn--sm" style="flex:1;background:#E7F5EF;color:#1E7A4C" disabled="{{ true }}">✓ Invitada</button></sc-if><sc-if value="{{ doc.invitedNot }}" hint-placeholder-val="{{ true }}"><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#DD553F" onClick="{{ doc.onInvite }}">Invitar a postularse</button></sc-if></div>
-</div>
-</sc-for>
 </div>
 </sc-if>
 </div>
@@ -4537,6 +4457,7 @@ class Component extends DCLogic {
       { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
     ],
     docBuscarVista: 'lista', mapaOfertaIdx: null,
+    buscadorSoloRapidas: false, buscadorSoloFavoritos: false,
     docCategoria: 'Docente',
     docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
@@ -5901,6 +5822,24 @@ class Component extends DCLogic {
       handleZonaFilterKeyDown: (e) => { if (e.key === 'Enter') { if (this.state.addingZonaFilterVal.trim()) this.setState(s => ({ filtroZonas: [...s.filtroZonas, s.addingZonaFilterVal.trim()], addingZonaFilter: false, addingZonaFilterVal: '' })); else this.setState({ addingZonaFilter: false }); } },
       confirmZonaFilter: () => { if (this.state.addingZonaFilterVal.trim()) this.setState(s => ({ filtroZonas: [...s.filtroZonas, s.addingZonaFilterVal.trim()], addingZonaFilter: false, addingZonaFilterVal: '' })); else this.setState({ addingZonaFilter: false }); },
       toggleSoloVerificados: () => this.setState(s => ({ filtroSoloVerificados: !s.filtroSoloVerificados })),
+      toggleSoloRapidas: () => this.setState(st => ({ buscadorSoloRapidas: !st.buscadorSoloRapidas })),
+      toggleSoloFavoritos: () => this.setState(st => ({ buscadorSoloFavoritos: !st.buscadorSoloFavoritos })),
+      soloRapidasTrackStyle: this.state.buscadorSoloRapidas ? 'background:#DD553F' : 'background:#CFCCC5',
+      soloRapidasDotStyle: this.state.buscadorSoloRapidas ? 'right:2px' : 'left:2px',
+      soloFavoritosStyle: this.state.buscadorSoloFavoritos
+        ? 'background:#16214F;color:#fff'
+        : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+      // Con "sólo suplencias" se esconde el catálogo y queda la tira de disponibles ya.
+      mostrarRapidos: true,
+      mostrarCatalogo: !this.state.buscadorSoloRapidas,
+      buscadorTitulo: this.state.buscadorSoloRapidas
+        ? (this.state.buscadorSoloFavoritos ? 'Favoritos disponibles para suplencia' : 'Suplencias')
+        : (this.state.buscadorSoloFavoritos ? 'Favoritos' : 'Todos los docentes'),
+      buscadorBajada: this.state.buscadorSoloRapidas
+        ? 'Docentes disponibles ya para cubrir suplencias e imprevistos.'
+        : (this.state.buscadorSoloFavoritos
+            ? 'Docentes que fuiste guardando para tener a mano.'
+            : 'Catálogo completo + disponibles para suplencias · Vicente López, Olivos, Martínez'),
       soloVerificadosTrackStyle: this.state.filtroSoloVerificados ? 'background:#16214F' : 'background:#CFCCC5',
       soloVerificadosDotStyle: this.state.filtroSoloVerificados ? 'right:2px' : 'left:2px',
       clearFilters: () => this.clearFilters(),
@@ -5947,6 +5886,7 @@ class Component extends DCLogic {
           if (activeDisciplinas.length && !d.disciplinas.some(x => activeDisciplinas.includes(x))) return false;
           if (activeDisponibilidad.length && !d.turnos.some(x => activeDisponibilidad.includes(x))) return false;
           if (this.state.filtroSoloVerificados && !d.verified) return false;
+          if (this.state.buscadorSoloFavoritos && !this.state.favoritosInst.includes(d.name)) return false;
           if (!this.matchesZonaFilter(d.zona)) return false;
           if (!this.matchesBuscadorTexto(d)) return false;
           if (this.state.buscadorFiltroNivel !== 'Todos los niveles' && d.nivel !== this.state.buscadorFiltroNivel) return false;
@@ -5967,6 +5907,7 @@ class Component extends DCLogic {
           if (activeDisciplinas.length && !d.disciplinas.some(x => activeDisciplinas.includes(x))) return false;
           if (activeDisponibilidad.length && !d.turnos.some(x => activeDisponibilidad.includes(x))) return false;
           if (this.state.filtroSoloVerificados && !d.verified) return false;
+          if (this.state.buscadorSoloFavoritos && !this.state.favoritosInst.includes(d.name)) return false;
           if (!this.matchesZonaFilter(d.zona)) return false;
           if (!this.matchesBuscadorTexto(d)) return false;
           if (this.state.buscadorFiltroNivel !== 'Todos los niveles' && d.nivel !== this.state.buscadorFiltroNivel) return false;
