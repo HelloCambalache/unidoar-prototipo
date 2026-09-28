@@ -55,6 +55,9 @@
 <datalist id="zonasSuggestions"><option value="Vicente López"></option><option value="Olivos"></option><option value="Martínez"></option><option value="San Isidro"></option><option value="Boulogne"></option><option value="Núñez"></option><option value="Tigre"></option><option value="Nordelta"></option><option value="Munro"></option><option value="Florida"></option><option value="Villa Adelina"></option><option value="Palermo"></option><option value="Belgrano"></option></datalist>
 <link rel="stylesheet" href="_ds/design-system-f87763ef-190c-425f-b703-e11a0398c0b2/styles.css">
 <script src="_ds/design-system-f87763ef-190c-425f-b703-e11a0398c0b2/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="./mapa.js" defer></script>
 <script src="./image-slot-store.js"></script>
 <script src="./image-slot.js"></script>
 <style>
@@ -1323,26 +1326,14 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-if>
 <sc-if value="{{ esVistaMapa }}" hint-placeholder-val="{{ false }}">
 <div class="udoar-mapa" style="position:relative;background:#EDEBE5;border:1px solid #E3E1DC;border-radius:12px;overflow:hidden">
-<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true">
-<path d="M100 0 L100 100 L66 100 C74 74 84 50 100 34 Z" fill="#D9E8F0"></path>
-<path d="M100 0 L100 34 C84 50 74 74 66 100 L60 100 C69 72 80 47 100 28 Z" fill="#C9DEEA"></path>
-<path d="M0 62 C22 58 44 66 62 86" stroke="#DCDAD3" stroke-width="1.1" fill="none"></path>
-<path d="M30 0 C34 30 40 58 55 100" stroke="#DCDAD3" stroke-width="1.1" fill="none"></path>
-</svg>
-<div class="udoar-hero-grid-bg" style="position:absolute;inset:0;opacity:.5;pointer-events:none"></div>
-<sc-for list="{{ mapaZonas }}" as="z" hint-placeholder-count="6">
-<span style="position:absolute;transform:translate(-50%,-50%);font:600 10px/1 Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#A7A49C;white-space:nowrap;pointer-events:none;{{ z.style }}">{{ z.nombre }}</span>
-</sc-for>
-<sc-for list="{{ mapaPines }}" as="p" hint-placeholder-count="6">
-<span onClick="{{ p.onClick }}" title="{{ p.titulo }}" style="position:absolute;transform:translate(-50%,-100%);cursor:pointer;display:block;width:26px;height:26px;border-radius:999px 999px 999px 2px;rotate:45deg;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(31,36,33,.3);{{ p.style }}"></span>
-</sc-for>
-<div class="udoar-mapa-leyenda" style="position:absolute;right:14px;top:14px;display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.93);border:1px solid #E3E1DC;border-radius:999px;padding:8px 14px;pointer-events:none">
+<div id="udoar-mapa-host" style="position:absolute;inset:0"></div>
+<div class="udoar-mapa-leyenda" style="position:absolute;right:14px;top:14px;z-index:500;display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.93);border:1px solid #E3E1DC;border-radius:999px;padding:8px 14px;pointer-events:none">
 <sc-for list="{{ mapaLeyenda }}" as="l" hint-placeholder-count="3">
 <span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span>{{ l.label }}</span>
 </sc-for>
 </div>
 <sc-if value="{{ mapaSel }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-mapa-card" style="position:absolute;left:14px;right:14px;bottom:14px;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px 16px;box-shadow:0 10px 28px rgba(31,36,33,.18);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<div class="udoar-mapa-card" style="position:absolute;left:14px;right:14px;bottom:14px;z-index:500;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px 16px;box-shadow:0 10px 28px rgba(31,36,33,.18);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
 <img src="{{ mapaSel.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
 <div style="flex:1 1 200px;min-width:0">
 <div style="font:600 15px/1.3 Inter,sans-serif">{{ mapaSel.title }}</div>
@@ -1355,7 +1346,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 </sc-if>
 <sc-if value="{{ mapaSinSel }}" hint-placeholder-val="{{ true }}">
-<div style="position:absolute;left:14px;right:14px;bottom:14px;text-align:center;font:500 12.5px/1.4 Inter,sans-serif;color:#6B706C;background:rgba(255,255,255,.9);border-radius:8px;padding:9px;pointer-events:none">Tocá un punto para ver la búsqueda</div>
+<div style="position:absolute;left:14px;right:14px;bottom:14px;z-index:500;text-align:center;font:500 12.5px/1.4 Inter,sans-serif;color:#6B706C;background:rgba(255,255,255,.9);border-radius:8px;padding:9px;pointer-events:none">Tocá un punto para ver la búsqueda</div>
 </sc-if>
 </div>
 </sc-if>
@@ -1583,7 +1574,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </div>
 <div class="udoar-btn-row" style="display:flex;gap:8px">
 <button class="cbl-btn cbl-btn--secondary" style="flex:1;{{ i.savedBtnStyle }}" onClick="{{ i.onToggleSaved }}">{{ i.savedLabel }}</button>
-<button class="cbl-btn cbl-btn--primary" style="flex:1;background:#16214F" onClick="{{ i.onVer }}">Ver institución</button>
+<button class="cbl-btn cbl-btn--primary" style="flex:1;background:#16214F" onClick="{{ i.onVer }}">Ver perfil</button>
 </div>
 </div>
 </sc-for>
@@ -1709,7 +1700,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="font:400 12px/1.4 Inter,sans-serif;color:#6B706C;margin-bottom:12px">{{ selectedOport.institucionTipo }}</div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#3D423E">{{ selectedOport.institucionDesc }}</p>
 <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #E3E1DC;margin-bottom:12px;font:400 13px/1 Inter,sans-serif"><span style="color:#6B706C">Búsquedas activas</span><span style="font-weight:600">{{ selectedOport.institucionBusquedas }}</span></div>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ selectedOport.onVerInstitucion }}">Ver institución</button>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ selectedOport.onVerInstitucion }}">Ver perfil</button>
 </div>
 <sc-if value="{{ oportConfirmed }}" hint-placeholder-val="{{ false }}">
 <div style="background:#E7F5EF;border:1px solid #B9E3CE;border-radius:8px;padding:16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E7A4C" stroke-width="2.2" style="flex:none;margin-top:1px"><path d="M20 6L9 17l-5-5"></path></svg><div style="font:400 13px/1.5 Inter,sans-serif;color:#1E7A4C">¡Postulación enviada! Te avisamos por WhatsApp si te seleccionan.</div></div>
@@ -3644,7 +3635,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </div>
 <div class="udoar-btn-row" style="display:flex;gap:8px">
 <button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1;{{ i.savedBtnStyle }}" onClick="{{ i.onToggleSaved }}">{{ i.savedLabel }}</button>
-<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#16214F" onClick="{{ i.onVer }}">Ver institución</button>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="flex:1;background:#16214F" onClick="{{ i.onVer }}">Ver perfil</button>
 </div>
 </div>
 </sc-for>
@@ -4827,11 +4818,13 @@ class Component extends DCLogic {
   // Mapa esquemático de Zona Norte: cada zona tiene una posición fija en
   // porcentajes y las ofertas se clavan ahí, separadas entre sí cuando varias
   // caen en la misma zona. No es cartografía, es orientación.
+  // Latitud y longitud de cada zona, para el mapa de OpenStreetMap.
   ZONAS_MAPA = {
-    'Nordelta': [19, 13], 'Tigre': [11, 26], 'Boulogne': [27, 42], 'San Isidro': [39, 31],
-    'Martínez': [48, 41], 'Villa Adelina': [35, 53], 'Munro': [46, 62], 'Olivos': [57, 51],
-    'Florida': [55, 65], 'Vicente López': [64, 64], 'Núñez': [74, 75], 'Belgrano': [83, 84],
-    'Palermo': [90, 92],
+    'Nordelta': [-34.4030, -58.6480], 'Tigre': [-34.4264, -58.5796], 'Boulogne': [-34.5060, -58.5660],
+    'San Isidro': [-34.4708, -58.5130], 'Martínez': [-34.4880, -58.5060], 'Villa Adelina': [-34.5230, -58.5480],
+    'Munro': [-34.5300, -58.5230], 'Olivos': [-34.5100, -58.4930], 'Florida': [-34.5390, -58.4930],
+    'Vicente López': [-34.5280, -58.4790], 'Núñez': [-34.5450, -58.4600], 'Belgrano': [-34.5620, -58.4560],
+    'Palermo': [-34.5780, -58.4250],
   };
   colorDeCategoria(cat) {
     if (cat === 'Entrenador/a') return '#F0B400';
@@ -5149,7 +5142,11 @@ class Component extends DCLogic {
   selectMember(m) { this.setState({ selectedMember: m }); }
   closeMember() { this.setState({ selectedMember: null }); }
 
-  componentDidUpdate() { window.__udInst = this; if (window.__udSyncUrl) window.__udSyncUrl(this.state.screen); }
+  componentDidUpdate() {
+    // El mapa de Leaflet vive fuera de la plantilla: se le pasan los pines por acá.
+    try {
+      window.__udMapaDatos = { pines: this._valsMapa || [], sel: this.state.mapaOfertaIdx };
+    } catch (e) {} window.__udInst = this; if (window.__udSyncUrl) window.__udSyncUrl(this.state.screen); }
   go(s) { this.setState(st => ({ screen: s, selectedCv: null, selectedCurso: null, perfilFrom: s === 'instDocPerfil' ? st.screen : st.perfilFrom })); }
   showAppToast(msg) { this.setState({ appToastMsg: msg }); clearTimeout(this._appToastTimer); this._appToastTimer = setTimeout(() => this.setState({ appToastMsg: '' }), 2200); }
   selectInstitucion() { this.setState({ screen: 'instOnb1' }); }
@@ -5691,26 +5688,19 @@ class Component extends DCLogic {
         { label: 'Entrenadores', color: '#F0B400' },
         { label: 'Guardavidas', color: '#82D8E9' },
       ],
-      mapaZonas: Object.keys(this.ZONAS_MAPA).map(n => ({
-        nombre: n,
-        style: 'left:' + this.ZONAS_MAPA[n][0] + '%;top:' + (this.ZONAS_MAPA[n][1] + 6) + '%',
-      })),
-      mapaPines: (() => {
+      mapaPines: this._valsMapa = (() => {
         const usadas = {};
         return this.oportunidadesFiltradas().map((o, i) => {
-          const base = this.ZONAS_MAPA[o.zona] || [50, 50];
+          const base = this.ZONAS_MAPA[o.zona] || [-34.52, -58.50];
           const n = usadas[o.zona] = (usadas[o.zona] || 0) + 1;
-          // Varias ofertas en la misma zona se abren en abanico alrededor del punto.
+          // Varias búsquedas en la misma zona se abren en abanico alrededor del punto.
           const ang = (n - 1) * 2.4;
-          const rad = n === 1 ? 0 : 4.4;
-          const x = base[0] + Math.cos(ang) * rad;
-          const y = base[1] + Math.sin(ang) * rad;
-          const sel = this.state.mapaOfertaIdx === i;
+          const rad = n === 1 ? 0 : 0.006;
           return {
             titulo: o.title + ' · ' + o.inst,
-            onClick: () => this.seleccionarEnMapa(i),
-            style: 'left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%;background:' + this.colorDeCategoria(o.categoria)
-              + (sel ? ';outline:3px solid rgba(22,33,79,.3);z-index:5' : ';z-index:2'),
+            lat: base[0] + Math.sin(ang) * rad,
+            lng: base[1] + Math.cos(ang) * rad,
+            color: this.colorDeCategoria(o.categoria),
           };
         });
       })(),
