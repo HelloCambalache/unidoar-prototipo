@@ -215,6 +215,14 @@
     {
       "source": "/app/institucion",
       "destination": "/index.html"
+    },
+    {
+      "source": "/buscar-trabajo",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/instituciones",
+      "destination": "/index.html"
     }
   ],
   "headers": [

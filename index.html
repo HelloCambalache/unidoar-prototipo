@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -321,7 +321,7 @@ a:hover{color:#DD553F}
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
 <span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
@@ -629,7 +629,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
 <div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
@@ -730,7 +730,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#F0B400;color:#1F2421" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
 <div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
@@ -830,7 +830,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
 <div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DC2626;color:#fff" onClick="{{ goSignup }}">Soy institución</button></div>
 </div>
 <div class="udoar-cat-pills" style="padding:14px 40px;background:#FAFAF8;border-bottom:1px solid #E3E1DC;display:flex;gap:10px;flex-wrap:wrap">
@@ -917,6 +917,110 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="padding:44px 40px;background:#16214F;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap"><div style="max-width:600px"><span class="cbl-badge" style="background:rgba(245,147,50,.2);color:#DC2626">Plan Fundador · quedan 8 de 20 cupos</span><h2 style="margin:14px 0 8px;font:600 28px/1.2 Inter,sans-serif;letter-spacing:-.02em;color:#fff">Entrá con precio de fundador y quedátelo</h2></div><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DC2626;color:#fff" onClick="{{ goSignup }}">Quiero el plan Fundador</button></div>
 <dc-import name="Footer" go-landing="{{ goLanding }}" go-educadores="{{ goEducadores }}" go-entrenadores="{{ goEntrenadores }}" go-guardavidas="{{ goGuardavidas }}" go-doc="{{ goDocOnb1 }}" go-inst="{{ goInstBuscador }}" go-bo="{{ goBoOperacion }}" go-planes="{{ goPlanes }}" go-quienes-somos="{{ goQuienesSomos }}" go-terminos="{{ goTerminos }}" go-doc-app="{{ goDocenteAppFresh }}" go-inst-app="{{ goInstitucionAppFresh }}" go-contacto="{{ goContacto }}" hint-size="100%,140px"></dc-import>
 
+</sc-if>
+
+<sc-if value="{{ isPublicTrabajo }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;background:#EDEBE5;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background-color:#040B35">
+<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">
+<span onClick="{{ goPublicTrabajo }}" style="cursor:pointer" style-hover="color:#82D8E9">Buscar trabajo</span>
+<span onClick="{{ goPublicInstituciones }}" style="cursor:pointer" style-hover="color:#82D8E9">Instituciones</span>
+<span onClick="{{ goPlanes }}" style="cursor:pointer" style-hover="color:#82D8E9">Planes</span>
+<span onClick="{{ goQuienesSomos }}" style="cursor:pointer" style-hover="color:#82D8E9">Quiénes somos</span>
+</div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center">
+<span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta</button>
+</div>
+</div>
+
+<div class="udoar-app-main" style="flex:1;padding:36px 48px">
+<h1 style="margin:0 0 6px;font:700 34px/1.2 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#1F2421">Búsquedas abiertas</h1>
+<p style="margin:0 0 22px;font:400 15px/1.5 Inter,sans-serif;color:#6B706C">Todo lo que las instituciones están buscando ahora mismo. Mirá sin cuenta; para postularte necesitás una.</p>
+<div style="background:#16214F;border-radius:12px;padding:22px 26px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+<div style="flex:1 1 320px;min-width:0">
+<div style="font:700 19px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">{{ muroTitulo }}</div>
+<div style="font:400 14px/1.5 Inter,sans-serif;color:rgba(255,255,255,.72)">{{ muroBajada }}</div>
+</div>
+<div class="udoar-btn-row" style="display:flex;gap:10px;flex:none">
+<button class="cbl-btn cbl-btn--secondary" style="background:transparent;border-color:rgba(255,255,255,.35);color:#fff" onClick="{{ goSignup }}">Ya tengo cuenta</button>
+<button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta gratis</button>
+</div>
+</div>
+
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+<input class="cbl-input" style="flex:1;min-width:220px;max-width:360px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
+<select class="cbl-select" style="max-width:190px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
+</div>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+<sc-for list="{{ publicTrabajoList }}" as="o" hint-placeholder-count="9">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:18px;display:flex;flex-direction:column">
+<div style="display:flex;gap:11px;margin-bottom:12px">
+<img src="{{ o.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<div style="min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">
+<div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
+<div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
+</div>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="margin-top:auto;background:#DD553F" onClick="{{ goSignup }}">Postularme</button>
+</div>
+</sc-for>
+</div>
+</div>
+<dc-import name="Footer"></dc-import>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPublicInstituciones }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;background:#EDEBE5;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background-color:#040B35">
+<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">
+<span onClick="{{ goPublicTrabajo }}" style="cursor:pointer" style-hover="color:#82D8E9">Buscar trabajo</span>
+<span onClick="{{ goPublicInstituciones }}" style="cursor:pointer" style-hover="color:#82D8E9">Instituciones</span>
+<span onClick="{{ goPlanes }}" style="cursor:pointer" style-hover="color:#82D8E9">Planes</span>
+<span onClick="{{ goQuienesSomos }}" style="cursor:pointer" style-hover="color:#82D8E9">Quiénes somos</span>
+</div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center">
+<span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span>
+<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta</button>
+</div>
+</div>
+
+<div class="udoar-app-main" style="flex:1;padding:36px 48px">
+<h1 style="margin:0 0 6px;font:700 34px/1.2 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#1F2421">Instituciones en Unidoar</h1>
+<p style="margin:0 0 22px;font:400 15px/1.5 Inter,sans-serif;color:#6B706C">Colegios, clubes, jardines y gimnasios que ya contratan por acá. Entrá a cualquiera para ver qué están buscando.</p>
+<div style="background:#16214F;border-radius:12px;padding:22px 26px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+<div style="flex:1 1 320px;min-width:0">
+<div style="font:700 19px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">{{ muroTitulo }}</div>
+<div style="font:400 14px/1.5 Inter,sans-serif;color:rgba(255,255,255,.72)">{{ muroBajada }}</div>
+</div>
+<div class="udoar-btn-row" style="display:flex;gap:10px;flex:none">
+<button class="cbl-btn cbl-btn--secondary" style="background:transparent;border-color:rgba(255,255,255,.35);color:#fff" onClick="{{ goSignup }}">Ya tengo cuenta</button>
+<button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta gratis</button>
+</div>
+</div>
+
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+<sc-for list="{{ publicInstList }}" as="i" hint-placeholder-count="5">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:18px;display:flex;flex-direction:column">
+<div style="display:flex;gap:11px;margin-bottom:12px">
+<img src="{{ i.logo }}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<div style="min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ i.nombre }}</div><div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C">{{ i.tipo }} · {{ i.zona }}</div></div>
+</div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#3D423E;margin-bottom:14px">{{ i.desc }}</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA">
+<span style="font:500 12.5px/1 Inter,sans-serif;color:#6B706C">{{ i.busquedasLabel }}</span>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm" onClick="{{ goSignup }}">Ver perfil</button>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<dc-import name="Footer"></dc-import>
+</div>
 </sc-if>
 
 <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
@@ -1540,6 +1644,53 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="display:flex;gap:12px;align-items:flex-start;background:#E7F5EF;border:1px solid #B9E3CE;border-radius:10px;padding:14px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1E7A4C" style="flex:none"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5.1-1.3A10 10 0 1012 2zm5.6 14.3c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.2.1.4 0 .6-.3.6-.6.8-.8 1.1-.2.2-.4.4-.2.8.6 1.1 1.3 1.8 2.2 2.4.9.6 1.4.8 1.7.6.3-.2.6-.6.9-.9.2-.3.5-.2.8-.1.3.1 1.7.8 2 .9.3.2.5.2.6.4.1.2.1.7-.2 1.4z"></path></svg><div style="font:400 13px/1.5 Inter,sans-serif;color:#1E7A4C">La institución te contacta por WhatsApp al número que dejaste en tu perfil. Unidoar no tiene chat interno: toda la conversación con {{ selectedPost.inst }} sigue por ahí.</div></div>
 </sc-if>
 <button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="margin-top:16px" onClick="{{ selectedPost.onVerInst }}">Ir a institución</button>
+<div style="border-top:1px solid #E3E1DC;margin-top:22px;padding-top:18px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Agendar</div>
+<sc-if value="{{ selectedPost.tieneAgenda }}" hint-placeholder-val="{{ false }}">
+<div style="background:#E7F5EF;border:1px solid #B9E3CE;border-radius:8px;padding:14px;margin-bottom:12px">
+<div style="display:flex;align-items:flex-start;gap:9px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E7A4C" stroke-width="1.8" style="flex:none;margin-top:2px"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+<div style="flex:1;min-width:0">
+<div style="font:600 13.5px/1.3 Inter,sans-serif;color:#1E7A4C;margin-bottom:2px">{{ selectedPost.agendaTitulo }}</div>
+<div style="font:400 12.5px/1.4 Inter,sans-serif;color:#1E7A4C">{{ selectedPost.agendaCuando }}</div>
+</div>
+</div>
+<div class="udoar-btn-row" style="display:flex;gap:8px;margin-top:12px">
+<a href="{{ selectedPost.agendaLink }}" target="_blank" rel="noopener" class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:1 1 auto;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#1F2421">Agregar a Google Calendar</a>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none;color:#DC2626;border-color:#F0C4BD" onClick="{{ selectedPost.onBorrarAgenda }}">Quitar</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ selectedPost.sinAgenda }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+<input class="cbl-input" type="date" style="flex:1 1 150px;min-width:0" value="{{ agendaFecha }}" onChange="{{ updateAgendaFecha }}">
+<input class="cbl-input" type="time" style="flex:1 1 110px;min-width:0" value="{{ agendaHora }}" onChange="{{ updateAgendaHora }}">
+</div>
+<input class="cbl-input" style="width:100%;margin-bottom:10px" placeholder="Ej. Entrevista con la directora" value="{{ agendaTitulo }}" onChange="{{ updateAgendaTitulo }}">
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#97125F;{{ agendaBotonStyle }}" onClick="{{ selectedPost.onAgendar }}">Agendar</button>
+</sc-if>
+</div>
+
+<div style="border-top:1px solid #E3E1DC;margin-top:22px;padding-top:18px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:4px">Mis notas</div>
+<p style="margin:0 0 12px;font:400 12.5px/1.45 Inter,sans-serif;color:#6B706C">Privadas. La institución no las ve.</p>
+<sc-if value="{{ selectedPost.tieneNotas }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+<sc-for list="{{ selectedPost.notas }}" as="n" hint-placeholder-count="2">
+<div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:11px 13px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+<span style="font:400 13px/1.5 Inter,sans-serif;color:#3D423E;flex:1;min-width:0">{{ n.texto }}</span>
+<span onClick="{{ n.onBorrar }}" style="cursor:pointer;flex:none;font:500 12px/1 Inter,sans-serif;color:#DC2626">Borrar</span>
+</div>
+<div style="margin-top:6px;font:400 11.5px/1 Inter,sans-serif;color:#9AA09B">{{ n.fecha }}</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<textarea class="cbl-textarea" style="width:100%;min-height:70px;margin-bottom:10px" placeholder="Ej. Pidieron que lleve el título original" value="{{ notaTexto }}" onChange="{{ updateNotaTexto }}"></textarea>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="{{ notaBotonStyle }}" onClick="{{ selectedPost.onGuardarNota }}">Guardar nota</button>
+</div>
+
 </div>
 </sc-if>
 
@@ -4574,6 +4725,7 @@ class Component extends DCLogic {
     docCursoQuery: '', docCursoModalidad: 'Todas las modalidades', docCursoSoloInscripta: false,
     docSoloRapidas: false, docSoloFavoritos: false,
     instVista: 'lista', mapaInstIdx: null,
+    postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
     docCategoria: 'Docente',
     docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
@@ -5019,6 +5171,54 @@ class Component extends DCLogic {
       return true;
     });
   }
+  // ── Notas y agenda de cada postulación ─────────────────────────────────
+  clavePost(p) { return (p && (p.key || p.title)) || ''; }
+  guardarNotaPost(clave) {
+    const texto = (this.state.notaTexto || '').trim();
+    if (!texto) return;
+    this.setState(st => ({
+      postNotas: { ...st.postNotas, [clave]: [{ texto, fecha: this.fechaDeHoy() }, ...(st.postNotas[clave] || [])] },
+      notaTexto: '',
+    }));
+  }
+  borrarNotaPost(clave, i) {
+    this.setState(st => ({ postNotas: { ...st.postNotas, [clave]: (st.postNotas[clave] || []).filter((_, j) => j !== i) } }));
+  }
+  agendarPost(clave, titulo) {
+    const { agendaFecha, agendaHora } = this.state;
+    if (!agendaFecha || !agendaHora) return;
+    this.setState(st => ({
+      postAgenda: { ...st.postAgenda, [clave]: { fecha: agendaFecha, hora: agendaHora, titulo: (st.agendaTitulo || '').trim() || titulo } },
+      agendaFecha: '', agendaHora: '', agendaTitulo: '',
+    }));
+  }
+  borrarAgendaPost(clave) {
+    this.setState(st => { const a = { ...st.postAgenda }; delete a[clave]; return { postAgenda: a }; });
+  }
+  // Link de "agregar al calendario" de Google. Las fechas van en UTC, formato
+  // YYYYMMDDTHHMMSSZ, y el evento dura una hora.
+  linkCalendario(agenda, donde) {
+    if (!agenda) return '#';
+    const inicio = new Date(agenda.fecha + 'T' + agenda.hora + ':00');
+    if (isNaN(inicio)) return '#';
+    const fin = new Date(inicio.getTime() + 60 * 60 * 1000);
+    const fmt = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const q = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: agenda.titulo,
+      dates: fmt(inicio) + '/' + fmt(fin),
+      details: 'Agendado desde Unidoar',
+      location: donde || '',
+    });
+    return 'https://calendar.google.com/calendar/render?' + q.toString();
+  }
+  formatoCuando(agenda) {
+    const d = new Date(agenda.fecha + 'T' + agenda.hora + ':00');
+    if (isNaN(d)) return agenda.fecha + ' · ' + agenda.hora;
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return dias[d.getDay()] + ' ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' · ' + agenda.hora + ' hs';
+  }
   setVistaInst(v) { this.setState({ instVista: v, mapaInstIdx: null }); }
   seleccionarInstEnMapa(i) { this.setState(st => ({ mapaInstIdx: st.mapaInstIdx === i ? null : i })); }
   // La zona de una institución puede venir como "Villa Adelina, Vicente López":
@@ -5328,7 +5528,7 @@ class Component extends DCLogic {
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
       'docOnb1','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
-      'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','instCuenta','contacto',
+      'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
     const vals = {};
     for (const t of targets) {
@@ -5815,6 +6015,22 @@ class Component extends DCLogic {
           : 'background:#F0EFEA;color:#3D423E',
         onPick: () => this.setDocCategoria(c),
       })),
+      // Vistas públicas: el mismo catálogo, pero sin sesión y con muro al postularse.
+      muroTitulo: this.state.screen === 'publicInstituciones'
+        ? 'Creá tu cuenta y mandales tu CV'
+        : 'Creá tu cuenta para postularte',
+      muroBajada: this.state.screen === 'publicInstituciones'
+        ? 'Gratis para docentes. Guardás las instituciones que te interesan y te avisamos cuando publican.'
+        : 'Gratis para docentes. Te lleva dos minutos y después te postulás con un clic.',
+      publicTrabajoList: this.state.oportunidadesMas.filter(o =>
+        (this.state.filtroOportCategoria === 'Todas las categorías' || o.categoria === this.state.filtroOportCategoria) &&
+        (!this.state.filtroOportTexto || (o.title + ' ' + o.inst).toLowerCase().includes(this.state.filtroOportTexto.toLowerCase()))
+      ),
+      publicInstList: this.state.institucionesList.map(i => ({
+        ...i,
+        busquedasLabel: i.busquedas === 0 ? 'Sin búsquedas abiertas'
+          : i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
+      })),
       esInstVistaLista: this.state.instVista !== 'mapa',
       esInstVistaMapa: this.state.instVista === 'mapa',
       verInstLista: () => this.setVistaInst('lista'),
@@ -6018,10 +6234,39 @@ class Component extends DCLogic {
         };
       })(),
       goDocInstitucionesFromPerfil: () => this.go('docInstituciones'),
-      selectedPost: this.state.selectedPost ? { ...this.state.selectedPost, onVerInst: () => {
-        const match = this.state.institucionesList.find(i => i.nombre === this.state.selectedPost.inst);
-        if (match) this.openInstPerfil(match.key); else this.go('docInstituciones');
-      } } : null,
+      selectedPost: this.state.selectedPost ? (() => {
+        const p = this.state.selectedPost;
+        const clave = this.clavePost(p);
+        const notas = this.state.postNotas[clave] || [];
+        const agenda = this.state.postAgenda[clave] || null;
+        return {
+          ...p,
+          onVerInst: () => {
+            const match = this.state.institucionesList.find(i => i.nombre === p.inst);
+            if (match) this.openInstPerfil(match.key); else this.go('docInstituciones');
+          },
+          notas: notas.map((n, i) => ({ ...n, onBorrar: () => this.borrarNotaPost(clave, i) })),
+          tieneNotas: notas.length > 0,
+          onGuardarNota: () => this.guardarNotaPost(clave),
+          tieneAgenda: !!agenda,
+          sinAgenda: !agenda,
+          agendaTitulo: agenda ? agenda.titulo : '',
+          agendaCuando: agenda ? this.formatoCuando(agenda) : '',
+          agendaLink: this.linkCalendario(agenda, p.inst),
+          onAgendar: () => this.agendarPost(clave, 'Entrevista · ' + p.title),
+          onBorrarAgenda: () => this.borrarAgendaPost(clave),
+        };
+      })() : null,
+      notaTexto: this.state.notaTexto,
+      updateNotaTexto: (e) => this.setState({ notaTexto: e.target.value }),
+      notaBotonStyle: (this.state.notaTexto || '').trim() ? '' : 'opacity:.45;pointer-events:none',
+      agendaFecha: this.state.agendaFecha,
+      updateAgendaFecha: (e) => this.setState({ agendaFecha: e.target.value }),
+      agendaHora: this.state.agendaHora,
+      updateAgendaHora: (e) => this.setState({ agendaHora: e.target.value }),
+      agendaTitulo: this.state.agendaTitulo,
+      updateAgendaTitulo: (e) => this.setState({ agendaTitulo: e.target.value }),
+      agendaBotonStyle: (this.state.agendaFecha && this.state.agendaHora) ? '' : 'opacity:.45;pointer-events:none',
       closePost: () => this.closePost(),
       openPostEdfisica: () => this.openPost({
         title: 'Ed. Física — Primario', inst: 'Colegio San Andrés del Norte', estado: 'Contratada', badgeStyle: 'background:#E7F5EF;color:#1E7A4C', sinMensajes: false,
