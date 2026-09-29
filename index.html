@@ -1074,7 +1074,10 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <h1 style="margin:0 0 8px;font:600 22px/1.25 Inter,sans-serif;letter-spacing:-.018em">Contanos sobre tu institución</h1>
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Con esto armamos tu vitrina y filtramos los perfiles que te sirven.</p>
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Nombre de la institución</span><input class="cbl-input" placeholder="Ej. Colegio San Andrés del Norte"></div>
-<div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Tipo de institución</span><select class="cbl-select" value="{{ instTipo }}" onChange="{{ updateInstTipo }}"><option>Colegio privado</option><option>Jardín de infantes</option><option>Club o gimnasio</option><option>Natatorio o colonia</option><option>Instituto de idiomas</option></select></div>
+<div class="udoar-onb-2col" style="display:flex;gap:14px;margin-bottom:14px">
+<div class="cbl-field" style="flex:1"><span class="cbl-label">Tipo de institución</span><select class="cbl-select" value="{{ instTipo }}" onChange="{{ updateInstTipo }}"><option>Colegio privado</option><option>Jardín de infantes</option><option>Club o gimnasio</option><option>Natatorio o colonia</option><option>Instituto de idiomas</option></select></div>
+<div class="cbl-field" style="flex:1"><span class="cbl-label">Año de fundación</span><input class="cbl-input" type="number" min="1800" max="2027" placeholder="Ej. 1978"></div>
+</div>
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Nombre de contacto</span><input class="cbl-input" placeholder="Ej. Marina Gómez"></div>
 <div class="udoar-onb-2col" style="display:flex;gap:14px;margin-bottom:14px">
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Rol en la institución</span><select class="cbl-select"><option>Director/a</option><option>Coordinador/a</option><option>Docente</option><option>Administrativo/a</option><option>Otro</option></select></div>
@@ -1906,7 +1909,8 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="padding:16px;border-right:1px solid #E3E1DC"><div style="font:700 22px/1 Inter,sans-serif">{{ selectedInst.alumnos }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:4px">alumnos</div></div>
 <div style="padding:16px;border-right:1px solid #E3E1DC"><div style="font:600 14px/1.3 Inter,sans-serif">{{ selectedInst.niveles }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:4px">niveles</div></div>
 <div style="padding:16px;border-right:1px solid #E3E1DC"><div style="font:600 14px/1.3 Inter,sans-serif">{{ selectedInst.turnos }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:4px">turnos</div></div>
-<div style="padding:16px"><div style="font:700 22px/1 Inter,sans-serif">{{ selectedInst.docentesPlanta }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:4px">docentes en planta</div></div>
+<div style="padding:16px;border-right:1px solid #E3E1DC"><div style="font:700 22px/1 Inter,sans-serif">{{ selectedInst.docentesPlanta }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:4px">docentes en planta</div></div>
+<div style="padding:16px"><div style="font:700 22px/1 Inter,sans-serif">{{ selectedInst.fundada }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C">fundación</div></div>
 </div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px;margin-bottom:16px">
 <div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Sobre la institución</div>
@@ -2150,7 +2154,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px">
-<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:600 15px/1 Inter,sans-serif">Disponibilidad horaria</span><span style="font:400 12px/1 Inter,sans-serif;color:#9AA09B">Tocá una celda para cambiarla</span></div>
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:600 15px/1 Inter,sans-serif">Disponibilidad horaria</span><span style="font:400 12px/1 Inter,sans-serif;color:#9AA09B">Marcá tu disponibilidad horaria</span></div>
 <div style="display:grid;grid-template-columns:90px repeat(5,1fr);gap:6px;font:400 12px/1 Inter,sans-serif;color:#6B706C;margin-bottom:8px"><span></span><span style="text-align:center">Lun</span><span style="text-align:center">Mar</span><span style="text-align:center">Mié</span><span style="text-align:center">Jue</span><span style="text-align:center">Vie</span></div>
 <sc-for list="{{ docDispRows }}" as="row" hint-placeholder-count="3">
 <div style="display:grid;grid-template-columns:90px repeat(5,1fr);gap:6px;margin-bottom:6px">
@@ -3123,6 +3127,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
 <input class="cbl-input" style="flex:1;min-width:160px;font:400 13px/1 Inter,sans-serif;color:#6B706C;border:none;padding:2px 0;height:auto;box-shadow:none" value="Colegio privado bilingüe">
 <input class="cbl-input" style="flex:1;min-width:160px;font:400 13px/1 Inter,sans-serif;color:#6B706C;border:none;padding:2px 0;height:auto;box-shadow:none" value="Villa Adelina, Vicente López">
+<input class="cbl-input" style="flex:1;min-width:160px;font:400 13px/1 Inter,sans-serif;color:#6B706C;border:none;padding:2px 0;height:auto;box-shadow:none" value="Fundado en 1978">
 </div>
 </div>
 </div>
@@ -4560,7 +4565,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;margin-bottom:12px">
 <div style="font:600 13px/1 Inter,sans-serif;margin-bottom:4px">Disponibilidad horaria</div>
-<div style="font:400 11px/1.3 Inter,sans-serif;color:#9AA09B;margin-bottom:12px">Tocá una celda para cambiarla · actualizada hace 6 días</div>
+<div style="font:400 11px/1.3 Inter,sans-serif;color:#9AA09B;margin-bottom:12px">Marcá tu disponibilidad horaria · actualizada hace 6 días</div>
 <div style="display:grid;grid-template-columns:56px repeat(5,1fr);gap:5px;font:400 10.5px/1 Inter,sans-serif;color:#6B706C;margin-bottom:6px"><span></span><span style="text-align:center">Lun</span><span style="text-align:center">Mar</span><span style="text-align:center">Mié</span><span style="text-align:center">Jue</span><span style="text-align:center">Vie</span></div>
 <div style="display:grid;grid-template-columns:56px repeat(5,1fr);gap:5px;margin-bottom:5px"><span style="font:400 11px/1 Inter,sans-serif;color:#6B706C;align-self:center">Mañana</span><span style="height:22px;border-radius:5px;background:#16214F"></span><span style="height:22px;border-radius:5px;background:#16214F"></span><span style="height:22px;border-radius:5px;background:#16214F"></span><span style="height:22px;border-radius:5px;background:#16214F"></span><span style="height:22px;border-radius:5px;background:#16214F"></span></div>
 <div style="display:grid;grid-template-columns:56px repeat(5,1fr);gap:5px;margin-bottom:5px"><span style="font:400 11px/1 Inter,sans-serif;color:#6B706C;align-self:center">Tarde</span><span style="height:22px;border-radius:5px;background:#F0EFEA"></span><span style="height:22px;border-radius:5px;background:#8CA9BE"></span><span style="height:22px;border-radius:5px;background:#F0EFEA"></span><span style="height:22px;border-radius:5px;background:#8CA9BE"></span><span style="height:22px;border-radius:5px;background:#F0EFEA"></span></div>
@@ -4922,22 +4927,22 @@ class Component extends DCLogic {
     ],
     filtroOportCategoria: 'Todas las categorías', filtroOportNivel: 'Todos los niveles', filtroOportTurno: 'Todos los turnos', filtroOportTexto: '',
     institucionesList: [
-      { key: 'sanandres', portada: 'assets/sanandres-portada-fixed.jpg', nombre: 'Colegio San Andrés del Norte', tipo: 'Colegio privado', zona: 'Villa Adelina, Vicente López', logo: 'assets/inst-logo-sanandres.png', direccion: 'Av. de los Fresnos 2140, Villa Adelina', desc: 'Colegio bilingüe de Nivel Inicial, Primario y Secundario en Vicente López. 340 alumnos.', verificada: true, busquedas: 3, saved: false, alumnos: 640, niveles: 'Inicial · Primario · Secundario', turnos: 'Mañana y tarde', docentesPlanta: 48, busquedasList: [
+      { key: 'sanandres', fundada: '1978', portada: 'assets/sanandres-portada-fixed.jpg', nombre: 'Colegio San Andrés del Norte', tipo: 'Colegio privado', zona: 'Villa Adelina, Vicente López', logo: 'assets/inst-logo-sanandres.png', direccion: 'Av. de los Fresnos 2140, Villa Adelina', desc: 'Colegio bilingüe de Nivel Inicial, Primario y Secundario en Vicente López. 340 alumnos.', verificada: true, busquedas: 3, saved: false, alumnos: 640, niveles: 'Inicial · Primario · Secundario', turnos: 'Mañana y tarde', docentesPlanta: 48, busquedasList: [
         { puesto: 'Ed. Física — Primario', tipo: 'Titular · 18 hs semanales', turno: 'Mañana' },
         { puesto: 'Maestra de sala de 4', tipo: 'Suplencia', turno: 'Turno tarde' },
         { puesto: 'Profe de Inglés — Secundario', tipo: 'Titular · 12 hs', turno: 'Turno mañana' },
       ] },
-      { key: 'ribera', portada: '', nombre: 'Club Atlético Ribera', tipo: 'Club deportivo', zona: 'Núñez', logo: 'assets/inst-logo-ribera.png', direccion: 'Av. del Libertador 4800, Núñez', desc: 'Club social y deportivo con escuela de natación activa todo el año y colonia de verano.', verificada: true, busquedas: 1, saved: false, alumnos: 1200, niveles: 'Todas las edades', turnos: 'Mañana, tarde y fin de semana', docentesPlanta: 22, busquedasList: [
+      { key: 'ribera', fundada: '1952', portada: '', nombre: 'Club Atlético Ribera', tipo: 'Club deportivo', zona: 'Núñez', logo: 'assets/inst-logo-ribera.png', direccion: 'Av. del Libertador 4800, Núñez', desc: 'Club social y deportivo con escuela de natación activa todo el año y colonia de verano.', verificada: true, busquedas: 1, saved: false, alumnos: 1200, niveles: 'Todas las edades', turnos: 'Mañana, tarde y fin de semana', docentesPlanta: 22, busquedasList: [
         { puesto: 'Natación — escuela de verano', tipo: 'Temporada', turno: 'Turno mañana' },
       ] },
-      { key: 'vicentelopez', portada: '', nombre: 'Instituto Vicente López', tipo: 'Instituto privado', zona: 'Vicente López', logo: 'assets/inst-logo-vicentelopez.png', direccion: 'Av. Maipú 1620, Vicente López', desc: 'Instituto de Nivel Secundario y Terciario con orientación en ciencias sociales.', verificada: true, busquedas: 2, saved: false, alumnos: 410, niveles: 'Secundario · Terciario', turnos: 'Mañana y tarde', docentesPlanta: 35, busquedasList: [
+      { key: 'vicentelopez', fundada: '1991', portada: '', nombre: 'Instituto Vicente López', tipo: 'Instituto privado', zona: 'Vicente López', logo: 'assets/inst-logo-vicentelopez.png', direccion: 'Av. Maipú 1620, Vicente López', desc: 'Instituto de Nivel Secundario y Terciario con orientación en ciencias sociales.', verificada: true, busquedas: 2, saved: false, alumnos: 410, niveles: 'Secundario · Terciario', turnos: 'Mañana y tarde', docentesPlanta: 35, busquedasList: [
         { puesto: 'Ed. Física — Secundario', tipo: 'Titular · 12 hs semanales', turno: 'Turno tarde' },
         { puesto: 'Profe de Historia', tipo: 'Titular · 8 hs', turno: 'Turno mañana' },
       ] },
-      { key: 'fullbody', portada: '', nombre: 'Full Body Olivos', tipo: 'Gimnasio', zona: 'Olivos', logo: 'assets/inst-logo-fullbody.png', direccion: 'Av. Maipú 3200, Olivos', desc: 'Gimnasio de barrio con clases grupales y entrenamiento funcional.', verificada: false, busquedas: 1, saved: false, alumnos: 380, niveles: 'Adultos', turnos: 'Mañana, tarde y noche', docentesPlanta: 9, busquedasList: [
+      { key: 'fullbody', fundada: '2014', portada: '', nombre: 'Full Body Olivos', tipo: 'Gimnasio', zona: 'Olivos', logo: 'assets/inst-logo-fullbody.png', direccion: 'Av. Maipú 3200, Olivos', desc: 'Gimnasio de barrio con clases grupales y entrenamiento funcional.', verificada: false, busquedas: 1, saved: false, alumnos: 380, niveles: 'Adultos', turnos: 'Mañana, tarde y noche', docentesPlanta: 9, busquedasList: [
         { puesto: 'Profe de sala — Gimnasio', tipo: 'Rápida · hoy', turno: 'Turno tarde' },
       ] },
-      { key: 'aromos', portada: '', nombre: 'Jardín Los Aromos', tipo: 'Jardín de infantes', zona: 'Nordelta', logo: 'assets/inst-logo-aromos.png', direccion: 'Av. de los Lagos 800, Nordelta', desc: 'Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.', verificada: true, busquedas: 0, saved: false, alumnos: 120, niveles: 'Maternal · Inicial', turnos: 'Jornada simple y extendida', docentesPlanta: 14, busquedasList: [] },
+      { key: 'aromos', fundada: '2003', portada: '', nombre: 'Jardín Los Aromos', tipo: 'Jardín de infantes', zona: 'Nordelta', logo: 'assets/inst-logo-aromos.png', direccion: 'Av. de los Lagos 800, Nordelta', desc: 'Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.', verificada: true, busquedas: 0, saved: false, alumnos: 120, niveles: 'Maternal · Inicial', turnos: 'Jornada simple y extendida', docentesPlanta: 14, busquedasList: [] },
     ],
     selectedInstKey: (window.__udInitialInst || null),
     docAsigQuery: '', docZonaQuery: '',
