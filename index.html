@@ -340,6 +340,13 @@ a:hover{color:#DD553F}
   .udoar-ad-foto{width:100% !important;height:132px;order:-1}
   .udoar-ad-foto span{display:none}
 }
+
+/* Publicidad ancha del tablero: foto al costado, arriba en el celular. */
+@media (max-width:860px){
+  .udoar-ad-ancha{flex-direction:column}
+  .udoar-ad-ancha-foto{width:100% !important;height:128px;order:-1}
+  .udoar-ad-ancha-foto span{display:none}
+}
 </style>
 </helmet>
 
@@ -1379,14 +1386,16 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </sc-for>
 </div>
 
-<div onClick="{{ goDocCursos2 }}" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;padding:26px 28px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-<div class="udoar-dark-grid-bg" style="position:absolute;inset:0;pointer-events:none"></div>
-<div style="position:relative;z-index:1;flex:1 1 300px;min-width:0">
+<div class="udoar-ad-ancha" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;margin-bottom:26px;display:flex;align-items:stretch">
+<div class="udoar-ad-ancha-texto" style="flex:1 1 0;min-width:0;padding:26px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;position:relative;z-index:1">
+<div style="flex:1 1 300px;min-width:0">
 <span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#D6DEF9;margin-bottom:10px;display:inline-block">Publicidad</span>
-<div style="font:700 22px/1.25 Sora,Inter,sans-serif;color:#fff;margin-bottom:6px">Certificate en RCP y primeros auxilios</div>
-<div style="font:400 14px/1.55 Inter,sans-serif;color:rgba(255,255,255,.75);max-width:52ch">Cruz Roja Argentina dicta dos encuentros para docentes en Vicente López. Las instituciones lo piden cada vez más para cargos con chicos.</div>
+<div style="font:700 22px/1.25 Sora,Inter,sans-serif;color:#fff;margin-bottom:6px">Mutual Docente · préstamos y descuentos</div>
+<div style="font:400 14px/1.55 Inter,sans-serif;color:rgba(255,255,255,.75);max-width:52ch">Créditos a sola firma, turismo y farmacia con descuento para docentes y personal de instituciones educativas. Asociarse es gratis.</div>
 </div>
-<button class="cbl-btn cbl-btn--primary" style="position:relative;z-index:1;flex:none;background:#DD553F">Ver el curso</button>
+<button class="cbl-btn cbl-btn--primary" style="flex:none;background:#DD553F">Asociarme</button>
+</div>
+<div class="udoar-ad-ancha-foto" style="flex:none;width:30%;background:url(&quot;assets/hero-docente.jpg&quot;) center / cover no-repeat;position:relative"><span style="position:absolute;top:0;bottom:0;left:0;width:96px;background:linear-gradient(90deg,#16214F,transparent);pointer-events:none"></span></div>
 </div>
 
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
