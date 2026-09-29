@@ -1484,11 +1484,14 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="flex:1;min-width:0">
 <sc-if value="{{ isDocBuscarTabTodas }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-<input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
+<input class="cbl-input" style="flex:1;min-width:180px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
 <select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
 <select class="cbl-select" style="max-width:150px" value="{{ filtroOportNivel }}" onChange="{{ updateFiltroOportNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Secundario</option><option>Adultos</option></select>
 <select class="cbl-select" style="max-width:150px" value="{{ filtroOportTurno }}" onChange="{{ updateFiltroOportTurno }}"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Mañana y tarde</option></select>
+<div style="display:flex;gap:10px;flex:none">
 <span onClick="{{ toggleDocSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docSoloFavoritosStyle }}">★ Favoritos</span>
+<span onClick="{{ toggleDocSoloRapidas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docSoloRapidasBotonStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Búsqueda rápida</span>
+</div>
 </div>
 <div class="udoar-btn-row" style="display:flex;gap:6px;margin-bottom:16px;background:#fff;border:1px solid #E3E1DC;border-radius:999px;padding:4px;width:max-content">
 <span onClick="{{ verBuscarLista }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ buscarVistaListaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>Lista</span>
@@ -2370,13 +2373,16 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 <select class="cbl-select" style="max-width:150px" value="{{ buscadorFiltroNivel }}" onChange="{{ updateBuscadorFiltroNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
 <select class="cbl-select" style="max-width:170px" value="{{ buscadorFiltroTipo }}" onChange="{{ updateBuscadorFiltroTipo }}"><option>Todos los tipos</option><option>Titular</option><option>Suplencia</option><option>Suplencia rápida</option></select>
+<div style="display:flex;gap:10px;flex:none">
 <span onClick="{{ toggleSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloFavoritosStyle }}">★ Favoritos</span>
+<span onClick="{{ toggleSoloRapidas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloRapidasBotonStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Búsqueda rápida</span>
+</div>
 </div>
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
 <sc-if value="{{ mostrarRapidos }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ buscadorDocentesRapidosList }}" as="doc" hint-placeholder-count="2">
-<div style="background:#fff;border:1.5px solid #DD553F;border-radius:8px;padding:18px">
-<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:10px">Disponible para suplencia rápida</span>
+<div style="background:#fff;border:1px solid #F2C9BE;border-radius:8px;padding:18px">
+<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Suplencia rápida</span>
 <div style="display:flex;gap:12px;margin-bottom:10px"><div style="width:44px;height:44px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="flex:1;min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div><span onClick="{{ doc.onToggleFavorito }}" style="cursor:pointer;font-size:17px;flex:none;{{ doc.favStarStyle }}">★</span></div>
 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
 <sc-for list="{{ doc.tags }}" as="t" hint-placeholder-count="2"><span class="cbl-badge cbl-badge--neutral">{{ t }}</span></sc-for>
@@ -4320,8 +4326,8 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;margin-bottom:14px" onClick="{{ goInstAppBusquedas }}">+ Publicar suplencia</button>
 <div style="display:flex;flex-direction:column;gap:10px">
 <sc-for list="{{ buscadorDocentesRapidosList }}" as="doc" hint-placeholder-count="2">
-<div style="background:#fff;border:1.5px solid #DD553F;border-radius:10px;padding:14px">
-<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;margin-bottom:8px">Disponible para suplencia rápida</span>
+<div style="background:#fff;border:1px solid #F2C9BE;border-radius:10px;padding:14px">
+<span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;display:inline-flex;align-items:center;gap:5px;margin-bottom:8px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Suplencia rápida</span>
 <div style="display:flex;gap:10px;margin-bottom:8px"><div style="width:42px;height:42px;flex:none;border-radius:999px;background:url(&quot;{{ doc.photo }}&quot;) center / cover no-repeat"></div><div style="min-width:0"><div style="font:600 14px/1.2 Inter,sans-serif;display:flex;align-items:center;gap:5px">{{ doc.name }} <sc-if value="{{ doc.verified }}" hint-placeholder-val="{{ true }}">{{ verifiedIcon }}</sc-if></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">{{ doc.bio }}</div></div></div>
 <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
 <sc-for list="{{ doc.tags }}" as="t" hint-placeholder-count="2"><span class="cbl-badge cbl-badge--neutral">{{ t }}</span></sc-for>
@@ -6380,6 +6386,9 @@ class Component extends DCLogic {
       mapaInstSinSel: this.state.mapaInstIdx == null,
       toggleDocSoloRapidas: () => this.setState(st => ({ docSoloRapidas: !st.docSoloRapidas })),
       toggleDocSoloFavoritos: () => this.setState(st => ({ docSoloFavoritos: !st.docSoloFavoritos })),
+      docSoloRapidasBotonStyle: this.state.docSoloRapidas
+        ? 'background:#DD553F;color:#fff'
+        : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
       docSoloRapidasTrackStyle: this.state.docSoloRapidas ? 'background:#DD553F' : 'background:#CFCCC5',
       docSoloRapidasDotStyle: this.state.docSoloRapidas ? 'right:2px' : 'left:2px',
       docSoloFavoritosStyle: this.state.docSoloFavoritos
@@ -6681,6 +6690,9 @@ class Component extends DCLogic {
       toggleSoloVerificados: () => this.setState(s => ({ filtroSoloVerificados: !s.filtroSoloVerificados })),
       toggleSoloRapidas: () => this.setState(st => ({ buscadorSoloRapidas: !st.buscadorSoloRapidas })),
       toggleSoloFavoritos: () => this.setState(st => ({ buscadorSoloFavoritos: !st.buscadorSoloFavoritos })),
+      soloRapidasBotonStyle: this.state.buscadorSoloRapidas
+        ? 'background:#DD553F;color:#fff'
+        : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
       soloRapidasTrackStyle: this.state.buscadorSoloRapidas ? 'background:#DD553F' : 'background:#CFCCC5',
       soloRapidasDotStyle: this.state.buscadorSoloRapidas ? 'right:2px' : 'left:2px',
       soloFavoritosStyle: this.state.buscadorSoloFavoritos
