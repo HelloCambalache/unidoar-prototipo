@@ -1260,16 +1260,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;gap:10px;flex-wrap:wrap;flex:1 1 320px;justify-content:flex-end"><button class="cbl-btn cbl-btn--secondary" style="flex:1 1 auto" onClick="{{ goDocOportunidades }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="flex:1 1 auto;background:#DD553F" onClick="{{ goDocOportunidades }}">Terminar y empezar a postularme</button></div>
 </div>
 </div>
-<div style="flex:1 1 260px;min-width:240px;background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
-<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Nivel de tu perfil</div>
-<div style="font:600 17px/1.2 Inter,sans-serif;margin-bottom:6px">{{ docNivelPerfil }} <span class="cbl-badge" style="{{ docNivelBadgeStyle }}">{{ docNivelBadge }}</span></div>
-<div style="height:6px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:16px"><div style="height:100%;background:#1E7A4C;{{ docNivelBarraStyle }}"></div></div>
-<div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1.45 Inter,sans-serif">
-<div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Básico</strong><br><span style="color:#6B706C">Podés postularte y las instituciones te ven en el catálogo.</span></div></div>
-<div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Completo</strong><br><span style="color:#6B706C">Con experiencia, zonas y disponibilidad cargadas aparecés más arriba en las búsquedas.</span></div></div>
-<div style="display:flex;gap:8px"><span style="{{ docVerificadoTickStyle }}">{{ docVerificadoTick }}</span><div><strong style="color:#1F2421">Verificado</strong><br><span style="color:#6B706C">{{ docVerificadoTexto }}</span></div></div>
-</div>
-</div>
 </div>
 </sc-if>
 
@@ -2027,8 +2017,16 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Identidad (DNI)</div>
 
 <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>{{ docCredencial }}</div>
-<div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Certificado de buena conducta</div>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;flex:none;{{ docConductaPuntoStyle }}">{{ docConductaPunto }}</span>Certificado de buena conducta <span style="color:#9AA09B">(optativo)</span></div>
 </div>
+</div>
+<div style="margin-top:14px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+<span style="width:34px;height:34px;flex:none;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;{{ docConductaIconoStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M9.5 14.5l1.8 1.8 3.2-3.6"></path></svg></span>
+<div style="flex:1;min-width:220px">
+<div style="font:600 14px/1.3 Inter,sans-serif;color:#1F2421;margin-bottom:3px">Certificado de buena conducta <span class="cbl-badge" style="background:#F0EFEA;color:#6B706C;margin-left:4px">Optativo</span></div>
+<div style="font:400 13px/1.45 Inter,sans-serif;color:#6B706C">{{ docConductaDetalle }}</div>
+</div>
+<button class="cbl-btn cbl-btn--secondary" style="flex:none" onClick="{{ subirConducta }}">{{ docConductaBoton }}</button>
 </div>
 </div>
 
@@ -5196,14 +5194,13 @@ class Component extends DCLogic {
   setDocCategoria(c) { this.setState({ docCategoria: c }); }
   setDocEstudio(v) { this.setState({ docEstudio: v }); }
   // Documentación del alta: arranca vacía y se va cargando.
+  // El certificado de buena conducta no entra acá: es optativo y se sube
+  // después, desde el perfil.
   DOCS_ALTA = [
     { key: 'dni', nombre: 'DNI — frente y dorso',
       vacio: 'Foto o PDF del frente y del dorso',
       archivo: 'dni-frente.jpg · dni-dorso.jpg' },
     { key: 'credencial' },
-    { key: 'conducta', nombre: 'Certificado de buena conducta',
-      vacio: 'Lo emite el Registro Nacional de Reincidencia',
-      archivo: 'buena-conducta.pdf · vence a los 6 meses de emitido' },
   ];
   // Catálogo del paso de asignaturas. Se agrupa por rubro y se recorta según lo
   // que la persona eligió en "¿Qué sos?": un entrenador no tiene por qué
@@ -5252,7 +5249,7 @@ class Component extends DCLogic {
   subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
   docsAltaCompletos() {
     const d = this.state.docDocs;
-    return !!(d.dni && d.conducta && (!this.docPideCredencial() || d.credencial));
+    return !!(d.dni && (!this.docPideCredencial() || d.credencial));
   }
   // ── Roles del equipo ───────────────────────────────────────────────────
   ROLES_EQUIPO = [
@@ -6183,11 +6180,8 @@ class Component extends DCLogic {
       showMyCv: this.state.showMyCv,
       toggleMyCv: () => this.toggleMyCv(),
       docCredencialMin: this.credencialDoc().nombre.charAt(0).toLowerCase() + this.credencialDoc().nombre.slice(1),
-      docVerificadoTexto: this.docPideCredencial()
-        ? 'Con el DNI y ' + (this.credencialDoc().nombre.charAt(0).toLowerCase() + this.credencialDoc().nombre.slice(1)) + ' validados entr\u00e1s en las b\u00fasquedas que piden "solo verificados".'
-        : 'Con el DNI y el certificado de buena conducta validados entr\u00e1s en las b\u00fasquedas que piden "solo verificados". El t\u00edtulo lo sub\u00eds cuando te recibas.',
       docPedidoAntes: this.docPideCredencial() ? 'Te vamos a pedir ' : 'No te pedimos t\u00edtulo: alcanza con el ',
-      docPedidoFuerte: this.docPideCredencial() ? this.credencialDoc().nombre : 'DNI y el certificado de buena conducta',
+      docPedidoFuerte: this.docPideCredencial() ? this.credencialDoc().nombre : 'DNI',
       docPedidoDespues: this.docPideCredencial() ? '.' : '. Sub\u00eds el t\u00edtulo cuando te recibas.',
       docDocsList: this.DOCS_ALTA.filter(doc => doc.key !== 'credencial' || this.docPideCredencial()).map(doc => {
         const cred = this.credencialDoc();
@@ -6206,6 +6200,19 @@ class Component extends DCLogic {
           onSubir: () => this.subirDocAlta(doc.key),
         };
       }),
+      // El certificado es optativo: se sube desde el perfil, no en el alta.
+      docConductaDetalle: this.state.docDocs.conducta
+        ? 'buena-conducta.pdf · vence a los 6 meses de emitido'
+        : 'Lo emite el Registro Nacional de Reincidencia. Algunas instituciones lo piden.',
+      docConductaBoton: this.state.docDocs.conducta ? 'Reemplazar' : 'Subir archivo',
+      docConductaIconoStyle: this.state.docDocs.conducta
+        ? 'background:#E7F5EF;color:#1E7A4C'
+        : 'background:#F3F2EE;color:#9AA09B',
+      docConductaPunto: this.state.docDocs.conducta ? '✓' : '',
+      docConductaPuntoStyle: this.state.docDocs.conducta
+        ? 'background:#1E7A4C;color:#fff;font:700 11px/1 Inter,sans-serif'
+        : 'background:#F0EFEA;border:1px solid #E3E1DC',
+      subirConducta: () => this.subirDocAlta('conducta'),
       docNivelPerfil: this.docsAltaCompletos() ? 'Completo' : 'Básico',
       docNivelBadge: this.docsAltaCompletos() ? '✓ verificado' : 'sin verificar',
       docNivelFaltan: (() => {
