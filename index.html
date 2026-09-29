@@ -2362,6 +2362,28 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px">
 <div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ buscadorTitulo }}</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">{{ buscadorBajada }}</p></div>
 </div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px 18px;margin-bottom:16px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#16214F"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="flex:none"><path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z"></path><path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"></path></svg><span style="font:600 14px/1 Inter,sans-serif">Buscá con IA</span><span class="cbl-badge" style="background:#E5E9FB;color:#16214F;margin-left:2px">Nuevo</span></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+<input class="cbl-input" style="flex:1;min-width:240px" placeholder="Contame qué necesitás: «profe de inglés para secundario, turno mañana»" value="{{ iaQuery }}" onChange="{{ updateIaQuery }}" onKeyDown="{{ keyIa }}">
+<button class="cbl-btn cbl-btn--primary" style="background:#16214F;flex:none" onClick="{{ buscarConIa }}">Buscar</button>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<span style="font:400 12.5px/1 Inter,sans-serif;color:#9AA09B">Probá con:</span>
+<sc-for list="{{ iaEjemplos }}" as="e" hint-placeholder-count="3">
+<span onClick="{{ e.onPick }}" style="cursor:pointer;padding:6px 12px;border-radius:999px;background:#F0EFEA;color:#3D423E;font:500 12.5px/1 Inter,sans-serif">{{ e.label }}</span>
+</sc-for>
+</div>
+<sc-if value="{{ hayIaLeido }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #E3E1DC">
+<span style="font:500 12.5px/1 Inter,sans-serif;color:#6B706C">Entendimos:</span>
+<sc-for list="{{ iaLeidoList }}" as="l" hint-placeholder-count="3">
+<span class="cbl-badge" style="background:#E5E9FB;color:#16214F;font-weight:600">{{ l.label }}</span>
+</sc-for>
+<span onClick="{{ limpiarIa }}" style="cursor:pointer;margin-left:auto;font:500 12.5px/1 Inter,sans-serif;color:#9AA09B">Limpiar</span>
+</div>
+</sc-if>
+</div>
 <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
 <div style="position:relative;max-width:260px;flex:1;min-width:200px">
 <input class="cbl-input" style="width:100%" placeholder="Buscar por nombre o disciplina" value="{{ buscadorSearchQuery }}" onChange="{{ updateBuscadorSearchQuery }}">
@@ -2379,6 +2401,13 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </div>
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<sc-if value="{{ buscadorSinResultados }}" hint-placeholder-val="{{ false }}">
+<div style="grid-column:1/-1;border:1px dashed #CFCCC5;border-radius:10px;padding:34px 24px;text-align:center">
+<div style="font:600 15px/1.3 Inter,sans-serif;color:#1F2421;margin-bottom:5px">No hay docentes con esos filtros</div>
+<div style="font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:16px">Probá con menos condiciones, o ampliá la zona de búsqueda.</div>
+<button class="cbl-btn cbl-btn--secondary" onClick="{{ limpiarIa }}">Limpiar la búsqueda</button>
+</div>
+</sc-if>
 <sc-if value="{{ mostrarRapidos }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ buscadorDocentesRapidosList }}" as="doc" hint-placeholder-count="2">
 <div style="background:#fff;border:1px solid #F2C9BE;border-radius:8px;padding:18px">
@@ -4754,7 +4783,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 class Component extends DCLogic {
   state = {
     screen: (window.__udInitialScreen || 'landing'), showPlanPicker: false, showInvite: false, selectedMember: null, searchesTab: 'activas', tipoBusqueda: 'titular', urgente: false,
-    instTipo: 'Colegio privado', instBuscadorTab: 'todos', buscadorOrden: 'Recomendados', filtroHistEstado: 'Todos los estados', favoritosInst: [], buscadorSearchQuery: '', showContactoToast: false, editingBusquedaKey: null,
+    instTipo: 'Colegio privado', instBuscadorTab: 'todos', buscadorOrden: 'Recomendados', filtroHistEstado: 'Todos los estados', favoritosInst: [], buscadorSearchQuery: '', iaQuery: '', iaLeido: null, showContactoToast: false, editingBusquedaKey: null,
     inviteEmailVal: '', inviteRoleVal: 'Administrador/a', filtroInstTexto: '', filtroInstTipo: 'Todos los tipos', filtroInstZona: 'Todas las zonas', cvSentTo: [], filtroInstFavoritas: false, docBuscarFavoritos: [],
     teamMembers: [
       { key: 'esteban', initials: 'EG', name: 'Esteban Grimaldi', role: 'Dueño de la cuenta', email: 'esteban@sanandresdelnorte.edu.ar', status: 'Activo', since: 'Ene 2026', isOwner: true },
@@ -4925,6 +4954,57 @@ class Component extends DCLogic {
   toggleDisciplinaFilter(k) { this.setState(s => ({ filtroDisciplinas: { ...s.filtroDisciplinas, [k]: !s.filtroDisciplinas[k] } })); }
   toggleDisponibilidadFilter(k) { this.setState(s => ({ filtroDisponibilidad: { ...s.filtroDisponibilidad, [k]: !s.filtroDisponibilidad[k] } })); }
   removeZonaFilter(z) { this.setState(s => ({ filtroZonas: s.filtroZonas.filter(x => x !== z) })); }
+  // Buscador con IA. En el prototipo no hay modelo detrás: lee la frase por
+  // palabras clave y deja puestos los filtros de siempre, así lo que se ve
+  // después es el buscador real y no una lista inventada. En el MVP esta
+  // función se reemplaza por una llamada al backend.
+  IA_DISCIPLINAS = ['inglés', 'matemática', 'lengua', 'historia', 'geografía', 'biología', 'química',
+    'física', 'música', 'plástica', 'teatro', 'danza', 'educación física', 'natación', 'fútbol',
+    'vóley', 'básquet', 'tenis', 'yoga', 'pilates', 'guardavidas', 'informática', 'portugués'];
+  IA_NIVELES = { 'inicial': 'Inicial', 'jardin': 'Inicial', 'sala de': 'Inicial', 'primari': 'Primario', 'secundari': 'Secundario' };
+  IA_TURNOS = { 'ma\u00f1ana': 'Turno mañana', 'tarde': 'Turno tarde', 'sabado': 'Contraturno / sábados', 'contraturno': 'Contraturno / sábados' };
+  buscarConIa(texto) {
+    const frase = texto === undefined ? this.state.iaQuery : texto;
+    const q = this.normalizeTxt(frase);
+    if (!q.trim()) { this.setState({ iaQuery: frase, iaLeido: null }); return; }
+    const leido = [];
+    const disciplina = this.IA_DISCIPLINAS
+      .slice()
+      .sort((a, b) => b.length - a.length)
+      .find(d => q.includes(this.normalizeTxt(d))) || '';
+    if (disciplina) leido.push(disciplina.charAt(0).toUpperCase() + disciplina.slice(1));
+    let nivel = 'Todos los niveles';
+    for (const k of Object.keys(this.IA_NIVELES)) if (q.includes(k)) { nivel = this.IA_NIVELES[k]; break; }
+    if (nivel !== 'Todos los niveles') leido.push(nivel);
+    const urgente = /rapid|urgent|ma\u00f1ana mismo|cuanto antes|ya/.test(q);
+    let tipo = 'Todos los tipos';
+    if (urgente) tipo = 'Suplencia rápida';
+    else if (q.includes('suplencia')) tipo = 'Suplencia';
+    else if (q.includes('titular')) tipo = 'Titular';
+    if (tipo !== 'Todos los tipos') leido.push(tipo);
+    const turnos = {};
+    for (const k of Object.keys(this.IA_TURNOS)) if (q.includes(this.normalizeTxt(k))) turnos[this.IA_TURNOS[k]] = true;
+    Object.keys(turnos).forEach(t => leido.push(t));
+    const verificados = /verificad|con titulo|con t\u00edtulo/.test(q);
+    if (verificados) leido.push('Sólo verificados');
+    this.setState({
+      iaQuery: frase,
+      iaLeido: leido.length ? leido : ['No reconocimos filtros: te mostramos el catálogo completo'],
+      buscadorSearchQuery: disciplina,
+      buscadorFiltroNivel: nivel,
+      buscadorFiltroTipo: tipo,
+      buscadorSoloRapidas: urgente,
+      filtroDisponibilidad: turnos,
+      filtroSoloVerificados: verificados,
+    });
+  }
+  limpiarIa() {
+    this.setState({
+      iaQuery: '', iaLeido: null, buscadorSearchQuery: '',
+      buscadorFiltroNivel: 'Todos los niveles', buscadorFiltroTipo: 'Todos los tipos',
+      buscadorSoloRapidas: false, filtroDisponibilidad: {}, filtroSoloVerificados: false,
+    });
+  }
   normalizeTxt(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
   matchesZonaFilter(zonaStr) {
     if (!this.state.filtroZonas.length) return true;
@@ -5784,7 +5864,7 @@ class Component extends DCLogic {
     const navOn = 'background:#E5E9FB;font:600 14px/1 Inter,sans-serif;color:#16214F';
     const navOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
 
-    return {
+    const salida = {
       ...vals,
       selectInstitucion: () => this.selectInstitucion(),
       selectDocente: () => this.selectDocente(),
@@ -6758,6 +6838,18 @@ class Component extends DCLogic {
       updateBuscadorFiltroNivel: (e) => this.setState({ buscadorFiltroNivel: e.target.value }),
       buscadorFiltroTipo: this.state.buscadorFiltroTipo,
       updateBuscadorFiltroTipo: (e) => this.setState({ buscadorFiltroTipo: e.target.value }),
+      iaQuery: this.state.iaQuery,
+      updateIaQuery: (e) => this.setState({ iaQuery: e.target.value }),
+      keyIa: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.buscarConIa(); } },
+      buscarConIa: () => this.buscarConIa(),
+      limpiarIa: () => this.limpiarIa(),
+      hayIaLeido: !!this.state.iaLeido,
+      iaLeidoList: (this.state.iaLeido || []).map(t => ({ label: t })),
+      iaEjemplos: [
+        'Profe de matemática para secundario',
+        'Suplencia rápida de educación física, turno mañana',
+        'Guardavidas verificado para el natatorio',
+      ].map(t => ({ label: t, onPick: () => this.buscarConIa(t) })),
       buscadorSearchQuery: this.state.buscadorSearchQuery,
       updateBuscadorSearchQuery: (e) => this.setState({ buscadorSearchQuery: e.target.value }),
       buscadorSearchSuggestions: (() => {
@@ -7177,6 +7269,9 @@ class Component extends DCLogic {
       closeInstAppInvite: () => this.setState({ instAppInviteOpen: false }),
       sendInstAppInvite: () => { this.setState({ instAppInviteOpen: false }); this.showAppToast('Invitación enviada'); },
     };
+    salida.buscadorSinResultados = !salida.buscadorDocentesList.length
+      && !(salida.mostrarRapidos && salida.buscadorDocentesRapidosList.length);
+    return salida;
   }
 }
 
