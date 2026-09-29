@@ -12,7 +12,7 @@ cual, sin reescribir: sirve como fuente de verdad visual y de copy para el MVP.
 
 ## URLs por pantalla
 
-Cada una de las 59 pantallas tiene su propia dirección, así se puede linkear una
+Cada una de las 60 pantallas tiene su propia dirección, así se puede linkear una
 sola sin tener que navegar hasta ella. **El índice completo está en [`/mapa`](https://unidoar-prototipo.vercel.app/mapa.html).**
 
 Algunos ejemplos:

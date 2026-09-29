@@ -177,6 +177,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/institucion/cursos/inscriptos",
+      "destination": "/index.html"
+    },
+    {
       "source": "/institucion/cursos/nuevo",
       "destination": "/index.html"
     },
