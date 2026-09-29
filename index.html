@@ -1213,22 +1213,28 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 
 <sc-if value="{{ isDocOnbAsig }}" hint-placeholder-val="{{ false }}">
 <h1 style="margin:0 0 8px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">¿Qué enseñás?</h1>
-<p style="margin:0 0 18px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tocá todo lo que dés. Cuantas más sumes, en más búsquedas aparecés.</p>
-<input class="cbl-input" style="width:100%;margin-bottom:18px" placeholder="{{ docAsigBuscarPlaceholder }}" value="{{ docAsigQuery }}" onChange="{{ updateDocAsigQuery }}">
-<sc-for list="{{ docAsigRubros }}" as="g" hint-placeholder-count="3">
-<div style="margin-bottom:18px">
-<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">{{ g.rubro }}</div>
-<div style="display:flex;flex-wrap:wrap;gap:8px">
-<sc-for list="{{ g.items }}" as="a" hint-placeholder-count="5">
-<span onClick="{{ a.onToggle }}" style="cursor:pointer;padding:10px 16px;border-radius:999px;font:500 14px/1 Inter,sans-serif;transition:background .15s,border-color .15s;{{ a.style }}">{{ a.label }}</span>
-</sc-for>
+<p style="margin:0 0 18px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Elegí el rubro y después la asignatura. Sumá todas las que dés: cuantas más, en más búsquedas aparecés.</p>
+<div class="udoar-onb-2col" style="display:flex;gap:12px;margin-bottom:20px">
+<div class="cbl-field" style="flex:1;min-width:0"><span class="cbl-label">Rubro</span>
+<select class="cbl-select" style="width:100%" value="{{ docAsigRubroValor }}" onChange="{{ selectDocAsigRubro }}">
+<sc-for list="{{ docAsigRubroOptions }}" as="r" hint-placeholder-count="6"><option value="{{ r.key }}">{{ r.label }}</option></sc-for>
+</select>
+</div>
+<div class="cbl-field" style="flex:1;min-width:0"><span class="cbl-label">Asignatura o disciplina</span>
+<select class="cbl-select" style="width:100%" value="{{ docAsigItemValor }}" onChange="{{ selectDocAsigItem }}">
+<sc-for list="{{ docAsigItemOptions }}" as="a" hint-placeholder-count="5"><option value="{{ a.key }}">{{ a.label }}</option></sc-for>
+</select>
 </div>
 </div>
-</sc-for>
-<sc-if value="{{ docAsigSinResultados }}" hint-placeholder-val="{{ false }}">
-<div style="border:1px dashed #CFCCC5;border-radius:10px;padding:22px;text-align:center;margin-bottom:18px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">No encontramos nada con esa búsqueda. Probá con otra palabra.</div>
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Lo que elegiste</div>
+<sc-if value="{{ docAsigVacio }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px dashed #CFCCC5;border-radius:10px;padding:20px;text-align:center;margin-bottom:26px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Todavía no elegiste ninguna. Elegí un rubro y después la asignatura.</div>
 </sc-if>
-<div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin:4px 0 26px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">{{ docAsigResumen }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px">
+<sc-for list="{{ docAsigElegidas }}" as="t" hint-placeholder-count="2">
+<span onClick="{{ t.onRemove }}" style="cursor:pointer;padding:10px 16px;border-radius:999px;font:500 14px/1 Inter,sans-serif;background:#16214F;color:#fff">{{ t.label }} ×</span>
+</sc-for>
+</div>
 <div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:5px">¿En qué niveles podés trabajar?</div>
 <p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Podés marcar más de uno.</p>
 <div class="udoar-onb-2col" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
@@ -4840,7 +4846,7 @@ class Component extends DCLogic {
     docSoloRapidas: false, docSoloFavoritos: false,
     instVista: 'lista', mapaInstIdx: null,
     postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
-    docCategoria: 'Docente', docEstudio: 'recibido',
+    docCategoria: 'Docente', docEstudio: 'recibido', docAsigRubro: '', docAsigItem: '',
     docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
@@ -5226,6 +5232,16 @@ class Component extends DCLogic {
     ],
   };
   rubrosAsignaturas() { return this.ASIGNATURAS[this.state.docCategoria] || this.ASIGNATURAS['Docente']; }
+  setDocAsigRubro(v) { this.setState({ docAsigRubro: v, docAsigItem: '' }); }
+  // El segundo desplegable agrega al elegir y vuelve solo al placeholder,
+  // así se pueden sumar varias del mismo rubro sin volver al primero.
+  agregarDocAsig(v) {
+    if (!v) return;
+    this.setState(st => ({
+      docAsignaturas: st.docAsignaturas.includes(v) ? st.docAsignaturas : [...st.docAsignaturas, v],
+      docAsigItem: '',
+    }));
+  }
   toggleDocAsig(v) {
     this.setState(st => ({
       docAsignaturas: st.docAsignaturas.includes(v)
@@ -6219,35 +6235,23 @@ class Component extends DCLogic {
           onPick: () => this.setDocCategoria(c),
         };
       }),
-      // Paso de asignaturas: rubros filtrados por el buscador; el rubro que se
-      // queda sin coincidencias no se dibuja.
-      docAsigRubros: (() => {
-        const q = (this.state.docAsigQuery || '').trim().toLowerCase();
-        return this.rubrosAsignaturas().map(g => ({
-          rubro: g.rubro,
-          items: g.items
-            .filter(it => !q || it.toLowerCase().includes(q))
-            .map(it => {
-              const sel = this.state.docAsignaturas.includes(it);
-              return {
-                label: it,
-                style: sel
-                  ? 'background:#16214F;color:#fff;border:1px solid #16214F'
-                  : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
-                onToggle: () => this.toggleDocAsig(it),
-              };
-            }),
-        })).filter(g => g.items.length);
+      // Paso de asignaturas: primero el rubro, después la asignatura de ese rubro.
+      docAsigRubroValor: this.state.docAsigRubro,
+      docAsigRubroOptions: [{ key: '', label: 'Elegí un rubro' }]
+        .concat(this.rubrosAsignaturas().map(g => ({ key: g.rubro, label: g.rubro }))),
+      selectDocAsigRubro: (e) => this.setDocAsigRubro(e.target.value),
+      docAsigItemValor: this.state.docAsigItem,
+      docAsigItemOptions: (() => {
+        const g = this.rubrosAsignaturas().find(x => x.rubro === this.state.docAsigRubro);
+        if (!g) return [{ key: '', label: 'Primero elegí un rubro' }];
+        // Las ya elegidas salen de la lista: no se puede sumar dos veces la misma.
+        const libres = g.items.filter(it => !this.state.docAsignaturas.includes(it));
+        if (!libres.length) return [{ key: '', label: 'Ya sumaste todas las de este rubro' }];
+        return [{ key: '', label: 'Elegí una asignatura' }].concat(libres.map(it => ({ key: it, label: it })));
       })(),
-      docAsigSinResultados: !this.rubrosAsignaturas().some(g => g.items.some(it =>
-        !(this.state.docAsigQuery || '').trim() ||
-        it.toLowerCase().includes((this.state.docAsigQuery || '').trim().toLowerCase()))),
-      docAsigResumen: this.state.docAsignaturas.length === 0
-        ? 'Todav\u00eda no elegiste ninguna'
-        : this.state.docAsignaturas.length === 1
-          ? 'Elegiste 1: ' + this.state.docAsignaturas[0]
-          : 'Elegiste ' + this.state.docAsignaturas.length + ': ' + this.state.docAsignaturas.join(', '),
-      docAsigBuscarPlaceholder: 'Buscar entre ' + this.rubrosAsignaturas().reduce((n, g) => n + g.items.length, 0) + ' opciones\u2026',
+      selectDocAsigItem: (e) => this.agregarDocAsig(e.target.value),
+      docAsigElegidas: this.state.docAsignaturas.map(t => ({ label: t, onRemove: () => this.toggleDocAsig(t) })),
+      docAsigVacio: this.state.docAsignaturas.length === 0,
       docNivelesGrandes: Object.keys(this.state.docNiveles).map(k => ({
         label: k,
         style: this.state.docNiveles[k]
