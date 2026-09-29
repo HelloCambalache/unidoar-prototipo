@@ -311,6 +311,14 @@ a:hover{color:#DD553F}
 @media (max-width:560px){
 .udoar-app-main .udoar-grid-3{grid-template-columns:1fr !important}
 }
+
+/* Fila de documentación: con dos botones (frente y dorso) no entra en una
+   línea en el celular, así que la botonera baja a su propio renglón. */
+@media (max-width:560px){
+  .udoar-doc-row{flex-wrap:wrap}
+  .udoar-doc-btns{flex:1 1 100% !important;margin-top:6px}
+  .udoar-doc-btns .cbl-btn{flex:1 1 auto}
+}
 </style>
 </helmet>
 
@@ -1245,7 +1253,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <p style="margin:0 0 22px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong style="color:#1F2421">Sin verificar</strong> hasta que revisemos la documentación — normalmente en menos de 48 horas.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
 <sc-for list="{{ docDocsList }}" as="d" hint-placeholder-count="3">
-<div class="udoar-doc-row" style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1 1 0;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalle }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">Cargado</span></sc-if><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ d.onSubir }}">{{ d.boton }}</button></div>
+<div class="udoar-doc-row" style="display:flex;align-items:center;gap:12px;border:1px solid #E3E1DC;border-radius:8px;padding:14px 16px"><span style="width:30px;height:30px;flex:none;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;{{ d.iconoStyle }}"><sc-if value="{{ d.esDni }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="5" width="20" height="14" rx="2"></rect><circle cx="8" cy="12" r="2"></circle><path d="M14 10h4M14 14h4"></path></svg></sc-if><sc-if value="{{ d.esCredencial }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 4.5-9 4.5-9-4.5z"></path><path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"></path></svg></sc-if><sc-if value="{{ d.esConducta }}" hint-placeholder-val="{{ false }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg></sc-if></span><div style="flex:1 1 0;min-width:0"><div style="font:500 14px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.detalle }}</div></div><sc-if value="{{ d.cargado }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">Cargado</span></sc-if><div class="udoar-doc-btns" style="display:flex;gap:8px;flex:none"><sc-for list="{{ d.botones }}" as="b" hint-placeholder-count="1"><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none;{{ b.style }}" onClick="{{ b.onSubir }}">{{ b.label }}</button></sc-for></div></div>
 </sc-for>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
@@ -4838,7 +4846,7 @@ class Component extends DCLogic {
     instVista: 'lista', mapaInstIdx: null,
     postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
     docCategoria: 'Docente', docEstudio: 'recibido', docAsigRubro: '', docAsigItem: '',
-    docDocs: { dni: false, credencial: false, conducta: false },
+    docDocs: { dniFrente: false, dniDorso: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
@@ -5191,7 +5199,7 @@ class Component extends DCLogic {
   // después, desde el perfil.
   DOCS_ALTA = [
     { key: 'dni', nombre: 'DNI — frente y dorso',
-      vacio: 'Foto o PDF del frente y del dorso',
+      vacio: 'Foto o PDF de cada lado',
       archivo: 'dni-frente.jpg · dni-dorso.jpg' },
     { key: 'credencial' },
   ];
@@ -5242,7 +5250,7 @@ class Component extends DCLogic {
   subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
   docsAltaCompletos() {
     const d = this.state.docDocs;
-    return !!(d.dni && (!this.docPideCredencial() || d.credencial));
+    return !!(d.dniFrente && d.dniDorso && (!this.docPideCredencial() || d.credencial));
   }
   // ── Roles del equipo ───────────────────────────────────────────────────
   ROLES_EQUIPO = [
@@ -6181,16 +6189,35 @@ class Component extends DCLogic {
         const nombre = doc.key === 'credencial' ? cred.nombre : doc.nombre;
         const vacio = doc.key === 'credencial' ? cred.vacio : doc.vacio;
         const archivo = doc.key === 'credencial' ? cred.detalle : doc.archivo;
-        const cargado = !!this.state.docDocs[doc.key];
+        // El DNI son dos archivos: un botón por lado, y se da por cargado
+        // recién cuando están los dos.
+        const esDni = doc.key === 'dni';
+        const frente = !!this.state.docDocs.dniFrente;
+        const dorso = !!this.state.docDocs.dniDorso;
+        const cargado = esDni ? (frente && dorso) : !!this.state.docDocs[doc.key];
+        const detalleDni = frente && dorso
+          ? archivo
+          : frente ? 'dni-frente.jpg · falta el dorso'
+          : dorso ? 'dni-dorso.jpg · falta el frente'
+          : vacio;
+        const ladoStyle = (ok) => ok ? 'border-color:#1E7A4C;color:#1E7A4C' : '';
         return {
           nombre, cargado,
-          esDni: doc.key === 'dni', esCredencial: doc.key === 'credencial', esConducta: doc.key === 'conducta',
-          detalle: cargado ? archivo : vacio,
-          detalleCorto: cargado ? (doc.key === 'credencial' ? cred.corto : archivo) : vacio,
+          esDni, esCredencial: doc.key === 'credencial', esConducta: doc.key === 'conducta',
+          detalle: esDni ? detalleDni : (cargado ? archivo : vacio),
+          detalleCorto: esDni ? detalleDni : (cargado ? (doc.key === 'credencial' ? cred.corto : archivo) : vacio),
           vacio: !cargado,
           iconoStyle: cargado ? 'background:#E7F5EF;color:#1E7A4C' : 'background:#F3F2EE;color:#9AA09B',
-          boton: cargado ? 'Reemplazar' : 'Subir archivo',
-          onSubir: () => this.subirDocAlta(doc.key),
+          botones: esDni
+            ? [
+                { label: frente ? '✓ Frente' : 'Frente', style: ladoStyle(frente), onSubir: () => this.subirDocAlta('dniFrente') },
+                { label: dorso ? '✓ Dorso' : 'Dorso', style: ladoStyle(dorso), onSubir: () => this.subirDocAlta('dniDorso') },
+              ]
+            : [{ label: cargado ? 'Reemplazar' : 'Subir archivo', style: '', onSubir: () => this.subirDocAlta(doc.key) }],
+          // La fila compacta del mobile se toca entera: marca los dos lados.
+          onSubir: esDni
+            ? () => this.setState(st => ({ docDocs: { ...st.docDocs, dniFrente: true, dniDorso: true } }))
+            : () => this.subirDocAlta(doc.key),
         };
       }),
       // El certificado es optativo: se sube desde el perfil, no en el alta.
@@ -6209,7 +6236,7 @@ class Component extends DCLogic {
       docNivelPerfil: this.docsAltaCompletos() ? 'Completo' : 'Básico',
       docNivelBadge: this.docsAltaCompletos() ? '✓ verificado' : 'sin verificar',
       docNivelFaltan: (() => {
-        const faltan = ['dni', 'credencial', 'conducta'].filter(k => !this.state.docDocs[k]).length;
+        const faltan = ['dniFrente', 'dniDorso', 'credencial'].filter(k => !this.state.docDocs[k]).length;
         if (!faltan) return '✓ verificado';
         return faltan === 1 ? 'falta 1 documento' : 'faltan ' + faltan + ' documentos';
       })(),
