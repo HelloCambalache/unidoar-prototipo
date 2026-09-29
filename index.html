@@ -1437,15 +1437,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="font:400 13px/1.5 Inter,sans-serif;color:#97125F;margin-bottom:12px">Te falta subir la foto de perfil. Los perfiles con foto reciben el doble de invitaciones.</div>
 <button class="cbl-btn cbl-btn--block" style="background:#97125F;color:#fff" onClick="{{ goDocPerfil }}">Completar perfil</button>
 </div>
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
-<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:12px">Accesos rápidos</div>
-<div style="display:flex;flex-direction:column;gap:8px">
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocOportunidades }}">Buscar trabajo</button>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocRapidas }}">Ver suplencias</button>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocInstituciones }}">Instituciones</button>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--block" onClick="{{ goDocCursos2 }}">Cursos</button>
-</div>
-</div>
 </div>
 </div>
 </sc-if>
@@ -2896,6 +2887,21 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </div>
 <div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Profesor que lo dicta</span><input class="cbl-input" placeholder="Ej. Martina Alsina" value="{{ cursoModalProfesor }}" onChange="{{ updateCursoModalProfesor }}"></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:16px 18px;margin-bottom:16px">
+<div onClick="{{ toggleCursoModalCertifica }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px">
+<div style="flex:1;min-width:0">
+<div style="font:600 14px/1.3 Inter,sans-serif;margin-bottom:2px">Entrega certificado</div>
+<div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">Al terminarlo, el docente recibe el certificado y el curso le suma puntaje.</div>
+</div>
+<span style="flex:none;position:relative;width:38px;height:22px;border-radius:999px;transition:background .18s;{{ cursoCertTrackStyle }}"><span style="position:absolute;top:2px;width:18px;height:18px;border-radius:999px;background:#fff;transition:left .18s,right .18s;{{ cursoCertDotStyle }}"></span></span>
+</div>
+<sc-if value="{{ cursoModalCertifica }}" hint-placeholder-val="{{ true }}">
+<div class="cbl-field" style="margin-top:14px;padding-top:14px;border-top:1px solid #F0EFEA;max-width:220px"><span class="cbl-label">Puntaje que suma</span><input class="cbl-input" type="number" min="0" max="100" value="{{ cursoModalPuntaje }}" onChange="{{ updateCursoModalPuntaje }}"></div>
+</sc-if>
+<sc-if value="{{ cursoModalSinCertificado }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:12px;font:400 12.5px/1.4 Inter,sans-serif;color:#9AA09B">Sin certificado, el curso aparece igual en el catálogo pero no suma puntaje.</div>
+</sc-if>
+</div>
 <div style="display:flex;gap:14px;margin-bottom:16px">
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Fecha de inicio</span><input class="cbl-input" type="date" value="{{ cursoModalFechaInicio }}" onChange="{{ updateCursoModalFechaInicio }}"></div>
 <div class="cbl-field" style="flex:1"><span class="cbl-label">Fecha de finalización</span><input class="cbl-input" type="date" value="{{ cursoModalFechaFinal }}" onChange="{{ updateCursoModalFechaFinal }}"></div>
@@ -3044,7 +3050,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div onClick="{{ stopPropagation }}" style="background:#fff;border-radius:10px;width:480px;max-width:92vw;padding:26px;box-shadow:0 20px 50px rgba(0,0,0,.3)">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><h2 style="margin:0;font:600 18px/1.2 Inter,sans-serif">Invitar a alguien</h2><span onClick="{{ toggleInvite }}" style="cursor:pointer;color:#9AA09B">✕</span></div>
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" placeholder="nombre@colegio.edu.ar" value="{{ inviteEmailVal }}" onChange="{{ updateInviteEmail }}"></div>
-<div class="cbl-field" style="margin-bottom:10px"><span class="cbl-label">Rol</span><select class="cbl-select" value="{{ inviteRoleVal }}" onChange="{{ updateInviteRole }}"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option></select></div>
+<div class="cbl-field" style="margin-bottom:10px"><span class="cbl-label">Rol</span><select class="cbl-select" value="{{ inviteRoleVal }}" onChange="{{ updateInviteRole }}"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option><option>Director/a</option><option>Secretario/a</option><option>Referente de nivel</option><option>Administración y facturación</option><option>Otro</option></select></div>
 <div style="background:#FAFAF8;border:1px solid #E3E1DC;border-radius:8px;padding:12px 14px;margin-bottom:18px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">{{ inviteRoleDesc }}</div>
 <div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px" onClick="{{ sendInviteEquipo }}">Enviar invitación</button><button class="cbl-btn cbl-btn--secondary cbl-btn--lg" onClick="{{ toggleInvite }}">Cancelar</button></div>
 </div>
@@ -3076,20 +3082,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </table>
 </div>
 
-<div style="font:600 16px/1.2 Inter,sans-serif;margin:26px 0 4px">Qué puede hacer cada rol</div>
-<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Los permisos se aplican a toda la institución. El dueño de la cuenta es único y es el que paga el plan.</p>
-<div class="udoar-table-wrap" style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden">
-<table class="cbl-table">
-<thead><tr><th>Permiso</th><sc-for list="{{ rolesEquipo }}" as="r" hint-placeholder-count="4"><th style="text-align:center">{{ r.corto }}</th></sc-for></tr></thead>
-<tbody>
-<sc-for list="{{ permisosEquipo }}" as="p" hint-placeholder-count="6">
-<tr><td><div style="font-weight:600">{{ p.nombre }}</div><div style="font:400 12px/1.4 Inter,sans-serif;color:#9AA09B">{{ p.detalle }}</div></td>
-<sc-for list="{{ p.celdas }}" as="c" hint-placeholder-count="4"><td style="text-align:center;font:600 14px/1 Inter,sans-serif;{{ c.style }}">{{ c.marca }}</td></sc-for>
-</tr>
-</sc-for>
-</tbody>
-</table>
-</div>
 
 </sc-if>
 
@@ -4711,7 +4703,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <sc-if value="{{ instAppInviteOpen }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;margin-bottom:14px">
 <div class="cbl-field" style="margin-bottom:14px"><span class="cbl-label">Email</span><input class="cbl-input" type="email" placeholder="nombre@colegio.edu.ar"></div>
-<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Rol</span><select class="cbl-select"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option></select></div>
+<div class="cbl-field" style="margin-bottom:16px"><span class="cbl-label">Rol</span><select class="cbl-select"><option>Administrador/a</option><option>Reclutador/a</option><option>Coordinador/a de área</option><option>Director/a</option><option>Secretario/a</option><option>Referente de nivel</option><option>Administración y facturación</option><option>Otro</option></select></div>
 <div style="display:flex;gap:10px">
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;flex:1" onClick="{{ sendInstAppInvite }}">Enviar invitación</button>
 <button class="cbl-btn cbl-btn--secondary cbl-btn--block" style="flex:1" onClick="{{ closeInstAppInvite }}">Cancelar</button>
@@ -4967,7 +4959,7 @@ class Component extends DCLogic {
     postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
     docCategoria: 'Docente', docEstudio: 'recibido', docAsigRubro: '', docAsigItem: '',
     docDocs: { dniFrente: false, dniDorso: false, credencial: false, conducta: false },
-    showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
+    showCursoModal: false, cursoModalCertifica: true, cursoModalPuntaje: '10', cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
     novedades: [
       { fecha: '12 AGO', titulo: 'Abrimos inscripción a Nivel Inicial 2027', texto: 'Sala de 3, 4 y 5 con jornada extendida. Las entrevistas con familias arrancan en septiembre; vamos a necesitar dos maestras más para febrero.' },
@@ -5107,6 +5099,7 @@ class Component extends DCLogic {
     this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: i,
       cursoModalTitulo: c.titulo || '', cursoModalSubtitulo: c.subtitulo || '', cursoModalTexto: c.descripcion || '',
       cursoModalModalidad: c.modalidad || 'Presencial', cursoModalProfesor: c.profesor || '',
+      cursoModalCertifica: c.certifica !== false, cursoModalPuntaje: String(c.puntaje || 10),
       cursoModalFechaInicio: c.fechaInicio || '', cursoModalFechaFinal: c.fechaFinal || '',
       cursoModalHorario: c.horario || '',
       cursoModalDias: c.diasHorario || this.recalcularDiasCurso(c.fechaInicio, c.fechaFinal, null, this.horarioPorDefecto(c.horario)),
@@ -5645,7 +5638,7 @@ class Component extends DCLogic {
   // El id de la foto se reserva al abrir el formulario, así el <image-slot> del
   // alta y el de la tarjeta guardada apuntan al mismo lugar y la foto se ve.
   nuevoFotoId() { return 'curso_' + Date.now(); }
-  openCursoModal() { this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: null, cursoModalFotoId: this.nuevoFotoId(), cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '' }); }
+  openCursoModal() { this.setState({ screen: 'instCrearCurso', selectedCurso: null, cursoModalEditIdx: null, cursoModalCertifica: true, cursoModalPuntaje: '10', cursoModalFotoId: this.nuevoFotoId(), cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '' }); }
   closeCursoModal() { this.setState({ screen: 'instCursos' }); }
   formatFechas(inicio, fin) {
     if (!inicio) return 'Fecha a confirmar';
@@ -5680,7 +5673,7 @@ class Component extends DCLogic {
   removeTeamMember(key) { this.setState(s => ({ teamMembers: s.teamMembers.filter(m => m.key !== key) })); }
   saveCursoModal() {
     this.setState(s => {
-      const campos = { titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: this.armarHorario(s.cursoModalDias), diasHorario: s.cursoModalDias, fotoId: s.cursoModalFotoId || this.nuevoFotoId(), archivos: s.cursoModalArchivos, linkInfo: s.cursoModalLinkInfo, link: s.cursoModalLink, direccion: s.cursoModalDireccion };
+      const campos = { certifica: !!s.cursoModalCertifica, puntaje: parseInt(s.cursoModalPuntaje, 10) || 0, titulo: s.cursoModalTitulo || 'Nuevo curso', subtitulo: s.cursoModalSubtitulo, descripcion: s.cursoModalTexto, modalidad: s.cursoModalModalidad, profesor: s.cursoModalProfesor, fechaInicio: s.cursoModalFechaInicio, fechaFinal: s.cursoModalFechaFinal, horario: this.armarHorario(s.cursoModalDias), diasHorario: s.cursoModalDias, fotoId: s.cursoModalFotoId || this.nuevoFotoId(), archivos: s.cursoModalArchivos, linkInfo: s.cursoModalLinkInfo, link: s.cursoModalLink, direccion: s.cursoModalDireccion };
       const i = s.cursoModalEditIdx;
       if (i !== null && s.cursosDetallados[i]) {
         const lista = s.cursosDetallados.slice();
@@ -6145,6 +6138,13 @@ class Component extends DCLogic {
       cursoModalTitulo: this.state.cursoModalTitulo, updateCursoModalTitulo: (e) => this.setState({ cursoModalTitulo: e.target.value }),
       cursoModalSubtitulo: this.state.cursoModalSubtitulo, updateCursoModalSubtitulo: (e) => this.setState({ cursoModalSubtitulo: e.target.value }),
       cursoModalTexto: this.state.cursoModalTexto, updateCursoModalTexto: (e) => this.setState({ cursoModalTexto: e.target.value }),
+      cursoModalCertifica: this.state.cursoModalCertifica,
+      cursoModalSinCertificado: !this.state.cursoModalCertifica,
+      toggleCursoModalCertifica: () => this.setState(st => ({ cursoModalCertifica: !st.cursoModalCertifica })),
+      cursoCertTrackStyle: this.state.cursoModalCertifica ? 'background:#1E7A4C' : 'background:#CFCCC5',
+      cursoCertDotStyle: this.state.cursoModalCertifica ? 'right:2px' : 'left:2px',
+      cursoModalPuntaje: this.state.cursoModalPuntaje,
+      updateCursoModalPuntaje: (e) => this.setState({ cursoModalPuntaje: e.target.value }),
       isCursoModalOnline: this.state.cursoModalModalidad === 'Online',
       setCursoModalPresencial: () => this.setState({ cursoModalModalidad: 'Presencial' }),
       setCursoModalOnline: () => this.setState({ cursoModalModalidad: 'Online' }),
@@ -6952,7 +6952,18 @@ class Component extends DCLogic {
           ? { marca: '✓', style: 'color:#1E7A4C' }
           : { marca: '—', style: 'color:#C9C6C0' }),
       })),
-      inviteRoleDesc: (this.ROLES_EQUIPO.find(r => r.nombre === this.state.inviteRoleVal) || this.ROLES_EQUIPO[1]).desc,
+      inviteRoleDesc: (() => {
+        const rol = this.state.inviteRoleVal;
+        const base = this.ROLES_EQUIPO.find(r => r.nombre === rol);
+        if (base) return base.desc;
+        return ({
+          'Director/a': 'Ve todo y aprueba contrataciones. No toca el plan ni la facturaci\u00f3n.',
+          'Secretario/a': 'Carga y edita b\u00fasquedas, agenda entrevistas y responde postulantes.',
+          'Referente de nivel': 'Ve las b\u00fasquedas de su nivel y comenta en los postulantes. No publica ni contrata.',
+          'Administraci\u00f3n y facturaci\u00f3n': 'Accede al plan, los comprobantes y los datos de facturaci\u00f3n. No ve las b\u00fasquedas.',
+          'Otro': 'Los permisos los defin\u00eds vos cuando acepte la invitaci\u00f3n.',
+        })[rol] || this.ROLES_EQUIPO[1].desc;
+      })(),
       mostrarRapidos: true,
       mostrarCatalogo: !this.state.buscadorSoloRapidas,
       buscadorTitulo: this.state.buscadorSoloRapidas
