@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnbAsig": "/onboarding/docente/asignaturas","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -1185,22 +1185,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </div>
 <div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span style="font:600 13px/1 Inter,sans-serif">Asignaturas y disciplinas *</span></div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px">
-<sc-for list="{{ docAsignaturas }}" as="t" hint-placeholder-count="2"><span class="cbl-badge" style="background:#FDE9E1;color:#8A2F1A;cursor:pointer" onClick="{{ t.onRemove }}">{{ t.label }} ×</span></sc-for>
-</div>
-<div style="position:relative;margin-bottom:14px">
-<input class="cbl-input" style="width:100%" placeholder="Buscar asignatura o disciplina (Matemática, Música, Natación...)" value="{{ docAsigQuery }}" onChange="{{ updateDocAsigQuery }}">
-<sc-if value="{{ hasDocAsigSuggestions }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E3E1DC;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.1);margin-top:4px;z-index:5;overflow:hidden">
-<sc-for list="{{ docAsigSuggestions }}" as="opt" hint-placeholder-count="3"><div onClick="{{ opt.onPick }}" style="padding:9px 14px;font:400 13px/1 Inter,sans-serif;cursor:pointer" style-hover="background:#F5F4F0">{{ opt.label }}</div></sc-for>
-</div>
-</sc-if>
-</div>
-<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:8px">Niveles en los que podés trabajar</div>
-<div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ docNivelesList }}" as="n" hint-placeholder-count="4"><span class="cbl-badge" style="cursor:pointer;{{ n.style }}" onClick="{{ n.onToggle }}">{{ n.label }}</span></sc-for></div>
-</div>
-<div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
 <div style="font:600 13px/1 Inter,sans-serif;margin-bottom:4px">Zonas donde estás dispuesta a trabajar</div>
 <p style="margin:0 0 12px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Sólo vas a ver búsquedas de estas zonas. Podés cambiarlas cuando quieras.</p>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px">
@@ -1223,8 +1207,36 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between">
 <span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnb2 }}">← Volver al paso 2</span>
-<div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--secondary">Guardar borrador</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOnb4 }}">Continuar a documentación</button></div>
+<div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--secondary">Guardar borrador</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOnbAsig }}">Continuar</button></div>
 </div>
+</sc-if>
+
+<sc-if value="{{ isDocOnbAsig }}" hint-placeholder-val="{{ false }}">
+<h1 style="margin:0 0 8px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">¿Qué enseñás?</h1>
+<p style="margin:0 0 18px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tocá todo lo que dés. Cuantas más sumes, en más búsquedas aparecés.</p>
+<input class="cbl-input" style="width:100%;margin-bottom:18px" placeholder="{{ docAsigBuscarPlaceholder }}" value="{{ docAsigQuery }}" onChange="{{ updateDocAsigQuery }}">
+<sc-for list="{{ docAsigRubros }}" as="g" hint-placeholder-count="3">
+<div style="margin-bottom:18px">
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">{{ g.rubro }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{ g.items }}" as="a" hint-placeholder-count="5">
+<span onClick="{{ a.onToggle }}" style="cursor:pointer;padding:10px 16px;border-radius:999px;font:500 14px/1 Inter,sans-serif;transition:background .15s,border-color .15s;{{ a.style }}">{{ a.label }}</span>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ docAsigSinResultados }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px dashed #CFCCC5;border-radius:10px;padding:22px;text-align:center;margin-bottom:18px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">No encontramos nada con esa búsqueda. Probá con otra palabra.</div>
+</sc-if>
+<div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin:4px 0 26px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">{{ docAsigResumen }}</div>
+<div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:5px">¿En qué niveles podés trabajar?</div>
+<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Podés marcar más de uno.</p>
+<div class="udoar-onb-2col" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
+<sc-for list="{{ docNivelesGrandes }}" as="n" hint-placeholder-count="4">
+<div onClick="{{ n.onToggle }}" style="cursor:pointer;flex:1;min-width:140px;padding:16px;border-radius:12px;text-align:center;font:600 15px/1.3 Inter,sans-serif;color:#1F2421;transition:border-color .15s;{{ n.style }}">{{ n.label }}</div>
+</sc-for>
+</div>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb4 }}">Continuar</button>
 </sc-if>
 
 <sc-if value="{{ isDocOnb4 }}" hint-placeholder-val="{{ false }}">
@@ -5187,6 +5199,40 @@ class Component extends DCLogic {
       vacio: 'Lo emite el Registro Nacional de Reincidencia',
       archivo: 'buena-conducta.pdf · vence a los 6 meses de emitido' },
   ];
+  // Catálogo del paso de asignaturas. Se agrupa por rubro y se recorta según lo
+  // que la persona eligió en "¿Qué sos?": un entrenador no tiene por qué
+  // recorrer la lista de materias de secundario para encontrar Fútbol.
+  ASIGNATURAS = {
+    'Docente': [
+      { rubro: 'Exactas y naturales', items: ['Matemática', 'Física', 'Química', 'Biología', 'Ciencias Naturales', 'Informática'] },
+      { rubro: 'Lengua y sociales', items: ['Lengua', 'Literatura', 'Historia', 'Geografía', 'Ciencias Sociales', 'Formación Ética'] },
+      { rubro: 'Arte y música', items: ['Música', 'Plástica', 'Teatro', 'Danza', 'Audiovisuales'] },
+      { rubro: 'Idiomas', items: ['Inglés', 'Portugués', 'Francés', 'Italiano', 'Alemán'] },
+      { rubro: 'Nivel inicial y primario', items: ['Nivel Inicial', 'Maestro/a de grado', 'Apoyo escolar', 'Psicopedagogía'] },
+      { rubro: 'Educación física', items: ['Educación Física', 'Deportes escolares', 'Expresión corporal'] },
+    ],
+    'Entrenador/a': [
+      { rubro: 'Deportes de equipo', items: ['Fútbol', 'Vóley', 'Básquet', 'Handball', 'Hockey', 'Rugby'] },
+      { rubro: 'Deportes individuales', items: ['Tenis', 'Atletismo', 'Artes marciales', 'Boxeo', 'Golf', 'Equitación'] },
+      { rubro: 'Gimnasio y fitness', items: ['Musculación', 'Funcional', 'Spinning', 'Pilates', 'Yoga', 'Entrenamiento personal'] },
+      { rubro: 'Actividades acuáticas', items: ['Natación', 'Aquagym', 'Waterpolo'] },
+      { rubro: 'Otras disciplinas', items: ['Danza deportiva', 'Escalada', 'Preparación física'] },
+    ],
+    'Guardavidas': [
+      { rubro: 'Pileta y natatorio', items: ['Pileta cubierta', 'Pileta al aire libre', 'Natatorio de club', 'Escuela de natación'] },
+      { rubro: 'Playa, río y laguna', items: ['Playa', 'Río', 'Laguna', 'Balneario'] },
+      { rubro: 'Colonias y temporada', items: ['Colonia de vacaciones', 'Campamento', 'Eventos deportivos'] },
+      { rubro: 'Formación y apoyo', items: ['Primeros auxilios', 'RCP', 'Natación para principiantes'] },
+    ],
+  };
+  rubrosAsignaturas() { return this.ASIGNATURAS[this.state.docCategoria] || this.ASIGNATURAS['Docente']; }
+  toggleDocAsig(v) {
+    this.setState(st => ({
+      docAsignaturas: st.docAsignaturas.includes(v)
+        ? st.docAsignaturas.filter(x => x !== v)
+        : [...st.docAsignaturas, v],
+    }));
+  }
   subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
   docsAltaCompletos() {
     const d = this.state.docDocs;
@@ -5672,7 +5718,7 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#DC2626' : '#E3E1DC',
     }));
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
-      'docOnb1','docOnbCat','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
+      'docOnb1','docOnbCat','docOnb2','docOnb3','docOnbAsig','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
       'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
@@ -5692,7 +5738,7 @@ class Component extends DCLogic {
     const cat = catInfo[s] || catInfo.educadores;
 
     const isDoc = ['docDashboard', 'docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
-    const isDocOnb = ['docOnb1', 'docOnbCat', 'docOnb2', 'docOnb3', 'docOnb4', 'docOnb5'].includes(s);
+    const isDocOnb = ['docOnb1', 'docOnbCat', 'docOnb2', 'docOnb3', 'docOnbAsig', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
     const isInst = ['instDashboard', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos', 'instCrearCurso', 'instBase', 'instCuenta'].includes(s);
@@ -5717,7 +5763,7 @@ class Component extends DCLogic {
       isInstOnbPage: isInstOnb,
       onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/onboarding-bg-3.jpg' : 'assets/onboarding-bg-1.jpg',
       isDocOnbPage: isDocOnb,
-      docOnbBgUrl: s === 'docOnbCat' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
+      docOnbBgUrl: s === 'docOnbCat' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnbAsig' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
       navDocDashboardStyle: s === 'docDashboard' ? docNavOn : docNavOff,
       navDocBuscarStyle: s === 'docOportunidades' ? docNavOn : docNavOff,
       navDocRapidasStyle: s === 'docRapidas' ? docNavOn : docNavOff,
@@ -5908,8 +5954,8 @@ class Component extends DCLogic {
       updateInstTipo: (e) => this.updateInstTipo(e),
       isInstTipoEducativo: ['Colegio privado', 'Jardín de infantes', 'Instituto de idiomas'].includes(this.state.instTipo),
       docOnbCardWidth: '760px',
-      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 5 · Tu cuenta' : s === 'docOnbCat' ? 'Paso 2 de 5 · Qué sos' : s === 'docOnb2' ? 'Paso 3 de 5 · Tu CV' : s === 'docOnb3' ? 'Paso 4 de 5 · Tu perfil' : 'Paso 5 de 5 · Documentación',
-      docOnbProgress: s === 'docOnb1' ? '20%' : s === 'docOnbCat' ? '40%' : s === 'docOnb2' ? '60%' : s === 'docOnb3' ? '80%' : '100%',
+      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 6 · Tu cuenta' : s === 'docOnbCat' ? 'Paso 2 de 6 · Qué sos' : s === 'docOnb2' ? 'Paso 3 de 6 · Tu CV' : s === 'docOnb3' ? 'Paso 4 de 6 · Tu perfil' : s === 'docOnbAsig' ? 'Paso 5 de 6 · Qué enseñás' : 'Paso 6 de 6 · Documentación',
+      docOnbProgress: s === 'docOnb1' ? '17%' : s === 'docOnbCat' ? '33%' : s === 'docOnb2' ? '50%' : s === 'docOnb3' ? '67%' : s === 'docOnbAsig' ? '83%' : '100%',
       docNivelesList: Object.keys(this.state.docNiveles).map(k => ({ label: k, style: this.state.docNiveles[k] ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#6B706C', onToggle: () => this.toggleDocNivel(k) })),
       docDispRows: this.state.docDispGrid.map((row, ri) => ({
         label: row.label,
@@ -6173,6 +6219,42 @@ class Component extends DCLogic {
           onPick: () => this.setDocCategoria(c),
         };
       }),
+      // Paso de asignaturas: rubros filtrados por el buscador; el rubro que se
+      // queda sin coincidencias no se dibuja.
+      docAsigRubros: (() => {
+        const q = (this.state.docAsigQuery || '').trim().toLowerCase();
+        return this.rubrosAsignaturas().map(g => ({
+          rubro: g.rubro,
+          items: g.items
+            .filter(it => !q || it.toLowerCase().includes(q))
+            .map(it => {
+              const sel = this.state.docAsignaturas.includes(it);
+              return {
+                label: it,
+                style: sel
+                  ? 'background:#16214F;color:#fff;border:1px solid #16214F'
+                  : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+                onToggle: () => this.toggleDocAsig(it),
+              };
+            }),
+        })).filter(g => g.items.length);
+      })(),
+      docAsigSinResultados: !this.rubrosAsignaturas().some(g => g.items.some(it =>
+        !(this.state.docAsigQuery || '').trim() ||
+        it.toLowerCase().includes((this.state.docAsigQuery || '').trim().toLowerCase()))),
+      docAsigResumen: this.state.docAsignaturas.length === 0
+        ? 'Todav\u00eda no elegiste ninguna'
+        : this.state.docAsignaturas.length === 1
+          ? 'Elegiste 1: ' + this.state.docAsignaturas[0]
+          : 'Elegiste ' + this.state.docAsignaturas.length + ': ' + this.state.docAsignaturas.join(', '),
+      docAsigBuscarPlaceholder: 'Buscar entre ' + this.rubrosAsignaturas().reduce((n, g) => n + g.items.length, 0) + ' opciones\u2026',
+      docNivelesGrandes: Object.keys(this.state.docNiveles).map(k => ({
+        label: k,
+        style: this.state.docNiveles[k]
+          ? 'background:#fff;border:2px solid #16214F'
+          : 'background:#fff;border:2px solid #E3E1DC',
+        onToggle: () => this.toggleDocNivel(k),
+      })),
       docEstudioList: [
         { k: 'recibido', label: 'Ya me recibí', desc: 'Tenés el título o la certificación' },
         { k: 'estudiante', label: 'Estoy estudiando', desc: 'Todavía no tenés el título' },

@@ -65,6 +65,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/onboarding/docente/asignaturas",
+      "destination": "/index.html"
+    },
+    {
       "source": "/onboarding/docente/2",
       "destination": "/index.html"
     },
