@@ -1323,6 +1323,92 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Vieron tu perfil</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">7</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">instituciones, últimos 30 días</div></div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Suplencias abiertas</div><div style="font:600 28px/1 Inter,sans-serif;color:#DD553F">2</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">una vence en 18 hs</div></div>
 </div>
+
+<div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start;margin-bottom:22px">
+<div style="flex:1;min-width:0">
+
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<h2 style="margin:0;font:600 17px/1.2 Inter,sans-serif">Recomendadas para vos</h2>
+<span onClick="{{ goDocOportunidades }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span>
+</div>
+<p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+<img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font:700 12px/1 Inter,sans-serif;{{ r.matchStyle }}">{{ r.matchLabel }}</span>
+</div>
+<div style="font:600 14.5px/1.3 Inter,sans-serif;margin-bottom:2px">{{ r.title }}</div>
+<div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ r.inst }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+<sc-for list="{{ r.motivos }}" as="m" hint-placeholder-count="2"><span class="cbl-badge" style="background:#F0EFEA;color:#3D423E;font-size:11px">{{ m }}</span></sc-for>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA">
+<span style="font:400 12px/1.3 Inter,sans-serif;color:#9AA09B">{{ r.zona }}</span>
+<span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Ver oferta ›</span>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<h2 style="margin:0;font:600 17px/1.2 Inter,sans-serif">Instituciones destacadas</h2>
+<span onClick="{{ goDocInstituciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span>
+</div>
+<p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Las que más están buscando en tus zonas.</p>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
+<sc-for list="{{ institucionesDestacadas }}" as="d" hint-placeholder-count="3">
+<div onClick="{{ d.onVer }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
+<div style="display:flex;gap:11px;margin-bottom:10px">
+<img src="{{ d.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<div style="min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif">{{ d.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ d.tipo }} · {{ d.zona }}</div></div>
+</div>
+<div style="font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:12px">{{ d.resumen }}</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA">
+<span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;font-size:11px">{{ d.busquedasLabel }}</span>
+<span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Ver perfil ›</span>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div onClick="{{ goDocCursos2 }}" class="udoar-dark-grid-bg" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;padding:26px 28px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+<div style="position:relative;z-index:1;flex:1 1 300px;min-width:0">
+<span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#D6DEF9;margin-bottom:10px;display:inline-block">Publicidad</span>
+<div style="font:700 22px/1.25 Sora,Inter,sans-serif;color:#fff;margin-bottom:6px">Certificate en RCP y primeros auxilios</div>
+<div style="font:400 14px/1.55 Inter,sans-serif;color:rgba(255,255,255,.75);max-width:52ch">Cruz Roja Argentina dicta dos encuentros para docentes en Vicente López. Las instituciones lo piden cada vez más para cargos con chicos.</div>
+</div>
+<button class="cbl-btn cbl-btn--primary" style="position:relative;z-index:1;flex:none;background:#DD553F">Ver el curso</button>
+</div>
+
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<h2 style="margin:0;font:600 17px/1.2 Inter,sans-serif">Cursos destacados</h2>
+<span onClick="{{ goDocCursos2 }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todos</span>
+</div>
+<p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Suman en tu perfil y las instituciones los ven.</p>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<sc-for list="{{ cursosDestacados }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
+<div style="position:relative">
+<sc-if value="{{ c.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ c.fotoUrl }}" alt="" style="width:100%;height:116px;object-fit:cover;display:block"></sc-if>
+<sc-if value="{{ c.sinFoto }}" hint-placeholder-val="{{ true }}"><div style="width:100%;height:116px;background:#F3F2EE;display:flex;align-items:center;justify-content:center;color:#C9C6C0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.6"></circle><path d="M4 17l5-5 4 4 3-2 4 4"></path></svg></div></sc-if>
+<span class="cbl-badge" style="position:absolute;top:9px;left:9px;{{ c.modalidadStyle }}">{{ c.modalidad }}</span>
+</div>
+<div style="padding:14px;display:flex;flex-direction:column;flex:1">
+<div style="font:600 14.5px/1.3 Inter,sans-serif;margin-bottom:2px">{{ c.titulo }}</div>
+<div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ c.subtitulo }}</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;font:400 12px/1.3 Inter,sans-serif;color:#9AA09B">
+<span>{{ c.fechasLabel }}</span><span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Ver ›</span>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+
+</div>
+</div>
+
 <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
 <div style="flex:1;min-width:320px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h2 style="margin:0;font:600 16px/1.2 Inter,sans-serif">Tus postulaciones</h2><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span></div>
@@ -5219,6 +5305,33 @@ class Component extends DCLogic {
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     return dias[d.getDay()] + ' ' + d.getDate() + ' de ' + meses[d.getMonth()] + ' · ' + agenda.hora + ' hs';
   }
+  // ── Recomendaciones del dashboard del docente ──────────────────────────
+  // El match compara la búsqueda contra lo que cargó en su perfil: asignatura,
+  // zonas y disponibilidad. No pretende ser un algoritmo, es una señal legible.
+  matchDeOferta(o) {
+    const asigs = this.state.docAsignaturas || [];
+    const zonas = this.state.docZonas || [];
+    const disp = this.state.docDisponibilidad || [];
+    const motivos = [];
+    let p = 45;
+    if (asigs.some(a => (o.asignatura || '').toLowerCase().includes(a.toLowerCase()) || a.toLowerCase().includes((o.asignatura || '').toLowerCase()))) {
+      p += 28; motivos.push('Tu asignatura');
+    }
+    if (zonas.some(z => (o.zona || '').toLowerCase().includes(z.toLowerCase()))) {
+      p += 18; motivos.push('En tus zonas');
+    }
+    if (disp.some(d => (d || '').toLowerCase().includes((o.turno || '').toLowerCase()) && o.turno)) {
+      p += 12; motivos.push('Tu turno');
+    }
+    if (o.rapida) { p += 4; motivos.push('Suplencia rápida'); }
+    if (!motivos.length) motivos.push('Cerca de tus zonas');
+    return { match: Math.min(p, 97), motivos: motivos.slice(0, 2) };
+  }
+  colorDeMatch(m) {
+    if (m >= 80) return 'background:#E7F5EF;color:#1E7A4C';
+    if (m >= 60) return 'background:#FDF1C7;color:#7A5900';
+    return 'background:#F0EFEA;color:#6B706C';
+  }
   setVistaInst(v) { this.setState({ instVista: v, mapaInstIdx: null }); }
   seleccionarInstEnMapa(i) { this.setState(st => ({ mapaInstIdx: st.mapaInstIdx === i ? null : i })); }
   // La zona de una institución puede venir como "Villa Adelina, Vicente López":
@@ -6030,6 +6143,29 @@ class Component extends DCLogic {
         ...i,
         busquedasLabel: i.busquedas === 0 ? 'Sin búsquedas abiertas'
           : i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
+      })),
+      recomendadasList: this.state.oportunidadesMas
+        .map(o => ({ ...o, ...this.matchDeOferta(o) }))
+        .sort((a, b) => b.match - a.match)
+        .slice(0, 3)
+        .map(o => ({ ...o, matchLabel: o.match + '% match', matchStyle: this.colorDeMatch(o.match), onClick: () => this.openOport(o) })),
+      institucionesDestacadas: this.state.institucionesList
+        .slice()
+        .sort((a, b) => b.busquedas - a.busquedas)
+        .slice(0, 3)
+        .map(i => ({
+          ...i,
+          resumen: (i.desc || '').length > 92 ? i.desc.slice(0, 92).trim() + '…' : i.desc,
+          busquedasLabel: i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
+          onVer: () => this.openInstPerfil(i.key),
+        })),
+      cursosDestacados: this.state.cursosDetallados.slice(0, 3).map(c => ({
+        ...c,
+        subtitulo: c.subtitulo || '',
+        fotoUrl: this.fotoDeSlot(c.fotoId), tieneFoto: !!this.fotoDeSlot(c.fotoId), sinFoto: !this.fotoDeSlot(c.fotoId),
+        modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E',
+        fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal),
+        onClick: () => this.openCurso({ ...c, hasSubtitulo: !!c.subtitulo }),
       })),
       esInstVistaLista: this.state.instVista !== 'mapa',
       esInstVistaMapa: this.state.instVista === 'mapa',
