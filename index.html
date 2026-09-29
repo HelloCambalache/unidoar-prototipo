@@ -1315,7 +1315,6 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <sc-if value="{{ isDocDashboard }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px">
 <div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Buenas, Luciana</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Hay 9 búsquedas nuevas en tus zonas y una institución vio tu perfil ayer.</p></div>
-<span style="font:400 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap">Semana del 24 al 30 de agosto</span>
 </div>
 <div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Búsquedas nuevas</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">9</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">en Vicente López, Núñez y Tigre</div></div>
@@ -1324,7 +1323,7 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Suplencias abiertas</div><div style="font:600 28px/1 Inter,sans-serif;color:#DD553F">2</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">una vence en 18 hs</div></div>
 </div>
 
-<div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start;margin-bottom:22px">
+<div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
 <div style="flex:1;min-width:0">
 
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1373,7 +1372,8 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-for>
 </div>
 
-<div onClick="{{ goDocCursos2 }}" class="udoar-dark-grid-bg" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;padding:26px 28px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+<div onClick="{{ goDocCursos2 }}" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;padding:26px 28px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+<div class="udoar-dark-grid-bg" style="position:absolute;inset:0;pointer-events:none"></div>
 <div style="position:relative;z-index:1;flex:1 1 300px;min-width:0">
 <span class="cbl-badge" style="background:rgba(255,255,255,.14);color:#D6DEF9;margin-bottom:10px;display:inline-block">Publicidad</span>
 <div style="font:700 22px/1.25 Sora,Inter,sans-serif;color:#fff;margin-bottom:6px">Certificate en RCP y primeros auxilios</div>
@@ -1406,17 +1406,16 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 </sc-for>
 </div>
 
-</div>
-</div>
-
-<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+<div style="margin-top:26px">
 <div style="flex:1;min-width:320px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h2 style="margin:0;font:600 16px/1.2 Inter,sans-serif">Tus postulaciones</h2><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span></div>
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Ed. Física — Primario</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Colegio San Andrés del Norte · postulada el 21/08</div></div><span class="cbl-badge" style="background:#FBE0EF;color:#97125F">Entrevista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Maestra de sala de 3</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Jardín Los Aromos · postulada el 18/08</div></div><span class="cbl-badge" style="background:#F0EFEA;color:#3D423E">En revisión</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Natación — escuela de verano</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Club Atlético Ribera · postulada el 12/08</div></div><span class="cbl-badge" style="background:#E5E9FB;color:#16214F">Vista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 </div>
-<div style="flex:none;width:300px;display:flex;flex-direction:column;gap:14px">
+</div>
+</div>
+<div class="udoar-2col-aside" style="flex:none;width:300px;display:flex;flex-direction:column;gap:14px">
 <div style="background:#FBE0EF;border-radius:8px;padding:16px">
 <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Completá tu perfil</span><span style="font:600 12px/1 Inter,sans-serif;color:#97125F">80%</span></div>
 <div style="height:6px;border-radius:999px;background:rgba(151,18,95,.15);overflow:hidden;margin-bottom:10px"><div style="width:80%;height:6px;background:#97125F"></div></div>
@@ -4799,12 +4798,12 @@ class Component extends DCLogic {
     docValores: ['Respeto', 'Compromiso', 'Excelencia'], valorInputVal: '',
     docCursos: ['Cursos de RCP', 'Cursos de natación'], cursoInputVal: '',
     cursosDetallados: [
-      { fotoId: 'curso1', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
-      { fotoId: 'curso2', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
-      { fotoId: 'curso3', titulo: 'Aula heterogénea y diversidad', subtitulo: 'Instituto Vicente López', descripcion: 'Herramientas concretas para trabajar con grupos disparejos: consignas por niveles, evaluación diferenciada y acompañamiento de chicos con adaptaciones.', modalidad: 'Online', profesor: 'Lic. Verónica Maidana', fechaInicio: '2027-04-06', fechaFinal: '2027-05-11', horario: 'Martes 19:00 a 21:00', link: 'https://meet.google.com/aula-heterogenea', linkInfo: '', archivos: [{ nombre: 'programa-del-curso.pdf', peso: 'PDF · 240 KB' }], inscritos: ['Luciana Prieto', 'Carolina Ruiz Díaz'] },
-      { fotoId: 'curso4', titulo: 'ESI en Nivel Inicial', subtitulo: 'Jardín Los Aromos', descripcion: 'Cómo llevar la Educación Sexual Integral a salas de 3, 4 y 5 sin improvisar: materiales, vocabulario y cómo contarlo a las familias.', modalidad: 'Presencial', profesor: 'Equipo de orientación del jardín', fechaInicio: '2027-04-11', fechaFinal: '2027-04-25', horario: 'Sábados 9:00 a 12:00', link: '', linkInfo: '', inscritos: [] },
-      { fotoId: 'curso5', titulo: 'Entrenamiento funcional para grupos grandes', subtitulo: 'Full Body Olivos', descripcion: 'Planificación de clases para 20 o más personas con poco equipamiento, progresiones por nivel y prevención de lesiones.', modalidad: 'Presencial', profesor: 'Nicolás Bermúdez', fechaInicio: '2027-03-20', fechaFinal: '2027-04-10', horario: 'Viernes 18:00 a 20:00', link: '', linkInfo: '', inscritos: ['Facundo Ojeda'] },
-      { fotoId: 'curso6', titulo: 'Guardavidas: actualización de reválida', subtitulo: 'Club Atlético Ribera', descripcion: 'Repaso de protocolos de rescate en pileta, RCP y la documentación que piden los municipios para revalidar el carnet.', modalidad: 'Presencial', profesor: 'Agustina Molina', fechaInicio: '2027-05-04', fechaFinal: '2027-05-18', horario: 'Lunes 18:00 a 21:00', link: '', linkInfo: '', inscritos: [] },
+      { fotoId: 'curso1', foto: 'assets/urgente-docentes.jpg', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
+      { fotoId: 'curso2', foto: 'assets/cat-guardavidas-pileta.jpg', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
+      { fotoId: 'curso3', foto: 'assets/hero-aula.jpg', titulo: 'Aula heterogénea y diversidad', subtitulo: 'Instituto Vicente López', descripcion: 'Herramientas concretas para trabajar con grupos disparejos: consignas por niveles, evaluación diferenciada y acompañamiento de chicos con adaptaciones.', modalidad: 'Online', profesor: 'Lic. Verónica Maidana', fechaInicio: '2027-04-06', fechaFinal: '2027-05-11', horario: 'Martes 19:00 a 21:00', link: 'https://meet.google.com/aula-heterogenea', linkInfo: '', archivos: [{ nombre: 'programa-del-curso.pdf', peso: 'PDF · 240 KB' }], inscritos: ['Luciana Prieto', 'Carolina Ruiz Díaz'] },
+      { fotoId: 'curso4', foto: 'assets/cat-docentes.jpg', titulo: 'ESI en Nivel Inicial', subtitulo: 'Jardín Los Aromos', descripcion: 'Cómo llevar la Educación Sexual Integral a salas de 3, 4 y 5 sin improvisar: materiales, vocabulario y cómo contarlo a las familias.', modalidad: 'Presencial', profesor: 'Equipo de orientación del jardín', fechaInicio: '2027-04-11', fechaFinal: '2027-04-25', horario: 'Sábados 9:00 a 12:00', link: '', linkInfo: '', inscritos: [] },
+      { fotoId: 'curso5', foto: 'assets/cat-entrenadores-gym.jpg', titulo: 'Entrenamiento funcional para grupos grandes', subtitulo: 'Full Body Olivos', descripcion: 'Planificación de clases para 20 o más personas con poco equipamiento, progresiones por nivel y prevención de lesiones.', modalidad: 'Presencial', profesor: 'Nicolás Bermúdez', fechaInicio: '2027-03-20', fechaFinal: '2027-04-10', horario: 'Viernes 18:00 a 20:00', link: '', linkInfo: '', inscritos: ['Facundo Ojeda'] },
+      { fotoId: 'curso6', foto: 'assets/hero-guardavidas.jpg', titulo: 'Guardavidas: actualización de reválida', subtitulo: 'Club Atlético Ribera', descripcion: 'Repaso de protocolos de rescate en pileta, RCP y la documentación que piden los municipios para revalidar el carnet.', modalidad: 'Presencial', profesor: 'Agustina Molina', fechaInicio: '2027-05-04', fechaFinal: '2027-05-18', horario: 'Lunes 18:00 a 21:00', link: '', linkInfo: '', inscritos: [] },
     ],
     docBuscarVista: 'lista', mapaOfertaIdx: null,
     buscadorSoloRapidas: false, buscadorSoloFavoritos: false,
@@ -5052,6 +5051,8 @@ class Component extends DCLogic {
     return { filas: salida, descartadas, error: '' };
   }
   // Foto guardada de un curso, para las pantallas donde se muestra pero no se edita.
+  // La foto que subió la institución manda; si no hay, la que trae el curso.
+  fotoDeCurso(c) { return (c && (this.fotoDeSlot(c.fotoId) || c.foto)) || ''; }
   fotoDeSlot(id) {
     try { return (window.udImageSlots && window.udImageSlots.get(id)) || ''; } catch (e) { return ''; }
   }
@@ -5213,7 +5214,7 @@ class Component extends DCLogic {
         ...c,
         hasSubtitulo: !!c.subtitulo,
         resumen: texto.length > 130 ? texto.slice(0, 130).trim() + '…' : texto,
-        fotoUrl: this.fotoDeSlot(c.fotoId), tieneFoto: !!this.fotoDeSlot(c.fotoId), sinFoto: !this.fotoDeSlot(c.fotoId),
+        fotoUrl: this.fotoDeCurso(c), tieneFoto: !!this.fotoDeCurso(c), sinFoto: !this.fotoDeCurso(c),
         modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E',
         fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal),
         dictaLabel: c.profesor || 'A confirmar',
@@ -5749,7 +5750,7 @@ class Component extends DCLogic {
       cursoInputVal: this.state.cursoInputVal,
       updateCursoInput: (e) => this.setState({ cursoInputVal: e.target.value }),
       keyCursoInput: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addCurso(); } },
-      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, fotoUrl: this.fotoDeSlot(c.fotoId), tieneFoto: !!this.fotoDeSlot(c.fotoId), sinFoto: !this.fotoDeSlot(c.fotoId), onVer: () => this.openCurso(c), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
+      cursosDetalladosList: this.state.cursosDetallados.map((c, i) => ({ ...c, hasSubtitulo: !!c.subtitulo, fotoUrl: this.fotoDeCurso(c), tieneFoto: !!this.fotoDeCurso(c), sinFoto: !this.fotoDeCurso(c), onVer: () => this.openCurso(c), onEditar: () => this.editCursoDetallado(i), onClick: () => this.openCurso(c), onTituloChange: (e) => this.updateCursoDetallado(i, 'titulo', e.target.value), modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E', fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal), inscritosCount: (c.inscritos || []).length, hasInscritos: (c.inscritos || []).length > 0, inscritosList: c.inscritos || [], onDescChange: (e) => this.updateCursoDetallado(i, 'descripcion', e.target.value) })),
       isEditandoCurso: this.state.cursoModalEditIdx !== null,
       isCreandoCurso: this.state.cursoModalEditIdx === null,
       cursoFormTitulo: this.state.cursoModalEditIdx !== null ? 'Editar curso' : 'Crear curso',
@@ -6162,7 +6163,7 @@ class Component extends DCLogic {
       cursosDestacados: this.state.cursosDetallados.slice(0, 3).map(c => ({
         ...c,
         subtitulo: c.subtitulo || '',
-        fotoUrl: this.fotoDeSlot(c.fotoId), tieneFoto: !!this.fotoDeSlot(c.fotoId), sinFoto: !this.fotoDeSlot(c.fotoId),
+        fotoUrl: this.fotoDeCurso(c), tieneFoto: !!this.fotoDeCurso(c), sinFoto: !this.fotoDeCurso(c),
         modalidadStyle: c.modalidad === 'Online' ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#3D423E',
         fechasLabel: this.formatFechas(c.fechaInicio, c.fechaFinal),
         onClick: () => this.openCurso({ ...c, hasSubtitulo: !!c.subtitulo }),
@@ -6234,7 +6235,7 @@ class Component extends DCLogic {
       updateFiltroOportCategoria: (e) => this.setState({ filtroOportCategoria: e.target.value }),
       updateFiltroOportNivel: (e) => this.setState({ filtroOportNivel: e.target.value }),
       updateFiltroOportTurno: (e) => this.setState({ filtroOportTurno: e.target.value }),
-      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fotoUrl: this.fotoDeSlot(this.state.selectedCurso.fotoId), tieneFoto: !!this.fotoDeSlot(this.state.selectedCurso.fotoId), sinFoto: !this.fotoDeSlot(this.state.selectedCurso.fotoId), fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link,
+      selectedCurso: this.state.selectedCurso ? { ...this.state.selectedCurso, hasSubtitulo: !!this.state.selectedCurso.subtitulo, fotoUrl: this.fotoDeCurso(this.state.selectedCurso), tieneFoto: !!this.fotoDeCurso(this.state.selectedCurso), sinFoto: !this.fotoDeCurso(this.state.selectedCurso), fechasLabel: this.formatFechas(this.state.selectedCurso.fechaInicio, this.state.selectedCurso.fechaFinal), hasLink: !!this.state.selectedCurso.link,
         hasLinkInfo: !!this.state.selectedCurso.linkInfo,
         archivos: this.state.selectedCurso.archivos || [],
         tieneArchivos: (this.state.selectedCurso.archivos || []).length > 0,
