@@ -1121,7 +1121,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </sc-for>
 </div>
 <div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:5px">¿Ya te recibiste?</div>
-<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Si todavía estás cursando también podés trabajar: te pedimos la constancia en vez del título.</p>
+<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Si todavía estás cursando también podés trabajar: no te pedimos el título hasta que lo tengas.</p>
 <div class="udoar-onb-2col" style="display:flex;gap:10px;margin-bottom:22px">
 <sc-for list="{{ docEstudioList }}" as="e" hint-placeholder-count="2">
 <div onClick="{{ e.onPick }}" style="cursor:pointer;flex:1;min-width:0;padding:18px;border-radius:12px;text-align:center;transition:border-color .15s;{{ e.style }}">
@@ -1130,7 +1130,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </sc-for>
 </div>
-<div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin-bottom:22px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">Te vamos a pedir <b style="color:#1F2421;font-weight:600">{{ docCredencial }}</b>.</div>
+<div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin-bottom:22px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">{{ docPedidoAntes }}<b style="color:#1F2421;font-weight:600">{{ docPedidoFuerte }}</b>{{ docPedidoDespues }}</div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb2 }}">Continuar</button>
 </sc-if>
 
@@ -1249,7 +1249,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1.45 Inter,sans-serif">
 <div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Básico</strong><br><span style="color:#6B706C">Podés postularte y las instituciones te ven en el catálogo.</span></div></div>
 <div style="display:flex;gap:8px"><span style="color:#1E7A4C">✓</span><div><strong style="color:#1F2421">Completo</strong><br><span style="color:#6B706C">Con experiencia, zonas y disponibilidad cargadas aparecés más arriba en las búsquedas.</span></div></div>
-<div style="display:flex;gap:8px"><span style="{{ docVerificadoTickStyle }}">{{ docVerificadoTick }}</span><div><strong style="color:#1F2421">Verificado</strong><br><span style="color:#6B706C">Con el DNI y {{ docCredencialMin }} validados entrás en las búsquedas que piden "solo verificados".</span></div></div>
+<div style="display:flex;gap:8px"><span style="{{ docVerificadoTickStyle }}">{{ docVerificadoTick }}</span><div><strong style="color:#1F2421">Verificado</strong><br><span style="color:#6B706C">{{ docVerificadoTexto }}</span></div></div>
 </div>
 </div>
 </div>
@@ -5153,12 +5153,6 @@ class Component extends DCLogic {
       nombre: 'Título docente',
       detalle: 'titulo-profesorado.pdf · la institución lo valida al contratarte',
       corto: 'La institución lo valida al contratarte',
-      estudiante: {
-        vacio: 'PDF de la constancia de alumno/a regular',
-        nombre: 'Constancia de alumno/a regular',
-        detalle: 'constancia-alumno-regular.pdf · con las materias aprobadas del profesorado',
-        corto: 'Con las materias aprobadas del profesorado',
-      },
     },
     'Entrenador/a': {
       label: 'Entrenador/a / Instructor/a',
@@ -5167,12 +5161,6 @@ class Component extends DCLogic {
       nombre: 'Certificación deportiva',
       detalle: 'certificacion-deportiva.pdf · de la federación o entidad que la emitió',
       corto: 'De la federación o entidad que la emitió',
-      estudiante: {
-        vacio: 'PDF de la constancia de cursada',
-        nombre: 'Constancia de cursada',
-        detalle: 'constancia-cursada.pdf · de la federación o entidad donde te estás formando',
-        corto: 'De la entidad donde te estás formando',
-      },
     },
     'Guardavidas': {
       label: 'Guardavidas',
@@ -5181,19 +5169,12 @@ class Component extends DCLogic {
       nombre: 'Carnet de guardavidas con reválida',
       detalle: 'revalida-2026.pdf · la reválida vence al cierre de la temporada',
       corto: 'La reválida vence al cierre de la temporada',
-      estudiante: {
-        vacio: 'PDF de la constancia del curso en trámite',
-        nombre: 'Constancia del curso de guardavidas',
-        detalle: 'constancia-curso-guardavidas.pdf · hasta que salga el carnet no podés tomar turnos',
-        corto: 'Hasta que salga el carnet no podés tomar turnos',
-      },
     },
   };
-  // Quien todavía cursa no tiene el título: en su lugar le pedimos la constancia.
-  credencialDoc() {
-    const base = this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente'];
-    return this.state.docEstudio === 'estudiante' && base.estudiante ? base.estudiante : base;
-  }
+  credencialDoc() { return this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente']; }
+  // A quien todavía cursa no le pedimos nada en lugar del título: se verifica
+  // con el DNI y la buena conducta, y sube el título cuando lo tenga.
+  docPideCredencial() { return this.state.docEstudio !== 'estudiante'; }
   setDocCategoria(c) { this.setState({ docCategoria: c }); }
   setDocEstudio(v) { this.setState({ docEstudio: v }); }
   // Documentación del alta: arranca vacía y se va cargando.
@@ -5207,7 +5188,10 @@ class Component extends DCLogic {
       archivo: 'buena-conducta.pdf · vence a los 6 meses de emitido' },
   ];
   subirDocAlta(k) { this.setState(st => ({ docDocs: { ...st.docDocs, [k]: true } })); }
-  docsAltaCompletos() { const d = this.state.docDocs; return !!(d.dni && d.credencial && d.conducta); }
+  docsAltaCompletos() {
+    const d = this.state.docDocs;
+    return !!(d.dni && d.conducta && (!this.docPideCredencial() || d.credencial));
+  }
   // ── Roles del equipo ───────────────────────────────────────────────────
   ROLES_EQUIPO = [
     { nombre: 'Dueño de la cuenta', corto: 'Dueño',
@@ -6137,7 +6121,13 @@ class Component extends DCLogic {
       showMyCv: this.state.showMyCv,
       toggleMyCv: () => this.toggleMyCv(),
       docCredencialMin: this.credencialDoc().nombre.charAt(0).toLowerCase() + this.credencialDoc().nombre.slice(1),
-      docDocsList: this.DOCS_ALTA.map(doc => {
+      docVerificadoTexto: this.docPideCredencial()
+        ? 'Con el DNI y ' + (this.credencialDoc().nombre.charAt(0).toLowerCase() + this.credencialDoc().nombre.slice(1)) + ' validados entr\u00e1s en las b\u00fasquedas que piden "solo verificados".'
+        : 'Con el DNI y el certificado de buena conducta validados entr\u00e1s en las b\u00fasquedas que piden "solo verificados". El t\u00edtulo lo sub\u00eds cuando te recibas.',
+      docPedidoAntes: this.docPideCredencial() ? 'Te vamos a pedir ' : 'No te pedimos t\u00edtulo: alcanza con el ',
+      docPedidoFuerte: this.docPideCredencial() ? this.credencialDoc().nombre : 'DNI y el certificado de buena conducta',
+      docPedidoDespues: this.docPideCredencial() ? '.' : '. Sub\u00eds el t\u00edtulo cuando te recibas.',
+      docDocsList: this.DOCS_ALTA.filter(doc => doc.key !== 'credencial' || this.docPideCredencial()).map(doc => {
         const cred = this.credencialDoc();
         const nombre = doc.key === 'credencial' ? cred.nombre : doc.nombre;
         const vacio = doc.key === 'credencial' ? cred.vacio : doc.vacio;
@@ -6175,23 +6165,23 @@ class Component extends DCLogic {
         return {
           label: this.CREDENCIALES[c].label,
           desc: this.CREDENCIALES[c].desc,
-          style: sel ? 'background:#fff;border:2px solid #97125F' : 'background:#fff;border:2px solid #E3E1DC',
+          style: sel ? 'background:#fff;border:2px solid #16214F' : 'background:#fff;border:2px solid #E3E1DC',
           dot: sel ? '✓' : '',
           dotStyle: sel
-            ? 'background:#97125F;color:#fff;font:700 12px/1 Inter,sans-serif'
+            ? 'background:#16214F;color:#fff;font:700 12px/1 Inter,sans-serif'
             : 'background:#F0EFEA;border:1px solid #E3E1DC',
           onPick: () => this.setDocCategoria(c),
         };
       }),
       docEstudioList: [
         { k: 'recibido', label: 'Ya me recibí', desc: 'Tenés el título o la certificación' },
-        { k: 'estudiante', label: 'Estoy estudiando', desc: 'Te pedimos la constancia de cursada' },
+        { k: 'estudiante', label: 'Estoy estudiando', desc: 'Todavía no tenés el título' },
       ].map(o => {
         const sel = this.state.docEstudio === o.k;
         return {
           label: o.label,
           desc: o.desc,
-          style: sel ? 'background:#fff;border:2px solid #97125F' : 'background:#fff;border:2px solid #E3E1DC',
+          style: sel ? 'background:#fff;border:2px solid #16214F' : 'background:#fff;border:2px solid #E3E1DC',
           onPick: () => this.setDocEstudio(o.k),
         };
       }),
