@@ -1599,6 +1599,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Cursos completados</span><span style="font:600 18px/1 Inter,sans-serif;color:#1E7A4C">{{ misCursosCompletados }}</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Horas de formación</span><span style="font:600 18px/1 Inter,sans-serif;color:#1F2421">{{ misCursosHoras }}</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Certificados</span><span style="font:600 18px/1 Inter,sans-serif;color:#97125F">{{ misCursosCertificados }}</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #F0EFEA"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Puntaje acumulado</span><span style="font:600 18px/1 Inter,sans-serif;color:#7A5900">{{ misCursosPuntaje }}</span></div>
 </div>
 </div>
 <div style="background:#FBE0EF;border-radius:10px;padding:18px">
@@ -1621,6 +1622,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <input class="cbl-input" style="flex:1;min-width:220px;max-width:340px" placeholder="Buscar por curso o institución" value="{{ docCursoQuery }}" onChange="{{ updateDocCursoQuery }}">
 <select class="cbl-select" style="max-width:170px" value="{{ docCursoModalidad }}" onChange="{{ updateDocCursoModalidad }}"><option>Todas las modalidades</option><option>Presencial</option><option>Online</option></select>
 <span onClick="{{ toggleDocCursoInscripto }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docCursoInscriptoStyle }}">Sólo en los que estoy anotada</span>
+<span style="display:flex;gap:8px;flex:none;margin-left:auto"><span onClick="{{ verCursosLista }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 14px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;{{ cursosVistaListaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"></path></svg>Lista</span><span onClick="{{ verCursosAgenda }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 14px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;{{ cursosVistaAgendaStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="flex:none"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Agenda</span></span>
 </div>
 
 <div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
@@ -1628,6 +1630,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <sc-if value="{{ docCursosVacio }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:34px;text-align:center;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">No hay cursos que coincidan con lo que buscás.</div>
 </sc-if>
+<sc-if value="{{ esCursosLista }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
 <sc-for list="{{ docCursosDisponiblesList }}" as="cu" hint-placeholder-count="6">
 <div onClick="{{ cu.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
@@ -1641,6 +1644,9 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:2px">{{ cu.titulo }}</div>
 <sc-if value="{{ cu.hasSubtitulo }}" hint-placeholder-val="{{ false }}"><div style="font:500 12.5px/1.3 Inter,sans-serif;color:#16214F;margin-bottom:8px">{{ cu.subtitulo }}</div></sc-if>
 <div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:12px">{{ cu.resumen }}</div>
+<sc-if value="{{ cu.certifica }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;display:inline-flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="9" r="5.5"></circle><path d="M8.5 13.5L7 22l5-2.5 5 2.5-1.5-8.5"></path></svg>Certificado</span><span class="cbl-badge" style="background:#FDF1C7;color:#7A5900;font-weight:600">{{ cu.puntajeLabel }}</span></div>
+</sc-if>
 <div style="display:flex;flex-direction:column;gap:5px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">
 <div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>{{ cu.fechasLabel }}</div>
 <div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ cu.horario }}</div>
@@ -1654,6 +1660,29 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </sc-for>
 </div>
+</sc-if>
+<sc-if value="{{ esCursosAgenda }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:22px">
+<sc-for list="{{ cursosAgenda }}" as="m" hint-placeholder-count="2">
+<div>
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">{{ m.mes }}</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ m.items }}" as="cu" hint-placeholder-count="3">
+<div onClick="{{ cu.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;transition:box-shadow .18s" style-hover="box-shadow:0 6px 16px rgba(31,36,33,.09)">
+<span style="flex:none;width:44px;height:44px;border-radius:10px;background:#F0EFEA;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 17px/1 Sora,Inter,sans-serif">{{ cu.dia }}</span>
+<div style="flex:1 1 220px;min-width:0">
+<div style="font:600 14.5px/1.3 Inter,sans-serif;margin-bottom:2px">{{ cu.titulo }}</div>
+<div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">{{ cu.horario }} · {{ cu.modalidad }}</div>
+</div>
+<span class="cbl-badge" style="background:#FDF1C7;color:#7A5900;font-weight:600;flex:none">{{ cu.puntajeLabel }}</span>
+<sc-if value="{{ cu.inscripto }}" hint-placeholder-val="{{ false }}"><span class="cbl-badge" style="background:#E7F5EF;color:#1E7A4C;flex:none">✓ Anotada</span></sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
 </div>
 
 <div class="udoar-2col-aside" style="flex:none;width:280px;display:flex;flex-direction:column;gap:16px">
@@ -1663,6 +1692,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Cursos completados</span><span style="font:600 18px/1 Inter,sans-serif;color:#1E7A4C">{{ misCursosCompletados }}</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Horas de formación</span><span style="font:600 18px/1 Inter,sans-serif;color:#1F2421">{{ misCursosHoras }}</span></div>
 <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Anotada ahora</span><span style="font:600 18px/1 Inter,sans-serif;color:#97125F">{{ docCursosAnotadaCount }}</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #F0EFEA"><span style="font:400 13.5px/1 Inter,sans-serif;color:#3D423E">Puntaje acumulado</span><span style="font:600 18px/1 Inter,sans-serif;color:#7A5900">{{ misCursosPuntaje }}</span></div>
 </div>
 </div>
 <sc-if value="{{ cursoDestacado }}" hint-placeholder-val="{{ true }}">
@@ -4892,18 +4922,18 @@ class Component extends DCLogic {
     docValores: ['Respeto', 'Compromiso', 'Excelencia'], valorInputVal: '',
     docCursos: ['Cursos de RCP', 'Cursos de natación'], cursoInputVal: '',
     cursosDetallados: [
-      { fotoId: 'curso1', foto: 'assets/urgente-docentes.jpg', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
-      { fotoId: 'curso2', foto: 'assets/cat-guardavidas-pileta.jpg', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
-      { fotoId: 'curso3', foto: 'assets/hero-aula.jpg', titulo: 'Aula heterogénea y diversidad', subtitulo: 'Instituto Vicente López', descripcion: 'Herramientas concretas para trabajar con grupos disparejos: consignas por niveles, evaluación diferenciada y acompañamiento de chicos con adaptaciones.', modalidad: 'Online', profesor: 'Lic. Verónica Maidana', fechaInicio: '2027-04-06', fechaFinal: '2027-05-11', horario: 'Martes 19:00 a 21:00', link: 'https://meet.google.com/aula-heterogenea', linkInfo: '', archivos: [{ nombre: 'programa-del-curso.pdf', peso: 'PDF · 240 KB' }], inscritos: ['Luciana Prieto', 'Carolina Ruiz Díaz'] },
-      { fotoId: 'curso4', foto: 'assets/cat-docentes.jpg', titulo: 'ESI en Nivel Inicial', subtitulo: 'Jardín Los Aromos', descripcion: 'Cómo llevar la Educación Sexual Integral a salas de 3, 4 y 5 sin improvisar: materiales, vocabulario y cómo contarlo a las familias.', modalidad: 'Presencial', profesor: 'Equipo de orientación del jardín', fechaInicio: '2027-04-11', fechaFinal: '2027-04-25', horario: 'Sábados 9:00 a 12:00', link: '', linkInfo: '', inscritos: [] },
-      { fotoId: 'curso5', foto: 'assets/cat-entrenadores-gym.jpg', titulo: 'Entrenamiento funcional para grupos grandes', subtitulo: 'Full Body Olivos', descripcion: 'Planificación de clases para 20 o más personas con poco equipamiento, progresiones por nivel y prevención de lesiones.', modalidad: 'Presencial', profesor: 'Nicolás Bermúdez', fechaInicio: '2027-03-20', fechaFinal: '2027-04-10', horario: 'Viernes 18:00 a 20:00', link: '', linkInfo: '', inscritos: ['Facundo Ojeda'] },
-      { fotoId: 'curso6', foto: 'assets/hero-guardavidas.jpg', titulo: 'Guardavidas: actualización de reválida', subtitulo: 'Club Atlético Ribera', descripcion: 'Repaso de protocolos de rescate en pileta, RCP y la documentación que piden los municipios para revalidar el carnet.', modalidad: 'Presencial', profesor: 'Agustina Molina', fechaInicio: '2027-05-04', fechaFinal: '2027-05-18', horario: 'Lunes 18:00 a 21:00', link: '', linkInfo: '', inscritos: [] },
+      { fotoId: 'curso1', certifica: true, puntaje: 10, foto: 'assets/urgente-docentes.jpg', titulo: 'Curso de RCP y primeros auxilios', subtitulo: 'Certificación con Cruz Roja', descripcion: 'Certificación de dos encuentros para docentes y personal no docente, dictada por instructores de Cruz Roja. Incluye práctica con maniquíes.', modalidad: 'Presencial', profesor: 'Instructores de Cruz Roja Argentina', fechaInicio: '2027-03-10', fechaFinal: '2027-03-11', horario: '17:00 a 19:00', link: '', inscritos: ['Luciana Prieto'] },
+      { fotoId: 'curso2', certifica: true, puntaje: 15, foto: 'assets/cat-guardavidas-pileta.jpg', titulo: 'Curso de natación para docentes', subtitulo: 'Club Atlético Ribera', descripcion: 'Perfeccionamiento de técnica y didáctica para dar clases de natación a grupos de 6 a 10 años. Cuatro encuentros, incluye salida a pileta.', modalidad: 'Presencial', profesor: 'Martina Alsina', fechaInicio: '2027-03-15', fechaFinal: '2027-04-05', horario: 'Sábados 10:00 a 12:00', link: '', inscritos: [] },
+      { fotoId: 'curso3', certifica: true, puntaje: 20, foto: 'assets/hero-aula.jpg', titulo: 'Aula heterogénea y diversidad', subtitulo: 'Instituto Vicente López', descripcion: 'Herramientas concretas para trabajar con grupos disparejos: consignas por niveles, evaluación diferenciada y acompañamiento de chicos con adaptaciones.', modalidad: 'Online', profesor: 'Lic. Verónica Maidana', fechaInicio: '2027-04-06', fechaFinal: '2027-05-11', horario: 'Martes 19:00 a 21:00', link: 'https://meet.google.com/aula-heterogenea', linkInfo: '', archivos: [{ nombre: 'programa-del-curso.pdf', peso: 'PDF · 240 KB' }], inscritos: ['Luciana Prieto', 'Carolina Ruiz Díaz'] },
+      { fotoId: 'curso4', certifica: true, puntaje: 12, foto: 'assets/cat-docentes.jpg', titulo: 'ESI en Nivel Inicial', subtitulo: 'Jardín Los Aromos', descripcion: 'Cómo llevar la Educación Sexual Integral a salas de 3, 4 y 5 sin improvisar: materiales, vocabulario y cómo contarlo a las familias.', modalidad: 'Presencial', profesor: 'Equipo de orientación del jardín', fechaInicio: '2027-04-11', fechaFinal: '2027-04-25', horario: 'Sábados 9:00 a 12:00', link: '', linkInfo: '', inscritos: [] },
+      { fotoId: 'curso5', certifica: true, puntaje: 15, foto: 'assets/cat-entrenadores-gym.jpg', titulo: 'Entrenamiento funcional para grupos grandes', subtitulo: 'Full Body Olivos', descripcion: 'Planificación de clases para 20 o más personas con poco equipamiento, progresiones por nivel y prevención de lesiones.', modalidad: 'Presencial', profesor: 'Nicolás Bermúdez', fechaInicio: '2027-03-20', fechaFinal: '2027-04-10', horario: 'Viernes 18:00 a 20:00', link: '', linkInfo: '', inscritos: ['Facundo Ojeda'] },
+      { fotoId: 'curso6', certifica: true, puntaje: 18, foto: 'assets/hero-guardavidas.jpg', titulo: 'Guardavidas: actualización de reválida', subtitulo: 'Club Atlético Ribera', descripcion: 'Repaso de protocolos de rescate en pileta, RCP y la documentación que piden los municipios para revalidar el carnet.', modalidad: 'Presencial', profesor: 'Agustina Molina', fechaInicio: '2027-05-04', fechaFinal: '2027-05-18', horario: 'Lunes 18:00 a 21:00', link: '', linkInfo: '', inscritos: [] },
     ],
     docBuscarVista: 'lista', mapaOfertaIdx: null,
     buscadorSoloRapidas: false, buscadorSoloFavoritos: false,
     docCursoQuery: '', docCursoModalidad: 'Todas las modalidades', docCursoSoloInscripta: false,
     docSoloRapidas: false, docSoloFavoritos: false,
-    instVista: 'lista', mapaInstIdx: null,
+    instVista: 'lista', mapaInstIdx: null, docCursosVista: 'lista',
     postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
     docCategoria: 'Docente', docEstudio: 'recibido', docAsigRubro: '', docAsigItem: '',
     docDocs: { dniFrente: false, dniDorso: false, credencial: false, conducta: false },
@@ -5423,6 +5453,8 @@ class Component extends DCLogic {
         dictaLabel: c.profesor || 'A confirmar',
         cupoLabel: inscritos === 0 ? 'Sin anotados todavía' : inscritos === 1 ? '1 anotado' : inscritos + ' anotados',
         inscripto: this.state.docInscripciones.includes(c.fotoId),
+        certifica: c.certifica !== false,
+        puntajeLabel: '+' + (c.puntaje || 10) + ' puntos',
         onClick: () => this.openCurso({ ...c, hasSubtitulo: !!c.subtitulo }),
       };
     });
@@ -5537,6 +5569,24 @@ class Component extends DCLogic {
     return 'background:#F0EFEA;color:#6B706C';
   }
   setVistaInst(v) { this.setState({ instVista: v, mapaInstIdx: null }); }
+  setVistaCursos(v) { this.setState({ docCursosVista: v }); }
+  // Agenda: los mismos cursos del listado, ordenados por fecha y agrupados por
+  // mes, para ver de un vistazo cuándo cae cada uno.
+  MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  agendaCursos() {
+    const cursos = this.cursosParaDocente()
+      .filter(c => c.fechaInicio)
+      .sort((a, b) => a.fechaInicio.localeCompare(b.fechaInicio));
+    const grupos = [];
+    cursos.forEach(c => {
+      const [a, m, d] = c.fechaInicio.split('-');
+      const titulo = this.MESES[parseInt(m, 10) - 1] + ' de ' + a;
+      let g = grupos.find(x => x.mes === titulo);
+      if (!g) { g = { mes: titulo, items: [] }; grupos.push(g); }
+      g.items.push({ ...c, dia: String(parseInt(d, 10)).padStart(2, '0') });
+    });
+    return grupos;
+  }
   seleccionarInstEnMapa(i) { this.setState(st => ({ mapaInstIdx: st.mapaInstIdx === i ? null : i })); }
   // La zona de una institución puede venir como "Villa Adelina, Vicente López":
   // se usa la primera que exista en el mapa.
@@ -6042,6 +6092,18 @@ class Component extends DCLogic {
         : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
       docCursosAnotadaCount: this.state.docInscripciones.length,
       docCursosDisponiblesList: this.cursosParaDocente(),
+      verCursosLista: () => this.setVistaCursos('lista'),
+      verCursosAgenda: () => this.setVistaCursos('agenda'),
+      esCursosLista: this.state.docCursosVista === 'lista',
+      esCursosAgenda: this.state.docCursosVista === 'agenda',
+      cursosVistaListaStyle: this.state.docCursosVista === 'lista'
+        ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+      cursosVistaAgendaStyle: this.state.docCursosVista === 'agenda'
+        ? 'background:#16214F;color:#fff' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
+      cursosAgenda: this.agendaCursos(),
+      misCursosPuntaje: this.state.cursosDetallados
+        .filter(c => this.state.docInscripciones.includes(c.fotoId))
+        .reduce((n, c) => n + (c.puntaje || 0), 0) + 45,
       docCursosVacio: this.cursosParaDocente().length === 0,
       cursoDestacado: (() => {
         // El que más gente tiene anotada, como recomendación.
