@@ -61,6 +61,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/onboarding/docente/categoria",
+      "destination": "/index.html"
+    },
+    {
       "source": "/onboarding/docente/2",
       "destination": "/index.html"
     },

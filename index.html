@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -1103,6 +1103,34 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:center;gap:10px;margin:6px 0 14px;color:#9AA09B;font:400 12px/1 Inter,sans-serif"><span style="flex:1;height:1px;background:#E3E1DC"></span>o registrate con Google<span style="flex:1;height:1px;background:#E3E1DC"></span></div>
 <button class="cbl-btn cbl-btn--block" style="background:#fff;border:1px solid #E3E1DC;color:#1F2421;height:48px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px" style-hover="background:#FAFAF8;border-color:#C9C6C0" onClick="{{ goDocOnb2 }}"><svg width="18" height="18" viewBox="0 0 18 18" style="flex:none"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"></path><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.83.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"></path><path fill="#FBBC05" d="M3.97 10.72a5.41 5.41 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"></path><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"></path></svg>Continuar con Google</button>
 <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:22px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E;cursor:pointer"><input type="checkbox" style="margin-top:2px;flex:none"><span>Acepto los <span onClick="{{ goTerminos }}" style="color:#DD553F;font-weight:600;cursor:pointer">términos y condiciones</span> de UNIDOAR.</span></label>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnbCat }}">Continuar</button>
+</sc-if>
+
+<sc-if value="{{ isDocOnbCat }}" hint-placeholder-val="{{ false }}">
+<h1 style="margin:0 0 8px;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">¿Qué sos?</h1>
+<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">De esto dependen las búsquedas en las que aparecés y la documentación que te vamos a pedir.</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:26px">
+<sc-for list="{{ docCategoriasList }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.onPick }}" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px;border-radius:12px;transition:border-color .15s;{{ c.style }}">
+<span style="width:24px;height:24px;flex:none;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;{{ c.dotStyle }}">{{ c.dot }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font:600 16px/1.3 Inter,sans-serif;color:#1F2421;margin-bottom:3px">{{ c.label }}</span>
+<span style="display:block;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">{{ c.desc }}</span>
+</span>
+</div>
+</sc-for>
+</div>
+<div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:5px">¿Ya te recibiste?</div>
+<p style="margin:0 0 14px;font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Si todavía estás cursando también podés trabajar: te pedimos la constancia en vez del título.</p>
+<div class="udoar-onb-2col" style="display:flex;gap:10px;margin-bottom:22px">
+<sc-for list="{{ docEstudioList }}" as="e" hint-placeholder-count="2">
+<div onClick="{{ e.onPick }}" style="cursor:pointer;flex:1;min-width:0;padding:18px;border-radius:12px;text-align:center;transition:border-color .15s;{{ e.style }}">
+<span style="display:block;font:600 15px/1.3 Inter,sans-serif;color:#1F2421;margin-bottom:3px">{{ e.label }}</span>
+<span style="display:block;font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">{{ e.desc }}</span>
+</div>
+</sc-for>
+</div>
+<div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin-bottom:22px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">Te vamos a pedir <b style="color:#1F2421;font-weight:600">{{ docCredencial }}</b>.</div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb2 }}">Continuar</button>
 </sc-if>
 
@@ -1139,16 +1167,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <sc-if value="{{ isDocOnb3 }}" hint-placeholder-val="{{ false }}">
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Revisá lo que cargamos</h1><span style="font:500 12px/1 Inter,sans-serif;color:#1E7A4C">9 de 12 campos completos</span></div>
 <p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tocá cualquier campo para corregirlo. Los campos con * son obligatorios.</p>
-<div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
-<div style="font:600 13px/1 Inter,sans-serif;margin-bottom:4px">¿Qué sos? *</div>
-<p style="margin:0 0 12px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">De esto depende qué documentación te vamos a pedir en el próximo paso.</p>
-<div style="display:flex;flex-wrap:wrap;gap:8px">
-<sc-for list="{{ docCategoriasList }}" as="c" hint-placeholder-count="3">
-<span onClick="{{ c.onPick }}" style="cursor:pointer;padding:9px 16px;border-radius:999px;font:600 13px/1 Inter,sans-serif;{{ c.style }}">{{ c.label }}</span>
-</sc-for>
-</div>
-<div style="margin-top:12px;font:400 12.5px/1.5 Inter,sans-serif;color:#6B706C">Te vamos a pedir <b style="color:#3D423E;font-weight:600">{{ docCredencial }}</b>.</div>
-</div>
 <div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
 <div style="font:600 13px/1 Inter,sans-serif;margin-bottom:14px">Datos personales</div>
 <div class="udoar-onb-2col" style="display:flex;gap:14px;margin-bottom:12px">
@@ -4810,7 +4828,7 @@ class Component extends DCLogic {
     docSoloRapidas: false, docSoloFavoritos: false,
     instVista: 'lista', mapaInstIdx: null,
     postNotas: {}, postAgenda: {}, notaTexto: '', agendaFecha: '', agendaHora: '', agendaTitulo: '',
-    docCategoria: 'Docente',
+    docCategoria: 'Docente', docEstudio: 'recibido',
     docDocs: { dni: false, credencial: false, conducta: false },
     showCursoModal: false, cursoModalTitulo: '', cursoModalSubtitulo: '', cursoModalTexto: '', cursoModalModalidad: 'Presencial', cursoModalProfesor: '', cursoModalFechaInicio: '', cursoModalFechaFinal: '', cuentaNombre: 'Esteban', cuentaApellido: 'Grimaldi', cuentaEmail: 'esteban.grimaldi@sanandres.edu.ar', cuentaTelefono: '+54 9 11 5142-8830', showBajaCuenta: false, cuentaToastMsg: '', showImportCsv: false, csvFilas: [], csvDescartadas: 0, csvError: '', csvArchivo: '', cursoModalHorario: '', cursoModalDias: {}, cursoModalFotoId: '', cursoModalArchivos: [], cursoModalLinkInfo: '', cursoModalLink: '', cursoModalDireccion: '', selectedCurso: null, appSidebarOpen: false, docInscripciones: [],
     showInviteToast2: false,
@@ -5125,28 +5143,59 @@ class Component extends DCLogic {
   seleccionarEnMapa(i) { this.setState(st => ({ mapaOfertaIdx: st.mapaOfertaIdx === i ? null : i })); }
   cerrarMapaSel() { this.setState({ mapaOfertaIdx: null }); }
   // La categoría general del docente define qué credencial se le pide.
+  // La clave sigue siendo 'Entrenador/a' porque se compara por igualdad en las
+  // ofertas y en el color de categoría; lo que se muestra va en `label`.
   CREDENCIALES = {
     'Docente': {
+      label: 'Docente',
+      desc: 'Nivel inicial, primario, secundario y superior.',
       vacio: 'PDF del título o certificado analítico',
       nombre: 'Título docente',
       detalle: 'titulo-profesorado.pdf · la institución lo valida al contratarte',
       corto: 'La institución lo valida al contratarte',
+      estudiante: {
+        vacio: 'PDF de la constancia de alumno/a regular',
+        nombre: 'Constancia de alumno/a regular',
+        detalle: 'constancia-alumno-regular.pdf · con las materias aprobadas del profesorado',
+        corto: 'Con las materias aprobadas del profesorado',
+      },
     },
     'Entrenador/a': {
+      label: 'Entrenador/a / Instructor/a',
+      desc: 'Gimnasios, clubes, disciplinas deportivas y talleres.',
       vacio: 'PDF de la certificación vigente',
       nombre: 'Certificación deportiva',
       detalle: 'certificacion-deportiva.pdf · de la federación o entidad que la emitió',
       corto: 'De la federación o entidad que la emitió',
+      estudiante: {
+        vacio: 'PDF de la constancia de cursada',
+        nombre: 'Constancia de cursada',
+        detalle: 'constancia-cursada.pdf · de la federación o entidad donde te estás formando',
+        corto: 'De la entidad donde te estás formando',
+      },
     },
     'Guardavidas': {
+      label: 'Guardavidas',
+      desc: 'Natatorios, colonias y temporada de verano.',
       vacio: 'PDF del carnet con la reválida del año',
       nombre: 'Carnet de guardavidas con reválida',
       detalle: 'revalida-2026.pdf · la reválida vence al cierre de la temporada',
       corto: 'La reválida vence al cierre de la temporada',
+      estudiante: {
+        vacio: 'PDF de la constancia del curso en trámite',
+        nombre: 'Constancia del curso de guardavidas',
+        detalle: 'constancia-curso-guardavidas.pdf · hasta que salga el carnet no podés tomar turnos',
+        corto: 'Hasta que salga el carnet no podés tomar turnos',
+      },
     },
   };
-  credencialDoc() { return this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente']; }
+  // Quien todavía cursa no tiene el título: en su lugar le pedimos la constancia.
+  credencialDoc() {
+    const base = this.CREDENCIALES[this.state.docCategoria] || this.CREDENCIALES['Docente'];
+    return this.state.docEstudio === 'estudiante' && base.estudiante ? base.estudiante : base;
+  }
   setDocCategoria(c) { this.setState({ docCategoria: c }); }
+  setDocEstudio(v) { this.setState({ docEstudio: v }); }
   // Documentación del alta: arranca vacía y se va cargando.
   DOCS_ALTA = [
     { key: 'dni', nombre: 'DNI — frente y dorso',
@@ -5639,7 +5688,7 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#DC2626' : '#E3E1DC',
     }));
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
-      'docOnb1','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
+      'docOnb1','docOnbCat','docOnb2','docOnb3','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
       'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
@@ -5659,7 +5708,7 @@ class Component extends DCLogic {
     const cat = catInfo[s] || catInfo.educadores;
 
     const isDoc = ['docDashboard', 'docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
-    const isDocOnb = ['docOnb1', 'docOnb2', 'docOnb3', 'docOnb4', 'docOnb5'].includes(s);
+    const isDocOnb = ['docOnb1', 'docOnbCat', 'docOnb2', 'docOnb3', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
     const isInst = ['instDashboard', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos', 'instCrearCurso', 'instBase', 'instCuenta'].includes(s);
@@ -5684,7 +5733,7 @@ class Component extends DCLogic {
       isInstOnbPage: isInstOnb,
       onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/onboarding-bg-3.jpg' : 'assets/onboarding-bg-1.jpg',
       isDocOnbPage: isDocOnb,
-      docOnbBgUrl: s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
+      docOnbBgUrl: s === 'docOnbCat' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
       navDocDashboardStyle: s === 'docDashboard' ? docNavOn : docNavOff,
       navDocBuscarStyle: s === 'docOportunidades' ? docNavOn : docNavOff,
       navDocRapidasStyle: s === 'docRapidas' ? docNavOn : docNavOff,
@@ -5875,8 +5924,8 @@ class Component extends DCLogic {
       updateInstTipo: (e) => this.updateInstTipo(e),
       isInstTipoEducativo: ['Colegio privado', 'Jardín de infantes', 'Instituto de idiomas'].includes(this.state.instTipo),
       docOnbCardWidth: '760px',
-      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 4 · Tu cuenta' : s === 'docOnb2' ? 'Paso 2 de 4 · Tu CV' : s === 'docOnb3' ? 'Paso 3 de 4 · Tu perfil' : 'Paso 4 de 4 · Documentación',
-      docOnbProgress: s === 'docOnb1' ? '25%' : s === 'docOnb2' ? '50%' : s === 'docOnb3' ? '75%' : '100%',
+      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 5 · Tu cuenta' : s === 'docOnbCat' ? 'Paso 2 de 5 · Qué sos' : s === 'docOnb2' ? 'Paso 3 de 5 · Tu CV' : s === 'docOnb3' ? 'Paso 4 de 5 · Tu perfil' : 'Paso 5 de 5 · Documentación',
+      docOnbProgress: s === 'docOnb1' ? '20%' : s === 'docOnbCat' ? '40%' : s === 'docOnb2' ? '60%' : s === 'docOnb3' ? '80%' : '100%',
       docNivelesList: Object.keys(this.state.docNiveles).map(k => ({ label: k, style: this.state.docNiveles[k] ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#6B706C', onToggle: () => this.toggleDocNivel(k) })),
       docDispRows: this.state.docDispGrid.map((row, ri) => ({
         label: row.label,
@@ -6121,13 +6170,31 @@ class Component extends DCLogic {
       docCredencial: this.credencialDoc().nombre,
       docCredencialDetalle: this.credencialDoc().detalle,
       docCredencialDetalleCorto: this.credencialDoc().corto,
-      docCategoriasList: Object.keys(this.CREDENCIALES).map(c => ({
-        label: c,
-        style: this.state.docCategoria === c
-          ? 'background:#16214F;color:#fff'
-          : 'background:#F0EFEA;color:#3D423E',
-        onPick: () => this.setDocCategoria(c),
-      })),
+      docCategoriasList: Object.keys(this.CREDENCIALES).map(c => {
+        const sel = this.state.docCategoria === c;
+        return {
+          label: this.CREDENCIALES[c].label,
+          desc: this.CREDENCIALES[c].desc,
+          style: sel ? 'background:#fff;border:2px solid #97125F' : 'background:#fff;border:2px solid #E3E1DC',
+          dot: sel ? '✓' : '',
+          dotStyle: sel
+            ? 'background:#97125F;color:#fff;font:700 12px/1 Inter,sans-serif'
+            : 'background:#F0EFEA;border:1px solid #E3E1DC',
+          onPick: () => this.setDocCategoria(c),
+        };
+      }),
+      docEstudioList: [
+        { k: 'recibido', label: 'Ya me recibí', desc: 'Tenés el título o la certificación' },
+        { k: 'estudiante', label: 'Estoy estudiando', desc: 'Te pedimos la constancia de cursada' },
+      ].map(o => {
+        const sel = this.state.docEstudio === o.k;
+        return {
+          label: o.label,
+          desc: o.desc,
+          style: sel ? 'background:#fff;border:2px solid #97125F' : 'background:#fff;border:2px solid #E3E1DC',
+          onPick: () => this.setDocEstudio(o.k),
+        };
+      }),
       // Vistas públicas: el mismo catálogo, pero sin sesión y con muro al postularse.
       muroTitulo: this.state.screen === 'publicInstituciones'
         ? 'Creá tu cuenta y mandales tu CV'
