@@ -331,6 +331,15 @@ a:hover{color:#DD553F}
    a la vista aunque el menú se haga más largo que la pantalla. */
 .udoar-app-sidebar{overflow-y:auto}
 .udoar-sidebar-foot{margin-top:auto;position:sticky;bottom:0;background:#fff;padding-top:10px}
+
+/* Publicidades del tablero del docente: texto de un lado, foto del otro, y
+   apiladas en el celular. */
+.udoar-ad-foto{position:relative}
+@media (max-width:980px){
+  .udoar-ad{flex-direction:column}
+  .udoar-ad-foto{width:100% !important;height:132px;order:-1}
+  .udoar-ad-foto span{display:none}
+}
 </style>
 </helmet>
 
@@ -1405,19 +1414,23 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:26px">
-<div style="cursor:pointer;position:relative;overflow:hidden;background:#7A5900;border-radius:12px;padding:22px 24px;display:flex;flex-direction:column">
-<div class="udoar-dark-grid-bg" style="position:absolute;inset:0;pointer-events:none"></div>
-<div style="position:relative;z-index:1;display:flex;align-items:center;gap:9px;margin-bottom:12px"><span style="width:34px;height:34px;flex:none;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#FDF1C7"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path><path d="M9 7h7"></path></svg></span><span class="cbl-badge" style="background:rgba(255,255,255,.16);color:#FDF1C7">Publicidad</span></div>
-<div style="position:relative;z-index:1;font:700 18px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">Librería El Aula · 25% para docentes</div>
-<div style="position:relative;z-index:1;font:400 13.5px/1.5 Inter,sans-serif;color:#fff;opacity:.78;margin-bottom:16px;flex:1">Manuales, material didáctico y literatura infantil. Mostrás tu perfil verificado de UNIDOAR en la caja y tenés el descuento todo el año.</div>
-<button class="cbl-btn cbl-btn--sm" style="position:relative;z-index:1;align-self:flex-start;background:#F0B400;color:#3D2E00">Ver el catálogo</button>
+<div class="udoar-ad" style="cursor:pointer;position:relative;overflow:hidden;background:#16214F;border-radius:12px;display:flex">
+<div class="udoar-ad-texto" style="flex:1 1 0;min-width:0;padding:22px 24px;display:flex;flex-direction:column;position:relative;z-index:1">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><span style="width:32px;height:32px;flex:none;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#fff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path><path d="M9 7h7"></path></svg></span><span class="cbl-badge" style="background:rgba(255,255,255,.16);color:rgba(255,255,255,.88)">Publicidad</span></div>
+<div style="font:700 18px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">Librería El Aula · 25% para docentes</div>
+<div style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.8);margin-bottom:16px;flex:1">Manuales, material didáctico y literatura infantil. Mostrás tu perfil verificado de UNIDOAR en la caja y tenés el descuento todo el año.</div>
+<button class="cbl-btn cbl-btn--sm" style="align-self:flex-start;background:#82D8E9;color:#16214F">Ver el catálogo</button>
 </div>
-<div style="cursor:pointer;position:relative;overflow:hidden;background:#0E5A6B;border-radius:12px;padding:22px 24px;display:flex;flex-direction:column">
-<div class="udoar-dark-grid-bg" style="position:absolute;inset:0;pointer-events:none"></div>
-<div style="position:relative;z-index:1;display:flex;align-items:center;gap:9px;margin-bottom:12px"><span style="width:34px;height:34px;flex:none;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#CFEFF7"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8.3-8 9.5C7.2 20.3 4 16.5 4 12V6z"></path><path d="M9 12l2 2 4-4"></path></svg></span><span class="cbl-badge" style="background:rgba(255,255,255,.16);color:#CFEFF7">Publicidad</span></div>
-<div style="position:relative;z-index:1;font:700 18px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">Seguro de responsabilidad civil docente</div>
-<div style="position:relative;z-index:1;font:400 13.5px/1.5 Inter,sans-serif;color:#fff;opacity:.78;margin-bottom:16px;flex:1">Cobertura para quienes trabajan con grupos: educación física, natación, colonias y salidas. Desde $4.900 por mes, sin trámite presencial.</div>
-<button class="cbl-btn cbl-btn--sm" style="position:relative;z-index:1;align-self:flex-start;background:#82D8E9;color:#0E3A45">Ver la cobertura</button>
+<div class="udoar-ad-foto" style="flex:none;width:38%;background:url(&quot;assets/hero-aula.jpg&quot;) center / cover no-repeat"><span style="position:absolute;top:0;bottom:0;right:38%;width:56px;background:linear-gradient(90deg,#16214F,transparent);pointer-events:none"></span></div>
+</div>
+<div class="udoar-ad" style="cursor:pointer;position:relative;overflow:hidden;background:#97125F;border-radius:12px;display:flex">
+<div class="udoar-ad-texto" style="flex:1 1 0;min-width:0;padding:22px 24px;display:flex;flex-direction:column;position:relative;z-index:1">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><span style="width:32px;height:32px;flex:none;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#fff"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v6c0 4.4-3.1 8.2-7.5 9.4C7.6 20.2 4.5 16.4 4.5 12V6z"></path><path d="M9.2 12.2l2 2 3.6-4"></path></svg></span><span class="cbl-badge" style="background:rgba(255,255,255,.16);color:rgba(255,255,255,.88)">Publicidad</span></div>
+<div style="font:700 18px/1.3 Sora,Inter,sans-serif;color:#fff;margin-bottom:5px">Seguro de responsabilidad civil docente</div>
+<div style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.8);margin-bottom:16px;flex:1">Cobertura para quienes trabajan con grupos: educación física, natación, colonias y salidas. Desde $4.900 por mes, sin trámite presencial.</div>
+<button class="cbl-btn cbl-btn--sm" style="align-self:flex-start;background:#F0B400;color:#3D2E00">Ver la cobertura</button>
+</div>
+<div class="udoar-ad-foto" style="flex:none;width:38%;background:url(&quot;assets/cat-guardavidas-pileta.jpg&quot;) center / cover no-repeat"><span style="position:absolute;top:0;bottom:0;right:38%;width:56px;background:linear-gradient(90deg,#97125F,transparent);pointer-events:none"></span></div>
 </div>
 </div>
 
