@@ -3521,6 +3521,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px"><div><h2 style="margin:0 0 4px;font:600 19px/1.2 Inter,sans-serif">{{ boCatActual.label }}</h2><div style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">{{ boCatActual.desc }}</div></div><sc-if value="{{ boCatActual.custom }}" hint-placeholder-val="{{ false }}"><button class="cbl-btn" style="padding:8px 14px;color:#8F3D28;border:1px solid #EBCFC5;background:#fff" onClick="{{ removeBoCat }}">Eliminar categoría</button></sc-if></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border:1px solid #E3E1DC;border-radius:8px;overflow:hidden;background:#FAFAF8">
+<div style="padding:14px 16px;border-right:1px solid #E3E1DC"><div style="font:600 20px/1 Inter,sans-serif;color:#16214F">{{ boCatActual.rubros }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:6px">Rubros</div></div>
 <div style="padding:14px 16px;border-right:1px solid #E3E1DC"><div style="font:600 20px/1 Inter,sans-serif;color:#16214F">{{ boCatActual.total }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:6px">Asignaturas</div></div>
 <div style="padding:14px 16px;border-right:1px solid #E3E1DC"><div style="font:600 20px/1 Inter,sans-serif;color:#16214F">{{ boCatActual.visibles }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:6px">Visibles</div></div>
 <div style="padding:14px 16px;border-right:1px solid #E3E1DC"><div style="font:600 20px/1 Inter,sans-serif;color:#16214F">{{ boCatActual.docentes }}</div><div style="font:400 12px/1.3 Inter,sans-serif;color:#6B706C;margin-top:6px">Docentes con perfil</div></div>
@@ -3530,14 +3531,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;overflow:hidden">
 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:16px 18px;border-bottom:1px solid #E3E1DC">
 <input class="cbl-input" placeholder="Buscar asignatura" value="{{ boAsigQuery }}" onChange="{{ updateBoAsigQuery }}" style="flex:1;min-width:180px;max-width:280px">
-<div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap"><input class="cbl-input" placeholder="Ej. Robótica" value="{{ boAsigInputVal }}" onChange="{{ updateBoAsigInput }}" onKeyDown="{{ keyBoAsigInput }}" style="width:200px;max-width:100%"><button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:10px 16px" onClick="{{ addBoAsig }}">Agregar</button></div>
+<div style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap"><select class="cbl-select" style="max-width:200px" value="{{ boAsigRubro }}" onChange="{{ updateBoAsigRubro }}"><sc-for list="{{ boRubroOptions }}" as="r" hint-placeholder-count="4"><option value="{{ r.key }}">{{ r.label }}</option></sc-for></select><input class="cbl-input" placeholder="Ej. Robótica" value="{{ boAsigInputVal }}" onChange="{{ updateBoAsigInput }}" onKeyDown="{{ keyBoAsigInput }}" style="width:200px;max-width:100%"><button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:10px 16px" onClick="{{ addBoAsig }}">Agregar</button></div>
 </div>
 <div class="udoar-table-wrap" style="overflow:auto">
 <table class="cbl-table cbl-table--hover" style="min-width:560px">
 <thead><tr><th>Asignatura / disciplina</th><th>Docentes</th><th>Búsquedas activas</th><th>Visible</th><th></th></tr></thead>
 <tbody>
-<sc-for list="{{ boAsigRows }}" as="a" hint-placeholder-count="6">
-<tr><td style="font-weight:600">{{ a.label }}</td><td>{{ a.docentes }}</td><td>{{ a.busquedas }}</td><td><span onClick="{{ a.onToggle }}" style="cursor:pointer;display:inline-flex;align-items:center;width:36px;height:20px;border-radius:999px;padding:2px;box-sizing:border-box;{{ a.trackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);{{ a.knobStyle }}"></span></span></td><td style="text-align:right"><span onClick="{{ a.onRemove }}" style="cursor:pointer;color:#9AA09B;font:500 12px/1 Inter,sans-serif" style-hover="color:#8F3D28">Eliminar</span></td></tr>
+<sc-for list="{{ boAsigGrupos }}" as="g" hint-placeholder-count="3">
+<tr><td colspan="5" style="background:#FAFAF8;font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">{{ g.rubro }}</td></tr>
+<sc-for list="{{ g.filas }}" as="a" hint-placeholder-count="4">
+<tr><td style="font-weight:600">{{ a.label }}</td><td>{{ a.docentes }}</td><td>{{ a.busquedas }}</td><td><span onClick="{{ a.onToggle }}" style="cursor:pointer;display:inline-flex;align-items:center;width:38px;height:22px;border-radius:999px;padding:2px;{{ a.trackStyle }}"><span style="width:18px;height:18px;border-radius:999px;background:#fff;{{ a.knobStyle }}"></span></span></td><td style="text-align:right"><span onClick="{{ a.onRemove }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B">Eliminar</span></td></tr>
+</sc-for>
 </sc-for>
 </tbody>
 </table>
@@ -4908,15 +4912,32 @@ class Component extends DCLogic {
     ],
     cargoCategoria: 'profesor', cargoEspecialidad: 'Ed. Física',
     cargoCategoriaSimple: 'docente', cargoEspecialidadOtroVal: '',
-    boAsigCategoria: 'profesor',
+    boAsigCategoria: 'Docente',
+    // Mismo armado que el alta del docente: categoría → rubro → asignaturas.
     catalogoAsignaturas: {
-      profesor: ['Ed. Física', 'Matemática', 'Inglés', 'Música', 'Tecnología', 'Lengua y Literatura', 'Ciencias Naturales', 'Ciencias Sociales', 'Historia', 'Geografía', 'Biología', 'Química', 'Física', 'Plástica', 'Informática', 'Francés', 'Teatro', 'Danza', 'Economía', 'Filosofía', 'Construcción de Ciudadanía'],
-      maestro: ['Nivel Inicial', 'Grado Primario', 'Apoyo escolar', 'Maestra de sala de 2', 'Maestra de sala de 3', 'Maestra de sala de 4', 'Maestra de sala de 5', 'Psicopedagogía', 'Educación Especial'],
-      preceptor: ['Primario', 'Secundario'],
-      entrenador: ['Personal trainer', 'Fútbol', 'Básquet', 'Vóley', 'Hockey', 'Rugby', 'Natación', 'Gimnasia artística', 'Yoga', 'Crossfit', 'Boxeo', 'Tenis'],
-      guardavidas: ['Pileta', 'Playa / mar', 'Río', 'Balneario'],
+      'Docente': [
+        { rubro: 'Exactas y naturales', items: ['Matemática', 'Física', 'Química', 'Biología', 'Ciencias Naturales', 'Informática'] },
+        { rubro: 'Lengua y sociales', items: ['Lengua', 'Literatura', 'Historia', 'Geografía', 'Ciencias Sociales', 'Formación Ética'] },
+        { rubro: 'Arte y música', items: ['Música', 'Plástica', 'Teatro', 'Danza', 'Audiovisuales'] },
+        { rubro: 'Idiomas', items: ['Inglés', 'Portugués', 'Francés', 'Italiano', 'Alemán'] },
+        { rubro: 'Nivel inicial y primario', items: ['Nivel Inicial', 'Maestro/a de grado', 'Apoyo escolar', 'Psicopedagogía'] },
+        { rubro: 'Educación física', items: ['Educación Física', 'Deportes escolares', 'Expresión corporal'] },
+      ],
+      'Entrenador/a': [
+        { rubro: 'Deportes de equipo', items: ['Fútbol', 'Vóley', 'Básquet', 'Handball', 'Hockey', 'Rugby'] },
+        { rubro: 'Deportes individuales', items: ['Tenis', 'Atletismo', 'Artes marciales', 'Boxeo', 'Golf', 'Equitación'] },
+        { rubro: 'Gimnasio y fitness', items: ['Musculación', 'Funcional', 'Spinning', 'Pilates', 'Yoga', 'Entrenamiento personal'] },
+        { rubro: 'Actividades acuáticas', items: ['Natación', 'Aquagym', 'Waterpolo'] },
+        { rubro: 'Otras disciplinas', items: ['Danza deportiva', 'Escalada', 'Preparación física'] },
+      ],
+      'Guardavidas': [
+        { rubro: 'Pileta y natatorio', items: ['Pileta cubierta', 'Pileta al aire libre', 'Natatorio de club', 'Escuela de natación'] },
+        { rubro: 'Playa, río y laguna', items: ['Playa', 'Río', 'Laguna', 'Balneario'] },
+        { rubro: 'Colonias y temporada', items: ['Colonia de vacaciones', 'Campamento', 'Eventos deportivos'] },
+        { rubro: 'Formación y apoyo', items: ['Primeros auxilios', 'RCP', 'Natación para principiantes'] },
+      ],
     },
-    boAsigInputVal: '',
+    boAsigInputVal: '', boAsigRubro: 'Exactas y naturales',
     diaDesde: 'Lunes', diaHasta: 'Viernes', horaDesde: '08:00', horaHasta: '12:00',
     docCategoria: 'profesor',
     docAsignaturas: ['Música'], docDisponibilidad: ['Turno mañana'], docZonas: ['Tigre', 'Nordelta'], docCvUploaded: false, docBuscarTab: 'todas',
@@ -5404,30 +5425,14 @@ class Component extends DCLogic {
   // Catálogo del paso de asignaturas. Se agrupa por rubro y se recorta según lo
   // que la persona eligió en "¿Qué sos?": un entrenador no tiene por qué
   // recorrer la lista de materias de secundario para encontrar Fútbol.
-  ASIGNATURAS = {
-    'Docente': [
-      { rubro: 'Exactas y naturales', items: ['Matemática', 'Física', 'Química', 'Biología', 'Ciencias Naturales', 'Informática'] },
-      { rubro: 'Lengua y sociales', items: ['Lengua', 'Literatura', 'Historia', 'Geografía', 'Ciencias Sociales', 'Formación Ética'] },
-      { rubro: 'Arte y música', items: ['Música', 'Plástica', 'Teatro', 'Danza', 'Audiovisuales'] },
-      { rubro: 'Idiomas', items: ['Inglés', 'Portugués', 'Francés', 'Italiano', 'Alemán'] },
-      { rubro: 'Nivel inicial y primario', items: ['Nivel Inicial', 'Maestro/a de grado', 'Apoyo escolar', 'Psicopedagogía'] },
-      { rubro: 'Educación física', items: ['Educación Física', 'Deportes escolares', 'Expresión corporal'] },
-    ],
-    'Entrenador/a': [
-      { rubro: 'Deportes de equipo', items: ['Fútbol', 'Vóley', 'Básquet', 'Handball', 'Hockey', 'Rugby'] },
-      { rubro: 'Deportes individuales', items: ['Tenis', 'Atletismo', 'Artes marciales', 'Boxeo', 'Golf', 'Equitación'] },
-      { rubro: 'Gimnasio y fitness', items: ['Musculación', 'Funcional', 'Spinning', 'Pilates', 'Yoga', 'Entrenamiento personal'] },
-      { rubro: 'Actividades acuáticas', items: ['Natación', 'Aquagym', 'Waterpolo'] },
-      { rubro: 'Otras disciplinas', items: ['Danza deportiva', 'Escalada', 'Preparación física'] },
-    ],
-    'Guardavidas': [
-      { rubro: 'Pileta y natatorio', items: ['Pileta cubierta', 'Pileta al aire libre', 'Natatorio de club', 'Escuela de natación'] },
-      { rubro: 'Playa, río y laguna', items: ['Playa', 'Río', 'Laguna', 'Balneario'] },
-      { rubro: 'Colonias y temporada', items: ['Colonia de vacaciones', 'Campamento', 'Eventos deportivos'] },
-      { rubro: 'Formación y apoyo', items: ['Primeros auxilios', 'RCP', 'Natación para principiantes'] },
-    ],
-  };
-  rubrosAsignaturas() { return this.ASIGNATURAS[this.state.docCategoria] || this.ASIGNATURAS['Docente']; }
+  rubrosAsignaturas() {
+    const cat = this.state.catalogoAsignaturas || {};
+    const grupos = cat[this.state.docCategoria] || cat['Docente'] || [];
+    const ocultas = (this.state.boAsigHidden || {})[this.state.docCategoria] || [];
+    return grupos
+      .map(g => ({ rubro: g.rubro, items: g.items.filter(a => !ocultas.includes(a)) }))
+      .filter(g => g.items.length);
+  }
   setDocAsigRubro(v) { this.setState({ docAsigRubro: v, docAsigItem: '' }); }
   // El segundo desplegable agrega al elegir y vuelve solo al placeholder,
   // así se pueden sumar varias del mismo rubro sin volver al primero.
@@ -5837,22 +5842,45 @@ class Component extends DCLogic {
     this.setState({ cargoCategoria: k, cargoEspecialidad: cats[k][0] });
   }
   setCargoCategoriaSimple(k) {
-    const cats = this.state.catalogoAsignaturas;
-    const list = k === 'docente' ? [...new Set([...cats.profesor, ...cats.maestro, ...cats.preceptor])] : cats[k];
+    const list = this.asignaturasPlanas(k);
     this.setState({ cargoCategoriaSimple: k, cargoEspecialidad: list[0], cargoEspecialidadOtroVal: '' });
   }
   pickBoAsigCategoria(k) { this.setState({ boAsigCategoria: k }); }
+  // El catálogo pasó a estar agrupado por rubro; esto lo devuelve plano para los
+  // selectores que siguen pidiendo una lista simple. Las claves viejas
+  // (profesor / maestro / preceptor) caen todas en Docente.
+  asignaturasPlanas(k) {
+    const mapa = { profesor: 'Docente', maestro: 'Docente', preceptor: 'Docente', docente: 'Docente',
+      entrenador: 'Entrenador/a', guardavidas: 'Guardavidas' };
+    const cats = this.state.catalogoAsignaturas || {};
+    const claves = (!k || k === 'todas') ? Object.keys(cats) : [mapa[k] || k];
+    const salida = [];
+    claves.forEach(c => (cats[c] || []).forEach(g => g.items.forEach(a => { if (!salida.includes(a)) salida.push(a); })));
+    return salida;
+  }
   addBoAsig() {
     this.setState(s => {
-      const v = s.boAsigInputVal.trim();
-      if (!v) return {};
-      const list = s.catalogoAsignaturas[s.boAsigCategoria] || [];
-      if (list.includes(v)) return { boAsigInputVal: '' };
-      return { catalogoAsignaturas: { ...s.catalogoAsignaturas, [s.boAsigCategoria]: [...list, v] }, boAsigInputVal: '' };
+      const val = (s.boAsigInputVal || '').trim();
+      const rubro = s.boAsigRubro;
+      if (!val || !rubro) return {};
+      const grupos = s.catalogoAsignaturas[s.boAsigCategoria] || [];
+      if (grupos.some(g => g.items.includes(val))) return { boAsigInputVal: '' };
+      return {
+        catalogoAsignaturas: {
+          ...s.catalogoAsignaturas,
+          [s.boAsigCategoria]: grupos.map(g => g.rubro === rubro ? { ...g, items: [...g.items, val] } : g),
+        },
+        boAsigInputVal: '',
+      };
     });
   }
   removeBoAsig(cat, val) {
-    this.setState(s => ({ catalogoAsignaturas: { ...s.catalogoAsignaturas, [cat]: s.catalogoAsignaturas[cat].filter(x => x !== val) } }));
+    this.setState(s => ({
+      catalogoAsignaturas: {
+        ...s.catalogoAsignaturas,
+        [cat]: (s.catalogoAsignaturas[cat] || []).map(g => ({ ...g, items: g.items.filter(x => x !== val) })),
+      },
+    }));
   }
   setCargoEspecialidad(v) { this.setState({ cargoEspecialidad: v }); }
   setDiaDesde(v) { this.setState({ diaDesde: v }); }
@@ -6329,7 +6357,7 @@ class Component extends DCLogic {
       selectCargoCategoria: (e) => this.setCargoCategoria(e.target.value),
       cargoEspecialidad: this.state.cargoEspecialidad,
       selectCargoEspecialidad: (e) => this.setCargoEspecialidad(e.target.value),
-      cargoEspecialidadOptions: (this.state.catalogoAsignaturas[this.state.cargoCategoria] || ['Todas las áreas']),
+      cargoEspecialidadOptions: (this.asignaturasPlanas(this.state.cargoCategoria).length ? this.asignaturasPlanas(this.state.cargoCategoria) : ['Todas las áreas']),
       cargoCategoriaSimpleOptions: [
         { key: 'docente', label: 'Docente' },
         { key: 'entrenador', label: 'Entrenador/a' },
@@ -6338,9 +6366,7 @@ class Component extends DCLogic {
       cargoCategoriaSimple: this.state.cargoCategoriaSimple,
       selectCargoCategoriaSimple: (e) => this.setCargoCategoriaSimple(e.target.value),
       cargoEspecialidadOptionsSimple: (() => {
-        const cats = this.state.catalogoAsignaturas;
-        const k = this.state.cargoCategoriaSimple;
-        const list = k === 'docente' ? [...new Set([...cats.profesor, ...cats.maestro, ...cats.preceptor])] : (cats[k] || []);
+        const list = this.asignaturasPlanas(this.state.cargoCategoriaSimple);
         return [...list, 'Otra…'];
       })(),
       isCargoEspecialidadOtro: this.state.cargoEspecialidad === 'Otra…',
@@ -6951,11 +6977,7 @@ class Component extends DCLogic {
       ].map(c => ({ ...c, style: this.state.filtroCategoria === c.key ? 'background:#16214F;color:#fff' : 'background:#F0EFEA;color:#6B706C', onPick: () => this.setFiltroCategoria(c.key) })),
       disciplinaFilterList: (() => {
         const counts = { 'Educación Física': 34, 'Matemática': 61, 'Inglés': 48, 'Nivel Inicial': 39, 'Natación': 22 };
-        const cats = this.state.catalogoAsignaturas;
-        const k = this.state.filtroCategoria;
-        const subcats = k === 'todas' ? [...new Set([...cats.profesor, ...cats.maestro, ...cats.preceptor, ...cats.entrenador, ...cats.guardavidas])]
-          : k === 'docente' ? [...new Set([...cats.profesor, ...cats.maestro, ...cats.preceptor])]
-          : (cats[k] || []);
+        const subcats = this.asignaturasPlanas(this.state.filtroCategoria);
         return subcats.map(d => ({ key: d, label: d, count: counts[d] || null }));
       })().map(d => ({ ...d, hasCount: d.count != null, checked: !!this.state.filtroDisciplinas[d.key], boxStyle: this.state.filtroDisciplinas[d.key] ? 'background:#16214F;border-color:#16214F;color:#fff' : '', onToggle: () => this.toggleDisciplinaFilter(d.key) })),
       disponibilidadFilterList: [
@@ -7311,40 +7333,47 @@ class Component extends DCLogic {
       navBoCategoriasStyle: s === 'boCategorias' ? navOn : navOff,
       ...(() => {
         const base = [
-          { key: 'profesor', label: 'Profesor/a', desc: 'Secundario y terciario, por asignatura.' },
-          { key: 'maestro', label: 'Maestro/a', desc: 'Nivel inicial, primario y apoyo escolar.' },
-          { key: 'preceptor', label: 'Preceptor/a', desc: 'Preceptoría por nivel.' },
-          { key: 'entrenador', label: 'Entrenador/a', desc: 'Deportes, gimnasio y actividad física.' },
-          { key: 'guardavidas', label: 'Guardavidas', desc: 'Por tipo de espejo de agua.' },
+          { key: 'Docente', label: 'Docente', desc: 'Nivel inicial, primario, secundario y superior.' },
+          { key: 'Entrenador/a', label: 'Entrenador/a / Instructor/a', desc: 'Gimnasios, clubes, disciplinas deportivas y talleres.' },
+          { key: 'Guardavidas', label: 'Guardavidas', desc: 'Natatorios, colonias y temporada de verano.' },
         ];
         const cats = [...base, ...(this.state.boCatsExtra || []).map(c => ({ ...c, custom: true, desc: 'Categoría creada desde el backoffice.' }))];
         const cur = cats.find(c => c.key === this.state.boAsigCategoria) || cats[0];
         const cat = this.state.catalogoAsignaturas;
         const hidden = (this.state.boAsigHidden || {})[cur.key] || [];
         const num = (str, m) => { let n = 0; for (const ch of str) n = (n * 31 + ch.charCodeAt(0)) % 997; return n % m; };
-        const all = cat[cur.key] || [];
+        const grupos = cat[cur.key] || [];
+        const todas = grupos.reduce((xs, g) => xs.concat(g.items), []);
         const q = (this.state.boAsigQuery || '').toLowerCase();
-        const rows = all.filter(a => !q || a.toLowerCase().includes(q)).map(a => {
+        const fila = (a) => {
           const vis = !hidden.includes(a);
-          return { label: a, docentes: 4 + num(a, 60), busquedas: num(a + 'b', 7), trackStyle: vis ? 'background:#16214F;justify-content:flex-end' : 'background:#D8D6D0;justify-content:flex-start', knobStyle: '',
+          return { label: a, docentes: 4 + num(a, 60), busquedas: num(a + 'b', 7),
+            trackStyle: vis ? 'background:#16214F;justify-content:flex-end' : 'background:#D8D6D0;justify-content:flex-start', knobStyle: '',
             onToggle: () => this.setState(st => { const hd = { ...(st.boAsigHidden || {}) }; const l = hd[cur.key] || []; hd[cur.key] = l.includes(a) ? l.filter(x => x !== a) : [...l, a]; return { boAsigHidden: hd }; }),
             onRemove: () => this.removeBoAsig(cur.key, a) };
-        });
-        const sum = (f) => all.reduce((t, a) => t + f(a), 0);
+        };
+        // Se agrupa igual que en el alta: el rubro sin coincidencias no se dibuja.
+        const gruposFiltrados = grupos
+          .map(g => ({ rubro: g.rubro, filas: g.items.filter(a => !q || a.toLowerCase().includes(q)).map(fila) }))
+          .filter(g => g.filas.length);
+        const sum = (f) => todas.reduce((t, a) => t + f(a), 0);
+        const rubroActual = grupos.some(g => g.rubro === this.state.boAsigRubro) ? this.state.boAsigRubro : (grupos[0] || {}).rubro;
         return {
-          boCatList: cats.map(c => ({ ...c, count: (cat[c.key] || []).length, style: c.key === cur.key ? 'background:#E5E9FB;color:#16214F;font-weight:600' : 'color:#3D423E', onPick: () => this.setState({ boAsigCategoria: c.key, boAsigQuery: '' }) })),
-          boCatActual: { ...cur, custom: !!cur.custom, total: all.length, visibles: all.length - hidden.filter(x => all.includes(x)).length, docentes: sum(a => 4 + num(a, 60)), busquedas: sum(a => num(a + 'b', 7)) },
-          boAsigRows: rows,
-          boAsigEmpty: rows.length === 0,
+          boCatList: cats.map(c => ({ ...c, count: (cat[c.key] || []).reduce((n, g) => n + g.items.length, 0), style: c.key === cur.key ? 'background:#E5E9FB;color:#16214F;font-weight:600' : 'color:#3D423E', onPick: () => this.setState({ boAsigCategoria: c.key, boAsigQuery: '' }) })),
+          boCatActual: { ...cur, custom: !!cur.custom, rubros: grupos.length, total: todas.length, visibles: todas.length - hidden.filter(x => todas.includes(x)).length, docentes: sum(a => 4 + num(a, 60)), busquedas: sum(a => num(a + 'b', 7)) },
+          boAsigGrupos: gruposFiltrados,
+          boAsigEmpty: gruposFiltrados.length === 0,
           boAsigQuery: this.state.boAsigQuery || '',
           updateBoAsigQuery: e => this.setState({ boAsigQuery: e.target.value }),
+          boRubroOptions: grupos.map(g => ({ key: g.rubro, label: g.rubro })),
+          boAsigRubro: rubroActual,
+          updateBoAsigRubro: e => this.setState({ boAsigRubro: e.target.value }),
           boNewCatVal: this.state.boNewCatVal || '',
           updateBoNewCat: e => this.setState({ boNewCatVal: e.target.value }),
-          addBoCat: () => { const v = (this.state.boNewCatVal || '').trim(); if (!v) return; const key = 'c_' + Date.now(); this.setState(st => ({ boCatsExtra: [...(st.boCatsExtra || []), { key, label: v }], catalogoAsignaturas: { ...st.catalogoAsignaturas, [key]: [] }, boAsigCategoria: key, boNewCatVal: '' })); },
-          removeBoCat: () => this.setState(st => ({ boCatsExtra: (st.boCatsExtra || []).filter(c => c.key !== cur.key), boAsigCategoria: 'profesor' })),
+          addBoCat: () => { const v = (this.state.boNewCatVal || '').trim(); if (!v) return; const key = 'c_' + Date.now(); this.setState(st => ({ boCatsExtra: [...(st.boCatsExtra || []), { key, label: v }], catalogoAsignaturas: { ...st.catalogoAsignaturas, [key]: [{ rubro: 'General', items: [] }] }, boAsigCategoria: key, boNewCatVal: '' })); },
+          removeBoCat: () => this.setState(st => ({ boCatsExtra: (st.boCatsExtra || []).filter(c => c.key !== cur.key), boAsigCategoria: 'Docente' })),
         };
       })(),
-      boAsigList: (this.state.catalogoAsignaturas[this.state.boAsigCategoria] || []).map(a => ({ label: a, onRemove: () => this.removeBoAsig(this.state.boAsigCategoria, a) })),
       boAsigInputVal: this.state.boAsigInputVal,
       updateBoAsigInput: (e) => this.setState({ boAsigInputVal: e.target.value }),
       keyBoAsigInput: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addBoAsig(); } },
