@@ -342,7 +342,6 @@ a:hover{color:#DD553F}
 <span style="position:absolute;bottom:-140px;left:-90px;width:340px;height:340px;border-radius:999px;background:radial-gradient(circle,rgba(130,216,233,.22),transparent 70%);z-index:0;pointer-events:none"></span>
 
 <div style="position:relative;z-index:1;max-width:1160px;margin:0 auto;text-align:center">
-<span class="cbl-badge" style="background:#fff;border:1px solid #E3E1DC;color:#6B706C;font-weight:500">Disponible en todo el país</span>
 <h1 class="udoar-hero-title" style="margin:18px auto 16px;max-width:15ch;font:700 60px/1.04 Sora,Inter,sans-serif;letter-spacing:-.035em;color:#16214F;text-wrap:balance">Cubrir un cargo no debería llevar tres semanas</h1>
 <p style="margin:0 auto;max-width:620px;font:400 17px/1.6 Inter,sans-serif;color:#6B706C">Unidoar reúne a los docentes de tu zona —de matemática a natación— con identidad y título verificados. Publicás la búsqueda y ves quién está cerca y disponible.</p>
 
@@ -902,18 +901,17 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isPublicTrabajo }}" hint-placeholder-val="{{ false }}">
 <div style="min-height:100vh;background:#EDEBE5;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background-color:#040B35">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
-<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">
-<span onClick="{{ goPublicTrabajo }}" style="cursor:pointer" style-hover="color:#82D8E9">Buscar trabajo</span>
-<span onClick="{{ goPublicInstituciones }}" style="cursor:pointer" style-hover="color:#82D8E9">Instituciones</span>
-<span onClick="{{ goPlanes }}" style="cursor:pointer" style-hover="color:#82D8E9">Planes</span>
-<span onClick="{{ goQuienesSomos }}" style="cursor:pointer" style-hover="color:#82D8E9">Quiénes somos</span>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
+<div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
+<div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
+<div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center">
-<span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span>
-<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta</button>
-</div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 
 <div class="udoar-app-main" style="flex:1;padding:36px 48px">
@@ -956,18 +954,17 @@ Institutos de idiomas, escuelas de música y centros de apoyo escolar también e
 
 <sc-if value="{{ isPublicInstituciones }}" hint-placeholder-val="{{ false }}">
 <div style="min-height:100vh;background:#EDEBE5;display:flex;flex-direction:column">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background-color:#040B35">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
-<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">
-<span onClick="{{ goPublicTrabajo }}" style="cursor:pointer" style-hover="color:#82D8E9">Buscar trabajo</span>
-<span onClick="{{ goPublicInstituciones }}" style="cursor:pointer" style-hover="color:#82D8E9">Instituciones</span>
-<span onClick="{{ goPlanes }}" style="cursor:pointer" style-hover="color:#82D8E9">Planes</span>
-<span onClick="{{ goQuienesSomos }}" style="cursor:pointer" style-hover="color:#82D8E9">Quiénes somos</span>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
+<div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
+<div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
+<div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center">
-<span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span>
-<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="background:#DD553F" onClick="{{ goSignup }}">Crear cuenta</button>
-</div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 
 <div class="udoar-app-main" style="flex:1;padding:36px 48px">
@@ -3499,16 +3496,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <sc-if value="{{ isPlanes }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background:#16214F">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
 <div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
 <div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;color:rgba(255,255,255,.75);transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
-<div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 
 <div style="padding:64px 48px 56px;text-align:center;background:linear-gradient(180deg,#F4F3EF 0%,#FAFAF8 100%)">
@@ -3561,16 +3559,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <sc-if value="{{ isQuienesSomos }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #04062F">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
 <div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
 <div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
 <div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
 <div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
 </div>
-</div><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span style="cursor:pointer;color:#fff;font-weight:600">Quiénes somos</span></div>
-<div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 
 <div style="padding:72px 48px 60px;text-align:center;background:linear-gradient(180deg,#16214F 0%,#1B2A5E 100%);color:#fff">
@@ -3604,9 +3603,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <sc-if value="{{ isTerminos }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background:#16214F">
-<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:34px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
+<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
+<div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
+<div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
+<div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
+</div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 <div style="padding:56px 48px;max-width:760px;margin:0 auto">
 <h1 style="margin:0 0 8px;font:600 30px/1.2 Inter,sans-serif;letter-spacing:-.02em">Términos y condiciones</h1>
@@ -3625,9 +3632,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 
 <sc-if value="{{ isContacto }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:72px;background:#16214F">
-<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:34px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
+<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
+<div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
+<div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
+<div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
+</div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 <div style="padding:56px 48px;max-width:900px;margin:0 auto">
 <h1 style="margin:0 0 8px;font:600 30px/1.2 Inter,sans-serif;letter-spacing:-.02em">Contacto</h1>
@@ -3662,10 +3677,17 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </sc-if>
 <sc-if value="{{ isCategorias }}" hint-placeholder-val="{{ false }}">
 <div style="background:#fff">
-<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #07133D">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 72px; background-color: #040B35">
 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onClick="{{ goLanding }}"><img src="assets/unidoar-logo-horizontal.png" alt="Unidoar" style="height:56px;width:auto;object-fit:contain"></div>
-<div style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><span onClick="{{ goInstBuscador }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Explorá instituciones</span><span style="cursor:pointer;color:#fff;font-weight:600">Buscá docentes</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span></div>
-<div style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<div class="udoar-nav-links" style="display:flex;gap:28px;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)"><div class="udoar-navdrop" style="display:inline-block"><span onClick="{{ goCategorias }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscá docentes</span>
+<div class="udoar-navdrop-menu" style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;box-shadow:0 12px 30px rgba(31,36,33,.18);padding:8px;min-width:190px">
+<div onClick="{{ goEducadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDE9E1;color:#DD553F">Docentes</div>
+<div onClick="{{ goEntrenadores }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FDF1C7;color:#7A5900">Entrenadores</div>
+<div onClick="{{ goGuardavidas }}" style="cursor:pointer;padding:10px 14px;border-radius:7px;font:500 14px/1 Inter,sans-serif;color:#1F2421;transition:background .15s,color .15s" style-hover="background:#FEE2E2;color:#DC2626">Guardavidas</div>
+</div>
+</div><span onClick="{{ goPublicTrabajo }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Buscar trabajo</span><span onClick="{{ goPublicInstituciones }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Instituciones</span><span onClick="{{ goPlanes }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Planes</span><span onClick="{{ goQuienesSomos }}" style="cursor:pointer;transition:color .15s" style-hover="color:#82D8E9">Quiénes somos</span></div>
+<div class="udoar-nav-actions" style="display:flex;gap:10px;align-items:center"><span onClick="{{ goSignup }}" style="cursor:pointer;font:500 14px/1 Inter,sans-serif;color:rgba(255,255,255,.75)">Ingresar</span><button class="cbl-btn cbl-btn--primary cbl-btn--md" style="background:#DD553F;padding:11px 20px;font-size:14px;box-shadow:0 2px 6px rgba(221,85,63,.3)" onClick="{{ goSignup }}">Soy institución</button></div>
+<span class="udoar-landing-hamburger" onClick="{{ toggleLandingMenu }}" style="cursor:pointer;color:#fff"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></span>
 </div>
 
 <div style="padding:56px 48px 8px;text-align:center;background:linear-gradient(180deg,#F4F3EF 0%,#FAFAF8 100%)">
