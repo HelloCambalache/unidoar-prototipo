@@ -197,11 +197,13 @@ a:hover{color:#DD553F}
 .udoar-landing-hamburger{display:inline-flex !important}
 }
 @media (max-width:760px){
-.udoar-inst-header-bar{height:auto !important;padding-top:10px !important;padding-bottom:10px !important}
-.udoar-header-row{flex-wrap:wrap}
-.udoar-header-row::after{content:"";flex-basis:100%;order:2;height:0}
-.udoar-inst-name-badge{order:3;max-width:100%;white-space:normal;margin-top:6px;margin-left:32px}
+.udoar-inst-header-bar{padding-left:14px !important;padding-right:14px !important}
+.udoar-header-row{gap:12px !important;flex:1;min-width:0}
+.udoar-inst-name-badge{min-width:0;display:block;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .udoar-plan-badge{display:none !important}
+}
+@media (max-width:560px){
+.udoar-inst-name-badge{display:none !important}
 }
 @media (max-width:640px){
 .udoar-onb-content{padding:24px !important}
@@ -319,6 +321,11 @@ a:hover{color:#DD553F}
   .udoar-doc-btns{flex:1 1 100% !important;margin-top:6px}
   .udoar-doc-btns .cbl-btn{flex:1 1 auto}
 }
+
+/* Video del banner del tablero: en fila ocupa hasta 440px; cuando el banner
+   se apila en el celular pasa a ancho completo. */
+.udoar-banner-video{flex:1 1 380px;min-width:280px;max-width:440px;aspect-ratio:16/9}
+@media (max-width:860px){.udoar-2col > div.udoar-banner-video{flex:none;width:100% !important;min-width:0 !important;max-width:none}}
 </style>
 </helmet>
 
@@ -2248,18 +2255,18 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">En entrevista</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">4</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">2 agendadas para el jueves</div></div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Contratados este año</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">7</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">4 titulares, 3 suplencias</div></div>
 </div>
-<div class="udoar-2col" style="display:flex;gap:22px;align-items:center;background:#16214F;border-radius:12px;padding:22px;margin-bottom:20px;position:relative;overflow:hidden">
+<div class="udoar-2col" style="display:flex;gap:26px;align-items:center;background:#16214F;border-radius:12px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden">
 <span style="position:absolute;top:-90px;right:-60px;width:240px;height:240px;border-radius:999px;background:radial-gradient(circle,rgba(221,85,63,.38),transparent 70%);pointer-events:none"></span>
-<div onClick="{{ goInstPublicar }}" style="cursor:pointer;flex:none;width:248px;height:140px;border-radius:10px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1F2C63,#16214F);border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">
-<span style="width:52px;height:52px;border-radius:999px;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#16214F"><path d="M8 5v14l11-7z"></path></svg></span>
+<div onClick="{{ goInstPublicar }}" class="udoar-banner-video" style="cursor:pointer;border-radius:10px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1F2C63,#16214F);border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center">
+<span style="width:62px;height:62px;border-radius:999px;background:rgba(255,255,255,.92);display:inline-flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="#16214F"><path d="M8 5v14l11-7z"></path></svg></span>
 <span style="position:absolute;left:12px;bottom:10px;font:500 11.5px/1 Inter,sans-serif;color:rgba(255,255,255,.72)">2 min · cómo funciona</span>
 </div>
-<div style="flex:1 1 320px;min-width:260px;position:relative;z-index:1">
+<div style="flex:1 1 340px;min-width:280px;position:relative;z-index:1">
 <div style="font:700 19px/1.25 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff;margin-bottom:12px">Cubrir un cargo en UNIDOAR son tres pasos</div>
-<div class="udoar-2col" style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px">
-<div style="flex:1 1 150px;min-width:140px;display:flex;gap:9px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">1</span><span style="font:400 13px/1.45 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Publicá la búsqueda</b><br>Cargo, horas y turno. Tarda dos minutos.</span></div>
-<div style="flex:1 1 150px;min-width:140px;display:flex;gap:9px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">2</span><span style="font:400 13px/1.45 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Mirá quién se postula</b><br>Ya vienen con identidad y título verificados.</span></div>
-<div style="flex:1 1 150px;min-width:140px;display:flex;gap:9px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">3</span><span style="font:400 13px/1.45 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Entrevistá y contratá</b><br>Hablan por WhatsApp. Sin comisión.</span></div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px">
+<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">1</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Publicá la búsqueda</b><br>Cargo, horas y turno. Tarda dos minutos.</span></div>
+<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">2</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Mirá quién se postula</b><br>Ya vienen con identidad y título verificados.</span></div>
+<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">3</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Entrevistá y contratá</b><br>Hablan por WhatsApp. Sin comisión.</span></div>
 </div>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goInstPublicar }}">Publicar una búsqueda</button>
@@ -2363,16 +2370,10 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">{{ buscadorTitulo }}</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">{{ buscadorBajada }}</p></div>
 </div>
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px 18px;margin-bottom:16px">
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#16214F"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="flex:none"><path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z"></path><path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"></path></svg><span style="font:600 14px/1 Inter,sans-serif">Buscá con IA</span><span class="cbl-badge" style="background:#E5E9FB;color:#16214F;margin-left:2px">Nuevo</span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#16214F"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" style="flex:none"><path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z"></path><path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"></path></svg><span style="font:600 14px/1 Inter,sans-serif">Buscá con IA</span></div>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
 <input class="cbl-input" style="flex:1;min-width:240px" placeholder="Contame qué necesitás: «profe de inglés para secundario, turno mañana»" value="{{ iaQuery }}" onChange="{{ updateIaQuery }}" onKeyDown="{{ keyIa }}">
 <button class="cbl-btn cbl-btn--primary" style="background:#16214F;flex:none" onClick="{{ buscarConIa }}">Buscar</button>
-</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-<span style="font:400 12.5px/1 Inter,sans-serif;color:#9AA09B">Probá con:</span>
-<sc-for list="{{ iaEjemplos }}" as="e" hint-placeholder-count="3">
-<span onClick="{{ e.onPick }}" style="cursor:pointer;padding:6px 12px;border-radius:999px;background:#F0EFEA;color:#3D423E;font:500 12.5px/1 Inter,sans-serif">{{ e.label }}</span>
-</sc-for>
 </div>
 <sc-if value="{{ hayIaLeido }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid #E3E1DC">
@@ -6845,11 +6846,6 @@ class Component extends DCLogic {
       limpiarIa: () => this.limpiarIa(),
       hayIaLeido: !!this.state.iaLeido,
       iaLeidoList: (this.state.iaLeido || []).map(t => ({ label: t })),
-      iaEjemplos: [
-        'Profe de matemática para secundario',
-        'Suplencia rápida de educación física, turno mañana',
-        'Guardavidas verificado para el natatorio',
-      ].map(t => ({ label: t, onPick: () => this.buscarConIa(t) })),
       buscadorSearchQuery: this.state.buscadorSearchQuery,
       updateBuscadorSearchQuery: (e) => this.setState({ buscadorSearchQuery: e.target.value }),
       buscadorSearchSuggestions: (() => {
