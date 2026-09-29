@@ -1339,8 +1339,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Suplencias abiertas</div><div style="font:600 28px/1 Inter,sans-serif;color:#DD553F">2</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">una vence en 18 hs</div></div>
 </div>
 
-<div class="udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
-<div style="flex:1;min-width:0">
 
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
 <h2 style="margin:0;font:600 17px/1.2 Inter,sans-serif">Recomendadas para vos</h2>
@@ -1365,6 +1363,14 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 </div>
 </sc-for>
+</div>
+<div style="background:#FBE0EF;border-radius:10px;padding:18px 22px;margin:16px 0 26px;display:flex;align-items:center;gap:22px;flex-wrap:wrap">
+<div style="flex:1 1 320px;min-width:0">
+<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 14px/1 Inter,sans-serif;color:#97125F">Completá tu perfil</span><span style="font:600 13px/1 Inter,sans-serif;color:#97125F">80%</span></div>
+<div style="height:6px;border-radius:999px;background:rgba(151,18,95,.15);overflow:hidden;margin-bottom:10px"><div style="width:80%;height:6px;background:#97125F"></div></div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#97125F">Te falta subir la foto de perfil. Los perfiles con foto reciben el doble de invitaciones.</div>
+</div>
+<button class="cbl-btn" style="flex:none;background:#97125F;color:#fff" onClick="{{ goDocPerfil }}">Completar perfil</button>
 </div>
 
 <div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1451,16 +1457,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Ed. Física — Primario</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Colegio San Andrés del Norte · postulada el 21/08</div></div><span class="cbl-badge" style="background:#FBE0EF;color:#97125F">Entrevista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Maestra de sala de 3</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Jardín Los Aromos · postulada el 18/08</div></div><span class="cbl-badge" style="background:#F0EFEA;color:#3D423E">En revisión</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Natación — escuela de verano</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Club Atlético Ribera · postulada el 12/08</div></div><span class="cbl-badge" style="background:#E5E9FB;color:#16214F">Vista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
-</div>
-</div>
-</div>
-<div class="udoar-2col-aside" style="flex:none;width:300px;display:flex;flex-direction:column;gap:14px">
-<div style="background:#FBE0EF;border-radius:8px;padding:16px">
-<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Completá tu perfil</span><span style="font:600 12px/1 Inter,sans-serif;color:#97125F">80%</span></div>
-<div style="height:6px;border-radius:999px;background:rgba(151,18,95,.15);overflow:hidden;margin-bottom:10px"><div style="width:80%;height:6px;background:#97125F"></div></div>
-<div style="font:400 13px/1.5 Inter,sans-serif;color:#97125F;margin-bottom:12px">Te falta subir la foto de perfil. Los perfiles con foto reciben el doble de invitaciones.</div>
-<button class="cbl-btn cbl-btn--block" style="background:#97125F;color:#fff" onClick="{{ goDocPerfil }}">Completar perfil</button>
-</div>
 </div>
 </div>
 </sc-if>
