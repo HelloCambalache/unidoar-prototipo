@@ -306,7 +306,7 @@ a:hover{color:#DD553F}
 .udoar-mapa-leyenda span{font-size:10px !important}
 }
 /* El contenido de la app respira a lo ancho, con un tope para que no se estire de más. */
-.udoar-app-main>*{max-width:1320px}
+.udoar-app-main>*{max-width:1320px;flex-shrink:0}
 /* Las grillas de tarjetas de la app se adaptan al ancho real de su columna:
    con un panel lateral al costado, tres columnas fijas quedaban de 130px. */
 .udoar-app-main .udoar-grid-3{grid-template-columns:repeat(auto-fill,minmax(236px,1fr)) !important}
@@ -2422,9 +2422,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <label class="cbl-checkbox" style="cursor:pointer" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.checked }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.label }}</label>
 </sc-for>
 </div>
-<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
-<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px" onClick="{{ toggleSoloRapidas }}"><span style="font:500 13px/1 Inter,sans-serif">Sólo suplencias</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloRapidasTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloRapidasDotStyle }}"></span></span></div>
-<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onClick="{{ toggleSoloVerificados }}"><span style="font:500 13px/1 Inter,sans-serif">Solo verificados</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloVerificadosTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloVerificadosDotStyle }}"></span></span></div>
 </div>
 </details>
 <div style="flex:1;min-width:0">
@@ -2462,6 +2459,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div style="display:flex;gap:10px;flex:none">
 <span onClick="{{ toggleSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloFavoritosStyle }}">★ Favoritos</span>
 <span onClick="{{ toggleSoloRapidas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloRapidasBotonStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Búsqueda rápida</span>
+<span onClick="{{ toggleSoloVerificados }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ soloVerificadosBotonStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M20 6L9 17l-5-5"></path></svg>Verificados</span>
 </div>
 </div>
 <div class="udoar-grid-2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
@@ -6996,6 +6994,9 @@ class Component extends DCLogic {
       toggleSoloVerificados: () => this.setState(s => ({ filtroSoloVerificados: !s.filtroSoloVerificados })),
       toggleSoloRapidas: () => this.setState(st => ({ buscadorSoloRapidas: !st.buscadorSoloRapidas })),
       toggleSoloFavoritos: () => this.setState(st => ({ buscadorSoloFavoritos: !st.buscadorSoloFavoritos })),
+      soloVerificadosBotonStyle: this.state.filtroSoloVerificados
+        ? 'background:#1E7A4C;color:#fff'
+        : 'background:#fff;color:#3D423E;box-shadow:inset 0 0 0 1px #E3E1DC',
       soloRapidasBotonStyle: this.state.buscadorSoloRapidas
         ? 'background:#DD553F;color:#fff'
         : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
