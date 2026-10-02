@@ -2757,8 +2757,12 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </div>
 
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px">
-<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:600 15px/1 Inter,sans-serif">Disponibilidad</span><span style="font:400 12px/1 Inter,sans-serif;color:#9AA09B">Declarada por el postulante</span></div>
-<div style="font:400 14px/1.5 Inter,sans-serif;color:#3D423E">{{ selectedCv.disponibilidad }}</div>
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:600 15px/1 Inter,sans-serif">Disponibilidad horaria</span><span style="font:400 12px/1 Inter,sans-serif;color:#9AA09B">Declarada por el postulante</span></div>
+<div style="display:grid;grid-template-columns:70px repeat(5,1fr);gap:6px;font:400 12px/1 Inter,sans-serif;color:#6B706C;margin-bottom:8px"><span></span><span style="text-align:center">Lun</span><span style="text-align:center">Mar</span><span style="text-align:center">Mié</span><span style="text-align:center">Jue</span><span style="text-align:center">Vie</span></div>
+<sc-for list="{{ cvGrilla }}" as="f" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:70px repeat(5,1fr);gap:6px;margin-bottom:6px"><span style="font:400 13px/1 Inter,sans-serif;color:#6B706C;align-self:center">{{ f.label }}</span><sc-for list="{{ f.celdas }}" as="c" hint-placeholder-count="5"><span style="{{ c.style }}"></span></sc-for></div>
+</sc-for>
+<div style="display:flex;gap:16px;margin-top:8px;font:400 12px/1 Inter,sans-serif;color:#6B706C"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#16214F;display:inline-block"></span>Disponible</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#8CA9BE;display:inline-block"></span>A convenir</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#F0EFEA;display:inline-block"></span>Ocupada</span></div>
 </div>
 
 </div>
@@ -6501,6 +6505,18 @@ class Component extends DCLogic {
           cvResponde: '~' + (num(cv.name + 'r', 8) + 2) + ' horas',
           cvPostulaciones: num(cv.name + 'p', 4) + 1,
           cvZonas: [cv.zona, cv.disponibilidad].filter(Boolean).map(z => ({ label: z })),
+          // Grilla semanal del postulante: la franja que declaró queda
+          // disponible y el resto se arma estable a partir del nombre.
+          cvGrilla: ['Ma\u00f1ana', 'Tarde', 'Contraturno'].map((fila, r) => ({
+            label: fila,
+            celdas: [0, 1, 2, 3, 4].map(c => {
+              const suya = (cv.disponibilidad || '').toLowerCase().includes(fila.toLowerCase());
+              const n = num(cv.name + r + c, 10);
+              const estado = suya ? (n > 1 ? 'libre' : 'convenir') : (n > 6 ? 'convenir' : 'ocupada');
+              return { style: 'height:28px;border-radius:6px;background:'
+                + (estado === 'libre' ? '#16214F' : estado === 'convenir' ? '#8CA9BE' : '#F0EFEA') };
+            }),
+          })),
         };
       })(),
       closeCv: () => this.closeCv(),
