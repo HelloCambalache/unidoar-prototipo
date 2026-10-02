@@ -352,6 +352,11 @@ a:hover{color:#DD553F}
 @media (max-width:760px){
   .udoar-curso-foto{width:100% !important;height:150px;align-self:auto !important}
 }
+
+/* Los <a> con clase de botón no heredan el padding horizontal que el sistema le
+   da a los <button>: el texto quedaba pegado a los bordes. */
+a.cbl-btn{padding-left:22px;padding-right:22px}
+a.cbl-btn.cbl-btn--sm{padding-left:14px;padding-right:14px}
 </style>
 </helmet>
 
@@ -3227,7 +3232,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 </div>
 <div class="udoar-save-bar" style="display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:22px;padding-top:18px;border-top:1px solid #E3E1DC">
 <span style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los cambios se publican en tu vitrina pública.</span>
-<a href="/docente/instituciones/perfil?inst=sanandres" target="_blank" rel="noopener" class="cbl-btn cbl-btn--secondary" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:600 14px/1 Inter,sans-serif;color:#1F2421"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"></path></svg>Ver perfil público</a>
+<a href="/docente/instituciones/perfil?inst=sanandres" target="_blank" rel="noopener" class="cbl-btn cbl-btn--secondary" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:52px;font:600 14px/1 Inter,sans-serif;color:#1F2421"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 4h6v6"></path><path d="M20 4l-9 9"></path><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"></path></svg>Ver perfil público</a>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;min-width:200px">Guardar cambios</button>
 </div>
 </sc-if>
