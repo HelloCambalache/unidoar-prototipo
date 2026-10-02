@@ -391,7 +391,7 @@ a.cbl-btn.cbl-btn--sm{padding-left:14px;padding-right:14px}
 <span style="position:absolute;bottom:-140px;left:-90px;width:340px;height:340px;border-radius:999px;background:radial-gradient(circle,rgba(130,216,233,.22),transparent 70%);z-index:0;pointer-events:none"></span>
 
 <div style="position:relative;z-index:1;max-width:1160px;margin:0 auto;text-align:center">
-<h1 class="udoar-hero-title" style="margin:18px auto 16px;max-width:15ch;font:700 60px/1.04 Sora,Inter,sans-serif;letter-spacing:-.035em;color:#16214F;text-wrap:balance">Cubrir un cargo no debería llevar tres semanas</h1>
+<h1 class="udoar-hero-title" style="margin:18px auto 16px;max-width:24ch;font:700 60px/1.04 Sora,Inter,sans-serif;letter-spacing:-.035em;color:#16214F;text-wrap:balance">Cubrir un cargo no debería llevar tres semanas</h1>
 <p style="margin:0 auto;max-width:620px;font:400 17px/1.6 Inter,sans-serif;color:#6B706C">UNIDOAR reúne a los docentes de tu zona —de matemática a natación— con identidad y título verificados. Publicás la búsqueda y ves quién está cerca y disponible.</p>
 
 <div class="udoar-hero-ctas" style="display:flex;gap:12px;justify-content:center;margin:30px 0 46px;flex-wrap:wrap">
@@ -587,7 +587,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <span style="position:absolute;bottom:-130px;left:-80px;width:320px;height:320px;border-radius:999px;background:radial-gradient(circle,rgba(221,85,63,.16),transparent 70%);z-index:0;pointer-events:none"></span>
 <div style="position:relative;z-index:1;max-width:1160px;margin:0 auto">
 <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px"><span style="width:9px;height:9px;border-radius:999px;background:#DD553F;animation:udoarPulse 1.8s infinite"></span><span style="font:600 12px/1 Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#DD553F">Búsquedas urgentes</span></div>
-<h2 style="margin:0 0 12px;max-width:17ch;font:700 40px/1.1 Sora,Inter,sans-serif;letter-spacing:-.03em;color:#16214F;text-wrap:balance">¿Se te complicó una suplencia? Publicala ahora y sale primero</h2>
+<h2 style="margin:0 0 12px;max-width:32ch;font:700 40px/1.1 Sora,Inter,sans-serif;letter-spacing:-.03em;color:#16214F;text-wrap:balance">¿Se te complicó una suplencia? Publicala ahora y sale primero</h2>
 <p style="margin:0 0 30px;max-width:620px;font:400 16px/1.6 Inter,sans-serif;color:#6B706C">Marcá la búsqueda como rápida y el catálogo prioriza a los docentes disponibles ya, sin esperar la próxima semana.</p>
 
 <div class="udoar-urg-bento" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
@@ -955,7 +955,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
 <input class="cbl-input" style="flex:1;min-width:220px;max-width:360px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
-<select class="cbl-select" style="max-width:190px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
+<select class="cbl-select" style="max-width:190px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a / Instructor/a</option><option>Guardavidas</option></select>
 </div>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
 <sc-for list="{{ publicTrabajoList }}" as="o" hint-placeholder-count="9">
@@ -1528,7 +1528,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <sc-if value="{{ isDocBuscarTabTodas }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
 <input class="cbl-input" style="flex:1;min-width:180px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
-<select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a</option><option>Guardavidas</option></select>
+<select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a / Instructor/a</option><option>Guardavidas</option></select>
 <select class="cbl-select" style="max-width:150px" value="{{ filtroOportNivel }}" onChange="{{ updateFiltroOportNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Secundario</option><option>Adultos</option></select>
 <select class="cbl-select" style="max-width:150px" value="{{ filtroOportTurno }}" onChange="{{ updateFiltroOportTurno }}"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Mañana y tarde</option></select>
 <div style="display:flex;gap:10px;flex:none">
@@ -2227,8 +2227,8 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <div class="{{ appSidebarClass }}" style="flex:none;width:214px;background:#fff;border-right:1px solid #E3E1DC;padding:16px 12px;display:flex;flex-direction:column;gap:2px">
 <div onClick="{{ goInstDashboard }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navInicioStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>Dashboard</div>
 <div onClick="{{ goInstHistorial }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navHistorialStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"></path></svg>Publicaciones</div>
-<div onClick="{{ goInstBuscador }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBuscadorStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Buscar docentes</div>
-<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect><circle cx="9" cy="10.5" r="2.3"></circle><path d="M5.4 16.2c.5-1.7 1.9-2.6 3.6-2.6s3.1.9 3.6 2.6"></path><path d="M15.5 9.5H19"></path><path d="M15.5 13H19"></path></svg>Docentes</div>
+<div onClick="{{ goInstBuscador }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBuscadorStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4.3-4.3"></path></svg>Buscar profesionales</div>
+<div onClick="{{ goInstBase }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navBaseStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect><circle cx="9" cy="10.5" r="2.3"></circle><path d="M5.4 16.2c.5-1.7 1.9-2.6 3.6-2.6s3.1.9 3.6 2.6"></path><path d="M15.5 9.5H19"></path><path d="M15.5 13H19"></path></svg>Profesionales</div>
 <div onClick="{{ goInstVitrina }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navVitrinaStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M3.2 4.5h17.6l1.2 4.2a3.2 3.2 0 0 1-6.2 1.1 3.2 3.2 0 0 1-6.2 0 3.2 3.2 0 0 1-6.2-1.1z"></path><path d="M4.6 10.6V20h14.8v-9.4"></path><path d="M9.6 20v-5.2h4.8V20"></path></svg>Mi perfil</div>
 <div onClick="{{ goInstCursos }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navCursosStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>Mis cursos</div>
 <div onClick="{{ goInstEquipo }}" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;{{ navEquipoStyle }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.4"></circle><path d="M2 20c0-3.4 3.1-5.4 7-5.4s7 2 7 5.4"></path><circle cx="18" cy="9" r="2.4"></circle><path d="M15.5 20c0-2.4 1.2-3.6 2.5-3.6s2.5 1.2 2.5 3.6"></path></svg>Equipo</div>
@@ -2987,7 +2987,7 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </sc-if>
 
 <sc-if value="{{ isInstBase }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Docentes</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleImportCsv }}">Importar CSV</button><button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:11px 18px;font-size:14px" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div></div>
+<div class="udoar-page-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px"><div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Profesionales</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Todos los perfiles que pasaron por tu institución: cargados a mano, que te mandaron su CV o que se postularon.</p></div><div class="udoar-btn-row" style="display:flex;gap:8px"><button class="cbl-btn cbl-btn--secondary" style="padding:11px 18px;font-size:14px;border-color:#16214F;color:#16214F" style-hover="background:#16214F;color:#fff" onClick="{{ toggleImportCsv }}">Importar CSV</button><button class="cbl-btn cbl-btn--primary" style="background:#16214F;padding:11px 18px;font-size:14px" onClick="{{ toggleAddBase }}">+ Cargar perfil</button></div></div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
 <sc-for list="{{ baseStats }}" as="st" hint-placeholder-count="4">
@@ -3806,7 +3806,7 @@ Contratamos por año lectivo y también cubrimos suplencias cortas.</textarea>
 <div style="flex:1;min-width:280px;display:flex;flex-direction:column;gap:16px">
 <div class="cbl-field"><span class="cbl-label">Nombre</span><input class="cbl-input" placeholder="Tu nombre"></div>
 <div class="cbl-field"><span class="cbl-label">Email</span><input class="cbl-input" type="email" placeholder="nombre@email.com"></div>
-<div class="cbl-field"><span class="cbl-label">Sos…</span><select class="cbl-select"><option>Institución</option><option>Docente</option><option>Entrenador/a</option><option>Guardavidas</option><option>Otro</option></select></div>
+<div class="cbl-field"><span class="cbl-label">Sos…</span><select class="cbl-select"><option>Institución</option><option>Docente</option><option>Entrenador/a / Instructor/a</option><option>Guardavidas</option><option>Otro</option></select></div>
 <div class="cbl-field"><span class="cbl-label">Mensaje</span><textarea class="cbl-textarea" style="width:100%;min-height:120px" placeholder="Contanos en qué te podemos ayudar"></textarea></div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;align-self:flex-start" onClick="{{ sendContacto }}">Enviar mensaje</button>
 <sc-if value="{{ showContactoToast }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 16px;background:#E7F5EF;color:#1E7A4C;border-radius:8px;font:500 13px/1.4 Inter,sans-serif">Gracias, recibimos tu mensaje. Te contestamos a la brevedad.</div></sc-if>
@@ -6345,7 +6345,7 @@ class Component extends DCLogic {
         { key: 'profesor', label: 'Profesor/a' },
         { key: 'maestro', label: 'Maestro/a' },
         { key: 'preceptor', label: 'Preceptor/a' },
-        { key: 'entrenador', label: 'Entrenador/a' },
+        { key: 'entrenador', label: 'Entrenador/a / Instructor/a' },
         { key: 'suplente', label: 'Suplente' },
       ],
       cargoCategoria: this.state.cargoCategoria,
@@ -6355,7 +6355,7 @@ class Component extends DCLogic {
       cargoEspecialidadOptions: (this.asignaturasPlanas(this.state.cargoCategoria).length ? this.asignaturasPlanas(this.state.cargoCategoria) : ['Todas las áreas']),
       cargoCategoriaSimpleOptions: [
         { key: 'docente', label: 'Docente' },
-        { key: 'entrenador', label: 'Entrenador/a' },
+        { key: 'entrenador', label: 'Entrenador/a / Instructor/a' },
         { key: 'guardavidas', label: 'Guardavidas' },
       ],
       cargoCategoriaSimple: this.state.cargoCategoriaSimple,
@@ -6382,7 +6382,7 @@ class Component extends DCLogic {
       docCategoriaOptions: [
         { key: 'profesor', label: 'Profesor/a' },
         { key: 'maestro', label: 'Maestro/a' },
-        { key: 'entrenador', label: 'Entrenador/a' },
+        { key: 'entrenador', label: 'Entrenador/a / Instructor/a' },
         { key: 'guardavidas', label: 'Guardavidas' },
       ],
       docCategoria: this.state.docCategoria,
@@ -6967,7 +6967,7 @@ class Component extends DCLogic {
       filtroCategoriaOptions: [
         { key: 'todas', label: 'Todas' },
         { key: 'docente', label: 'Docente' },
-        { key: 'entrenador', label: 'Entrenador/a' },
+        { key: 'entrenador', label: 'Entrenador/a / Instructor/a' },
         { key: 'guardavidas', label: 'Guardavidas' },
       ].map(c => ({ ...c, style: this.state.filtroCategoria === c.key ? 'background:#16214F;color:#fff' : 'background:#F0EFEA;color:#6B706C', onPick: () => this.setFiltroCategoria(c.key) })),
       disciplinaFilterList: (() => {
@@ -7212,7 +7212,7 @@ class Component extends DCLogic {
       navEquipoStyle: s === 'instEquipo' ? navOn : navOff,
       navBaseStyle: s === 'instBase' ? navOn : navOff,
       perfilBack: () => this.go(this.state.perfilFrom === 'instBase' ? 'instBase' : 'instBuscador'),
-      perfilBackLabel: this.state.perfilFrom === 'instBase' ? 'Docentes' : 'Buscar docentes',
+      perfilBackLabel: this.state.perfilFrom === 'instBase' ? 'Profesionales' : 'Buscar profesionales',
       ...(() => {
         const origenStyles = { 'Se postuló': 'background:#E5E9FB;color:#16214F', 'Envió CV': 'background:#FDEBD8;color:#8A4A10', 'Cargado manualmente': 'background:#F0EFEA;color:#3D423E' };
         const seed = [
@@ -7325,7 +7325,7 @@ class Component extends DCLogic {
         { key: 'profesor', label: 'Profesor/a' },
         { key: 'maestro', label: 'Maestro/a' },
         { key: 'preceptor', label: 'Preceptor/a' },
-        { key: 'entrenador', label: 'Entrenador/a' },
+        { key: 'entrenador', label: 'Entrenador/a / Instructor/a' },
         { key: 'guardavidas', label: 'Guardavidas' },
       ].map(c => ({ ...c, style: this.state.boAsigCategoria === c.key ? 'background:#16214F;color:#fff' : 'background:#F0EFEA;color:#6B706C', onPick: () => this.pickBoAsigCategoria(c.key) })),
       navBoCategoriasStyle: s === 'boCategorias' ? navOn : navOff,
