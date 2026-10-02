@@ -357,6 +357,10 @@ a:hover{color:#DD553F}
    da a los <button>: el texto quedaba pegado a los bordes. */
 a.cbl-btn{padding-left:22px;padding-right:22px}
 a.cbl-btn.cbl-btn--sm{padding-left:14px;padding-right:14px}
+
+/* Los tres pasos del banner: en una fila, y apilados cuando no entran. */
+@media (max-width:1180px){.udoar-pasos{grid-template-columns:1fr !important;gap:12px !important}
+.udoar-pasos>div{flex-direction:row !important;gap:11px !important;align-items:flex-start}}
 </style>
 </helmet>
 
@@ -2333,10 +2337,10 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 <span style="position:absolute;top:-90px;right:-60px;width:240px;height:240px;border-radius:999px;background:radial-gradient(circle,rgba(221,85,63,.38),transparent 70%);pointer-events:none"></span>
 <div style="position:relative;z-index:1">
 <div style="font:700 19px/1.25 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff;margin-bottom:12px">Cubrir un cargo en UNIDOAR son tres pasos</div>
-<div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px">
-<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">1</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Publicá la búsqueda</b><br>Cargo, horas y turno. Tarda dos minutos.</span></div>
-<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">2</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Mirá quién se postula</b><br>Ya vienen con identidad y título verificados.</span></div>
-<div style="display:flex;gap:11px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">3</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Entrevistá y contratá</b><br>Hablan por WhatsApp. Sin comisión.</span></div>
+<div class="udoar-pasos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:20px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">1</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Publicá la búsqueda</b><br>Cargo, horas y turno. Tarda dos minutos.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">2</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Mirá quién se postula</b><br>Ya vienen con identidad y título verificados.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">3</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Entrevistá y contratá</b><br>Hablan por WhatsApp. Sin comisión.</span></div>
 </div>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goInstPublicar }}">Publicar una búsqueda</button>
