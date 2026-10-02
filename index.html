@@ -1221,7 +1221,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </sc-for>
 </div>
 <div style="border-radius:10px;background:#F0EFEA;padding:14px 16px;margin-bottom:22px;font:400 13.5px/1.5 Inter,sans-serif;color:#3D423E">{{ docPedidoAntes }}<b style="color:#1F2421;font-weight:600">{{ docPedidoFuerte }}</b>{{ docPedidoDespues }}</div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb2 }}">Continuar</button>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb3 }}">Continuar</button>
 <div style="margin-top:14px"><span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B" onClick="{{ goDocOnb1 }}">← Volver</span></div>
 </sc-if>
 
@@ -1238,7 +1238,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font:500 14px/1 Inter,sans-serif">Experiencia laboral</span></div><span style="flex:none;white-space:nowrap;font:400 13px/1 Inter,sans-serif;color:#6B706C">3 puestos, desde 2014</span></div>
 <div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font:500 14px/1 Inter,sans-serif">Formación</span></div><span style="flex:none;white-space:nowrap;font:400 13px/1 Inter,sans-serif;color:#6B706C">Profesorado + guardavidas</span></div>
 <div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font:500 14px/1 Inter,sans-serif">Asignaturas y disciplinas</span></div><span style="flex:none;white-space:nowrap;font:400 13px/1 Inter,sans-serif;color:#6B706C">Ed. Física, Natación, Vóley</span></div>
-<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;flex:none;border-radius:999px;border:1.5px dashed #CFCCC5"></span><span style="font:500 14px/1 Inter,sans-serif;color:#6B706C">Zonas donde trabajás</span></div><span style="flex:none;white-space:nowrap;font:400 13px/1 Inter,sans-serif;color:#9AA09B">te lo preguntamos en el paso 3</span></div>
+<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></span><span style="font:500 14px/1 Inter,sans-serif">Zonas donde trabajás</span></div><span style="flex:none;white-space:nowrap;font:400 13px/1 Inter,sans-serif;color:#6B706C">lo cargaste en el paso 3</span></div>
 </div>
 </sc-if>
 <sc-if value="{{ docCvNotUploaded }}" hint-placeholder-val="{{ true }}">
@@ -1250,17 +1250,17 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </sc-if>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:20px">
-<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap" onClick="{{ goDocOnbCat }}">← Volver</span>
-<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#16214F;white-space:nowrap" onClick="{{ goDocOnb3 }}">Prefiero cargarlo a mano</span>
+<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap" onClick="{{ goDocOnb3 }}">← Volver</span>
+<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#16214F;white-space:nowrap" onClick="{{ goDocOnbAsig }}">Lo subo después</span>
 </div>
-<button class="cbl-btn cbl-btn--primary" style="background:#DD553F;padding:12px 22px" onClick="{{ goDocOnb3 }}">Continuar</button>
+<button class="cbl-btn cbl-btn--primary" style="background:#DD553F;padding:12px 22px" onClick="{{ goDocOnbAsig }}">Continuar</button>
 </div>
 </sc-if>
 </sc-if>
 
 <sc-if value="{{ isDocOnb3 }}" hint-placeholder-val="{{ false }}">
-<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Revisá lo que cargamos</h1><span style="font:500 12px/1 Inter,sans-serif;color:#1E7A4C">3 de 8 campos completos</span></div>
-<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tocá cualquier campo para corregirlo. Los campos con * son obligatorios.</p>
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><h1 style="margin:0;font:600 24px/1.25 Inter,sans-serif;letter-spacing:-.018em">Tus datos personales</h1><span style="font:500 12px/1 Inter,sans-serif;color:#1E7A4C">3 de 8 campos completos</span></div>
+<p style="margin:0 0 20px;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Completá tus datos. Los campos con * son obligatorios para que podamos verificarte.</p>
 <div style="border:1px solid #E3E1DC;border-radius:8px;padding:18px;margin-bottom:16px">
 <div style="font:600 13px/1 Inter,sans-serif;margin-bottom:14px">Datos personales</div>
 <div class="udoar-onb-2col" style="display:flex;gap:14px;margin-bottom:12px">
@@ -1279,8 +1279,8 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between">
-<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnb2 }}">← Volver</span>
-<div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--secondary">Guardar borrador</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOnbAsig }}">Continuar</button></div>
+<span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnbCat }}">← Volver</span>
+<div style="display:flex;gap:10px"><button class="cbl-btn cbl-btn--secondary">Guardar borrador</button><button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goDocOnb2 }}">Continuar</button></div>
 </div>
 </sc-if>
 
@@ -1317,7 +1317,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 </div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#DD553F;height:48px;font-size:16px" onClick="{{ goDocOnb4 }}">Continuar</button>
-<div style="margin-top:14px"><span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B" onClick="{{ goDocOnb3 }}">← Volver</span></div>
+<div style="margin-top:14px"><span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B" onClick="{{ goDocOnb2 }}">← Volver</span></div>
 </sc-if>
 
 <sc-if value="{{ isDocOnb4 }}" hint-placeholder-val="{{ false }}">
@@ -6335,8 +6335,8 @@ class Component extends DCLogic {
       updateInstTipo: (e) => this.updateInstTipo(e),
       isInstTipoEducativo: ['Colegio privado', 'Jardín de infantes', 'Instituto de idiomas'].includes(this.state.instTipo),
       docOnbCardWidth: '760px',
-      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 6 · Tu cuenta' : s === 'docOnbCat' ? 'Paso 2 de 6 · Qué sos' : s === 'docOnb2' ? 'Paso 3 de 6 · Tu CV' : s === 'docOnb3' ? 'Paso 4 de 6 · Tu perfil' : s === 'docOnbAsig' ? 'Paso 5 de 6 · Niveles y horarios' : 'Paso 6 de 6 · Documentación',
-      docOnbProgress: s === 'docOnb1' ? '17%' : s === 'docOnbCat' ? '33%' : s === 'docOnb2' ? '50%' : s === 'docOnb3' ? '67%' : s === 'docOnbAsig' ? '83%' : '100%',
+      docOnbStepLabel: s === 'docOnb1' ? 'Paso 1 de 6 · Tu cuenta' : s === 'docOnbCat' ? 'Paso 2 de 6 · Qué sos' : s === 'docOnb3' ? 'Paso 3 de 6 · Tu perfil' : s === 'docOnb2' ? 'Paso 4 de 6 · Tu CV' : s === 'docOnbAsig' ? 'Paso 5 de 6 · Niveles y horarios' : 'Paso 6 de 6 · Documentación',
+      docOnbProgress: s === 'docOnb1' ? '17%' : s === 'docOnbCat' ? '33%' : s === 'docOnb3' ? '50%' : s === 'docOnb2' ? '67%' : s === 'docOnbAsig' ? '83%' : '100%',
       docNivelesList: Object.keys(this.state.docNiveles).map(k => ({ label: k, style: this.state.docNiveles[k] ? 'background:#E5E9FB;color:#16214F' : 'background:#F0EFEA;color:#6B706C', onToggle: () => this.toggleDocNivel(k) })),
       docDispRows: this.state.docDispGrid.map((row, ri) => ({
         label: row.label,
