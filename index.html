@@ -2446,14 +2446,6 @@ Escuelas de música, talleres y centros de apoyo escolar también entran: si con
 </sc-if>
 </div>
 <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-<div style="position:relative;max-width:260px;flex:1;min-width:200px">
-<input class="cbl-input" style="width:100%" placeholder="Buscar por nombre o disciplina" value="{{ buscadorSearchQuery }}" onChange="{{ updateBuscadorSearchQuery }}">
-<sc-if value="{{ hasBuscadorSearchSuggestions }}" hint-placeholder-val="{{ false }}">
-<div style="position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E3E1DC;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.1);margin-top:4px;z-index:5;overflow:hidden">
-<sc-for list="{{ buscadorSearchSuggestions }}" as="opt" hint-placeholder-count="3"><div onClick="{{ opt.onPick }}" style="padding:9px 14px;font:400 13px/1 Inter,sans-serif;cursor:pointer" style-hover="background:#F5F4F0">{{ opt.label }}</div></sc-for>
-</div>
-</sc-if>
-</div>
 <select class="cbl-select" style="max-width:150px" value="{{ buscadorFiltroNivel }}" onChange="{{ updateBuscadorFiltroNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Primario</option><option>Secundario</option></select>
 <select class="cbl-select" style="max-width:170px" value="{{ buscadorFiltroTipo }}" onChange="{{ updateBuscadorFiltroTipo }}"><option>Todos los tipos</option><option>Titular</option><option>Suplencia</option><option>Suplencia rápida</option></select>
 <div style="display:flex;gap:10px;flex:none">
