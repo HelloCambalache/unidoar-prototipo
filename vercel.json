@@ -125,6 +125,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/institucion/dashboard/primera-vez",
+      "destination": "/index.html"
+    },
+    {
       "source": "/institucion/publicar",
       "destination": "/index.html"
     },

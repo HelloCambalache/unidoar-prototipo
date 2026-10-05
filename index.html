@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnbAsig": "/onboarding/docente/asignaturas","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCursoVer": "/institucion/cursos/detalle","instInscriptos": "/institucion/cursos/inscriptos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnbAsig": "/onboarding/docente/asignaturas","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instDashNuevo": "/institucion/dashboard/primera-vez","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCursoVer": "/institucion/cursos/detalle","instInscriptos": "/institucion/cursos/inscriptos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -1141,7 +1141,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div class="cbl-field" style="margin-bottom:22px"><span class="cbl-label">Descripción</span>
 <textarea class="cbl-textarea" rows="3" placeholder="Contá brevemente quién es tu institución y qué tipo de docentes buscás habitualmente."></textarea>
 </div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#16214F;height:48px;font-size:16px" onClick="{{ goInstBuscador }}">Terminar y ver el catálogo</button>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#16214F;height:48px;font-size:16px" onClick="{{ goInstDashNuevo }}">Terminar y entrar a UNIDOAR</button>
 <div style="margin-top:14px"><span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B" onClick="{{ goInstOnb2 }}">← Volver</span></div>
 </sc-if>
 
@@ -2425,6 +2425,83 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
 <div style="flex:1;min-width:280px"><div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:6px">Completa tu perfil de institución para que los docentes te encuentren</div><div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:10px">Te faltan las fotos de instalaciones y la descripción. Los perfiles completos reciben el triple de ofrecimientos espontáneos.</div><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;max-width:260px;height:8px;border-radius:999px;background:#F0EFEA;overflow:hidden"><div style="width:60%;height:100%;background:#16214F"></div></div><span style="font:600 13px/1 Inter,sans-serif;color:#6B706C">60%</span></div></div>
 <button class="cbl-btn cbl-btn--primary cbl-btn--lg" style="background:#DD553F;padding:14px 22px;font-size:15px;flex:none" onClick="{{ goInstVitrina }}">Completar perfil</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInstDashNuevo }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Bienvenido, Esteban</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tu institución ya está en UNIDOAR. Te faltan tres cosas para empezar a recibir postulantes.</p></div>
+<span style="font:400 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap">Cuenta creada hoy</span>
+</div>
+
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;margin-bottom:22px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+<div style="font:600 16px/1.3 Inter,sans-serif">Para arrancar</div>
+<span style="font:600 13px/1 Inter,sans-serif;color:#6B706C">1 de 4 listos</span>
+</div>
+<div style="height:8px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:4px"><div style="width:25%;height:100%;background:#16214F"></div></div>
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#9AA09B;text-decoration:line-through">Creá la cuenta de tu institución</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Quedó lista con el Plan Fundador.</div></div><span style="flex:none;font:600 13px/1 Inter,sans-serif;color:#1E7A4C">Listo</span></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">2</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Completá el perfil de la institución</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Logo, foto de portada y descripción. Es lo que ven los profesionales antes de postularse.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goInstVitrina }}">Completar</button></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">3</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Publicá tu primera búsqueda</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Cargo, horas y turno. Tarda dos minutos y es lo que hace llegar los postulantes.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goInstPublicar }}">Publicar</button></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">4</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Invitá a tu equipo</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Sumá a quien tome las decisiones de contratación para que vea lo mismo que vos.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goInstEquipo }}">Invitar</button></div>
+</div>
+
+<div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Búsquedas activas</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Todavía no publicaste ninguna</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Postulantes nuevos</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Van a aparecer acá apenas publiques</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">En entrevista</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Los que marques como entrevistados</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Contratados este año</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Empezás el ciclo en cero</div></div>
+</div>
+<div class="udoar-2col" style="display:flex;gap:18px;align-items:stretch;margin-bottom:20px">
+<div onClick="{{ goInstPublicar }}" class="udoar-banner-video" style="cursor:pointer;border-radius:12px;position:relative;overflow:hidden;background:repeating-linear-gradient(135deg,#EDEBE5,#EDEBE5 9px,#E4E1DA 9px,#E4E1DA 18px);border:1px solid #E3E1DC;display:flex;align-items:center;justify-content:center">
+<span style="width:62px;height:62px;border-radius:999px;background:#16214F;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(4,11,53,.28)"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"></path></svg></span>
+<span style="position:absolute;left:14px;bottom:12px;font:500 12px/1 Inter,sans-serif;color:#6B706C">2 min · cómo funciona</span>
+</div>
+<div class="udoar-banner-pasos" style="flex:1 1 340px;min-width:280px;position:relative;overflow:hidden;background:#16214F;border-radius:12px;padding:22px 24px;display:flex;flex-direction:column;justify-content:center">
+<span style="position:absolute;top:-90px;right:-60px;width:240px;height:240px;border-radius:999px;background:radial-gradient(circle,rgba(221,85,63,.38),transparent 70%);pointer-events:none"></span>
+<div style="position:relative;z-index:1">
+<div style="font:700 19px/1.25 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff;margin-bottom:12px">Cubrir un cargo en UNIDOAR son tres pasos</div>
+<div class="udoar-pasos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:20px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">1</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Publicá la búsqueda</b><br>Cargo, horas y turno. Tarda dos minutos.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">2</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Mirá quién se postula</b><br>Ya vienen con identidad y título verificados.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="width:20px;height:20px;flex:none;border-radius:999px;background:#F59332;color:#16214F;display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 Inter,sans-serif">3</span><span style="font:400 13.5px/1.5 Inter,sans-serif;color:rgba(255,255,255,.82)"><b style="color:#fff;font-weight:600">Entrevistá y contratá</b><br>Hablan por WhatsApp. Sin comisión.</span></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goInstPublicar }}">Publicar una búsqueda</button>
+<button class="cbl-btn" style="background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff" onClick="{{ goInstBuscador }}">Buscar en el catálogo</button>
+</div>
+</div>
+</div>
+</div>
+<div class="udoar-2col" style="display:flex;gap:18px;align-items:flex-start">
+<div style="flex:1 1 0;min-width:0;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px">
+<div style="font:600 15px/1 Inter,sans-serif;margin-bottom:16px">Búsquedas activas</div>
+<div style="border:1.5px dashed #CFCCC5;border-radius:10px;padding:34px 24px;text-align:center">
+<span style="width:46px;height:46px;border-radius:999px;background:#F0EFEA;display:inline-flex;align-items:center;justify-content:center;color:#6B706C;margin-bottom:14px"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M8 6V4.5A1.5 1.5 0 019.5 3h5A1.5 1.5 0 0116 4.5V6"></path><path d="M12 11v6"></path><path d="M9 14h6"></path></svg></span>
+<div style="font:600 16px/1.35 Inter,sans-serif;margin-bottom:6px">Todavía no publicás ninguna búsqueda</div>
+<p style="margin:0 auto 18px;max-width:46ch;font:400 13.5px/1.55 Inter,sans-serif;color:#6B706C">Cuando publiques una, acá vas a ver cuántos se postularon, quiénes ya están verificados y en qué etapa va cada uno.</p>
+<button class="cbl-btn cbl-btn--primary" style="background:#DD553F" onClick="{{ goInstPublicar }}">Publicar mi primera búsqueda</button>
+</div>
+<div style="margin-top:18px;padding-top:16px;border-top:1px solid #F0EFEA;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<span style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;flex:1 1 240px">¿Tenés una suplencia para cubrir esta semana? Marcala como búsqueda rápida y sale primero en el catálogo.</span>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goInstRapidas }}">Ver búsquedas rápidas</button>
+</div>
+</div>
+
+<div style="flex:none;width:300px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:20px">
+<div style="font:600 15px/1 Inter,sans-serif;margin-bottom:4px">Profesionales de tu zona</div>
+<div style="font:400 13px/1.4 Inter,sans-serif;color:#6B706C;margin-bottom:16px">Ya están en UNIDOAR, cerca de tu institución</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:40px;height:40px;flex:none;border-radius:999px;background:url(&quot;assets/hero-entrenador.jpg&quot;) center / cover no-repeat"></span><div><div style="display:flex;align-items:center;gap:6px;font:600 14px/1.2 Inter,sans-serif">Martina Alsina <span class="cbl-badge cbl-badge--success" style="font-size:10px">Verificada</span></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">Ed. Física · Vicente López</div></div></div>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm cbl-btn--block" onClick="{{ goInstDocPerfil }}">Invitar a postularse</button>
+</div>
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:40px;height:40px;flex:none;border-radius:999px;background:url(&quot;assets/hero-guardavidas.jpg&quot;) center / cover no-repeat"></span><div><div style="display:flex;align-items:center;gap:6px;font:600 14px/1.2 Inter,sans-serif">Facundo Ojeda <span class="cbl-badge cbl-badge--success" style="font-size:10px">Verificado</span></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">Natación · a 2 km</div></div></div>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm cbl-btn--block" onClick="{{ goInstDocPerfil }}">Invitar a postularse</button>
+</div>
+<div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="width:40px;height:40px;flex:none;border-radius:999px;background:url(&quot;assets/hero-docente.jpg&quot;) center / cover no-repeat"></span><div><div style="display:flex;align-items:center;gap:6px;font:600 14px/1.2 Inter,sans-serif">Carolina Ruiz Díaz <span class="cbl-badge cbl-badge--success" style="font-size:10px">Verificada</span></div><div style="margin-top:2px;font:400 12px/1.4 Inter,sans-serif;color:#6B706C">Inglés · Martínez</div></div></div>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm cbl-btn--block" onClick="{{ goInstDocPerfil }}">Invitar a postularse</button>
+</div>
+</div>
+<div style="margin-top:16px;padding-top:14px;border-top:1px solid #F0EFEA;font:400 12.5px/1.5 Inter,sans-serif;color:#9AA09B">Cuando publiques una búsqueda, acá vamos a priorizar los perfiles que encajan con ese cargo.</div>
+<button class="cbl-btn cbl-btn--secondary cbl-btn--sm cbl-btn--block" style="margin-top:12px" onClick="{{ goInstBuscador }}">Ver todo el catálogo</button>
+</div>
 </div>
 </sc-if>
 
@@ -6035,7 +6112,7 @@ class Component extends DCLogic {
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
       'docOnb1','docOnbCat','docOnb2','docOnb3','docOnbAsig','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
-      'instDashboard','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCursoVer','instInscriptos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
+      'instDashboard','instDashNuevo','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCursoVer','instInscriptos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
     const vals = {};
     for (const t of targets) {
@@ -6066,7 +6143,7 @@ class Component extends DCLogic {
     const isDocOnb = ['docOnb1', 'docOnbCat', 'docOnb2', 'docOnb3', 'docOnbAsig', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
-    const isInst = ['instDashboard', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos','instCursoVer','instInscriptos', 'instCrearCurso', 'instBase', 'instCuenta'].includes(s);
+    const isInst = ['instDashboard', 'instDashNuevo', 'instPublicar', 'instBuscador', 'instRapidas', 'instDocPerfil', 'instPipeline', 'instContratar', 'instEquipo', 'instVitrina', 'instPlan', 'instHistorial', 'instCursos','instCursoVer','instInscriptos', 'instCrearCurso', 'instBase', 'instCuenta'].includes(s);
     const isInstOnb = ['instOnb1', 'instOnb2', 'instOnb3'].includes(s);
     const isBo = ['boVerif', 'boInst', 'boDocentes', 'boCobros', 'boOperacion', 'boDocDetalle', 'boInstDetalle', 'boCategorias', 'boCobroDetalle'].includes(s);
 
@@ -6211,7 +6288,8 @@ class Component extends DCLogic {
       })),
       notifDocVacio: (this.state.notifTab === 'noleidas' ? this.state.notifsDoc.filter(n => !n.leida) : this.state.notifsDoc).length === 0,
       notifInstNoLeidas: this.state.notifsInst.filter(n => !n.leida).length,
-      hayNotifInst: this.state.notifsInst.some(n => !n.leida),
+      // Una cuenta recién creada no puede tener notificaciones sin leer.
+      hayNotifInst: s !== 'instDashNuevo' && this.state.notifsInst.some(n => !n.leida),
       notifInstList: (this.state.notifTab === 'noleidas' ? this.state.notifsInst.filter(n => !n.leida) : this.state.notifsInst).map(n => ({ ...n,
         avatarStyle: 'background:' + n.color,
         filaStyle: n.leida ? 'background:#fff' : 'background:#FAFAF8',
@@ -7269,7 +7347,7 @@ class Component extends DCLogic {
       navBuscarColor: s === 'docOportunidades' ? '#16214F' : '#9AA09B',
       navPostulColor: s === 'docPostulaciones' ? '#16214F' : '#9AA09B',
       navPerfilColor: s === 'docPerfil' ? '#16214F' : '#9AA09B',
-      navInicioStyle: s === 'instDashboard' ? navOn : navOff,
+      navInicioStyle: (s === 'instDashboard' || s === 'instDashNuevo') ? navOn : navOff,
       navHistorialStyle: s === 'instHistorial' ? navOn : navOff,
       navBuscadorStyle: (s === 'instBuscador' || s === 'instRapidas') ? navOn : navOff,
       isInstBuscador: s === 'instBuscador' || s === 'instRapidas',
