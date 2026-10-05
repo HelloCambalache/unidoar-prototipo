@@ -9,6 +9,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/docente/dashboard/primera-vez",
+      "destination": "/index.html"
+    },
+    {
       "source": "/educadores",
       "destination": "/index.html"
     },

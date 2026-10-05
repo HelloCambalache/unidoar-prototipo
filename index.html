@@ -11,7 +11,7 @@
    Mapea cada pantalla del state machine a una ruta real, para poder linkear
    pantallas sueltas. No altera el prototipo: solo lee y escribe la URL. */
 (function () {
-  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnbAsig": "/onboarding/docente/asignaturas","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instDashNuevo": "/institucion/dashboard/primera-vez","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCursoVer": "/institucion/cursos/detalle","instInscriptos": "/institucion/cursos/inscriptos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
+  var MAP = {"landing": "/","educadores": "/educadores","entrenadores": "/entrenadores","guardavidas": "/guardavidas","categorias": "/categorias","planes": "/planes","quienesSomos": "/quienes-somos","contacto": "/contacto","terminos": "/terminos","signup": "/registro","instOnb1": "/onboarding/institucion/1","instOnb2": "/onboarding/institucion/2","instOnb3": "/onboarding/institucion/3","docOnb1": "/onboarding/docente/1","docOnbCat": "/onboarding/docente/categoria","docOnbAsig": "/onboarding/docente/asignaturas","docOnb2": "/onboarding/docente/2","docOnb3": "/onboarding/docente/3","docOnb4": "/onboarding/docente/4","docOnb5": "/onboarding/docente/5","docDashboard": "/docente/dashboard","docDashNuevo": "/docente/dashboard/primera-vez", "docOportunidades": "/docente/oportunidades","docRapidas": "/docente/busquedas-rapidas","docOfertaDetalle": "/docente/oferta","docInstituciones": "/docente/instituciones","docInstPerfil": "/docente/instituciones/perfil","docCursos2": "/docente/cursos","docPostulaciones": "/docente/postulaciones","docPerfil": "/docente/perfil","docNotif": "/docente/notificaciones","instDashboard": "/institucion/dashboard","instDashNuevo": "/institucion/dashboard/primera-vez","instPublicar": "/institucion/publicar","instBuscador": "/institucion/buscar-docentes","instRapidas": "/institucion/busquedas-rapidas","instDocPerfil": "/institucion/docente","instPipeline": "/institucion/postulantes","instContratar": "/institucion/contratar","instEquipo": "/institucion/equipo","instVitrina": "/institucion/vitrina","instPlan": "/institucion/plan","instHistorial": "/institucion/busquedas","instCursos": "/institucion/cursos","instCursoVer": "/institucion/cursos/detalle","instInscriptos": "/institucion/cursos/inscriptos","instCrearCurso": "/institucion/cursos/nuevo","instBase": "/institucion/base-de-docentes","instCuenta": "/institucion/cuenta","publicTrabajo": "/buscar-trabajo","publicInstituciones": "/instituciones","boVerif": "/backoffice/verificacion","boDocentes": "/backoffice/docentes","boDocDetalle": "/backoffice/docentes/detalle","boInst": "/backoffice/instituciones","boInstDetalle": "/backoffice/instituciones/detalle","boCobros": "/backoffice/cobros","boCobroDetalle": "/backoffice/cobros/detalle","boCategorias": "/backoffice/categorias","boOperacion": "/backoffice/operacion","docenteApp": "/app/docente","institucionApp": "/app/institucion"};
   var REV = {}; for (var k in MAP) REV[MAP[k]] = k;
 
   function norm(p) {
@@ -1340,7 +1340,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px">
 <span style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap;flex:none" onClick="{{ goDocOnbAsig }}">← Volver</span>
-<div style="display:flex;gap:10px;flex-wrap:wrap;flex:1 1 320px;justify-content:flex-end"><button class="cbl-btn cbl-btn--secondary" style="flex:1 1 auto" onClick="{{ goDocOportunidades }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="flex:1 1 auto;background:#DD553F" onClick="{{ goDocOportunidades }}">Terminar y buscar trabajo</button></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;flex:1 1 320px;justify-content:flex-end"><button class="cbl-btn cbl-btn--secondary" style="flex:1 1 auto" onClick="{{ goDocDashNuevo }}">Lo subo después</button><button class="cbl-btn cbl-btn--primary" style="flex:1 1 auto;background:#DD553F" onClick="{{ goDocDashNuevo }}">Terminar y buscar trabajo</button></div>
 </div>
 </div>
 </div>
@@ -1360,7 +1360,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div class="udoar-inst-name-badge" style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,.1);border-radius:8px;font:500 13px/1 Inter,sans-serif;color:rgba(255,255,255,.9)">Luciana Prieto</div>
 </div>
 <div style="display:flex;align-items:center;gap:14px">
-<span class="udoar-plan-badge cbl-badge" style="background:rgba(255,255,255,.14);color:#FBD9EC;cursor:pointer" style-hover="background:rgba(255,255,255,.24)" title="Ir a mi perfil" onClick="{{ goDocPerfil }}">Perfil 80%</span>
+<span class="udoar-plan-badge cbl-badge" style="background:rgba(255,255,255,.14);color:#FBD9EC;cursor:pointer" style-hover="background:rgba(255,255,255,.24)" title="Ir a mi perfil" onClick="{{ goDocPerfil }}">Perfil {{ docPerfilPct }}</span>
 <span style="position:relative;display:inline-flex"><span onClick="{{ toggleNotif }}" style="cursor:pointer;display:inline-flex;position:relative" title="Notificaciones"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path></svg><sc-if value="{{ hayNotifDoc }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#97125F;color:#fff;font:600 10px/16px Inter,sans-serif;text-align:center">{{ notifDocNoLeidas }}</span></sc-if></span><sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:34px;right:0;width:360px;max-width:88vw;background:#fff;border:1px solid #E3E1DC;border-radius:12px;box-shadow:0 16px 40px rgba(31,36,33,.22);z-index:60;overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px"><span style="font:600 17px/1.2 Inter,sans-serif;color:#1F2421;letter-spacing:-.01em">Notificaciones</span><span onClick="{{ marcarNotifsLeidas }}" style="cursor:pointer;font:500 12.5px/1 Inter,sans-serif;color:#97125F">Marcar todas como leídas</span></div><div style="display:flex;gap:18px;padding:0 18px;border-bottom:1px solid #E3E1DC"><span onClick="{{ setNotifTabTodas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabTodasStyle }}">Todas</span><span onClick="{{ setNotifTabNoLeidas }}" style="cursor:pointer;padding:8px 0;font:600 13px/1 Inter,sans-serif;{{ notifTabNoLeidasStyle }}">No leídas ({{ notifDocNoLeidas }})</span></div><div style="max-height:340px;overflow:auto"><sc-for list="{{ notifDocList }}" as="n" hint-placeholder-count="3"><div onClick="{{ n.onOpen }}" style="cursor:pointer;display:flex;gap:11px;align-items:flex-start;padding:13px 18px;border-bottom:1px solid #F0EFEA;{{ n.filaStyle }}" style-hover="background:#F0EFEA"><span style="flex:none;width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif;{{ n.avatarStyle }}">{{ n.ini }}</span><div style="flex:1;min-width:0"><div style="font:400 13px/1.45 Inter,sans-serif;color:#3D423E"><b style="font-weight:600;color:#1F2421">{{ n.titulo }}</b> {{ n.texto }}</div><div style="margin-top:3px;font:400 11.5px/1 Inter,sans-serif;color:#9AA09B">{{ n.cuando }}</div></div><span style="flex:none;margin-top:6px;{{ n.puntoStyle }}"></span></div></sc-for><sc-if value="{{ notifDocVacio }}" hint-placeholder-val="{{ false }}"><div style="padding:28px 18px;text-align:center;font:400 13px/1.5 Inter,sans-serif;color:#9AA09B">No te queda ninguna sin leer.</div></sc-if></div><div onClick="{{ goDocNotif }}" style="cursor:pointer;padding:12px 18px;text-align:center;font:600 13px/1 Inter,sans-serif;color:#97125F;border-top:1px solid #E3E1DC">Ver todas las notificaciones</div></div></sc-if></span>
 <span style="width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.15);color:#fff;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">LP</span>
 </div>
@@ -1511,6 +1511,60 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #E3E1DC"><div style="flex:1;min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">Natación — escuela de verano</div><div style="font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C;margin-top:2px">Club Atlético Ribera · postulada el 12/08</div></div><span class="cbl-badge" style="background:#E5E9FB;color:#16214F">Vista</span><span onClick="{{ goDocPostulaciones }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F;white-space:nowrap">Ver</span></div>
 </div>
 </div>
+</sc-if>
+
+<sc-if value="{{ isDocDashNuevo }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px">
+<div><h1 style="margin:0 0 6px;font:600 24px/1.2 Inter,sans-serif;letter-spacing:-.018em">Bienvenida, Luciana</h1><p style="margin:0;font:400 14px/1.5 Inter,sans-serif;color:#6B706C">Tu perfil ya está publicado. Desde ahora podés postularte a todo lo que quieras, incluso mientras verificamos tu documentación.</p></div>
+<span style="font:400 13px/1 Inter,sans-serif;color:#9AA09B;white-space:nowrap">Perfil creado hoy</span>
+</div>
+
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;margin-bottom:22px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px">
+<div style="font:600 16px/1.3 Inter,sans-serif">Para arrancar</div>
+<span style="font:600 13px/1 Inter,sans-serif;color:#6B706C">1 de 4 listos</span>
+</div>
+<div style="height:8px;border-radius:999px;background:#F0EFEA;overflow:hidden;margin-bottom:4px"><div style="width:25%;height:100%;background:#97125F"></div></div>
+<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;background:#1E7A4C;color:#fff;display:inline-flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#9AA09B;text-decoration:line-through">Creá tu perfil</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Ya estás en el catálogo: las instituciones de tus zonas pueden encontrarte.</div></div><span style="flex:none;font:600 13px/1 Inter,sans-serif;color:#1E7A4C">Listo</span></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">2</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Subí tu documentación</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Hasta que la revisemos tu perfil se muestra como Sin verificar, y es lo primero que mira una institución.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goDocOnb4 }}">Subir</button></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">3</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Sumá tu foto de perfil</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Los perfiles con foto reciben el doble de invitaciones.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goDocPerfil }}">Agregar</button></div><div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #F0EFEA"><span style="width:26px;height:26px;flex:none;border-radius:999px;border:1.5px solid #CFCCC5;color:#6B706C;display:inline-flex;align-items:center;justify-content:center;font:600 12px/1 Inter,sans-serif">4</span><div style="flex:1 1 0;min-width:0"><div style="font:600 14.5px/1.3 Inter,sans-serif;color:#1F2421">Postulate a tu primera búsqueda</div><div style="margin-top:3px;font:400 13px/1.45 Inter,sans-serif;color:#6B706C">Ya hay búsquedas abiertas que coinciden con tus asignaturas y tus zonas.</div></div><button class="cbl-btn cbl-btn--secondary cbl-btn--sm" style="flex:none" onClick="{{ goDocOportunidades }}">Ver búsquedas</button></div>
+</div>
+
+<div class="udoar-grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Búsquedas nuevas</div><div style="font:600 28px/1 Inter,sans-serif;color:#1F2421">9</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">en Vicente López, Núñez y Tigre</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Postulaciones activas</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Todavía no te postulaste a ninguna</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Vieron tu perfil</div><div style="font:600 28px/1 Inter,sans-serif;color:#CFCCC5">0</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">Se cuenta desde que publicaste el perfil</div></div><div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px"><div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Suplencias abiertas</div><div style="font:600 28px/1 Inter,sans-serif;color:#DD553F">2</div><div style="margin-top:6px;font:400 13px/1.4 Inter,sans-serif;color:#6B706C">una vence en 18 hs</div></div>
+</div>
+
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:22px;margin-bottom:26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+<div style="flex:1 1 320px;min-width:260px">
+<div style="font:600 16px/1.3 Inter,sans-serif;margin-bottom:6px">Todavía no te postulaste a nada</div>
+<p style="margin:0;font:400 13.5px/1.55 Inter,sans-serif;color:#6B706C">Cuando te postules, acá vas a seguir cada búsqueda: si la institución te abrió el perfil, si te agendó una entrevista y en qué etapa quedó.</p>
+</div>
+<button class="cbl-btn cbl-btn--primary" style="flex:none;background:#97125F" onClick="{{ goDocOportunidades }}">Ver búsquedas abiertas</button>
+</div>
+
+<div class="udoar-sec-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+<h2 style="margin:0;font:600 17px/1.2 Inter,sans-serif">Recomendadas para vos</h2>
+<span onClick="{{ goDocOportunidades }}" style="cursor:pointer;font:500 13px/1 Inter,sans-serif;color:#97125F">Ver todas</span>
+</div>
+<p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+<img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
+<span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font:700 12px/1 Inter,sans-serif;{{ r.matchStyle }}">{{ r.matchLabel }}</span>
+</div>
+<div style="font:600 14.5px/1.3 Inter,sans-serif;margin-bottom:2px">{{ r.title }}</div>
+<div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C;margin-bottom:10px">{{ r.inst }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+<sc-for list="{{ r.motivos }}" as="m" hint-placeholder-count="2"><span class="cbl-badge" style="background:#F0EFEA;color:#3D423E;font-size:11px">{{ m }}</span></sc-for>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA">
+<span style="font:400 12px/1.3 Inter,sans-serif;color:#9AA09B">{{ r.zona }}</span>
+<span style="font:600 13px/1 Inter,sans-serif;color:#97125F">Ver oferta ›</span>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:14px;padding:14px 16px;border-radius:8px;background:#FBE3F0;font:400 13px/1.5 Inter,sans-serif;color:#7A1B4E">A medida que completés el perfil y marques tu disponibilidad, estas recomendaciones se van afinando.</div>
 </sc-if>
 
 <sc-if value="{{ isDocOportunidades }}" hint-placeholder-val="{{ false }}">
@@ -6110,7 +6164,7 @@ class Component extends DCLogic {
       color: i === this.state.testimonialIdx ? '#DC2626' : '#E3E1DC',
     }));
     const targets = ['landing','educadores','entrenadores','guardavidas','signup',
-      'docOnb1','docOnbCat','docOnb2','docOnb3','docOnbAsig','docOnb4','docOnb5','docDashboard', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
+      'docOnb1','docOnbCat','docOnb2','docOnb3','docOnbAsig','docOnb4','docOnb5','docDashboard','docDashNuevo', 'docOportunidades','docRapidas','docOfertaDetalle','docInstituciones','docInstPerfil','docCursos2','docPostulaciones','docPerfil','docNotif',
       'instOnb1','instOnb2','instOnb3','planes','categorias','quienesSomos','terminos',
       'instDashboard','instDashNuevo','instPublicar','instBuscador','instRapidas','instDocPerfil','instPipeline','instContratar','instEquipo','instVitrina','instPlan','instHistorial','instCursos','instCursoVer','instInscriptos','instCrearCurso','instBase','instCuenta','contacto','publicTrabajo','publicInstituciones',
       'boVerif','boInst','boDocentes','boCobros','boOperacion','boDocDetalle','boInstDetalle','boCategorias','boCobroDetalle','docenteApp','institucionApp'];
@@ -6139,7 +6193,7 @@ class Component extends DCLogic {
     const isCat = ['educadores', 'entrenadores', 'guardavidas'].includes(s);
     const cat = catInfo[s] || catInfo.educadores;
 
-    const isDoc = ['docDashboard', 'docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
+    const isDoc = ['docDashboard', 'docDashNuevo', 'docOportunidades', 'docRapidas', 'docOfertaDetalle', 'docInstituciones', 'docInstPerfil', 'docCursos2', 'docPostulaciones', 'docPerfil', 'docNotif'].includes(s);
     const isDocOnb = ['docOnb1', 'docOnbCat', 'docOnb2', 'docOnb3', 'docOnbAsig', 'docOnb4', 'docOnb5'].includes(s);
     const docNavOn = 'background:#FBE3F0;font:600 14px/1 Inter,sans-serif;color:#7A1B4E';
     const docNavOff = 'font:500 14px/1 Inter,sans-serif;color:#6B706C';
@@ -6166,7 +6220,7 @@ class Component extends DCLogic {
       onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/onboarding-bg-3.jpg' : 'assets/onboarding-bg-1.jpg',
       isDocOnbPage: isDocOnb,
       docOnbBgUrl: s === 'docOnbCat' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnbAsig' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
-      navDocDashboardStyle: s === 'docDashboard' ? docNavOn : docNavOff,
+      navDocDashboardStyle: (s === 'docDashboard' || s === 'docDashNuevo') ? docNavOn : docNavOff,
       navDocBuscarStyle: s === 'docOportunidades' ? docNavOn : docNavOff,
       navDocRapidasStyle: s === 'docRapidas' ? docNavOn : docNavOff,
       navDocInstitucionesStyle: (s === 'docInstituciones' || s === 'docInstPerfil') ? docNavOn : docNavOff,
@@ -6279,7 +6333,9 @@ class Component extends DCLogic {
       notifTabTodasStyle: this.state.notifTab === 'todas' ? 'color:#1F2421;border-bottom:2px solid #97125F' : 'color:#9AA09B;border-bottom:2px solid transparent',
       notifTabNoLeidasStyle: this.state.notifTab === 'noleidas' ? 'color:#1F2421;border-bottom:2px solid #97125F' : 'color:#9AA09B;border-bottom:2px solid transparent',
       notifDocNoLeidas: this.state.notifsDoc.filter(n => !n.leida).length,
-      hayNotifDoc: this.state.notifsDoc.some(n => !n.leida),
+      // Una cuenta recién creada no tiene notificaciones ni el perfil hecho.
+      hayNotifDoc: s !== 'docDashNuevo' && this.state.notifsDoc.some(n => !n.leida),
+      docPerfilPct: s === 'docDashNuevo' ? '35%' : '80%',
       notifDocList: (this.state.notifTab === 'noleidas' ? this.state.notifsDoc.filter(n => !n.leida) : this.state.notifsDoc).map(n => ({ ...n,
         avatarStyle: 'background:' + n.color,
         filaStyle: n.leida ? 'background:#fff' : 'background:#FAFAF8',
