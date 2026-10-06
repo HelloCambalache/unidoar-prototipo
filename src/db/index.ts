@@ -9,6 +9,18 @@ import * as schema from "./schema";
  * y ahí todavía puede no existir la URL de la base (por ejemplo antes de provisionar Supabase).
  * No envolver en un Proxy: rompe librerías que inspeccionan el objeto.
  */
+/**
+ * Conexiones por instancia. El pooler de sesión de Supabase tiene un tope total (`pool_size`, 15 por defecto)
+ * y cada instancia de Vercel guarda su propio pool, aun inactiva: con 5 por instancia, unos pocos redeploys
+ * seguidos agotan el tope y las páginas con varias consultas a la vez fallan con EMAXCONNSESSION. En Vercel
+ * alcanzan 2 (las consultas extra esperan unos milisegundos). `DB_POOL_MAX` lo pisa sin tocar código.
+ */
+function maxConexiones() {
+  const configurado = Number.parseInt(process.env.DB_POOL_MAX ?? "", 10);
+  if (configurado > 0) return configurado;
+  return process.env.VERCEL ? 2 : 5;
+}
+
 function crearDb() {
   const url = urlApp();
   if (!url) {
@@ -19,7 +31,7 @@ function crearDb() {
   const cliente = postgres(url, {
     // Pooler de transacciones de Supabase: sin prepared statements.
     prepare: !usaPoolerDeTransacciones(url),
-    max: 5,
+    max: maxConexiones(),
     // Se reciclan las conexiones en reposo antes de que el pooler las cierre por su cuenta: una conexión
     // cerrada del otro lado hace fallar la próxima escritura con CONNECTION_CLOSED.
     idle_timeout: 10,
