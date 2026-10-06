@@ -1,0 +1,65 @@
+/* Animaciones y fondos del sitio público que Tailwind no expresa con utilidades. */
+
+@keyframes pub-hero-fade {
+  0% { opacity: 0; }
+  3% { opacity: 1; }
+  30% { opacity: 1; }
+  33% { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes pub-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes pub-pulso {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acento, #dd553f) 50%, transparent); }
+  70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acento, #dd553f) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acento, #dd553f) 0%, transparent); }
+}
+@keyframes pub-testimonio-entra {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Tres fotos que se funden una a otra (cada una con su animation-delay inline). */
+.pub-hero-fade { animation: pub-hero-fade 15s infinite; opacity: 0; }
+.pub-marquee-logos { animation: pub-marquee 26s linear infinite; }
+.pub-marquee-tipos { animation: pub-marquee 46s linear infinite; }
+.pub-marquee-pausa:hover .pub-marquee-tipos,
+.pub-marquee-pausa:focus-within .pub-marquee-tipos { animation-play-state: paused; }
+.pub-pulso { animation: pub-pulso 1.8s infinite; }
+.pub-testimonio { animation: pub-testimonio-entra 0.55s cubic-bezier(0.22, 0.7, 0.3, 1) both; }
+
+/* Cuadrícula de fondo del hero (clara) y de las secciones oscuras. */
+.pub-grid-claro {
+  background-image:
+    linear-gradient(var(--color-borde) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-borde) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+.pub-grid-oscuro {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 0%, #000 35%, transparent 100%);
+}
+
+/* Bordes difuminados de las tiras que se desplazan. */
+.pub-marquee-borde {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+
+/* Sin movimiento: la primera foto queda fija y las tiras se detienen. */
+@media (prefers-reduced-motion: reduce) {
+  .pub-hero-fade,
+  .pub-marquee-logos,
+  .pub-marquee-tipos,
+  .pub-pulso,
+  .pub-testimonio { animation: none !important; }
+  .pub-hero-fade:first-child { opacity: 1; }
+}
