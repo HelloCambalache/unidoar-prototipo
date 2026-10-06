@@ -22,7 +22,7 @@ export function MarcoAcceso({
     <div className="flex min-h-screen max-[860px]:flex-col">
       <div className="relative flex min-w-0 flex-1 flex-col justify-end max-[860px]:h-[230px] max-[860px]:flex-none">
         <Image
-          src="/assets/signup-modal-bg.jpg"
+          src="/assets/aula-secundaria.jpg"
           alt=""
           fill
           priority

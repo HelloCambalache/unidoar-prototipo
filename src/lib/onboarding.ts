@@ -48,10 +48,14 @@ export type PasoMarco = { etiqueta: string; progreso: number; fondo: string };
 
 const FONDO = (n: 1 | 2 | 3) => `/assets/onboarding-bg-${n}.jpg`;
 
+// El alta de institución usa fotos propias en los pasos 1 y 3 (prototipo: `onboardingBgUrl`).
+const FONDO_INSTITUCION_ACCESO = "/assets/entrenador-chicos.jpg";
+const FONDO_INSTITUCION_FINAL = "/assets/gimnasio-entrenamiento.jpg";
+
 export const PASOS_INSTITUCION = {
-  "1": { etiqueta: "Paso 1 de 3 · Tu acceso", progreso: 33, fondo: FONDO(1) },
+  "1": { etiqueta: "Paso 1 de 3 · Tu acceso", progreso: 33, fondo: FONDO_INSTITUCION_ACCESO },
   "2": { etiqueta: "Paso 2 de 3 · Tu institución", progreso: 66, fondo: FONDO(2) },
-  "3": { etiqueta: "Paso 3 de 3", progreso: 100, fondo: FONDO(3) },
+  "3": { etiqueta: "Paso 3 de 3", progreso: 100, fondo: FONDO_INSTITUCION_FINAL },
 } as const satisfies Record<string, PasoMarco>;
 
 /** Orden real del alta de docente (el del prototipo): cuenta → qué sos → perfil → CV → niveles y horarios → documentación. */

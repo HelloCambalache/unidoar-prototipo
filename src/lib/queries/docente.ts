@@ -21,6 +21,9 @@ import { cursosParaDocente } from "@/lib/queries/cursos";
 import { busquedaVigente, kmEntre } from "@/lib/queries/instituciones";
 import { institucionVisible } from "@/lib/visibilidad";
 
+/** El dashboard muestra cuatro tarjetas por fila (diseño del prototipo): recomendadas, instituciones y cursos. */
+const CUATRO_POR_FILA = 4;
+
 const HORA = 3_600_000;
 const DIA = 24 * HORA;
 
@@ -214,7 +217,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
 
   const recomendadas = [...candidatas]
     .sort((x, y) => y.porcentaje - x.porcentaje || (x.km ?? Infinity) - (y.km ?? Infinity))
-    .slice(0, 3)
+    .slice(0, CUATRO_POR_FILA)
     .map(
       ({ b, km, porcentaje, motivos }): TarjetaOferta => ({
         id: b.id,
@@ -238,7 +241,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       (x, y) =>
         Number(y.cerca) - Number(x.cerca) || y.i.activas - x.i.activas || (x.km ?? Infinity) - (y.km ?? Infinity),
     )
-    .slice(0, 3)
+    .slice(0, CUATRO_POR_FILA)
     .map(
       ({ i }): TarjetaInstitucionDestacada => ({
         id: i.id,
@@ -255,7 +258,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
   const cursos = cursosVigentes
     .filter((c) => !c.inscripto)
     .sort((x, y) => y.inscriptos - x.inscriptos)
-    .slice(0, 3)
+    .slice(0, CUATRO_POR_FILA)
     .map(
       (c): TarjetaCursoDestacado => ({
         id: c.id,

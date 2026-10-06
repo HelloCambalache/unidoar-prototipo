@@ -217,8 +217,8 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
             >
               <span
                 aria-hidden
-                style={{ backgroundImage: `url(${pub.fotoUrgente})` }}
-                className="absolute inset-0 bg-cover bg-center opacity-[.22]"
+                style={{ backgroundImage: `url(${pub.fotoUrgente})`, backgroundPosition: pub.posicionUrgente }}
+                className="absolute inset-0 bg-cover opacity-[.22]"
               />
               <div className="relative">
                 <span className="inline-flex rounded-full bg-white/30 px-2.5 py-[5px] text-[11px] leading-none font-semibold">
