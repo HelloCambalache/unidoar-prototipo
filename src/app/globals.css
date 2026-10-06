@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+/* Tokens de marca UNIDOAR (ver HANDOFF.md → Design Tokens). */
+@theme {
+  /* Azul marca */
+  --color-navy-950: #02042d;
+  --color-navy-900: #040b35;
+  --color-navy-850: #04062f;
+  --color-navy-700: #16214f;
+  --color-navy-300: #7a87b8;
+  --color-navy-100: #d6def9;
+  --color-navy-50: #e5e9fb;
+
+  /* Categorías */
+  --color-naranja: #dd553f; /* Educadores / CTA primario */
+  --color-naranja-oscuro: #a94a32;
+  --color-naranja-tint: #fde9e1;
+  --color-naranja-ink: #8a2f1a;
+  --color-ambar: #f59332; /* Entrenadores */
+  --color-celeste: #82d8e9; /* Guardavidas */
+
+  /* Acentos de estado */
+  --color-rosa: #97125f;
+  --color-rosa-tint: #fbe0ef;
+  --color-verde: #1e7a4c;
+  --color-verde-tint: #e7f5ef;
+  --color-verde-borde: #b7dfc9;
+
+  /* Neutros */
+  --color-app: #edebe5; /* fondo de la app */
+  --color-superficie: #faf9f8;
+  --color-borde: #e3e1dc;
+  --color-borde-fuerte: #c9c6c0;
+  --color-tinta: #1f2421; /* texto oscuro / labels */
+  --color-tinta-2: #3d423e;
+  --color-apagado: #6b706c; /* texto secundario */
+  --color-sutil: #9aa09b;
+  --color-backoffice: #1f2421;
+  --color-sidebar: #33363b;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), system-ui, sans-serif;
+
+  --radius-ud: 8px;
+  --shadow-dropdown: 0 12px 30px rgba(31, 36, 33, 0.18);
+  --shadow-cta-foto: 0 4px 10px rgba(0, 0, 0, 0.15);
+
+  --animate-pulso: udoar-pulse 2s infinite;
+  --animate-slide-in-right: slide-in-right 0.25s ease both;
+}
+
+@keyframes udoar-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(221, 85, 63, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(221, 85, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(221, 85, 63, 0); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-app);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* En @layer base para que las utilidades de Tailwind (text-white, text-apagado…) pisen el
+   color por defecto de los links; sin capa, estas reglas ganan siempre sobre cualquier utilidad. */
+@layer base {
+  a {
+    color: var(--color-navy-700);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  a:hover {
+    color: var(--color-naranja);
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

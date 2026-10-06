@@ -1,0 +1,175 @@
+import { z } from "zod";
+import { enlaceWhatsapp } from "@/lib/pipeline";
+import { PLANES, pesos, planDe, type PlanClave } from "@/lib/planes";
+
+/*
+ * Reglas de cobros compartidas por el backoffice (servidor y cliente). Sin acceso a base.
+ * Las fechas de cobro son columnas `date` ("2026-10-10"): se comparan como texto, en hora argentina.
+ */
+
+const ZONA = "America/Argentina/Buenos_Aires";
+
+export const CLAVES_PLAN = Object.keys(PLANES) as [PlanClave, ...PlanClave[]];
+export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && Object.hasOwn(PLANES, v);
+
+export const MEDIOS_PAGO = ["Transferencia", "Tarjeta", "Débito automático", "Efectivo", "Mercado Pago"] as const;
+
+/** Día del mes en que se cobra cuando la institución no tiene uno cargado. */
+export const DIA_COBRO_POR_DEFECTO = 10;
+
+export type EstadoFactura = "pagada" | "pendiente" | "vencida";
+
+const FORMATO_HOY = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** Hoy en Argentina, "2026-10-06". */
+export const hoyAR = (ahora = new Date()) => FORMATO_HOY.format(ahora);
+/** Mes en curso en Argentina, "2026-10". */
+export const periodoActual = (ahora = new Date()) => hoyAR(ahora).slice(0, 7);
+/** Año en curso en Argentina. */
+export const anioActual = (ahora = new Date()) => Number(hoyAR(ahora).slice(0, 4));
+
+/**
+ * Una factura pendiente cuya fecha ya pasó cuenta como vencida aunque nadie la haya marcado: el estado
+ * guardado solo se actualiza cuando el equipo usa "Marcar vencidas", así que se calcula al leer.
+ */
+export function estadoEfectivo(estado: string, fechaCobro: string, hoy: string): EstadoFactura {
+  if (estado === "pagada") return "pagada";
+  if (estado === "vencida") return "vencida";
+  return fechaCobro < hoy ? "vencida" : "pendiente";
+}
+
+export const ETIQUETA_ESTADO_FACTURA: Record<EstadoFactura, string> = {
+  pagada: "Pagado",
+  pendiente: "Pendiente",
+  vencida: "Vencido",
+};
+
+/** Estado de una institución en la tabla de cobros. */
+export type EstadoCobro = "aldia" | "pendiente" | "vencida";
+export const ETIQUETA_ESTADO_COBRO: Record<EstadoCobro, string> = {
+  aldia: "Al día",
+  pendiente: "Pendiente",
+  vencida: "Vencida",
+};
+
+const MESES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
+/** "2026-09" → "Septiembre 2026". */
+export function etiquetaPeriodo(periodo: string) {
+  const [anio, mes] = periodo.split("-");
+  const nombre = MESES[Number(mes) - 1];
+  return nombre && anio ? `${nombre} ${anio}` : periodo;
+}
+
+/** "2026-11" + 3 → "2027-02". */
+export function sumarMeses(periodo: string, n: number) {
+  const [anio, mes] = periodo.split("-").map(Number) as [number, number];
+  const total = anio * 12 + (mes - 1) + n;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
+}
+
+/** "2026-10" + 10 → "2026-10-10" (el día se acota al largo del mes). */
+export function fechaCobroDelPeriodo(periodo: string, dia?: number | null) {
+  const [anio, mes] = periodo.split("-").map(Number) as [number, number];
+  const ultimo = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+  const d = Math.min(Math.max(dia ?? DIA_COBRO_POR_DEFECTO, 1), ultimo);
+  return `${periodo}-${String(d).padStart(2, "0")}`;
+}
+
+/** "2026-10-10" → "10/10/2026". */
+export function fechaDeColumna(fecha: string) {
+  const [anio, mes, dia] = fecha.split("-");
+  return anio && mes && dia ? `${dia}/${mes}/${anio}` : fecha;
+}
+
+/** "2026-10-10" → "10 oct 2026". */
+export function fechaBreve(fecha: string) {
+  const [anio, mes, dia] = fecha.split("-");
+  const nombre = MESES[Number(mes) - 1]?.slice(0, 3).toLowerCase();
+  return anio && nombre && dia ? `${Number(dia)} ${nombre} ${anio}` : fecha;
+}
+
+/** Lo que aporta una institución al MRR: el anual cuenta como precio / 12. */
+export function equivalenteMensual(plan: string) {
+  const p = planDe(plan);
+  return p.periodo === "año" ? Math.round(p.precio / 12) : p.precio;
+}
+
+/** "$ 54.000/mes" · "$ 720.000/año" */
+export function precioDePlan(plan: string) {
+  const p = planDe(plan);
+  return `${pesos(p.precio)}/${p.periodo}`;
+}
+
+export const montoDePlan = (plan: string) => planDe(plan).precio;
+
+/** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
+export const nombreDePlan = (plan: string) => planDe(plan).label.replace(/^Plan /, "");
+
+/** wa.me con el texto ya escrito. Null si el teléfono no se reconoce como argentino. */
+export function enlaceWhatsappConTexto(telefono: string | null | undefined, texto: string) {
+  const base = enlaceWhatsapp(telefono);
+  return base ? `${base}?text=${encodeURIComponent(texto)}` : null;
+}
+
+type CobroPendiente = { periodo: string; monto: number; fechaCobro: string };
+
+/** Texto prellenado del recordatorio de cobro. La persona lo revisa y lo manda a mano desde WhatsApp. */
+export function textoRecordatorio(contacto: string | null, institucion: string, pendientes: CobroPendiente[]) {
+  const saludo = contacto ? `Hola ${contacto.split(" ")[0]}, ` : "Hola, ";
+  const firma = "Si ya lo pagaste, avisanos así lo registramos. ¡Gracias!";
+  if (pendientes.length === 0) {
+    return `${saludo}te escribimos de UNIDOAR por la suscripción de ${institucion}. Está todo al día, gracias.`;
+  }
+  if (pendientes.length === 1) {
+    const [c] = pendientes as [CobroPendiente];
+    return `${saludo}te escribimos de UNIDOAR. Te recordamos que está pendiente el pago de ${etiquetaPeriodo(c.periodo)} de ${institucion} (${pesos(c.monto)}), con vencimiento el ${fechaDeColumna(c.fechaCobro)}. ${firma}`;
+  }
+  const total = pendientes.reduce((s, c) => s + c.monto, 0);
+  const periodos = pendientes.map((c) => etiquetaPeriodo(c.periodo)).join(", ");
+  return `${saludo}te escribimos de UNIDOAR. De ${institucion} quedan ${pendientes.length} cobros pendientes (${periodos}) por un total de ${pesos(total)}. Si ya pagaste alguno, avisanos así lo registramos. ¡Gracias!`;
+}
+
+/* ───────── Esquemas de formularios (los reusan cliente y server actions) ───────── */
+
+const vacioAUndefined = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), schema);
+
+const esFechaReal = (s: string) => {
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
+
+export const facturaNuevaSchema = z.object({
+  periodo: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Elegí el mes que se cobra"),
+  plan: z.enum(CLAVES_PLAN, { error: "Elegí un plan" }),
+  fechaCobro: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí la fecha de cobro")
+    .refine(esFechaReal, "La fecha no existe"),
+  medio: vacioAUndefined(z.enum(MEDIOS_PAGO).optional()),
+});
+export type FacturaNueva = z.input<typeof facturaNuevaSchema>;
+
+export const pagoSchema = z.object({ medio: z.enum(MEDIOS_PAGO, { error: "Elegí el medio de pago" }) });
+
+export const rechazoSchema = z.object({
+  nota: z.string().trim().min(3, "Contale a la institución por qué").max(500, "Máximo 500 caracteres"),
+});
+
+export const aprobacionSchema = z.object({
+  nota: vacioAUndefined(z.string().trim().max(500, "Máximo 500 caracteres").optional()),
+});
