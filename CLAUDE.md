@@ -89,7 +89,7 @@ Copy en español rioplatense (voseo: "Publicá", "Elegí"). Accesibilidad: contr
 
 **Pendiente:**
 - **Cobro real:** no hay pasarela de pago. "Cambiar de plan" crea un pedido (`solicitudes_plan`) que el backoffice atiende; las facturas se cargan a mano. Integrar Mercado Pago.
-- **Correo:** no hay servicio de mails. Las invitaciones al equipo muestran un enlace para copiar; Supabase usa su correo de prueba (muy limitado) para confirmar cuentas.
+- **Correo:** no hay servicio de mails. Las invitaciones al equipo muestran un enlace para copiar; Supabase usa su correo de prueba (muy limitado) para confirmar cuentas. Falta configurar SMTP propio, las URLs de Auth y las plantillas en español: guía en `docs/supabase-auth.md` (plantillas en `supabase/plantillas-correo/`).
 - Lectura automática del CV, importación de profesionales por CSV, resubida de DNI/título por el docente tras una corrección, material adjunto de cursos, y las vistas mobile "app" (`/app/docente`, `/app/institucion`).
 - Login con Google: hay que crear las credenciales en Google Cloud y activarlo en Supabase.
 - Rendimiento: las páginas de contenido (`/planes`, `/terminos`…) se generan en cada visita porque la cabecera consulta la sesión; se puede cachear con Partial Prerendering.
