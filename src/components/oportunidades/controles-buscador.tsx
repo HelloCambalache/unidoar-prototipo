@@ -21,7 +21,8 @@ const FOCO = "focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visi
 /**
  * Filtros del buscador de trabajo (panel lateral + barra superior). Cada cambio actualiza la URL,
  * así el listado, el mapa y el link compartido siempre coinciden. El listado va como `children`
- * (se renderiza en el servidor).
+ * (se renderiza en el servidor). Es el mismo panel del docente y del sitio público; con `publico`
+ * se ocultan el rango de distancia y los favoritos, que necesitan una cuenta.
  */
 export function ControlesBuscador({
   base,
@@ -30,9 +31,10 @@ export function ControlesBuscador({
   radioPorDefecto,
   conUbicacion,
   modo,
+  publico = false,
   children,
 }: {
-  /** Ruta de la pantalla: /docente/oportunidades o /docente/busquedas-rapidas. */
+  /** Ruta de la pantalla: /docente/oportunidades, /docente/busquedas-rapidas o /buscar-trabajo. */
   base: string;
   filtros: FiltrosOportunidades;
   /** Radio vigente (el del filtro o el del perfil). */
@@ -41,6 +43,8 @@ export function ControlesBuscador({
   radioPorDefecto: number;
   conUbicacion: boolean;
   modo: "todas" | "rapidas";
+  /** Sitio público (sin sesión): sin rango de distancia ni favoritos. */
+  publico?: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -111,15 +115,19 @@ export function ControlesBuscador({
 
           <div className="mb-4 h-px bg-borde" />
 
-          <RangoDeBusqueda
-            vigente={Math.min(radio, RADIO_MAX)}
-            porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
-            reinicios={reinicios}
-            habilitado={conUbicacion}
-            onCambio={(km) => aplicar({ radio: km })}
-          />
+          {!publico && (
+            <>
+              <RangoDeBusqueda
+                vigente={Math.min(radio, RADIO_MAX)}
+                porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
+                reinicios={reinicios}
+                habilitado={conUbicacion}
+                onCambio={(km) => aplicar({ radio: km })}
+              />
 
-          <div className="mb-4 h-px bg-borde" />
+              <div className="mb-4 h-px bg-borde" />
+            </>
+          )}
 
           <div className="flex flex-col gap-3.5">
             {modo === "todas" && (
@@ -172,9 +180,11 @@ export function ControlesBuscador({
             ))}
           </Select>
           <div className="flex flex-none gap-2.5">
-            <BotonFiltro activo={filtros.favoritos === "1"} onClick={() => aplicar({ favoritos: filtros.favoritos ? null : "1" })}>
-              <span aria-hidden>★</span> Favoritos
-            </BotonFiltro>
+            {!publico && (
+              <BotonFiltro activo={filtros.favoritos === "1"} onClick={() => aplicar({ favoritos: filtros.favoritos ? null : "1" })}>
+                <span aria-hidden>★</span> Favoritos
+              </BotonFiltro>
+            )}
             {modo === "todas" && (
               <BotonFiltro
                 activo={filtros.rapidas === "1"}

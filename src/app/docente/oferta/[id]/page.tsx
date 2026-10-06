@@ -161,6 +161,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
                       zona,
                       horario,
                       categoria: busqueda.categoria,
+                      rapida: busqueda.rapida,
                       lat: institucion.lat,
                       lng: institucion.lng,
                     },

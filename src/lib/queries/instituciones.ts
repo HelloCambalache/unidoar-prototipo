@@ -36,10 +36,11 @@ export type InstitucionCatalogo = {
 type Ubicacion = { lat: number | null; lng: number | null };
 
 /**
- * Catálogo de instituciones con búsquedas activas y favoritas del docente.
+ * Catálogo de instituciones con búsquedas activas y favoritas del docente. Lo usan el panel del docente
+ * y el sitio público (sin `usuarioId`: sin favoritas, y solo las verificadas o con búsquedas abiertas).
  * Los filtros se aplican en memoria para que "Nunez" encuentre "Núñez" (sin extensión unaccent).
  */
-export async function catalogoInstituciones(usuarioId: string, filtros: FiltrosInstituciones) {
+export async function catalogoInstituciones(usuarioId: string | null, filtros: FiltrosInstituciones) {
   const db = getDb();
   const ahora = new Date();
   const [filas, favs] = await Promise.all([
@@ -64,20 +65,23 @@ export async function catalogoInstituciones(usuarioId: string, filtros: FiltrosI
       .groupBy(instituciones.id)
       .orderBy(desc(count(busquedas.id)), asc(instituciones.nombre))
       .limit(500),
-    db
-      .select({ refId: favoritos.refId })
-      .from(favoritos)
-      .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "institucion"))),
+    usuarioId
+      ? db
+          .select({ refId: favoritos.refId })
+          .from(favoritos)
+          .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "institucion")))
+      : [],
   ]);
   const favoritas = new Set(favs.map((f) => f.refId));
 
   const q = normalizar(filtros.texto);
   const zonaFiltro = normalizar(filtros.zona);
   return filas
+    .filter((i) => usuarioId !== null || i.verificada || i.busquedasActivas > 0)
     .filter((i) => !q || normalizar(i.nombre).includes(q))
     .filter((i) => !filtros.tipo || i.tipo === filtros.tipo)
     .filter((i) => !zonaFiltro || normalizar(`${i.zona ?? ""} ${i.partido ?? ""}`).includes(zonaFiltro))
-    .filter((i) => !filtros.soloFavoritas || favoritas.has(i.id))
+    .filter((i) => !(usuarioId && filtros.soloFavoritas) || favoritas.has(i.id))
     .map(
       (i): InstitucionCatalogo => ({
         id: i.id,

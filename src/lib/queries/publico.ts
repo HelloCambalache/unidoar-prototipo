@@ -1,13 +1,12 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, count, countDistinct, desc, eq, gt, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
 import { CUPOS_FUNDADOR, nombrePublico } from "@/lib/publico";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import type { VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
-import { contiene } from "@/lib/sql-texto";
 import { busquedaDeInstitucionActiva, docenteVisible, institucionVisible } from "@/lib/visibilidad";
 
 /* Lecturas del sitio público (sin sesión). Todo sale de la base: nada de cifras fijas. */
@@ -263,90 +262,7 @@ export async function busquedasUrgentes(opciones: { categoria?: CategoriaDocente
   return filas.map(aBusquedaPublica);
 }
 
-
-export const BUSQUEDAS_POR_PAGINA = 24;
-
-/** Listado público de búsquedas activas, con texto libre, categoría y paginado. */
-export async function listarBusquedasPublicas(filtros: { q?: string; categoria?: CategoriaDocente; pagina?: number }) {
-  const db = getDb();
-  const pagina = Math.max(1, filtros.pagina ?? 1);
-  const condiciones: (SQL | undefined)[] = [eq(busquedas.estado, "activa"), busquedaDeInstitucionActiva];
-  if (filtros.categoria) condiciones.push(eq(busquedas.categoria, filtros.categoria));
-  if (filtros.q) {
-    condiciones.push(
-      or(
-        contiene(busquedas.puesto, filtros.q),
-        contiene(busquedas.disciplina, filtros.q),
-        contiene(busquedas.zona, filtros.q),
-        contiene(instituciones.nombre, filtros.q),
-      ),
-    );
-  }
-  const donde = and(...condiciones);
-
-  const [filas, [{ total }]] = await Promise.all([
-    db
-      .select(columnasBusqueda)
-      .from(busquedas)
-      .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
-      .where(donde)
-      .orderBy(desc(busquedas.rapida), desc(busquedas.creadoEn), asc(busquedas.puesto))
-      .limit(BUSQUEDAS_POR_PAGINA)
-      .offset((pagina - 1) * BUSQUEDAS_POR_PAGINA),
-    db
-      .select({ total: count() })
-      .from(busquedas)
-      .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
-      .where(donde),
-  ]);
-  return {
-    filas: filas.map(aBusquedaPublica),
-    total,
-    pagina,
-    paginas: Math.max(1, Math.ceil(total / BUSQUEDAS_POR_PAGINA)),
-  };
-}
-
 /* ───────── Instituciones ───────── */
-
-export type InstitucionPublica = {
-  id: string;
-  slug: string;
-  nombre: string;
-  tipo: string;
-  zona: string | null;
-  descripcion: string | null;
-  logoUrl: string | null;
-  verificada: boolean;
-  busquedasActivas: number;
-};
-
-/**
- * Instituciones visibles en el listado: las verificadas y las que tienen búsquedas abiertas.
- * Las más activas primero.
- */
-export async function listarInstitucionesPublicas(): Promise<InstitucionPublica[]> {
-  const activas = count(busquedas.id);
-  const filas = await getDb()
-    .select({
-      id: instituciones.id,
-      slug: instituciones.slug,
-      nombre: instituciones.nombre,
-      tipo: instituciones.tipo,
-      zona: instituciones.zona,
-      descripcion: instituciones.descripcion,
-      logoUrl: instituciones.logoUrl,
-      verificada: instituciones.verificada,
-      busquedasActivas: activas,
-    })
-    .from(instituciones)
-    .leftJoin(busquedas, and(eq(busquedas.institucionId, instituciones.id), eq(busquedas.estado, "activa")))
-    .where(institucionVisible)
-    .groupBy(instituciones.id)
-    .having(or(eq(instituciones.verificada, true), gt(activas, 0)))
-    .orderBy(desc(activas), asc(instituciones.nombre));
-  return filas;
-}
 
 export type PerfilInstitucionPublico = {
   id: string;

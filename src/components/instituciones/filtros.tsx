@@ -15,9 +15,12 @@ export type ValoresFiltroInstituciones = { q: string; tipo: string; zona: string
 export function InstitucionesFiltros({
   valores,
   zonas,
+  conFavoritas = true,
 }: {
   valores: ValoresFiltroInstituciones;
   zonas: string[];
+  /** Sin sesión no hay favoritas: el sitio público oculta el botón. */
+  conFavoritas?: boolean;
 }) {
   const { aplicar, aplicarConDemora, pendiente } = useFiltrosUrl();
   const [reinicio, setReinicio] = useState(0);
@@ -62,19 +65,21 @@ export function InstitucionesFiltros({
           </option>
         ))}
       </Select>
-      <button
-        type="button"
-        aria-pressed={valores.favoritas}
-        onClick={() => aplicar({ favoritas: valores.favoritas ? "" : "1" })}
-        className={cn(
-          "inline-flex min-h-[42px] items-center gap-1.5 rounded-lg px-4 text-sm leading-none font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
-          valores.favoritas
-            ? "bg-navy-700 text-white hover:bg-navy-900"
-            : "border border-borde bg-white text-tinta-2 hover:border-borde-fuerte hover:bg-superficie",
-        )}
-      >
-        <span aria-hidden>★</span> Favoritas
-      </button>
+      {conFavoritas && (
+        <button
+          type="button"
+          aria-pressed={valores.favoritas}
+          onClick={() => aplicar({ favoritas: valores.favoritas ? "" : "1" })}
+          className={cn(
+            "inline-flex min-h-[42px] items-center gap-1.5 rounded-lg px-4 text-sm leading-none font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+            valores.favoritas
+              ? "bg-navy-700 text-white hover:bg-navy-900"
+              : "border border-borde bg-white text-tinta-2 hover:border-borde-fuerte hover:bg-superficie",
+          )}
+        >
+          <span aria-hidden>★</span> Favoritas
+        </button>
+      )}
       {hayFiltros && (
         <button
           type="button"

@@ -1,27 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { z } from "zod";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { BotonLink } from "@/components/ui/button";
-import { InstitucionesFiltros } from "@/components/docente/instituciones-filtros";
+import { InstitucionEstrella } from "@/components/docente/instituciones-acciones";
 import { InstitucionesMapa, type PinInstitucion } from "@/components/docente/instituciones-mapa";
-import { InstitucionTarjeta } from "@/components/docente/instituciones-tarjeta";
+import { InstitucionesFiltros } from "@/components/instituciones/filtros";
+import { TarjetaInstitucion } from "@/components/instituciones/tarjeta";
 import { requerirDocente } from "@/lib/auth";
-import { TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { leerFiltrosInstituciones } from "@/lib/filtros-instituciones";
 import { catalogoInstituciones, zonasDisponibles } from "@/lib/queries/instituciones";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Instituciones" };
-
-/** Un valor inválido en la URL se ignora en vez de romper la página. */
-const filtrosSchema = z.object({
-  q: z.string().trim().max(80).optional().catch(undefined),
-  tipo: z.enum(TIPOS_INSTITUCION).optional().catch(undefined),
-  zona: z.string().trim().max(80).optional().catch(undefined),
-  favoritas: z.literal("1").optional().catch(undefined),
-  vista: z.enum(["lista", "mapa"]).optional().catch(undefined),
-});
 
 type Params = Record<string, string | string[] | undefined>;
 
@@ -31,7 +22,7 @@ const PILDORA =
 export default async function InstitucionesDocentePage({ searchParams }: { searchParams: Promise<Params> }) {
   const { usuario } = await requerirDocente();
   const crudo = await searchParams;
-  const f = filtrosSchema.parse(Object.fromEntries(Object.entries(crudo).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])));
+  const f = leerFiltrosInstituciones(crudo);
   const vista = f.vista ?? "lista";
 
   const [instituciones, zonas] = await Promise.all([
@@ -141,7 +132,12 @@ export default async function InstitucionesDocentePage({ searchParams }: { searc
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(236px,1fr))] gap-4 max-[560px]:grid-cols-1">
           {instituciones.map((i) => (
-            <InstitucionTarjeta key={i.id} i={i} />
+            <TarjetaInstitucion
+              key={i.id}
+              i={i}
+              href={`/docente/instituciones/${i.slug}`}
+              estrella={<InstitucionEstrella institucionId={i.id} favorita={i.favorita} nombre={i.nombre} />}
+            />
           ))}
         </div>
       )}

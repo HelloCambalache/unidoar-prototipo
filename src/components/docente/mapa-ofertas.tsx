@@ -6,6 +6,7 @@ import type { LayerGroup, Map as MapaLeaflet } from "leaflet";
 import type { CategoriaDocente } from "@/db/schema";
 import { Boton, BotonLink } from "@/components/ui/button";
 import { LogoInstitucion } from "@/components/docente/logo-institucion";
+import { iconoPin } from "@/components/docente/pin-mapa";
 import { CATEGORIA_INFO, CATEGORIAS } from "@/lib/catalogo";
 import { LEYENDA_CATEGORIA } from "@/lib/oportunidades";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ export type PinOferta = {
   zona: string | null;
   horario: string | null;
   categoria: CategoriaDocente;
+  /** Suplencia rápida: el pin lleva un reloj. */
+  rapida: boolean;
   lat: number;
   lng: number;
 };
@@ -34,20 +37,6 @@ function abrirEnAbanico(pines: PinOferta[]) {
     if (n === 1) return { ...p, latPin: p.lat, lngPin: p.lng };
     const angulo = (n - 1) * 2.4;
     return { ...p, latPin: p.lat + Math.sin(angulo) * 0.003, lngPin: p.lng + Math.cos(angulo) * 0.003 };
-  });
-}
-
-function icono(L: Leaflet, color: string, seleccionado: boolean) {
-  const borde = seleccionado ? "3px solid #16214F" : "2.5px solid #fff";
-  const escala = seleccionado ? 1.15 : 1;
-  return L.divIcon({
-    className: "",
-    html:
-      '<span style="display:block;width:24px;height:24px;border-radius:999px 999px 999px 2px;' +
-      `transform:rotate(45deg) scale(${escala});background:${color};border:${borde};` +
-      'box-shadow:0 3px 8px rgba(31,36,33,.35)"></span>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
   });
 }
 
@@ -143,7 +132,7 @@ export function MapaOfertas({
     }
     for (const p of abanico) {
       const marcador = L.marker([p.latPin, p.lngPin], {
-        icon: icono(L, CATEGORIA_INFO[p.categoria].color, !compacto && p.id === seleccion),
+        icon: iconoPin(L, CATEGORIA_INFO[p.categoria].color, !compacto && p.id === seleccion, { rapida: p.rapida }),
         title: `${p.puesto} · ${p.institucion}`,
         riseOnHover: true,
         interactive: !compacto,
@@ -193,6 +182,16 @@ export function MapaOfertas({
             {LEYENDA_CATEGORIA[c]}
           </span>
         ))}
+        {pines.some((p) => p.rapida) && (
+          <span className="flex items-center gap-[7px] text-[11.5px] leading-none font-medium text-tinta-2 max-[620px]:text-[10px]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16214F" strokeWidth="2.2" strokeLinecap="round" className="flex-none" aria-hidden>
+              <circle cx="12" cy="13" r="8" />
+              <path d="M12 9.5V13l2.4 1.6" />
+              <path d="M9.6 2.8h4.8" />
+            </svg>
+            Suplencia rápida
+          </span>
+        )}
       </div>
       {seleccionada ? (
         <div

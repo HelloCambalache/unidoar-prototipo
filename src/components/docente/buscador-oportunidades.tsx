@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
-import { ControlesBuscador } from "@/components/docente/controles-buscador";
+import { BotonFavorito } from "@/components/docente/boton-favorito";
 import { MapaOfertas, type PinOferta } from "@/components/docente/mapa-ofertas";
-import { TarjetaOferta } from "@/components/docente/tarjeta-oferta";
+import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
+import { TarjetaOferta } from "@/components/oportunidades/tarjeta-oferta";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
 import {
@@ -67,6 +68,7 @@ export async function BuscadorOportunidades({
             zona: o.zona,
             horario: o.horario,
             categoria: o.categoria,
+            rapida: o.rapida,
             lat: o.institucion.lat,
             lng: o.institucion.lng,
           },
@@ -132,7 +134,11 @@ export async function BuscadorOportunidades({
           <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(258px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
             {ofertas.map((o) => (
               <li key={o.id} className="flex *:w-full">
-                <TarjetaOferta oferta={o} />
+                <TarjetaOferta
+                  oferta={o}
+                  href={`/docente/oferta/${o.id}`}
+                  estrella={<BotonFavorito busquedaId={o.id} favorita={o.favorita} puesto={o.puesto} />}
+                />
               </li>
             ))}
           </ul>

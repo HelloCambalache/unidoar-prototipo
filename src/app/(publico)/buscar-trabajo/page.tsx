@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
+import { TarjetaOferta } from "@/components/oportunidades/tarjeta-oferta";
 import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { Paginacion } from "@/components/publico/paginacion";
-import { accionPostular, sesionPublica } from "@/components/publico/sesion";
-import { TarjetaBusqueda } from "@/components/publico/tarjeta-busqueda";
-import { Boton, BotonLink } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/campos";
-import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
+import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
+import { BotonLink } from "@/components/ui/button";
+import { leerFiltrosOportunidades, RADIO_MAX } from "@/lib/oportunidades";
 import { plural } from "@/lib/publico";
-import { listarBusquedasPublicas } from "@/lib/queries/publico";
+import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunidades";
 
 export const metadata: Metadata = {
   title: "Búsquedas abiertas",
@@ -19,21 +20,32 @@ export const metadata: Metadata = {
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
 
+const POR_PAGINA = 24;
+const BASE = "/buscar-trabajo";
+
 type Params = Promise<Record<string, string | string[] | undefined>>;
 const primero = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
+/** A dónde lleva cada tarjeta según quién mira: una visita al registro, un docente a la oferta de su panel. */
+function destino(sesion: SesionPublica, o: OfertaListada) {
+  if (!sesion.rol) return { href: "/registro", etiqueta: "Postularme" };
+  if (sesion.rol === "docente") return { href: `/docente/oferta/${o.id}`, etiqueta: "Ver oferta" };
+  return { href: `/instituciones/${o.institucion.slug}`, etiqueta: "Ver institución" };
+}
+
 export default async function BuscarTrabajo({ searchParams }: { searchParams: Params }) {
   const sp = await searchParams;
-  const q = primero(sp.q)?.trim().slice(0, 80) || undefined;
-  const cat = primero(sp.categoria);
-  const categoria = CATEGORIAS.find((c) => c === cat);
-  const pagina = Math.max(1, Number.parseInt(primero(sp.pagina) ?? "1", 10) || 1);
+  // Sin cuenta no hay ubicación ni favoritas ni mapa: esos parámetros de la URL se ignoran.
+  const filtros = { ...leerFiltrosOportunidades(sp), radio: undefined, favoritos: undefined, vista: undefined };
+  const pedida = Math.max(1, Number.parseInt(primero(sp.pagina) ?? "1", 10) || 1);
 
-  const [{ filas, total, paginas, pagina: paginaActual }, sesion] = await Promise.all([
-    listarBusquedasPublicas({ q, categoria, pagina }),
-    sesionPublica(),
-  ]);
-  const filtrando = !!(q || categoria);
+  const [{ ofertas }, sesion] = await Promise.all([listarOportunidades(null, null, filtros), sesionPublica()]);
+
+  const total = ofertas.length;
+  const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  const pagina = Math.min(pedida, paginas);
+  const visibles = ofertas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const filtrando = Object.values(filtros).some((v) => v !== undefined);
 
   return (
     <div className="flex-1 bg-app px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
@@ -52,76 +64,83 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
           />
         )}
 
-        <form role="search" method="get" action="/buscar-trabajo" className="mb-5 flex flex-wrap items-center gap-2.5">
-          <label htmlFor="filtro-q" className="sr-only">
-            Buscar por institución o materia
-          </label>
-          <Input
-            id="filtro-q"
-            name="q"
-            type="search"
-            defaultValue={q}
-            placeholder="Buscar por institución o materia"
-            maxLength={80}
-            className="max-w-[360px] min-w-[220px] flex-1"
-          />
-          <label htmlFor="filtro-categoria" className="sr-only">
-            Categoría
-          </label>
-          <Select id="filtro-categoria" name="categoria" defaultValue={categoria ?? ""} className="w-auto max-w-[220px]">
-            <option value="">Todas las categorías</option>
-            {CATEGORIAS.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORIA_INFO[c].label}
-              </option>
-            ))}
-          </Select>
-          <Boton type="submit">Buscar</Boton>
-          {filtrando && (
-            <BotonLink href="/buscar-trabajo" variante="fantasma">
-              Limpiar filtros
-            </BotonLink>
+        <ControlesBuscador
+          base={BASE}
+          filtros={filtros}
+          radio={RADIO_MAX}
+          radioPorDefecto={RADIO_MAX}
+          conUbicacion={false}
+          modo="todas"
+          publico
+        >
+          <p aria-live="polite" className="mb-4 text-[13px] text-apagado">
+            {plural(total, "búsqueda abierta", "búsquedas abiertas")}
+            {filtros.q ? ` para “${filtros.q}”` : ""}
+          </p>
+
+          {total === 0 ? (
+            <EstadoVacio
+              titulo={filtrando ? "Ninguna búsqueda coincide con esos filtros" : "Todavía no hay búsquedas abiertas"}
+              texto={
+                filtrando
+                  ? "Probá con otra palabra o sacá algún filtro para ver más resultados."
+                  : "Cuando una institución publique una búsqueda, la vas a ver acá."
+              }
+              accion={
+                filtrando ? (
+                  <BotonLink href={BASE} variante="secundario" tamano="sm">
+                    Ver todas las búsquedas
+                  </BotonLink>
+                ) : undefined
+              }
+            />
+          ) : (
+            <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(258px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
+              {visibles.map((o) => {
+                const { href, etiqueta } = destino(sesion, o);
+                return (
+                  <li key={o.id} className="flex *:w-full">
+                    <TarjetaOferta
+                      oferta={o}
+                      href={href}
+                      etiqueta={etiqueta}
+                      estrella={sesion.rol ? undefined : <EstrellaRegistro puesto={o.puesto} />}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </form>
 
-        <p aria-live="polite" className="mb-4 text-[13px] text-apagado">
-          {plural(total, "búsqueda abierta", "búsquedas abiertas")}
-          {q ? ` para “${q}”` : ""}
-        </p>
-
-        {filas.length === 0 ? (
-          <EstadoVacio
-            titulo={filtrando ? "No encontramos búsquedas con esos filtros" : "Todavía no hay búsquedas abiertas"}
-            texto={
-              filtrando
-                ? "Probá con otra palabra o quitá la categoría para ver más resultados."
-                : "Cuando una institución publique una búsqueda, la vas a ver acá."
-            }
-            accion={
-              filtrando ? (
-                <BotonLink href="/buscar-trabajo" variante="secundario" tamano="sm">
-                  Ver todas las búsquedas
-                </BotonLink>
-              ) : undefined
-            }
+          <Paginacion
+            base={BASE}
+            parametros={{
+              q: filtros.q,
+              categoria: filtros.categoria,
+              nivel: filtros.nivel,
+              turno: filtros.turno,
+              rapidas: filtros.rapidas,
+              verificadas: filtros.verificadas,
+            }}
+            pagina={pagina}
+            paginas={paginas}
           />
-        ) : (
-          <ul className="m-0 grid list-none grid-cols-3 gap-[18px] p-0 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
-            {filas.map((b) => (
-              <li key={b.id} className="grid">
-                <TarjetaBusqueda busqueda={b} accion={accionPostular(sesion, b.id)} />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <Paginacion
-          base="/buscar-trabajo"
-          parametros={{ q, categoria }}
-          pagina={paginaActual}
-          paginas={paginas}
-        />
+        </ControlesBuscador>
       </div>
     </div>
+  );
+}
+
+/** La estrella de favoritos para una visita: lleva a crear la cuenta, que es lo que hace falta para guardar. */
+function EstrellaRegistro({ puesto }: { puesto: string }) {
+  return (
+    <Link
+      href="/registro"
+      aria-label={`Creá tu cuenta para guardar en favoritos: ${puesto}`}
+      title="Creá tu cuenta para guardar en favoritos"
+      className="relative z-10 flex-none rounded-md px-1 text-base leading-none text-[#D8D6CE] transition-colors hover:text-[#F0B400]/70 focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
+    >
+      ★
+    </Link>
   );
 }

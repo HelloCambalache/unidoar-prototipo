@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import { iconoPin } from "@/components/docente/pin-mapa";
 import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as MapaLeaflet } from "leaflet";
 import { Boton, BotonLink } from "@/components/ui/button";
@@ -24,20 +25,6 @@ type Leaflet = typeof import("leaflet");
 
 // Zona norte de Buenos Aires: centro y zoom del prototipo, por si no hay ningún pin que encuadrar.
 const CENTRO_POR_DEFECTO: [number, number] = [-34.495, -58.53];
-
-function icono(L: Leaflet, color: string, seleccionado: boolean) {
-  const borde = seleccionado ? "3px solid #1F2421" : "2.5px solid #fff";
-  const escala = seleccionado ? 1.15 : 1;
-  return L.divIcon({
-    className: "",
-    html:
-      '<span style="display:block;width:24px;height:24px;border-radius:999px 999px 999px 2px;' +
-      `transform:rotate(45deg) scale(${escala});background:${color};border:${borde};` +
-      'box-shadow:0 3px 8px rgba(31,36,33,.35)"></span>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-  });
-}
 
 /**
  * Mapa real (Leaflet + OpenStreetMap) del catálogo de instituciones. Leaflet toca `window`, así que
@@ -83,7 +70,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
     for (const p of pines) {
       const color = p.favorita ? "#97125F" : p.verificada ? "#16214F" : "#9AA09B";
       const marcador = L.marker([p.lat, p.lng], {
-        icon: icono(L, color, p.id === seleccion),
+        icon: iconoPin(L, color, p.id === seleccion, { bordeSeleccion: "#1F2421" }),
         title: p.nombre,
         riseOnHover: true,
       });

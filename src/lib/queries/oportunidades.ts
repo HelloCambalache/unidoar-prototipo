@@ -63,32 +63,38 @@ export function horarioDeBusqueda(b: Pick<Busqueda, "horario" | "turno" | "carga
 }
 
 /**
- * Búsquedas abiertas que ve el docente en "Buscar trabajo" y "Búsquedas rápidas".
+ * Búsquedas abiertas que ve el docente en "Buscar trabajo" y "Búsquedas rápidas", y las que ve cualquier
+ * visita en el sitio público (`docente` y `usuarioId` en null: sin distancias, favoritas ni postulaciones).
  * Las rápidas vencidas no se listan: ya no aceptan respuesta.
  */
 export async function listarOportunidades(
-  docente: Docente,
-  usuarioId: string,
+  docente: Docente | null,
+  usuarioId: string | null,
   filtros: FiltrosOportunidades,
 ): Promise<ResultadoOportunidades> {
   const db = getDb();
   const ahora = new Date();
-  const radio = filtros.radio ?? docente.radioKm;
-  const origen = docente.lat != null && docente.lng != null ? { lat: docente.lat, lng: docente.lng } : null;
+  const radio = filtros.radio ?? docente?.radioKm ?? RADIO_MAX;
+  const origen = docente?.lat != null && docente.lng != null ? { lat: docente.lat, lng: docente.lng } : null;
   const conUbicacion = origen !== null;
 
   const [favoritas, propias] = await Promise.all([
-    db
-      .select({ id: favoritos.refId })
-      .from(favoritos)
-      .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "busqueda"))),
-    db
-      .select({ busquedaId: postulaciones.busquedaId, etapa: postulaciones.etapa })
-      .from(postulaciones)
-      .where(eq(postulaciones.docenteId, docente.id)),
+    usuarioId
+      ? db
+          .select({ id: favoritos.refId })
+          .from(favoritos)
+          .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "busqueda")))
+      : [],
+    docente
+      ? db
+          .select({ busquedaId: postulaciones.busquedaId, etapa: postulaciones.etapa })
+          .from(postulaciones)
+          .where(eq(postulaciones.docenteId, docente.id))
+      : [],
   ]);
   const idsFavoritas = new Set(favoritas.map((f) => f.id));
-  if (filtros.favoritos && idsFavoritas.size === 0) return { ofertas: [], radio, conUbicacion };
+  const soloFavoritas = !!usuarioId && !!filtros.favoritos;
+  if (soloFavoritas && idsFavoritas.size === 0) return { ofertas: [], radio, conUbicacion };
   const etapaPorBusqueda = new Map<string, EtapaPostulacion>(propias.map((p) => [p.busquedaId, p.etapa]));
 
   const condiciones = [
@@ -100,7 +106,7 @@ export async function listarOportunidades(
     filtros.turno ? eq(busquedas.turno, filtros.turno) : undefined,
     filtros.rapidas ? eq(busquedas.rapida, true) : undefined,
     filtros.verificadas ? eq(instituciones.verificada, true) : undefined,
-    filtros.favoritos ? inArray(busquedas.id, [...idsFavoritas]) : undefined,
+    soloFavoritas ? inArray(busquedas.id, [...idsFavoritas]) : undefined,
     filtros.q
       ? or(
           contiene(busquedas.puesto, filtros.q),

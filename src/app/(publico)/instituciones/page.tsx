@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { InstitucionesFiltros } from "@/components/instituciones/filtros";
+import { TarjetaInstitucion } from "@/components/instituciones/tarjeta";
 import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { sesionPublica } from "@/components/publico/sesion";
-import { TarjetaInstitucion } from "@/components/publico/tarjeta-institucion";
-import { listarInstitucionesPublicas } from "@/lib/queries/publico";
+import { BotonLink } from "@/components/ui/button";
+import { leerFiltrosInstituciones } from "@/lib/filtros-instituciones";
+import { catalogoInstituciones, zonasDisponibles } from "@/lib/queries/instituciones";
 
 export const metadata: Metadata = {
   title: "Instituciones",
@@ -14,8 +18,16 @@ export const metadata: Metadata = {
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
 
-export default async function Instituciones() {
-  const [instituciones, sesion] = await Promise.all([listarInstitucionesPublicas(), sesionPublica()]);
+type Params = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function Instituciones({ searchParams }: { searchParams: Params }) {
+  const f = leerFiltrosInstituciones(await searchParams);
+  const [instituciones, zonas, sesion] = await Promise.all([
+    catalogoInstituciones(null, { texto: f.q ?? "", tipo: f.tipo ?? "", zona: f.zona ?? "", soloFavoritas: false }),
+    zonasDisponibles(),
+    sesionPublica(),
+  ]);
+  const hayFiltros = !!(f.q || f.tipo || f.zona);
 
   return (
     <div className="flex-1 bg-app px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
@@ -35,21 +47,55 @@ export default async function Instituciones() {
           />
         )}
 
+        <InstitucionesFiltros
+          valores={{ q: f.q ?? "", tipo: f.tipo ?? "", zona: f.zona ?? "", favoritas: false }}
+          zonas={zonas}
+          conFavoritas={false}
+        />
+
         {instituciones.length === 0 ? (
           <EstadoVacio
-            titulo="Todavía no hay instituciones para mostrar"
-            texto="Las instituciones que se sumen y se verifiquen aparecen acá."
+            titulo={hayFiltros ? "Ninguna institución coincide con esos filtros" : "Todavía no hay instituciones para mostrar"}
+            texto={
+              hayFiltros
+                ? "Probá con otro tipo o con otra zona."
+                : "Las instituciones que se sumen y se verifiquen aparecen acá."
+            }
+            accion={
+              hayFiltros ? (
+                <BotonLink href="/instituciones" variante="secundario" tamano="sm">
+                  Ver todas las instituciones
+                </BotonLink>
+              ) : undefined
+            }
           />
         ) : (
-          <ul className="m-0 grid list-none grid-cols-3 gap-[18px] p-0 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[18px] max-[560px]:grid-cols-1">
             {instituciones.map((i) => (
-              <li key={i.id} className="grid">
-                <TarjetaInstitucion institucion={i} />
-              </li>
+              <TarjetaInstitucion
+                key={i.id}
+                i={i}
+                href={`/instituciones/${i.slug}`}
+                estrella={sesion.rol ? undefined : <EstrellaRegistro nombre={i.nombre} />}
+              />
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+/** La estrella de guardar para una visita: lleva a crear la cuenta, que es lo que hace falta para guardar. */
+function EstrellaRegistro({ nombre }: { nombre: string }) {
+  return (
+    <Link
+      href="/registro"
+      aria-label={`Creá tu cuenta para guardar: ${nombre}`}
+      title="Creá tu cuenta para guardar"
+      className="flex-none rounded-md px-1 text-base leading-none text-[#D8D6CE] transition-colors hover:text-[#F0B400]/70 focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
+    >
+      ★
+    </Link>
   );
 }
