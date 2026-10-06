@@ -716,7 +716,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <p style="margin:0 0 26px;max-width:620px;font:400 16px/1.6 Inter,sans-serif;color:#6B706C">Marcá la búsqueda como rápida y priorizamos profesores disponibles ya, con identidad verificada.</p>
 <div class="udoar-urg-bento" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
 <div style="grid-column:span 2;grid-row:span 2;position:relative;overflow:hidden;border-radius:18px;background:#DD553F;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
-<div style="position:absolute;inset:0;background-image:url(assets/cat-docentes.jpg);background-size:cover;background-position:center;opacity:.22"></div>
+<div style="position:absolute;inset:0;background-image:url(assets/aula-secundaria.jpg);background-size:cover;background-position:center;opacity:.22"></div>
 <div style="position:relative;z-index:1">
 <span class="cbl-badge" style="background:rgba(255,255,255,.22);color:#fff;font-size:11px">Suplencia rápida</span>
 <div style="margin-top:14px;font:700 24px/1.2 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff">Una licencia larga arranca el lunes</div>
@@ -5978,7 +5978,7 @@ class Component extends DCLogic {
       verifiedLabel: verified ? (p.name.trim().endsWith('a') ? 'Verificada' : 'Verificado') : 'Sin verificar',
       verifiedBadgeStyle: verified ? 'background:transparent;color:#1E7A4C' : 'background:transparent;color:#9AA09B',
       hasVerifiedIcon: verified,
-      photo: ['assets/hero-profesor.jpg', 'assets/hero-docente.jpg', 'assets/hero-entrenador.jpg', 'assets/hero-guardavidas.jpg', 'assets/bgDocentes-fixed.jpg', 'assets/bgEntrenadores-fixed.jpg'][p.name.length % 6],
+      photo: ['assets/hero-profesor.jpg', 'assets/hero-docente.jpg', 'assets/hero-entrenador.jpg', 'assets/hero-guardavidas.jpg', 'assets/bgDocentes-fixed.jpg', 'assets/bgEntrenadores-fixed.jpg', 'assets/profe-ciencias.jpg', 'assets/maestra-inicial.jpg', 'assets/entrenador-chicos.jpg', 'assets/aula-secundaria.jpg'][p.name.length % 10],
       noteStyle: p.note === 'Esperando respuesta' ? 'background:#F6E6E0;color:#8F3D28' : 'background:#FDE9D8;color:#9A4A12',
       borderColor: '#E3E1DC',
       onClick: () => this.openCv(p), onDragStart: (e) => { e.dataTransfer.setData('text/plain', p.key); this.setState({ draggingKey: p.key }); },
@@ -6026,7 +6026,7 @@ class Component extends DCLogic {
   }
   openBoInst(i) { this.setState({ boSelectedInst: { ...i, initials: i.nombre.split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('') }, screen: 'boInstDetalle' }); }
   closeBoInst() { this.setState({ boSelectedInst: null, screen: 'boInst' }); }
-  openBoDoc(d) { const photos = { 'Martina Alsina': 'assets/hero-entrenador.jpg', 'Rocío Aguirre': 'assets/bgEntrenadores-fixed.jpg', 'Facundo Ojeda': 'assets/hero-guardavidas.jpg', 'Carolina Ruiz Díaz': 'assets/hero-docente.jpg', 'Luciana Prieto': 'assets/bgDocentes-fixed.jpg' }; this.setState({ boSelectedDoc: { ...d, photo: photos[d.nombre] || 'assets/hero-profesor.jpg' }, screen: 'boDocDetalle' }); }
+  openBoDoc(d) { const photos = { 'Martina Alsina': 'assets/hero-entrenador.jpg', 'Rocío Aguirre': 'assets/bgEntrenadores-fixed.jpg', 'Facundo Ojeda': 'assets/hero-guardavidas.jpg', 'Carolina Ruiz Díaz': 'assets/maestra-inicial.jpg', 'Luciana Prieto': 'assets/bgDocentes-fixed.jpg' }; this.setState({ boSelectedDoc: { ...d, photo: photos[d.nombre] || 'assets/hero-profesor.jpg' }, screen: 'boDocDetalle' }); }
   closeBoDoc() { this.setState({ boSelectedDoc: null, screen: 'boDocentes' }); }
   inviteDoc(name) {
     this.setState(s => ({ invitedDocsSet: [...s.invitedDocsSet, name], showQuickInviteToast: true, quickInviteToastText: 'Invitación enviada a ' + name }));
@@ -7348,8 +7348,8 @@ class Component extends DCLogic {
         const catalog = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', disciplinas: ['Educación Física', 'Natación'], turnos: ['Turno mañana'], verified: true, urgente: true, coincide: 6, zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde marzo', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', nivel: 'Primario', tipo: 'Titular' },
           { name: 'Facundo Ojeda', bio: 'Profesor de Natación y guardavidas', disciplinas: ['Natación'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · Núñez', horario: 'Turno mañana · disponibilidad inmediata', tags: ['Natación', 'Guardavidas'], photo: 'assets/hero-guardavidas.jpg', nivel: 'Primario', tipo: 'Suplencia' },
-          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', disciplinas: ['Matemática'], turnos: ['Turno tarde'], verified: true, coincide: 4, zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/hero-profesor.jpg', nivel: 'Secundario', tipo: 'Titular' },
-          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', disciplinas: ['Inglés'], turnos: ['Turno mañana'], verified: true, coincide: 4, zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/hero-docente.jpg', nivel: 'Primario', tipo: 'Titular' },
+          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', disciplinas: ['Matemática'], turnos: ['Turno tarde'], verified: true, coincide: 4, zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/profe-ciencias.jpg', nivel: 'Secundario', tipo: 'Titular' },
+          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', disciplinas: ['Inglés'], turnos: ['Turno mañana'], verified: true, coincide: 4, zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/maestra-inicial.jpg', nivel: 'Primario', tipo: 'Titular' },
           { name: 'Luciana Prieto', bio: 'Maestra de Nivel Inicial', disciplinas: ['Nivel Inicial'], turnos: ['Turno tarde'], verified: false, coincide: 3, zona: 'Tigre · Nordelta', horario: 'Turno tarde · desde abril', tags: ['Nivel Inicial', 'Música'], photo: 'assets/bgDocentes-fixed.jpg', nivel: 'Inicial', tipo: 'Suplencia' },
           { name: 'Sol Belmonte', bio: 'Profesora de Danza contemporánea', disciplinas: ['Danza'], turnos: ['Contraturno / sábados'], verified: true, coincide: 3, zona: 'Palermo · Belgrano', horario: 'Contraturno y sábados', tags: ['Danza', 'Expresión corporal'], photo: 'assets/bgEntrenadores-fixed.jpg', nivel: 'Secundario', tipo: 'Titular' },
         ];
@@ -7371,8 +7371,8 @@ class Component extends DCLogic {
       buscadorDocentesRapidosList: (() => {
         const catalog = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', disciplinas: ['Educación Física', 'Natación'], turnos: ['Turno mañana'], verified: true, coincide: 6, zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde mañana', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
-          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', disciplinas: ['Educación Física'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/hero-profesor.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
-          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', disciplinas: ['Guardavidas'], turnos: ['Turno mañana', 'Turno tarde'], verified: true, coincide: 5, zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/hero-guardavidas.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
+          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', disciplinas: ['Educación Física'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/entrenador-chicos.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
+          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', disciplinas: ['Guardavidas'], turnos: ['Turno mañana', 'Turno tarde'], verified: true, coincide: 5, zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/cat-guardavidas-pileta.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
         ];
         const activeDisciplinas = Object.keys(this.state.filtroDisciplinas).filter(k => this.state.filtroDisciplinas[k]);
         const activeDisponibilidad = Object.keys(this.state.filtroDisponibilidad).filter(k => this.state.filtroDisponibilidad[k]);
@@ -7393,12 +7393,12 @@ class Component extends DCLogic {
         const catalogA = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde marzo', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', verified: true, coincide: 6 },
           { name: 'Facundo Ojeda', bio: 'Profesor de Natación y guardavidas', zona: 'Vicente López · Núñez', horario: 'Turno mañana · disponibilidad inmediata', tags: ['Natación', 'Guardavidas'], photo: 'assets/hero-guardavidas.jpg', verified: true, coincide: 5 },
-          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/hero-profesor.jpg', verified: true, coincide: 4 },
-          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/hero-docente.jpg', verified: true, coincide: 4 },
+          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/profe-ciencias.jpg', verified: true, coincide: 4 },
+          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/maestra-inicial.jpg', verified: true, coincide: 4 },
           { name: 'Luciana Prieto', bio: 'Maestra de Nivel Inicial', zona: 'Tigre · Nordelta', horario: 'Turno tarde · desde abril', tags: ['Nivel Inicial', 'Música'], photo: 'assets/bgDocentes-fixed.jpg', verified: false, coincide: 3 },
           { name: 'Sol Belmonte', bio: 'Profesora de Danza contemporánea', zona: 'Palermo · Belgrano', horario: 'Contraturno y sábados', tags: ['Danza', 'Expresión corporal'], photo: 'assets/bgEntrenadores-fixed.jpg', verified: true, coincide: 3 },
-          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/hero-profesor.jpg', verified: true, coincide: 5 },
-          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/hero-guardavidas.jpg', verified: true, coincide: 5 },
+          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/entrenador-chicos.jpg', verified: true, coincide: 5 },
+          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/cat-guardavidas-pileta.jpg', verified: true, coincide: 5 },
         ];
         const seen = new Set();
         const unique = catalogA.filter(d => this.state.favoritosInst.includes(d.name) && !seen.has(d.name) && seen.add(d.name));
@@ -7467,13 +7467,13 @@ class Component extends DCLogic {
         const origenStyles = { 'Se postuló': 'background:#E5E9FB;color:#16214F', 'Envió CV': 'background:#FDEBD8;color:#8A4A10', 'Cargado manualmente': 'background:#F0EFEA;color:#3D423E' };
         const seed = [
           { name: 'Martina Alsina', email: 'martina.alsina@mail.com', disciplina: 'Educación Física', origen: 'Se postuló', busqueda: 'Prof. Ed. Física · Secundario', fecha: '18/09/2026', estado: 'Entrevista', photo: 'assets/hero-entrenador.jpg' },
-          { name: 'Carolina Ruiz Díaz', email: 'caro.ruizdiaz@mail.com', disciplina: 'Inglés', origen: 'Envió CV', busqueda: '—', fecha: '15/09/2026', estado: 'Sin contactar', photo: 'assets/hero-docente.jpg' },
-          { name: 'Damián Ferreyra', email: 'dferreyra@mail.com', disciplina: 'Matemática', origen: 'Se postuló', busqueda: 'Prof. Matemática · 3er año', fecha: '12/09/2026', estado: 'Contratado', photo: 'assets/hero-profesor.jpg' },
+          { name: 'Carolina Ruiz Díaz', email: 'caro.ruizdiaz@mail.com', disciplina: 'Inglés', origen: 'Envió CV', busqueda: '—', fecha: '15/09/2026', estado: 'Sin contactar', photo: 'assets/maestra-inicial.jpg' },
+          { name: 'Damián Ferreyra', email: 'dferreyra@mail.com', disciplina: 'Matemática', origen: 'Se postuló', busqueda: 'Prof. Matemática · 3er año', fecha: '12/09/2026', estado: 'Contratado', photo: 'assets/profe-ciencias.jpg' },
           { name: 'Luciana Prieto', email: 'lu.prieto@mail.com', disciplina: 'Nivel Inicial', origen: 'Cargado manualmente', busqueda: '—', fecha: '09/09/2026', estado: 'En reserva', photo: 'assets/bgDocentes-fixed.jpg' },
           { name: 'Facundo Ojeda', email: 'facu.ojeda@mail.com', disciplina: 'Natación', origen: 'Se postuló', busqueda: 'Suplencia Natación · rápida', fecha: '05/09/2026', estado: 'Nuevo', photo: 'assets/hero-guardavidas.jpg' },
           { name: 'Sol Belmonte', email: 'sol.belmonte@mail.com', disciplina: 'Danza', origen: 'Envió CV', busqueda: '—', fecha: '28/08/2026', estado: 'Sin contactar', photo: 'assets/bgEntrenadores-fixed.jpg' },
-          { name: 'Nicolás Bravo', email: 'nbravo@mail.com', disciplina: 'Educación Física', origen: 'Cargado manualmente', busqueda: '—', fecha: '20/08/2026', estado: 'Ex docente', photo: 'assets/hero-profesor.jpg' },
-          { name: 'Agustina Molina', email: 'agus.molina@mail.com', disciplina: 'Guardavidas', origen: 'Se postuló', busqueda: 'Guardavidas · temporada', fecha: '14/08/2026', estado: 'Descartado', photo: 'assets/hero-guardavidas.jpg' },
+          { name: 'Nicolás Bravo', email: 'nbravo@mail.com', disciplina: 'Educación Física', origen: 'Cargado manualmente', busqueda: '—', fecha: '20/08/2026', estado: 'Ex docente', photo: 'assets/entrenador-chicos.jpg' },
+          { name: 'Agustina Molina', email: 'agus.molina@mail.com', disciplina: 'Guardavidas', origen: 'Se postuló', busqueda: 'Guardavidas · temporada', fecha: '14/08/2026', estado: 'Descartado', photo: 'assets/cat-guardavidas-pileta.jpg' },
         ];
         const all = [...(this.state.baseExtra || []), ...seed];
         const tab = this.state.baseTab || 'Todos';
