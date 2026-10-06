@@ -41,16 +41,26 @@
     capaPines = window.L.layerGroup().addTo(mapa);
   }
 
+  // Pin de ubicación clásico: la punta cae exactamente sobre la coordenada.
+  // Antes era un cuadrado con una esquina en punta y rotado 45°, que terminaba
+  // apuntando al costado en vez de al suelo.
   function icono(color, seleccionado) {
-    var borde = seleccionado ? '3px solid #16214F' : '2.5px solid #fff';
-    var escala = seleccionado ? 1.15 : 1;
+    var borde = seleccionado ? '#16214F' : '#ffffff';
+    var grosor = seleccionado ? 2.6 : 2;
+    var escala = seleccionado ? 1.12 : 1;
+    var ancho = Math.round(26 * escala);
+    var alto = Math.round(34 * escala);
+    var svg = '<svg width="' + ancho + '" height="' + alto + '" viewBox="0 0 26 34" fill="none"'
+      + ' xmlns="http://www.w3.org/2000/svg" style="display:block">'
+      + '<path d="M13 33C13 33 24 20.4 24 12.9A11 11 0 1 0 2 12.9C2 20.4 13 33 13 33Z"'
+      + ' fill="' + color + '" stroke="' + borde + '" stroke-width="' + grosor + '" stroke-linejoin="round"/>'
+      + '<circle cx="13" cy="12.7" r="4" fill="#fff" fill-opacity=".9"/>'
+      + '</svg>';
     return window.L.divIcon({
       className: '',
-      html: '<span style="display:block;width:24px;height:24px;border-radius:999px 999px 999px 2px;'
-        + 'transform:rotate(45deg) scale(' + escala + ');background:' + color + ';border:' + borde + ';'
-        + 'box-shadow:0 3px 8px rgba(31,36,33,.35)"></span>',
-      iconSize: [24, 24],
-      iconAnchor: [12, 24],
+      html: '<span style="display:block;filter:drop-shadow(0 3px 6px rgba(31,36,33,.35))">' + svg + '</span>',
+      iconSize: [ancho, alto],
+      iconAnchor: [ancho / 2, alto],
     });
   }
 
