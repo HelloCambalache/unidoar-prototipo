@@ -1,0 +1,285 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { and, eq, isNull } from "drizzle-orm";
+import { z } from "zod";
+import { getDb, transaccion } from "@/db";
+import {
+  cursos,
+  cvEnviados,
+  docenteDetalle,
+  docentes,
+  favoritos,
+  inscripcionesCurso,
+  instituciones,
+  zonas,
+} from "@/db/schema";
+import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
+import { requerirDocente } from "@/lib/auth";
+import { normalizar } from "@/lib/coincidencia";
+import { hoyArgentina } from "@/lib/fechas-curso";
+import { disponibilidadDesdeGrilla } from "@/lib/onboarding";
+import { perfilDocenteSchema } from "@/lib/perfil-docente";
+import { notificar } from "@/lib/queries/notificaciones";
+import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
+import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
+
+const idSchema = z.guid();
+
+function nombreCompleto(d: { nombre: string; apellido: string }) {
+  return `${d.nombre} ${d.apellido}`.trim();
+}
+
+/** Avisa a quienes administran una institución (propietario y equipo activo). */
+async function avisarAInstitucion(
+  institucionId: string,
+  aviso: { tipo: string; titulo: string; texto: string; enlace: string },
+) {
+  const destinatarios = await usuariosDeInstitucion(institucionId);
+  await Promise.all(destinatarios.map((id) => notificar(id, aviso)));
+}
+
+/* ───────────────────────────── Instituciones ───────────────────────────── */
+
+/** Guarda o quita una institución de las favoritas del docente. */
+export async function alternarFavoritoInstitucion(institucionId: string): Promise<Resultado<{ favorita: boolean }>> {
+  const { usuario } = await requerirDocente();
+  const id = idSchema.safeParse(institucionId);
+  if (!id.success) return fallo("Institución inválida.");
+
+  const db = getDb();
+  const [institucion] = await db
+    .select({ id: instituciones.id, slug: instituciones.slug })
+    .from(instituciones)
+    .where(eq(instituciones.id, id.data))
+    .limit(1);
+  if (!institucion) return fallo("Esa institución ya no existe.");
+
+  const [quitada] = await db
+    .delete(favoritos)
+    .where(and(eq(favoritos.usuarioId, usuario.id), eq(favoritos.tipo, "institucion"), eq(favoritos.refId, institucion.id)))
+    .returning({ refId: favoritos.refId });
+  if (!quitada) {
+    await db
+      .insert(favoritos)
+      .values({ usuarioId: usuario.id, tipo: "institucion", refId: institucion.id })
+      .onConflictDoNothing();
+  }
+
+  revalidatePath("/docente/instituciones");
+  revalidatePath(`/docente/instituciones/${institucion.slug}`);
+  return ok({ favorita: !quitada });
+}
+
+/** "Enviá tu CV a esta institución": una vez por institución; le llega un aviso con el link a tu perfil. */
+export async function enviarCvAInstitucion(institucionId: string): Promise<Resultado> {
+  const { docente } = await requerirDocente();
+  const id = idSchema.safeParse(institucionId);
+  if (!id.success) return fallo("Institución inválida.");
+
+  const db = getDb();
+  const [institucion] = await db
+    .select({ id: instituciones.id, slug: instituciones.slug, nombre: instituciones.nombre })
+    .from(instituciones)
+    .where(eq(instituciones.id, id.data))
+    .limit(1);
+  if (!institucion) return fallo("Esa institución ya no existe.");
+
+  const [nuevo] = await db
+    .insert(cvEnviados)
+    .values({ docenteId: docente.id, institucionId: institucion.id })
+    .onConflictDoNothing()
+    .returning({ institucionId: cvEnviados.institucionId });
+  if (nuevo) {
+    await avisarAInstitucion(institucion.id, {
+      tipo: "postulacion",
+      titulo: nombreCompleto(docente),
+      texto: "te envió su CV.",
+      enlace: `/institucion/docente/${docente.id}`,
+    });
+  }
+
+  revalidatePath(`/docente/instituciones/${institucion.slug}`);
+  return ok();
+}
+
+/* ───────────────────────────── Cursos ───────────────────────────── */
+
+export async function inscribirseCurso(cursoId: string): Promise<Resultado> {
+  const { docente } = await requerirDocente();
+  const id = idSchema.safeParse(cursoId);
+  if (!id.success) return fallo("Curso inválido.");
+
+  const db = getDb();
+  const [curso] = await db
+    .select({ id: cursos.id, titulo: cursos.titulo, fechaFinal: cursos.fechaFinal, institucionId: cursos.institucionId })
+    .from(cursos)
+    .where(eq(cursos.id, id.data))
+    .limit(1);
+  if (!curso) return fallo("Ese curso ya no existe.");
+  if (curso.fechaFinal && curso.fechaFinal < hoyArgentina()) return fallo("Este curso ya terminó y no admite inscripciones.");
+
+  const [nueva] = await db
+    .insert(inscripcionesCurso)
+    .values({ cursoId: curso.id, docenteId: docente.id })
+    .onConflictDoNothing()
+    .returning({ cursoId: inscripcionesCurso.cursoId });
+  if (nueva) {
+    await avisarAInstitucion(curso.institucionId, {
+      tipo: "curso",
+      titulo: nombreCompleto(docente),
+      texto: `se inscribió a «${curso.titulo}».`,
+      enlace: "/institucion/cursos",
+    });
+  }
+
+  revalidatePath("/docente/cursos");
+  revalidatePath("/docente/dashboard");
+  revalidatePath("/docente/perfil");
+  return ok();
+}
+
+export async function cancelarInscripcion(cursoId: string): Promise<Resultado> {
+  const { docente } = await requerirDocente();
+  const id = idSchema.safeParse(cursoId);
+  if (!id.success) return fallo("Curso inválido.");
+
+  const db = getDb();
+  // Solo se cancela lo propio y lo que todavía no se terminó: no se borra un curso ya completado.
+  const [cancelada] = await db
+    .delete(inscripcionesCurso)
+    .where(
+      and(
+        eq(inscripcionesCurso.cursoId, id.data),
+        eq(inscripcionesCurso.docenteId, docente.id),
+        isNull(inscripcionesCurso.terminoEn),
+      ),
+    )
+    .returning({ cursoId: inscripcionesCurso.cursoId });
+  if (!cancelada) return fallo("No pudimos cancelar la inscripción: ya terminaste el curso o no estabas inscripto.");
+
+  const [curso] = await db
+    .select({ titulo: cursos.titulo, institucionId: cursos.institucionId })
+    .from(cursos)
+    .where(eq(cursos.id, id.data))
+    .limit(1);
+  if (curso) {
+    await avisarAInstitucion(curso.institucionId, {
+      tipo: "curso",
+      titulo: nombreCompleto(docente),
+      texto: `canceló su inscripción a «${curso.titulo}».`,
+      enlace: "/institucion/cursos",
+    });
+  }
+
+  revalidatePath("/docente/cursos");
+  revalidatePath("/docente/dashboard");
+  revalidatePath("/docente/perfil");
+  return ok();
+}
+
+/* ───────────────────────────── Perfil ───────────────────────────── */
+
+/** Guarda "Mi perfil". Recibe el estado completo del formulario como JSON en el campo `datos`. */
+export async function actualizarPerfilDocente(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
+  const { usuario, docente } = await requerirDocente();
+
+  let crudo: unknown;
+  try {
+    crudo = JSON.parse(String(formData.get("datos") ?? ""));
+  } catch {
+    return fallo("No pudimos leer el formulario. Recargá la página e intentá de nuevo.");
+  }
+  const r = parsear(perfilDocenteSchema, (crudo ?? {}) as Record<string, unknown>);
+  if (!r.ok) return fallo(r.error, r.campos);
+  const datos = r.data;
+
+  // Foto y CV: se acepta lo que ya estaba guardado o un archivo que subió esta misma cuenta.
+  if (datos.fotoUrl && datos.fotoUrl !== docente.fotoUrl && !esUrlPublicaPropia(datos.fotoUrl, usuario.id)) {
+    return fallo("No pudimos validar la foto. Subila de nuevo.", { fotoUrl: "Archivo inválido" });
+  }
+  if (datos.cvUrl && datos.cvUrl !== docente.cvUrl && !esPathPrivadoPropio(datos.cvUrl, usuario.id, "cv")) {
+    return fallo("No pudimos validar el CV. Subilo de nuevo.", { cvUrl: "Archivo inválido" });
+  }
+
+  const db = getDb();
+
+  // El certificado de conducta vive en docente_detalle.documentos (lo crea el alta); se mezcla sin pisar el DNI ni el título.
+  const [detalle] = await db
+    .select({ documentos: docenteDetalle.documentos })
+    .from(docenteDetalle)
+    .where(eq(docenteDetalle.docenteId, docente.id))
+    .limit(1);
+  const documentos = { ...(detalle?.documentos ?? {}) };
+  let conductaCambio = false;
+  if (datos.conducta !== undefined && datos.conducta !== (documentos.conducta ?? "")) {
+    if (datos.conducta && !esPathPrivadoPropio(datos.conducta, usuario.id, "documentos")) {
+      return fallo("No pudimos validar el certificado. Subilo de nuevo.", { conducta: "Archivo inválido" });
+    }
+    if (datos.conducta) documentos.conducta = datos.conducta;
+    else delete documentos.conducta;
+    conductaCambio = true;
+  }
+
+  const sinRepetir = (items: string[]) => {
+    const vistos = new Set<string>();
+    return items.filter((i) => {
+      const clave = normalizar(i);
+      if (!clave || vistos.has(clave)) return false;
+      vistos.add(clave);
+      return true;
+    });
+  };
+  const zonasNuevas = sinRepetir(datos.zonas);
+
+  // Si cambió la primera zona (o todavía no tenía ubicación), la posición sale de la tabla de zonas.
+  let ubicacion: { lat: number; lng: number } | undefined;
+  if (zonasNuevas.length && (zonasNuevas[0] !== docente.zonas[0] || docente.lat == null || docente.lng == null)) {
+    const catalogo = await db.select({ nombre: zonas.nombre, lat: zonas.lat, lng: zonas.lng }).from(zonas);
+    for (const z of zonasNuevas) {
+      const hit = catalogo.find((c) => normalizar(c.nombre) === normalizar(z));
+      if (hit?.lat != null && hit.lng != null) {
+        ubicacion = { lat: hit.lat, lng: hit.lng };
+        break;
+      }
+    }
+  }
+
+  await transaccion(async (tx) => {
+    await tx
+      .update(docentes)
+      .set({
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        subtitulo: datos.subtitulo || null,
+        resumen: datos.resumen || null,
+        telefono: datos.telefono || null,
+        aniosExperiencia: datos.aniosExperiencia,
+        radioKm: datos.radioKm,
+        zonas: zonasNuevas,
+        asignaturas: sinRepetir(datos.asignaturas),
+        niveles: [...new Set(datos.niveles)],
+        experiencia: datos.experiencia.filter((e) => e.titulo),
+        formacion: datos.formacion.filter((f) => f.titulo),
+        disponibilidad: disponibilidadDesdeGrilla(datos.grilla),
+        ...(ubicacion ?? {}),
+        ...(datos.fotoUrl !== undefined ? { fotoUrl: datos.fotoUrl || null } : {}),
+        ...(datos.cvUrl !== undefined ? { cvUrl: datos.cvUrl || null } : {}),
+        // Un certificado nuevo hay que volver a revisarlo.
+        ...(conductaCambio ? { antecedentesVerificados: false } : {}),
+      })
+      .where(eq(docentes.id, docente.id));
+    // La grilla vive en docente_detalle; si el docente no tiene fila (perfil cargado a mano), se crea.
+    await tx
+      .insert(docenteDetalle)
+      .values({ docenteId: docente.id, grillaDisponibilidad: datos.grilla, documentos })
+      .onConflictDoUpdate({
+        target: docenteDetalle.docenteId,
+        set: { grillaDisponibilidad: datos.grilla, ...(conductaCambio ? { documentos } : {}) },
+      });
+  });
+
+  // El layout muestra "Perfil 80%": se refresca junto con las pantallas que dependen del perfil.
+  revalidatePath("/docente", "layout");
+  return ok();
+}
