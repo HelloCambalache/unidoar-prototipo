@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
+import { after } from "next/server";
 import postgres from "postgres";
 import { urlApp, usaPoolerDeTransacciones } from "./conexion";
 import * as schema from "./schema";
@@ -21,6 +22,12 @@ function maxConexiones() {
   return process.env.VERCEL ? 2 : 5;
 }
 
+/** Segundos sin usar una conexión antes de cerrarla. En Vercel es corto: así se liberan lugares del pooler enseguida. */
+const IDLE_SEGUNDOS = process.env.VERCEL ? 2 : 10;
+
+// Cuándo se hizo la última consulta (cualquier consulta, de cualquier pedido de esta instancia).
+let ultimoUso = Date.now();
+
 function crearDb() {
   const url = urlApp();
   if (!url) {
@@ -34,9 +41,13 @@ function crearDb() {
     max: maxConexiones(),
     // Se reciclan las conexiones en reposo antes de que el pooler las cierre por su cuenta: una conexión
     // cerrada del otro lado hace fallar la próxima escritura con CONNECTION_CLOSED.
-    idle_timeout: 10,
+    idle_timeout: IDLE_SEGUNDOS,
     max_lifetime: 60 * 15,
     connect_timeout: 15,
+    // Se llama en cada consulta: alcanza para saber hasta cuándo hay que mantener viva la instancia.
+    debug: () => {
+      ultimoUso = Date.now();
+    },
   });
   return drizzle(cliente, { schema });
 }
@@ -46,8 +57,40 @@ type Db = ReturnType<typeof crearDb>;
 // En desarrollo, el hot reload re-evalúa este módulo: se guarda la instancia para no abrir conexiones de más.
 const global = globalThis as unknown as { __unidoarDb?: Db };
 
+let esperando: Promise<void> | null = null;
+
+/**
+ * En Vercel, terminada la respuesta la instancia se congela con sus conexiones abiertas: los temporizadores
+ * que las cierran por inactividad no corren, y cada instancia vieja o nueva sigue ocupando lugares del
+ * pooler de Supabase durante minutos (llegó a agotar el tope con EMAXCONNSESSION). `after()` mantiene viva
+ * la instancia hasta que pasó el tiempo de inactividad sin consultas, así postgres-js las cierra solo.
+ * Una sola espera por instancia: se extiende sola mientras siga habiendo consultas.
+ */
+function mantenerVivaHastaSoltarConexiones() {
+  try {
+    after(() => {
+      esperando ??= (async () => {
+        const inicio = Date.now();
+        const quietud = (IDLE_SEGUNDOS + 1) * 1000;
+        try {
+          while (Date.now() - ultimoUso < quietud && Date.now() - inicio < 30_000) {
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        } finally {
+          esperando = null;
+        }
+      })();
+      return esperando;
+    });
+  } catch {
+    // Fuera de un pedido (build, scripts): no hay instancia que mantener viva.
+  }
+}
+
 export function getDb(): Db {
   global.__unidoarDb ??= crearDb();
+  ultimoUso = Date.now();
+  if (process.env.VERCEL) mantenerVivaHastaSoltarConexiones();
   return global.__unidoarDb;
 }
 
