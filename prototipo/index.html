@@ -60,7 +60,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="./mapa.js" defer></script>
+<script src="./mapa.js?v=3" defer></script>
 <script src="./image-slot-store.js"></script>
 <script src="./image-slot.js"></script>
 <style>
@@ -624,7 +624,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div class="udoar-urg-bento" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
 
 <div style="grid-column:span 2;grid-row:span 2;position:relative;overflow:hidden;border-radius:18px;background:#DD553F;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
-<div style="position:absolute;inset:0;background-image:url(assets/urgente-aula.jpg);background-size:cover;background-position:center;opacity:.22"></div>
+<div style="position:absolute;inset:0;background-image:url(assets/urgente-pizarron.jpg);background-size:cover;background-position:center 26%;opacity:.22"></div>
 <div style="position:relative;z-index:1">
 <span class="cbl-badge" style="background:rgba(255,255,255,.2);color:#fff;font-size:11px">Suplencia rápida</span>
 <div style="margin-top:14px;font:700 26px/1.2 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff">Se enferma un profe un martes</div>
@@ -716,7 +716,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <p style="margin:0 0 26px;max-width:620px;font:400 16px/1.6 Inter,sans-serif;color:#6B706C">Marcá la búsqueda como rápida y priorizamos profesores disponibles ya, con identidad verificada.</p>
 <div class="udoar-urg-bento" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px">
 <div style="grid-column:span 2;grid-row:span 2;position:relative;overflow:hidden;border-radius:18px;background:#DD553F;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
-<div style="position:absolute;inset:0;background-image:url(assets/cat-docentes.jpg);background-size:cover;background-position:center;opacity:.22"></div>
+<div style="position:absolute;inset:0;background-image:url(assets/profe-ciencias.jpg);background-size:cover;background-position:center 22%;opacity:.22"></div>
 <div style="position:relative;z-index:1">
 <span class="cbl-badge" style="background:rgba(255,255,255,.22);color:#fff;font-size:11px">Suplencia rápida</span>
 <div style="margin-top:14px;font:700 24px/1.2 Sora,Inter,sans-serif;letter-spacing:-.02em;color:#fff">Una licencia larga arranca el lunes</div>
@@ -984,24 +984,84 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 </div>
 
+<div class="udoar-inst-buscador-row udoar-2col" style="display:flex;gap:24px;align-items:flex-start">
+<details class="udoar-inst-buscador-filters" style="flex:none;width:250px;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
+<summary class="udoar-filters-sum">Filtros<svg class="udoar-filter-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></summary>
+<div class="udoar-filters-body">
+
+<div class="udoar-filters-innerhead" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font:600 14px/1 Inter,sans-serif">Filtros</span><span style="font:500 12px/1 Inter,sans-serif;color:#DD553F;cursor:pointer" onClick="{{ clearFilters }}">Limpiar</span></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Categoría</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:4px">
+<sc-for list="{{ filtroCategoriaOptions }}" as="c" hint-placeholder-count="4"><span onClick="{{ c.onPick }}" style="cursor:pointer;padding:6px 12px;border-radius:999px;font:600 12px/1 Inter,sans-serif;{{ c.style }}">{{ c.label }}</span></sc-for>
+</div>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<details class="udoar-filter-group">
+<summary class="udoar-filter-sum">Subcategoría<svg class="udoar-filter-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></summary>
+<div class="udoar-filter-body" style="display:flex;flex-direction:column;gap:8px;padding-top:10px;max-height:264px;overflow:auto">
+<sc-for list="{{ disciplinaFilterList }}" as="d" hint-placeholder-count="5">
+<label class="cbl-checkbox" style="cursor:pointer" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.checked }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.label }}<span style="margin-left:auto;font:400 12px/1 Inter,sans-serif;color:#9AA09B">{{ d.count }}</span></label>
+</sc-for>
+</div>
+</details>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Zona de trabajo</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<sc-for list="{{ zonaFilterList }}" as="z" hint-placeholder-count="3"><span class="cbl-badge" style="background:#E5E9FB;color:#16214F;cursor:pointer" onClick="{{ z.onRemove }}">{{ z.label }} ×</span></sc-for>
+</div>
+<sc-if value="{{ addingZonaFilter }}" hint-placeholder-val="{{ false }}"><input class="cbl-input" autoFocus="{{ true }}" style="font-size:13px;padding:8px 10px" value="{{ addingZonaFilterVal }}" onChange="{{ updateAddingZonaFilter }}" onKeyDown="{{ handleZonaFilterKeyDown }}" onBlur="{{ confirmZonaFilter }}"></sc-if>
+<sc-if value="{{ addingZonaFilterNot }}" hint-placeholder-val="{{ true }}"><input class="cbl-input" placeholder="Agregar partido o barrio" style="font-size:13px;padding:8px 10px" onFocus="{{ startAddingZonaFilter }}" readOnly="{{ true }}"></sc-if>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px">
+<span style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B">Disponibilidad</span>
+<sc-for list="{{ disponibilidadFilterList }}" as="d" hint-placeholder-count="3">
+<label class="cbl-checkbox" style="cursor:pointer" onClick="{{ d.onToggle }}"><span class="cbl-checkbox__box" style="{{ d.boxStyle }}"><sc-if value="{{ d.checked }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg></sc-if></span>{{ d.label }}</label>
+</sc-for>
+</div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="font:600 11px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#9AA09B;margin-bottom:10px">Rango de búsqueda</div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font:500 13px/1 Inter,sans-serif;color:#3D423E">{{ docFiltroRadioLabel }}</span></div>
+<input type="range" min="2" max="50" step="2" value="{{ docFiltroRadio }}" onChange="{{ updateDocFiltroRadio }}" style="width:100%;accent-color:#97125F;margin-bottom:6px">
+<div style="display:flex;justify-content:space-between;font:400 11.5px/1 Inter,sans-serif;color:#9AA09B;margin-bottom:16px"><span>2 km</span><span>Toda la zona</span></div>
+<div style="height:1px;background:#E3E1DC;margin-bottom:16px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:14px" onClick="{{ toggleDocSoloRapidas }}"><span style="font:500 13px/1 Inter,sans-serif">Sólo suplencias</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ docSoloRapidasTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ docSoloRapidasDotStyle }}"></span></span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onClick="{{ toggleSoloVerificados }}"><span style="font:500 13px/1 Inter,sans-serif">Solo instituciones verificadas</span><span style="width:34px;height:20px;border-radius:999px;position:relative;display:inline-block;flex:none;{{ soloVerificadosTrackStyle }}"><span style="width:16px;height:16px;border-radius:999px;background:#fff;position:absolute;top:2px;transition:left .15s,right .15s;{{ soloVerificadosDotStyle }}"></span></span></div>
+</div>
+</details>
+<div style="flex:1;min-width:0">
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-<input class="cbl-input" style="flex:1;min-width:220px;max-width:360px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
-<select class="cbl-select" style="max-width:190px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a / Instructor/a</option><option>Guardavidas</option></select>
+<input class="cbl-input" style="flex:1;min-width:180px" placeholder="Buscar por institución o materia" value="{{ filtroOportTexto }}" onChange="{{ updateFiltroOportTexto }}">
+<select class="cbl-select" style="max-width:170px" value="{{ filtroOportCategoria }}" onChange="{{ updateFiltroOportCategoria }}"><option>Todas las categorías</option><option>Profesor/a</option><option>Maestro/a</option><option>Entrenador/a / Instructor/a</option><option>Guardavidas</option></select>
+<select class="cbl-select" style="max-width:150px" value="{{ filtroOportNivel }}" onChange="{{ updateFiltroOportNivel }}"><option>Todos los niveles</option><option>Inicial</option><option>Secundario</option><option>Adultos</option></select>
+<select class="cbl-select" style="max-width:150px" value="{{ filtroOportTurno }}" onChange="{{ updateFiltroOportTurno }}"><option>Todos los turnos</option><option>Mañana</option><option>Tarde</option><option>Mañana y tarde</option></select>
+<div style="display:flex;gap:10px;flex:none">
+<span onClick="{{ toggleDocSoloFavoritos }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docSoloFavoritosStyle }}">★ Favoritos</span>
+<span onClick="{{ toggleDocSoloRapidas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:40px;border-radius:8px;font:600 13px/1 Inter,sans-serif;white-space:nowrap;flex:none;{{ docSoloRapidasBotonStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg>Búsqueda rápida</span>
 </div>
-<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
+</div>
+<div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
 <sc-for list="{{ publicTrabajoList }}" as="o" hint-placeholder-count="9">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:18px;display:flex;flex-direction:column">
-<div style="display:flex;gap:11px;margin-bottom:12px">
-<img src="{{ o.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
-<div style="min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div>
+<div onClick="{{ o.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s" style-hover="border-color:#C9C6C0;box-shadow:0 6px 16px rgba(31,36,33,.08)">
+<div style="display:flex;gap:12px;margin-bottom:10px"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ o.logo }});background-size:cover;background-position:center"></span><div style="flex:1;min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ o.title }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ o.inst }}</div></div><span onClick="{{ o.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;{{ o.favStyle }}">★</span></div>
+<div style="font:400 13px/1.5 Inter,sans-serif;color:#6B706C;margin-bottom:12px">{{ o.descripcion }}</div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;font:400 13px/1.4 Inter,sans-serif;color:#3D423E">
+<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
+<div style="display:flex;gap:8px;align-items:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B706C" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
 </div>
-<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;font:400 12.5px/1.4 Inter,sans-serif;color:#6B706C">
-<div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"></path><circle cx="12" cy="9" r="2.4"></circle></svg>{{ o.zona }}</div>
-<div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9AA09B" stroke-width="1.8" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>{{ o.horario }}</div>
-</div>
-<button class="cbl-btn cbl-btn--primary cbl-btn--sm" style="margin-top:auto;background:#DD553F" onClick="{{ goSignup }}">Postularme</button>
+<span onClick="{{ o.onClick }}" style="cursor:pointer;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA;font:600 13px/1 Inter,sans-serif;color:#16214F;display:inline-flex;align-items:center;gap:5px" style-hover="color:#DD553F">Postularme<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></span>
 </div>
 </sc-for>
+</div>
+<sc-if value="{{ publicTrabajoVacio }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px dashed #CFCCC5;border-radius:12px;padding:40px 24px;text-align:center">
+<div style="font:600 15px/1.3 Inter,sans-serif;margin-bottom:6px">Ninguna búsqueda coincide con esos filtros</div>
+<div style="font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Probá ampliar el rango o sacar algún filtro.</div>
+</div>
+</sc-if>
+</div>
 </div>
 </div>
 <dc-import name="Footer"></dc-import>
@@ -1037,21 +1097,30 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 </div>
 
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+<input class="cbl-input" style="flex:1;min-width:220px" placeholder="Buscar por nombre" value="{{ filtroInstTexto }}" onChange="{{ updateFiltroInstTexto }}">
+<select class="cbl-select" style="max-width:190px" value="{{ filtroInstTipo }}" onChange="{{ updateFiltroInstTipo }}"><option>Todos los tipos</option><option>Colegio privado</option><option>Instituto privado</option><option>Club deportivo</option><option>Gimnasio</option><option>Jardín de infantes</option></select>
+<select class="cbl-select" style="max-width:170px" value="{{ filtroInstZona }}" onChange="{{ updateFiltroInstZona }}"><option>Todas las zonas</option><option>Vicente López</option><option>Núñez</option><option>Olivos</option><option>Nordelta</option></select>
+<span onClick="{{ toggleFiltroInstFavoritas }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:0 16px;border-radius:8px;font:600 14px/1 Inter,sans-serif;{{ filtroInstFavoritasStyle }}">★ Favoritas</span></div>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px">
 <sc-for list="{{ publicInstList }}" as="i" hint-placeholder-count="5">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:18px;display:flex;flex-direction:column">
-<div style="display:flex;gap:11px;margin-bottom:12px">
-<img src="{{ i.logo }}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
-<div style="min-width:0"><div style="font:600 15px/1.3 Inter,sans-serif">{{ i.nombre }}</div><div style="font:400 12.5px/1.35 Inter,sans-serif;color:#6B706C">{{ i.tipo }} · {{ i.zona }}</div></div>
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column">
+<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+<div style="display:flex;gap:10px;align-items:center;min-width:0"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ i.logo }});background-size:cover;background-position:center"></span><div style="min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">{{ i.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ i.tipo }} · {{ i.zona }}</div></div></div>
+<span onClick="{{ i.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;line-height:1;{{ i.favStyle }}">★</span>
 </div>
-<div style="font:400 13px/1.5 Inter,sans-serif;color:#3D423E;margin-bottom:14px">{{ i.desc }}</div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:12px;border-top:1px solid #F0EFEA">
-<span style="font:500 12.5px/1 Inter,sans-serif;color:#6B706C">{{ i.busquedasLabel }}</span>
-<button class="cbl-btn cbl-btn--secondary cbl-btn--sm" onClick="{{ goSignup }}">Ver perfil</button>
-</div>
+<p style="margin:0 0 12px;font:400 13px/1.5 Inter,sans-serif;color:#3D423E;min-height:40px">{{ i.desc }}</p>
+<div style="margin-top:auto;padding-top:10px;border-top:1px solid #E3E1DC;margin-bottom:14px"><span class="cbl-badge" style="{{ i.busquedasBadgeStyle }}">{{ i.busquedasBadge }}</span></div>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#16214F" onClick="{{ i.onVer }}">Ver perfil</button>
 </div>
 </sc-for>
 </div>
+<sc-if value="{{ publicInstVacio }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px dashed #CFCCC5;border-radius:12px;padding:40px 24px;text-align:center">
+<div style="font:600 15px/1.3 Inter,sans-serif;margin-bottom:6px">Ninguna institución coincide con esos filtros</div>
+<div style="font:400 13.5px/1.5 Inter,sans-serif;color:#6B706C">Probá con otro tipo o con otra zona.</div>
+</div>
+</sc-if>
 </div>
 <dc-import name="Footer"></dc-import>
 </div>
@@ -1060,7 +1129,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
 <div class="udoar-signup-split" style="min-height:100vh;display:flex">
 <div class="udoar-signup-photo" style="flex:1;min-width:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end">
-<div style="position:absolute;inset:0;background:url(&quot;assets/signup-modal-bg.jpg&quot;) center / cover no-repeat"></div>
+<div style="position:absolute;inset:0;background:url(&quot;assets/aula-secundaria.jpg&quot;) center / cover no-repeat"></div>
 <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,33,79,.15),rgba(22,33,79,.8))"></div>
 <div style="position:relative;z-index:1;padding:48px;color:#fff">
 <div style="font:600 26px/1.3 Inter,sans-serif;margin-bottom:10px">Docentes verificados, sin vueltas</div>
@@ -1407,7 +1476,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="4">
 <div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
 <img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -1440,7 +1509,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Las que más están buscando en tus zonas.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ institucionesDestacadas }}" as="d" hint-placeholder-count="3">
+<sc-for list="{{ institucionesDestacadas }}" as="d" hint-placeholder-count="4">
 <div onClick="{{ d.onVer }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
 <div style="display:flex;gap:11px;margin-bottom:10px">
 <img src="{{ d.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -1473,7 +1542,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Suman en tu perfil y las instituciones los ven.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-<sc-for list="{{ cursosDestacados }}" as="c" hint-placeholder-count="3">
+<sc-for list="{{ cursosDestacados }}" as="c" hint-placeholder-count="4">
 <div onClick="{{ c.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
 <div style="position:relative">
 <sc-if value="{{ c.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ c.fotoUrl }}" alt="" style="width:100%;height:116px;object-fit:cover;display:block"></sc-if>
@@ -1560,7 +1629,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 </div>
 </div>
-<div onClick="{{ goDocRapidas }}" class="udoar-banner-video" style="cursor:pointer;border-radius:14px;position:relative;overflow:hidden;background:url(&quot;assets/urgente-aula.jpg&quot;) center / cover no-repeat;display:flex;align-items:flex-end">
+<div onClick="{{ goDocRapidas }}" class="udoar-banner-video" style="cursor:pointer;border-radius:14px;position:relative;overflow:hidden;background:url(&quot;assets/urgente-pizarron.jpg&quot;) center 26% / cover no-repeat;display:flex;align-items:flex-end">
 <span style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,11,53,.1),rgba(4,11,53,.88));pointer-events:none"></span>
 <div style="position:relative;z-index:1;padding:20px 22px">
 <span class="cbl-badge" style="background:#DD553F;color:#fff;margin-bottom:8px;display:inline-block">2 suplencias abiertas</span>
@@ -1576,7 +1645,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="4">
 <div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
 <img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -1705,7 +1774,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div id="udoar-mapa-host" style="position:absolute;inset:0"></div>
 <div class="udoar-mapa-leyenda" style="position:absolute;right:14px;top:14px;z-index:500;display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.93);border:1px solid #E3E1DC;border-radius:999px;padding:8px 14px;pointer-events:none">
 <sc-for list="{{ mapaLeyenda }}" as="l" hint-placeholder-count="3">
-<span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span>{{ l.label }}</span>
+<span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><sc-if value="{{ l.esPunto }}" hint-placeholder-val="{{ true }}"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span></sc-if><sc-if value="{{ l.esReloj }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ l.color }}" stroke-width="2.2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg></sc-if>{{ l.label }}</span>
 </sc-for>
 </div>
 <sc-if value="{{ mapaSel }}" hint-placeholder-val="{{ false }}">
@@ -2024,18 +2093,14 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <sc-if value="{{ esInstVistaLista }}" hint-placeholder-val="{{ true }}">
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
 <sc-for list="{{ institucionesCards }}" as="i" hint-placeholder-count="3">
-<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px">
+<div style="background:#fff;border:1px solid #E3E1DC;border-radius:8px;padding:18px;display:flex;flex-direction:column">
 <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-<div style="display:flex;gap:10px;align-items:center"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ i.logo }});background-size:cover;background-position:center"></span><div><div style="font:600 14px/1.3 Inter,sans-serif">{{ i.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ i.tipo }} · {{ i.zona }}</div></div></div>
+<div style="display:flex;gap:10px;align-items:center;min-width:0"><span style="flex:none;width:40px;height:40px;border-radius:8px;background-color:#E5E9FB;background-image:url({{ i.logo }});background-size:cover;background-position:center"></span><div style="min-width:0"><div style="font:600 14px/1.3 Inter,sans-serif">{{ i.nombre }}</div><div style="font:400 12px/1.35 Inter,sans-serif;color:#6B706C">{{ i.tipo }} · {{ i.zona }}</div></div></div>
+<span onClick="{{ i.onToggleFav }}" style="cursor:pointer;font-size:16px;flex:none;line-height:1;{{ i.favStyle }}">★</span>
 </div>
 <p style="margin:0 0 12px;font:400 13px/1.5 Inter,sans-serif;color:#3D423E;min-height:40px">{{ i.desc }}</p>
-<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #E3E1DC;margin-bottom:14px;font:400 13px/1 Inter,sans-serif">
-<span style="color:#6B706C">Búsquedas activas</span><span style="font-weight:600;color:{{ i.busquedasColor }}">{{ i.busquedas }}</span>
-</div>
-<div class="udoar-btn-row" style="display:flex;gap:8px">
-<button class="cbl-btn cbl-btn--secondary" style="flex:1;{{ i.savedBtnStyle }}" onClick="{{ i.onToggleSaved }}">{{ i.savedLabel }}</button>
-<button class="cbl-btn cbl-btn--primary" style="flex:1;background:#16214F" onClick="{{ i.onVer }}">Ver perfil</button>
-</div>
+<div style="margin-top:auto;padding-top:10px;border-top:1px solid #E3E1DC;margin-bottom:14px"><span class="cbl-badge" style="{{ i.busquedasBadgeStyle }}">{{ i.busquedasBadge }}</span></div>
+<button class="cbl-btn cbl-btn--primary cbl-btn--block" style="background:#16214F" onClick="{{ i.onVer }}">Ver perfil</button>
 </div>
 </sc-for>
 </div>
@@ -5752,6 +5817,17 @@ class Component extends DCLogic {
     if (franjas.convenir.length) salida.push({ titulo: 'A convenir', color: '#8CA9BE', texto: frase(franjas.convenir) });
     return salida;
   }
+  // El número de búsquedas abiertas es el dato que más mira un docente:
+  // va como pastilla verde cuando hay algo y apagada cuando no.
+  badgeDeBusquedas(n) {
+    return {
+      busquedasBadge: n === 0 ? 'Sin búsquedas abiertas'
+        : n === 1 ? '1 búsqueda abierta' : n + ' búsquedas abiertas',
+      busquedasBadgeStyle: n > 0
+        ? 'background:#E7F5EF;color:#1E7A4C'
+        : 'background:#F0EFEA;color:#9AA09B',
+    };
+  }
   // Mismo recorte que usa la grilla, para que el mapa muestre lo mismo.
   institucionesFiltradas() {
     return this.state.institucionesList.filter(i => {
@@ -5978,7 +6054,7 @@ class Component extends DCLogic {
       verifiedLabel: verified ? (p.name.trim().endsWith('a') ? 'Verificada' : 'Verificado') : 'Sin verificar',
       verifiedBadgeStyle: verified ? 'background:transparent;color:#1E7A4C' : 'background:transparent;color:#9AA09B',
       hasVerifiedIcon: verified,
-      photo: ['assets/hero-profesor.jpg', 'assets/hero-docente.jpg', 'assets/hero-entrenador.jpg', 'assets/hero-guardavidas.jpg', 'assets/bgDocentes-fixed.jpg', 'assets/bgEntrenadores-fixed.jpg'][p.name.length % 6],
+      photo: ['assets/hero-profesor.jpg', 'assets/hero-docente.jpg', 'assets/hero-entrenador.jpg', 'assets/hero-guardavidas.jpg', 'assets/bgDocentes-fixed.jpg', 'assets/bgEntrenadores-fixed.jpg', 'assets/profe-ciencias.jpg', 'assets/maestra-inicial.jpg', 'assets/entrenador-chicos.jpg', 'assets/aula-secundaria.jpg'][p.name.length % 10],
       noteStyle: p.note === 'Esperando respuesta' ? 'background:#F6E6E0;color:#8F3D28' : 'background:#FDE9D8;color:#9A4A12',
       borderColor: '#E3E1DC',
       onClick: () => this.openCv(p), onDragStart: (e) => { e.dataTransfer.setData('text/plain', p.key); this.setState({ draggingKey: p.key }); },
@@ -6026,7 +6102,7 @@ class Component extends DCLogic {
   }
   openBoInst(i) { this.setState({ boSelectedInst: { ...i, initials: i.nombre.split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('') }, screen: 'boInstDetalle' }); }
   closeBoInst() { this.setState({ boSelectedInst: null, screen: 'boInst' }); }
-  openBoDoc(d) { const photos = { 'Martina Alsina': 'assets/hero-entrenador.jpg', 'Rocío Aguirre': 'assets/bgEntrenadores-fixed.jpg', 'Facundo Ojeda': 'assets/hero-guardavidas.jpg', 'Carolina Ruiz Díaz': 'assets/hero-docente.jpg', 'Luciana Prieto': 'assets/bgDocentes-fixed.jpg' }; this.setState({ boSelectedDoc: { ...d, photo: photos[d.nombre] || 'assets/hero-profesor.jpg' }, screen: 'boDocDetalle' }); }
+  openBoDoc(d) { const photos = { 'Martina Alsina': 'assets/hero-entrenador.jpg', 'Rocío Aguirre': 'assets/bgEntrenadores-fixed.jpg', 'Facundo Ojeda': 'assets/hero-guardavidas.jpg', 'Carolina Ruiz Díaz': 'assets/maestra-inicial.jpg', 'Luciana Prieto': 'assets/bgDocentes-fixed.jpg' }; this.setState({ boSelectedDoc: { ...d, photo: photos[d.nombre] || 'assets/hero-profesor.jpg' }, screen: 'boDocDetalle' }); }
   closeBoDoc() { this.setState({ boSelectedDoc: null, screen: 'boDocentes' }); }
   inviteDoc(name) {
     this.setState(s => ({ invitedDocsSet: [...s.invitedDocsSet, name], showQuickInviteToast: true, quickInviteToastText: 'Invitación enviada a ' + name }));
@@ -6250,7 +6326,7 @@ class Component extends DCLogic {
       isDocentePage: isDoc,
       isInstPage: isInst,
       isInstOnbPage: isInstOnb,
-      onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/onboarding-bg-3.jpg' : 'assets/onboarding-bg-1.jpg',
+      onboardingBgUrl: s === 'instOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'instOnb3' ? 'assets/gimnasio-entrenamiento.jpg' : 'assets/entrenador-chicos.jpg',
       isDocOnbPage: isDocOnb,
       docOnbBgUrl: s === 'docOnbCat' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnbAsig' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb2' ? 'assets/onboarding-bg-2.jpg' : s === 'docOnb3' ? 'assets/onboarding-bg-3.jpg' : s === 'docOnb4' ? 'assets/onboarding-bg-1.jpg' : s === 'docOnb5' ? 'assets/onboarding-bg-2.jpg' : 'assets/onboarding-bg-3.jpg',
       navDocDashboardStyle: (s === 'docDashboard' || s === 'docDashNuevo') ? docNavOn : docNavOff,
@@ -6886,31 +6962,42 @@ class Component extends DCLogic {
       muroBajada: this.state.screen === 'publicInstituciones'
         ? 'Gratis para docentes. Guardás las instituciones que te interesan y te avisamos cuando publican.'
         : 'Gratis para docentes. Te lleva dos minutos y después te postulás con un clic.',
-      publicTrabajoList: this.state.oportunidadesMas.filter(o =>
-        (this.state.filtroOportCategoria === 'Todas las categorías' || o.categoria === this.state.filtroOportCategoria) &&
-        (!this.state.filtroOportTexto || (o.title + ' ' + o.inst).toLowerCase().includes(this.state.filtroOportTexto.toLowerCase()))
-      ),
-      publicInstList: this.state.institucionesList.map(i => ({
-        ...i,
-        busquedasLabel: i.busquedas === 0 ? 'Sin búsquedas abiertas'
-          : i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
+      // La página pública usa el mismo recorte que el buscador del docente, así los
+      // filtros de la izquierda funcionan igual. Lo único distinto es que cualquier
+      // acción lleva a crear la cuenta: sin cuenta se mira, no se guarda ni se postula.
+      publicTrabajoList: this.oportunidadesFiltradas().map(o => ({
+        ...o,
+        onClick: () => this.go('signup'),
+        onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.go('signup'); },
+        favStyle: 'color:#CFCCC5',
       })),
+      publicTrabajoVacio: this.oportunidadesFiltradas().length === 0,
+      // La página pública usa el mismo recorte que la del docente, así los filtros
+      // de arriba funcionan igual; sin cuenta no se guarda, se manda a crear una.
+      publicInstList: this.institucionesFiltradas().map(i => ({
+        ...i,
+        onVer: () => this.go('signup'),
+        onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.go('signup'); },
+        favStyle: 'color:#CFCCC5',
+        ...this.badgeDeBusquedas(i.busquedas),
+      })),
+      publicInstVacio: this.institucionesFiltradas().length === 0,
       recomendadasList: this.state.oportunidadesMas
         .map(o => ({ ...o, ...this.matchDeOferta(o) }))
         .sort((a, b) => b.match - a.match)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(o => ({ ...o, matchLabel: o.match + '% match', matchStyle: this.colorDeMatch(o.match), onClick: () => this.openOport(o) })),
       institucionesDestacadas: this.state.institucionesList
         .slice()
         .sort((a, b) => b.busquedas - a.busquedas)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(i => ({
           ...i,
           resumen: (i.desc || '').length > 92 ? i.desc.slice(0, 92).trim() + '…' : i.desc,
           busquedasLabel: i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
           onVer: () => this.openInstPerfil(i.key),
         })),
-      cursosDestacados: this.state.cursosDetallados.slice(0, 3).map(c => ({
+      cursosDestacados: this.state.cursosDetallados.slice(0, 4).map(c => ({
         ...c,
         subtitulo: c.subtitulo || '',
         fotoUrl: this.fotoDeCurso(c), tieneFoto: !!this.fotoDeCurso(c), sinFoto: !this.fotoDeCurso(c),
@@ -6957,9 +7044,10 @@ class Component extends DCLogic {
       buscarVistaListaStyle: this.state.docBuscarVista !== 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
       buscarVistaMapaStyle: this.state.docBuscarVista === 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
       mapaLeyenda: [
-        { label: 'Docentes', color: '#DD553F' },
-        { label: 'Entrenadores / Instructores', color: '#F0B400' },
-        { label: 'Guardavidas', color: '#82D8E9' },
+        { label: 'Docentes', color: '#DD553F', esPunto: true, esReloj: false },
+        { label: 'Entrenadores / Instructores', color: '#F0B400', esPunto: true, esReloj: false },
+        { label: 'Guardavidas', color: '#82D8E9', esPunto: true, esReloj: false },
+        { label: 'Suplencia rápida', color: '#16214F', esPunto: false, esReloj: true },
       ],
       mapaPines: this._valsMapa = (() => {
         const usadas = {};
@@ -6974,6 +7062,7 @@ class Component extends DCLogic {
             lat: base[0] + Math.sin(ang) * rad,
             lng: base[1] + Math.cos(ang) * rad,
             color: this.colorDeCategoria(o.categoria),
+            rapida: !!o.rapida,
           };
         });
       })(),
@@ -7108,9 +7197,12 @@ class Component extends DCLogic {
         iniciales: i.nombre.split(' ').filter(w => w.length > 2 || /[A-Z]/.test(w[0])).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
         busquedasColor: i.busquedas > 0 ? '#1E7A4C' : '#9AA09B',
         onToggleSaved: () => this.toggleSavedInst(i.key),
+        onToggleFav: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.toggleSavedInst(i.key); },
+        favStyle: i.saved ? 'color:#F0B400' : 'color:#CFCCC5',
         onVer: () => this.openInstPerfil(i.key),
         savedLabel: i.saved ? '★ Guardada' : '☆ Guardar',
         savedBtnStyle: i.saved ? 'background:#FDF1C7;color:#7A5900;border-color:#F0D98A' : '',
+        ...this.badgeDeBusquedas(i.busquedas),
       })),
       toggleFiltroInstFavoritas: () => this.toggleFiltroInstFavoritas(),
       filtroInstFavoritasStyle: this.state.filtroInstFavoritas ? 'background:#FDF1C7;color:#7A5900' : 'background:#fff;color:#3D423E;border:1px solid #E3E1DC',
@@ -7348,8 +7440,8 @@ class Component extends DCLogic {
         const catalog = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', disciplinas: ['Educación Física', 'Natación'], turnos: ['Turno mañana'], verified: true, urgente: true, coincide: 6, zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde marzo', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', nivel: 'Primario', tipo: 'Titular' },
           { name: 'Facundo Ojeda', bio: 'Profesor de Natación y guardavidas', disciplinas: ['Natación'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · Núñez', horario: 'Turno mañana · disponibilidad inmediata', tags: ['Natación', 'Guardavidas'], photo: 'assets/hero-guardavidas.jpg', nivel: 'Primario', tipo: 'Suplencia' },
-          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', disciplinas: ['Matemática'], turnos: ['Turno tarde'], verified: true, coincide: 4, zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/hero-profesor.jpg', nivel: 'Secundario', tipo: 'Titular' },
-          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', disciplinas: ['Inglés'], turnos: ['Turno mañana'], verified: true, coincide: 4, zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/hero-docente.jpg', nivel: 'Primario', tipo: 'Titular' },
+          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', disciplinas: ['Matemática'], turnos: ['Turno tarde'], verified: true, coincide: 4, zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/profe-ciencias.jpg', nivel: 'Secundario', tipo: 'Titular' },
+          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', disciplinas: ['Inglés'], turnos: ['Turno mañana'], verified: true, coincide: 4, zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/maestra-inicial.jpg', nivel: 'Primario', tipo: 'Titular' },
           { name: 'Luciana Prieto', bio: 'Maestra de Nivel Inicial', disciplinas: ['Nivel Inicial'], turnos: ['Turno tarde'], verified: false, coincide: 3, zona: 'Tigre · Nordelta', horario: 'Turno tarde · desde abril', tags: ['Nivel Inicial', 'Música'], photo: 'assets/bgDocentes-fixed.jpg', nivel: 'Inicial', tipo: 'Suplencia' },
           { name: 'Sol Belmonte', bio: 'Profesora de Danza contemporánea', disciplinas: ['Danza'], turnos: ['Contraturno / sábados'], verified: true, coincide: 3, zona: 'Palermo · Belgrano', horario: 'Contraturno y sábados', tags: ['Danza', 'Expresión corporal'], photo: 'assets/bgEntrenadores-fixed.jpg', nivel: 'Secundario', tipo: 'Titular' },
         ];
@@ -7371,8 +7463,8 @@ class Component extends DCLogic {
       buscadorDocentesRapidosList: (() => {
         const catalog = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', disciplinas: ['Educación Física', 'Natación'], turnos: ['Turno mañana'], verified: true, coincide: 6, zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde mañana', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
-          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', disciplinas: ['Educación Física'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/hero-profesor.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
-          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', disciplinas: ['Guardavidas'], turnos: ['Turno mañana', 'Turno tarde'], verified: true, coincide: 5, zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/hero-guardavidas.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
+          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', disciplinas: ['Educación Física'], turnos: ['Turno mañana'], verified: true, coincide: 5, zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/entrenador-chicos.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
+          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', disciplinas: ['Guardavidas'], turnos: ['Turno mañana', 'Turno tarde'], verified: true, coincide: 5, zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/cat-guardavidas-pileta.jpg', nivel: 'Primario', tipo: 'Suplencia rápida' },
         ];
         const activeDisciplinas = Object.keys(this.state.filtroDisciplinas).filter(k => this.state.filtroDisciplinas[k]);
         const activeDisponibilidad = Object.keys(this.state.filtroDisponibilidad).filter(k => this.state.filtroDisponibilidad[k]);
@@ -7393,12 +7485,12 @@ class Component extends DCLogic {
         const catalogA = [
           { name: 'Martina Alsina', bio: 'Profesora de Ed. Física · 12 años', zona: 'Vicente López · Olivos', horario: 'Turno mañana · desde marzo', tags: ['Ed. Física', 'Natación', 'Primario'], photo: 'assets/hero-entrenador.jpg', verified: true, coincide: 6 },
           { name: 'Facundo Ojeda', bio: 'Profesor de Natación y guardavidas', zona: 'Vicente López · Núñez', horario: 'Turno mañana · disponibilidad inmediata', tags: ['Natación', 'Guardavidas'], photo: 'assets/hero-guardavidas.jpg', verified: true, coincide: 5 },
-          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/hero-profesor.jpg', verified: true, coincide: 4 },
-          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/hero-docente.jpg', verified: true, coincide: 4 },
+          { name: 'Damián Ferreyra', bio: 'Profesor de Matemática', zona: 'San Isidro · Boulogne', horario: 'Turno tarde y vespertino', tags: ['Matemática', 'Secundario'], photo: 'assets/profe-ciencias.jpg', verified: true, coincide: 4 },
+          { name: 'Carolina Ruiz Díaz', bio: 'Profesora de Inglés · 8 años', zona: 'Martínez · Acassuso', horario: 'Turno mañana · 15 hs semanales', tags: ['Inglés', 'Primario'], photo: 'assets/maestra-inicial.jpg', verified: true, coincide: 4 },
           { name: 'Luciana Prieto', bio: 'Maestra de Nivel Inicial', zona: 'Tigre · Nordelta', horario: 'Turno tarde · desde abril', tags: ['Nivel Inicial', 'Música'], photo: 'assets/bgDocentes-fixed.jpg', verified: false, coincide: 3 },
           { name: 'Sol Belmonte', bio: 'Profesora de Danza contemporánea', zona: 'Palermo · Belgrano', horario: 'Contraturno y sábados', tags: ['Danza', 'Expresión corporal'], photo: 'assets/bgEntrenadores-fixed.jpg', verified: true, coincide: 3 },
-          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/hero-profesor.jpg', verified: true, coincide: 5 },
-          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/hero-guardavidas.jpg', verified: true, coincide: 5 },
+          { name: 'Nicolás Bravo', bio: 'Profesor de Educación Física', zona: 'Vicente López · 4 km', horario: 'Disponible hoy', tags: ['Ed. Física'], photo: 'assets/entrenador-chicos.jpg', verified: true, coincide: 5 },
+          { name: 'Agustina Molina', bio: 'Guardavidas habilitada', zona: 'Núñez · 5 km', horario: 'Disponible este fin de semana', tags: ['Guardavidas'], photo: 'assets/cat-guardavidas-pileta.jpg', verified: true, coincide: 5 },
         ];
         const seen = new Set();
         const unique = catalogA.filter(d => this.state.favoritosInst.includes(d.name) && !seen.has(d.name) && seen.add(d.name));
@@ -7467,13 +7559,13 @@ class Component extends DCLogic {
         const origenStyles = { 'Se postuló': 'background:#E5E9FB;color:#16214F', 'Envió CV': 'background:#FDEBD8;color:#8A4A10', 'Cargado manualmente': 'background:#F0EFEA;color:#3D423E' };
         const seed = [
           { name: 'Martina Alsina', email: 'martina.alsina@mail.com', disciplina: 'Educación Física', origen: 'Se postuló', busqueda: 'Prof. Ed. Física · Secundario', fecha: '18/09/2026', estado: 'Entrevista', photo: 'assets/hero-entrenador.jpg' },
-          { name: 'Carolina Ruiz Díaz', email: 'caro.ruizdiaz@mail.com', disciplina: 'Inglés', origen: 'Envió CV', busqueda: '—', fecha: '15/09/2026', estado: 'Sin contactar', photo: 'assets/hero-docente.jpg' },
-          { name: 'Damián Ferreyra', email: 'dferreyra@mail.com', disciplina: 'Matemática', origen: 'Se postuló', busqueda: 'Prof. Matemática · 3er año', fecha: '12/09/2026', estado: 'Contratado', photo: 'assets/hero-profesor.jpg' },
+          { name: 'Carolina Ruiz Díaz', email: 'caro.ruizdiaz@mail.com', disciplina: 'Inglés', origen: 'Envió CV', busqueda: '—', fecha: '15/09/2026', estado: 'Sin contactar', photo: 'assets/maestra-inicial.jpg' },
+          { name: 'Damián Ferreyra', email: 'dferreyra@mail.com', disciplina: 'Matemática', origen: 'Se postuló', busqueda: 'Prof. Matemática · 3er año', fecha: '12/09/2026', estado: 'Contratado', photo: 'assets/profe-ciencias.jpg' },
           { name: 'Luciana Prieto', email: 'lu.prieto@mail.com', disciplina: 'Nivel Inicial', origen: 'Cargado manualmente', busqueda: '—', fecha: '09/09/2026', estado: 'En reserva', photo: 'assets/bgDocentes-fixed.jpg' },
           { name: 'Facundo Ojeda', email: 'facu.ojeda@mail.com', disciplina: 'Natación', origen: 'Se postuló', busqueda: 'Suplencia Natación · rápida', fecha: '05/09/2026', estado: 'Nuevo', photo: 'assets/hero-guardavidas.jpg' },
           { name: 'Sol Belmonte', email: 'sol.belmonte@mail.com', disciplina: 'Danza', origen: 'Envió CV', busqueda: '—', fecha: '28/08/2026', estado: 'Sin contactar', photo: 'assets/bgEntrenadores-fixed.jpg' },
-          { name: 'Nicolás Bravo', email: 'nbravo@mail.com', disciplina: 'Educación Física', origen: 'Cargado manualmente', busqueda: '—', fecha: '20/08/2026', estado: 'Ex docente', photo: 'assets/hero-profesor.jpg' },
-          { name: 'Agustina Molina', email: 'agus.molina@mail.com', disciplina: 'Guardavidas', origen: 'Se postuló', busqueda: 'Guardavidas · temporada', fecha: '14/08/2026', estado: 'Descartado', photo: 'assets/hero-guardavidas.jpg' },
+          { name: 'Nicolás Bravo', email: 'nbravo@mail.com', disciplina: 'Educación Física', origen: 'Cargado manualmente', busqueda: '—', fecha: '20/08/2026', estado: 'Ex docente', photo: 'assets/entrenador-chicos.jpg' },
+          { name: 'Agustina Molina', email: 'agus.molina@mail.com', disciplina: 'Guardavidas', origen: 'Se postuló', busqueda: 'Guardavidas · temporada', fecha: '14/08/2026', estado: 'Descartado', photo: 'assets/cat-guardavidas-pileta.jpg' },
         ];
         const all = [...(this.state.baseExtra || []), ...seed];
         const tab = this.state.baseTab || 'Todos';

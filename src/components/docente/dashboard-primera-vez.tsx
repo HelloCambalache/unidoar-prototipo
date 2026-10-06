@@ -226,7 +226,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
         </div>
         <Link
           href="/docente/busquedas-rapidas"
-          style={{ backgroundImage: "url(/assets/urgente-aula.jpg)" }}
+          style={{ backgroundImage: "url(/assets/urgente-pizarron.jpg)" }}
           className="relative flex min-h-[200px] max-w-[440px] min-w-[280px] flex-[1_1_380px] items-end self-stretch overflow-hidden rounded-[14px] bg-cover bg-center bg-no-repeat max-[860px]:aspect-video max-[860px]:min-h-0 max-[860px]:w-full max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:flex-none"
         >
           <span

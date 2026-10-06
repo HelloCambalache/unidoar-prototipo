@@ -46,7 +46,7 @@ export function UrgentesHome({
           <div className="relative col-span-2 row-span-2 flex flex-col justify-between overflow-hidden rounded-[18px] bg-naranja p-7 max-[560px]:col-span-1">
             <span
               aria-hidden
-              className="absolute inset-0 bg-[url(/assets/urgente-aula.jpg)] bg-cover bg-center opacity-[.22]"
+              className="absolute inset-0 bg-[url(/assets/urgente-pizarron.jpg)] bg-cover bg-center opacity-[.22]"
             />
             <div className="relative">
               <span className="inline-flex rounded-full bg-white/20 px-2.5 py-[5px] text-[11px] leading-none font-semibold text-white">
