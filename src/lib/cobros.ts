@@ -164,7 +164,37 @@ export const facturaNuevaSchema = z.object({
 });
 export type FacturaNueva = z.input<typeof facturaNuevaSchema>;
 
-export const pagoSchema = z.object({ medio: z.enum(MEDIOS_PAGO, { error: "Elegí el medio de pago" }) });
+/** Hasta cuántos días atrás se puede registrar un pago (cubre un cierre de año o un olvido largo, no un error de tipeo). */
+export const DIAS_MAXIMOS_PAGO_ATRASADO = 366;
+
+/**
+ * Reglas de la fecha en la que llegó el pago ("2026-10-03"), en hora argentina: no puede ser futura ni de hace más de
+ * un año. Devuelve el mensaje de error o null si está bien. Las usan el formulario y la acción del servidor.
+ */
+export function errorDeFechaDePago(fecha: string, hoy: string) {
+  if (fecha > hoy) return "La fecha del pago no puede ser futura.";
+  const dias = (Date.parse(`${hoy}T00:00:00Z`) - Date.parse(`${fecha}T00:00:00Z`)) / 86_400_000;
+  if (dias > DIAS_MAXIMOS_PAGO_ATRASADO) return "Revisá la fecha: es de hace más de un año.";
+  return null;
+}
+
+export const pagoSchema = z.object({
+  medio: z.enum(MEDIOS_PAGO, { error: "Elegí el medio de pago" }),
+  /** Cuándo llegó el pago; sin fecha se toma el momento del registro. */
+  fecha: vacioAUndefined(
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí la fecha del pago")
+      .refine(esFechaReal, "La fecha no existe")
+      .optional(),
+  ),
+});
+
+export const anulacionSchema = z.object({
+  motivo: z.string().trim().min(3, "Contá el motivo: queda en el registro del equipo").max(300, "Máximo 300 caracteres"),
+  /** Si se le avisa a la institución que el pago registrado se corrigió. */
+  avisar: z.boolean(),
+});
 
 export const rechazoSchema = z.object({
   nota: z.string().trim().min(3, "Contale a la institución por qué").max(500, "Máximo 500 caracteres"),

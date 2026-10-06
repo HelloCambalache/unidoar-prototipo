@@ -73,6 +73,8 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Cargó la factura de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}`;
     case "factura.pagar":
       return `Registró el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}`;
+    case "factura.anular_pago":
+      return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":
       return `Marcó como vencida la factura de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}`;
     default:

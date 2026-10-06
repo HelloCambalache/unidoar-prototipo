@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
+import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
@@ -159,7 +160,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                         )}
                       </td>
                       <td className="text-right whitespace-nowrap">
-                        {f.estado !== "pagada" && <CobroPago factura={paraPago(f)} medioInicial={f.medio ?? i.medioPago} />}
+                        {f.estado !== "pagada" ? (
+                          <CobroPago factura={paraPago(f)} medioInicial={f.medio ?? i.medioPago} />
+                        ) : (
+                          <CobroAnularPago factura={paraPago(f)} />
+                        )}
                       </td>
                     </tr>
                   ))}

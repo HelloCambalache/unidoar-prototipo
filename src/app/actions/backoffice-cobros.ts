@@ -1,18 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { transaccion } from "@/db";
-import { facturas, instituciones, solicitudesPlan } from "@/db/schema";
+import { auditoria, facturas, instituciones, solicitudesPlan } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import {
+  anulacionSchema,
   aprobacionSchema,
+  errorDeFechaDePago,
   esClavePlan,
   etiquetaPeriodo,
   facturaNuevaSchema,
+  fechaDeColumna,
+  hoyAR,
   montoDePlan,
   pagoSchema,
   precioDePlan,
@@ -51,12 +55,22 @@ function revalidarCobros(institucionId?: string) {
 
 /* ───────────────────────────── Facturas ───────────────────────────── */
 
-/** Registra el pago de una factura (pasa a "pagada" con la fecha de hoy) y le avisa a la institución. */
-export async function registrarPago(facturaId: string, medio: string): Promise<Resultado> {
+/**
+ * Registra el pago de una factura (pasa a "pagada") y le avisa a la institución. `fecha` es cuándo llegó el pago
+ * ("2026-10-03"); sin ella, o si es hoy, se toma el momento del registro.
+ */
+export async function registrarPago(facturaId: string, medio: string, fecha?: string): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(facturaId)) return fallo(FACTURA_NO_ENCONTRADA);
-  const datos = parsear(pagoSchema, { medio });
-  if (!datos.ok) return fallo(datos.campos?.medio ?? datos.error, datos.campos);
+  const datos = parsear(pagoSchema, { medio, fecha });
+  if (!datos.ok) return fallo(datos.campos?.medio ?? datos.campos?.fecha ?? datos.error, datos.campos);
+
+  const hoy = hoyAR();
+  const errorFecha = datos.data.fecha ? errorDeFechaDePago(datos.data.fecha, hoy) : null;
+  if (errorFecha) return fallo(errorFecha, { fecha: errorFecha });
+  // Un pago de otro día se guarda al mediodía UTC de ese día (la misma fecha en Argentina); el de hoy, con su hora real.
+  const diaDelPago = datos.data.fecha ?? hoy;
+  const pagadaEn = diaDelPago === hoy ? new Date() : new Date(`${diaDelPago}T12:00:00Z`);
 
   let institucionId: string | undefined;
   const resultado = await transaccion(async (tx) => {
@@ -67,7 +81,7 @@ export async function registrarPago(facturaId: string, medio: string): Promise<R
 
     await tx
       .update(facturas)
-      .set({ estado: "pagada", pagadaEn: new Date(), medio: datos.data.medio })
+      .set({ estado: "pagada", pagadaEn, medio: datos.data.medio })
       .where(eq(facturas.id, factura.id));
     await registrarAuditoria(
       {
@@ -80,6 +94,9 @@ export async function registrarPago(facturaId: string, medio: string): Promise<R
           periodo: factura.periodo,
           monto: factura.monto,
           medio: datos.data.medio,
+          fechaPago: diaDelPago,
+          // Para poder dejar la factura como estaba si después se anula el pago.
+          medioAnterior: factura.medio,
           estadoAnterior: factura.estado,
         },
       },
@@ -88,9 +105,79 @@ export async function registrarPago(facturaId: string, medio: string): Promise<R
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, factura.institucionId), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `registró tu pago de ${etiquetaPeriodo(factura.periodo)} (${pesos(factura.monto)}). ¡Gracias!`,
+      texto:
+        diaDelPago === hoy
+          ? `registró tu pago de ${etiquetaPeriodo(factura.periodo)} (${pesos(factura.monto)}). ¡Gracias!`
+          : `registró tu pago de ${etiquetaPeriodo(factura.periodo)} (${pesos(factura.monto)}), recibido el ${fechaDeColumna(diaDelPago)}. ¡Gracias!`,
       enlace: "/institucion/plan",
     });
+    return ok();
+  });
+
+  if (resultado.ok) revalidarCobros(institucionId);
+  return resultado;
+}
+
+/**
+ * Anula el registro de un pago: la factura vuelve a figurar como impaga (vencida si ya pasó su fecha) y se borran la
+ * fecha y el medio con los que se había registrado. Pide un motivo, que queda en la auditoría, y puede avisarle a la
+ * institución, que había recibido "registró tu pago".
+ */
+export async function anularPago(facturaId: string, entrada: { motivo: string; avisar: boolean }): Promise<Resultado> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(facturaId)) return fallo(FACTURA_NO_ENCONTRADA);
+  const datos = parsear(anulacionSchema, entrada);
+  if (!datos.ok) return fallo(datos.campos?.motivo ?? datos.error, datos.campos);
+
+  let institucionId: string | undefined;
+  const resultado = await transaccion(async (tx) => {
+    const [factura] = await tx.select().from(facturas).where(eq(facturas.id, facturaId)).limit(1).for("update");
+    if (!factura) return fallo(FACTURA_NO_ENCONTRADA);
+    institucionId = factura.institucionId;
+    if (factura.estado !== "pagada") return fallo("Esa factura no figura como paga.");
+
+    // El medio que tenía antes del pago está en la auditoría; si no (factura cargada ya paga), el habitual de la institución.
+    const [registro] = await tx
+      .select({ detalle: auditoria.detalle })
+      .from(auditoria)
+      .where(and(eq(auditoria.entidad, "factura"), eq(auditoria.entidadId, factura.id), eq(auditoria.accion, "factura.pagar")))
+      .orderBy(desc(auditoria.creadoEn))
+      .limit(1);
+    const anterior = (registro?.detalle as { medioAnterior?: unknown } | null | undefined)?.medioAnterior;
+    const [institucion] = await tx
+      .select({ medioPago: instituciones.medioPago })
+      .from(instituciones)
+      .where(eq(instituciones.id, factura.institucionId))
+      .limit(1);
+    const medio = typeof anterior === "string" ? anterior : (institucion?.medioPago ?? null);
+
+    await tx.update(facturas).set({ estado: "pendiente", pagadaEn: null, medio }).where(eq(facturas.id, factura.id));
+    await registrarAuditoria(
+      {
+        usuarioId: admin.id,
+        accion: "factura.anular_pago",
+        entidad: "factura",
+        entidadId: factura.id,
+        detalle: {
+          institucionId: factura.institucionId,
+          periodo: factura.periodo,
+          monto: factura.monto,
+          motivo: datos.data.motivo,
+          medioDelPago: factura.medio,
+          pagadaEn: factura.pagadaEn?.toISOString() ?? null,
+          avisoALaInstitucion: datos.data.avisar,
+        },
+      },
+      tx,
+    );
+    if (datos.data.avisar) {
+      await avisarAVarios(tx, await destinatariosDeInstitucion(tx, factura.institucionId), {
+        tipo: "sistema",
+        titulo: "UNIDOAR",
+        texto: `corrigió el registro de tu pago de ${etiquetaPeriodo(factura.periodo)}: figura otra vez como pendiente.`,
+        enlace: "/institucion/plan",
+      });
+    }
     return ok();
   });
 
