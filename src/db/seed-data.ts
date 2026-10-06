@@ -32,17 +32,17 @@ export const CATALOGO_ASIGNATURAS: Record<CategoriaDocente, { rubro: string; ite
     { rubro: "Arte y música", items: ["Música", "Plástica", "Teatro", "Danza", "Audiovisuales"] },
     { rubro: "Idiomas", items: ["Inglés", "Portugués", "Francés", "Italiano", "Alemán"] },
     { rubro: "Nivel inicial y primario", items: ["Nivel Inicial", "Maestro/a de grado", "Apoyo escolar", "Psicopedagogía"] },
-    { rubro: "Educación física", items: ["Educación Física", "Deportes escolares", "Expresión corporal"] },
+    { rubro: "Educación física", items: ["Educación Física", "Deportes escolares", "Expresión corporal", "Natación"] },
   ],
   entrenador: [
     { rubro: "Deportes de equipo", items: ["Fútbol", "Vóley", "Básquet", "Handball", "Hockey", "Rugby"] },
     { rubro: "Deportes individuales", items: ["Tenis", "Atletismo", "Artes marciales", "Boxeo", "Golf", "Equitación"] },
     { rubro: "Gimnasio y fitness", items: ["Musculación", "Funcional", "Spinning", "Pilates", "Yoga", "Entrenamiento personal"] },
     { rubro: "Actividades acuáticas", items: ["Natación", "Aquagym", "Waterpolo"] },
-    { rubro: "Otras disciplinas", items: ["Danza deportiva", "Escalada", "Preparación física"] },
+    { rubro: "Otras disciplinas", items: ["Danza deportiva", "Escalada", "Preparación física", "Expresión corporal"] },
   ],
   guardavidas: [
-    { rubro: "Pileta y natatorio", items: ["Pileta cubierta", "Pileta al aire libre", "Natatorio de club", "Escuela de natación"] },
+    { rubro: "Pileta y natatorio", items: ["Pileta cubierta", "Pileta al aire libre", "Natatorio de club", "Escuela de natación", "Natación"] },
     { rubro: "Playa, río y laguna", items: ["Playa", "Río", "Laguna", "Balneario"] },
     { rubro: "Colonias y temporada", items: ["Colonia de vacaciones", "Campamento", "Eventos deportivos"] },
     { rubro: "Formación y apoyo", items: ["Primeros auxilios", "RCP", "Natación para principiantes"] },
@@ -152,6 +152,8 @@ type DocSeed = {
   categoria: CategoriaDocente;
   subtitulo: string;
   resumen?: string;
+  experiencia?: { titulo: string; fechas: string; desc: string }[];
+  formacion?: { titulo: string; detalle: string }[];
   fotoUrl?: string;
   telefono?: string;
   zonas: string[];
@@ -164,7 +166,7 @@ type DocSeed = {
 
 export const DOCENTES: DocSeed[] = [
   { key: "luciana", nombre: "Luciana", apellido: "Prieto", categoria: "educador", subtitulo: "Maestra de Nivel Inicial · 3 años de experiencia", resumen: "Maestra de Nivel Inicial con foco en estimulación temprana y trabajo con familias. Me manejo bien con salas numerosas y proyectos de expresión artística.", fotoUrl: "/assets/bgDocentes-fixed.jpg", telefono: "11 4455-3320", zonas: ["Tigre", "Nordelta"], asignaturas: ["Nivel Inicial", "Música"], disponibilidad: ["Turno mañana"], niveles: ["Inicial"], anios: 3, verificado: false },
-  { key: "martina", nombre: "Martina", apellido: "Alsina", categoria: "educador", subtitulo: "Profesora de Ed. Física · 12 años", resumen: "Profesora de Educación Física especializada en hockey y deportes de conjunto, con foco en trabajo grupal.", fotoUrl: "/assets/hero-entrenador.jpg", telefono: "11 4455-2201", zonas: ["Vicente López", "Olivos"], asignaturas: ["Educación Física", "Natación"], disponibilidad: ["Turno mañana"], niveles: ["Primario"], anios: 12, verificado: true },
+  { key: "martina", nombre: "Martina", apellido: "Alsina", categoria: "educador", subtitulo: "Profesora de Ed. Física · 12 años", resumen: "Trabajo con grupos de primaria y secundaria desde 2014, con foco en deportes de conjunto y natación. Los últimos seis años armé el programa de vóley femenino de un colegio de Olivos, que pasó de dos equipos a seis. Me manejo bien con grupos numerosos y con chicos que llegan sin ninguna experiencia deportiva. Busco un cargo de 15 a 20 horas en Vicente López o alrededores, turno mañana.", experiencia: [{ titulo: "Profesora de Educación Física — Colegio Los Tilos, Olivos", fechas: "2020 — actualidad · Primario y Secundario · 18 hs semanales", desc: "Ed. Física de 4.º a 7.º grado y coordinación del vóley femenino. Organizo el torneo interescolar de septiembre." }, { titulo: "Profesora de Natación — Club Atlético Ribera, Vicente López", fechas: "2017 — 2020 · Colonia de verano y escuela de natación", desc: "Grupos de 6 a 12 años, iniciación y perfeccionamiento. Tres veranos a cargo de la pileta chica." }, { titulo: "Suplencias de Ed. Física — varios colegios de Zona Norte", fechas: "2014 — 2017", desc: "Reemplazos cortos y licencias largas en cinco instituciones de Vicente López y San Isidro." }], formacion: [{ titulo: "Profesorado Nacional de Educación Física", detalle: "Instituto Vicente López · 2014" }, { titulo: "Guardavidas — habilitación provincial", detalle: "Vigente hasta 12/2027" }, { titulo: "Primeros auxilios y RCP", detalle: "Actualizado en 2025" }], fotoUrl: "/assets/hero-entrenador.jpg", telefono: "11 4455-2201", zonas: ["Vicente López", "Olivos"], asignaturas: ["Educación Física", "Natación"], disponibilidad: ["Turno mañana"], niveles: ["Primario"], anios: 12, verificado: true },
   { key: "nicolas", nombre: "Nicolás", apellido: "Bermúdez", categoria: "educador", subtitulo: "Ed. Física · Olivos", resumen: "Profesor de Ed. Física con experiencia en nivel primario, orientado a deportes de conjunto.", telefono: "11 4455-6631", zonas: ["Olivos"], asignaturas: ["Educación Física"], disponibilidad: ["Turno mañana"], niveles: ["Primario"], anios: 5, verificado: true },
   { key: "julieta", nombre: "Julieta", apellido: "Pereyra", categoria: "educador", subtitulo: "Maestra Nivel Inicial · Munro", resumen: "Maestra de Nivel Inicial con experiencia en salas de 3 a 5 años y proyectos de expresión artística.", telefono: "11 4455-7712", zonas: ["Munro"], asignaturas: ["Nivel Inicial", "Educación Física"], disponibilidad: ["Turno tarde"], niveles: ["Inicial", "Primario"], anios: 6, verificado: false },
   { key: "gonzalo", nombre: "Gonzalo", apellido: "Sarmiento", categoria: "educador", subtitulo: "Ed. Física · Florida", resumen: "Profesor de Ed. Física con foco en deportes individuales y preparación física.", telefono: "11 4455-9012", zonas: ["Florida"], asignaturas: ["Educación Física"], disponibilidad: ["Turno mañana"], niveles: ["Primario", "Secundario"], anios: 6, verificado: true },

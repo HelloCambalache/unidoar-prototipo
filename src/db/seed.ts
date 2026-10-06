@@ -136,6 +136,8 @@ async function demo() {
           categoria: d.categoria,
           subtitulo: d.subtitulo,
           resumen: d.resumen,
+          experiencia: d.experiencia ?? [],
+          formacion: d.formacion ?? [],
           fotoUrl: d.fotoUrl,
           telefono: d.telefono,
           email: `${d.nombre}.${d.apellido}`
