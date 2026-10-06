@@ -68,7 +68,6 @@ export function CursoFormulario({
           etiqueta="Foto del curso"
           variante="banner"
           valorInicial={inicial.fotoUrl}
-          ayuda="JPG, PNG o WebP · hasta 5 MB"
           className="[&>button]:h-[170px]"
         />
         {errores.fotoUrl && (

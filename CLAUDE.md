@@ -39,6 +39,9 @@ La app se conecta por el **pooler de sesión** de Supabase (`DATABASE_URL`, puer
 - La **clave de servicio** (`SUPABASE_SERVICE_ROLE_KEY`) solo se usa en servidor (`src/lib/supabase/admin.ts`); jamás con prefijo `NEXT_PUBLIC_`.
 - `usuarios.id` es el uuid de `auth.users`. La sesión se valida con `getClaims()` (JWT) en `src/proxy.ts` y `src/lib/auth.ts`.
 - Archivos: las subidas pasan por `/api/subir` (servidor); `publico` se lee por URL pública, `privado` (CV, documentos) solo con URL firmada generada en el servidor.
+  - Vercel corta los pedidos de más de ~4,5 MB (`FUNCTION_PAYLOAD_TOO_LARGE`, medido en producción). Por eso el navegador achica las imágenes (hasta 3 intentos de calidad) y los **PDF quedan en 4 MB**; para más habría que subir directo a Storage con URLs firmadas.
+  - Las imágenes que van al bucket `publico` se vuelven a codificar siempre en el navegador: se les saca el EXIF (puede traer el lugar donde se sacó la foto y esas URLs son públicas) y se limitan a 2000 px. Las del `privado` (documentos) se suben tal cual.
+  - Nada borra archivos de Storage: los reemplazados, quitados o abandonados quedan ahí (pendiente decidir una limpieza).
 
 ## Principio rector: nada hardcodeado
 

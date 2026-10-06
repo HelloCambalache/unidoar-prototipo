@@ -16,7 +16,7 @@ export type TipoArchivo = "imagen" | "pdf" | "imagen-o-pdf";
  * (se guarda el path y las URLs firmadas se generan al leer, ver src/lib/almacenamiento.ts).
  */
 export const CARPETAS = {
-  publico: { logos: "imagen", portadas: "imagen", fotos: "imagen", cursos: "imagen-o-pdf", novedades: "imagen", instalaciones: "imagen" },
+  publico: { logos: "imagen", portadas: "imagen", fotos: "imagen", cursos: "imagen", novedades: "imagen", instalaciones: "imagen" },
   privado: { cv: "pdf", documentos: "imagen-o-pdf" },
 } as const satisfies Record<BucketAlmacenamiento, Record<string, TipoArchivo>>;
 
@@ -28,6 +28,11 @@ export const tipoDeCarpeta = (bucket: BucketAlmacenamiento, carpeta: string): Ti
 };
 
 export const LIMITE_IMAGEN = 5 * 1024 * 1024;
+/**
+ * Lo máximo que se le pide procesar al navegador antes de achicarla: una foto de celular de 10 a 20 MB entra, un
+ * archivo de cientos de MB no. El límite que cuenta (`LIMITE_IMAGEN`) se aplica al resultado ya comprimido.
+ */
+export const LIMITE_ORIGINAL_IMAGEN = 25 * 1024 * 1024;
 export const LIMITE_PDF = 10 * 1024 * 1024;
 /**
  * Las funciones de Vercel rechazan cuerpos de más de 4,5 MB: el navegador comprime las imágenes

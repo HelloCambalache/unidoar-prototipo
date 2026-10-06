@@ -6,7 +6,7 @@ import { Icono } from "@/components/icons";
 import { supabaseUrl } from "@/lib/supabase/env";
 import {
   LIMITE_CUERPO_PETICION,
-  LIMITE_IMAGEN,
+  LIMITE_ORIGINAL_IMAGEN,
   LIMITE_PDF,
   MIME_IMAGEN,
   MIME_PDF,
@@ -38,7 +38,7 @@ type Props = Destino & {
   /** `name` del input oculto que lleva el valor al formulario: URL pública (bucket publico) o path (privado). */
   nombre: string;
   etiqueta?: string;
-  /** Texto de ayuda; por defecto "JPG, PNG o WebP · hasta 5 MB" según el tipo de la carpeta. */
+  /** Texto de ayuda; por defecto el formato y el peso máximo según el tipo de la carpeta. */
   ayuda?: string;
   /** Valor ya guardado (URL pública o path privado). */
   valorInicial?: string | null;
@@ -57,10 +57,16 @@ type Props = Destino & {
 
 type Resultado = { ok: true; path: string; url: string | null; nombre: string; tamano: number } | { ok: false; error: string };
 
-/** Achica imágenes que no entran en el cuerpo de una petición (4 MB): máx. 2000 px de lado, calidad .85. */
-async function comprimirImagen(archivo: File): Promise<File> {
+/** Intentos de achicado, de más a menos calidad: se corta en el primero que entra en el cuerpo de una petición. */
+const INTENTOS_DE_COMPRESION = [
+  { lado: 2000, calidad: 0.85 },
+  { lado: 1600, calidad: 0.75 },
+  { lado: 1200, calidad: 0.65 },
+] as const;
+
+async function redimensionar(archivo: File, { lado, calidad }: { lado: number; calidad: number }): Promise<File> {
   const bitmap = await createImageBitmap(archivo);
-  const escala = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+  const escala = Math.min(1, lado / Math.max(bitmap.width, bitmap.height));
   const ancho = Math.max(1, Math.round(bitmap.width * escala));
   const alto = Math.max(1, Math.round(bitmap.height * escala));
   const lienzo = document.createElement("canvas");
@@ -72,9 +78,25 @@ async function comprimirImagen(archivo: File): Promise<File> {
   bitmap.close();
   // PNG → WebP conserva la transparencia de los logos y pesa bastante menos.
   const tipoSalida = archivo.type === "image/png" ? "image/webp" : archivo.type;
-  const blob = await new Promise<Blob | null>((res) => lienzo.toBlob(res, tipoSalida, 0.85));
+  let blob = await new Promise<Blob | null>((res) => lienzo.toBlob(res, tipoSalida, calidad));
+  // Algunos navegadores (Safari) no codifican WebP y devuelven un PNG enorme: se pasa a JPEG sobre fondo blanco.
+  if (blob && tipoSalida === "image/webp" && blob.type !== "image/webp") {
+    ctx.globalCompositeOperation = "destination-over";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, ancho, alto);
+    blob = await new Promise<Blob | null>((res) => lienzo.toBlob(res, "image/jpeg", calidad));
+  }
   if (!blob) throw new Error("sin blob");
   return new File([blob], archivo.name, { type: blob.type });
+}
+
+/** Achica una imagen hasta que entre en una petición (4 MB), probando con menos calidad si hace falta. */
+async function comprimirImagen(archivo: File): Promise<File> {
+  for (const intento of INTENTOS_DE_COMPRESION) {
+    const reducida = await redimensionar(archivo, intento);
+    if (reducida.size <= LIMITE_CUERPO_PETICION) return reducida;
+  }
+  throw new Error("sigue pesando");
 }
 
 async function enviar(archivo: File, destino: Destino): Promise<Resultado> {
@@ -100,7 +122,7 @@ async function enviar(archivo: File, destino: Destino): Promise<Resultado> {
 }
 
 function ayudaPorDefecto(tipo: TipoArchivo) {
-  const imagen = `JPG, PNG o WebP · hasta ${mb(LIMITE_IMAGEN)} MB`;
+  const imagen = `JPG, PNG o WebP · hasta ${mb(LIMITE_ORIGINAL_IMAGEN)} MB (la achicamos si hace falta)`;
   const pdf = `PDF · hasta ${mb(Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION))} MB`;
   return tipo === "imagen" ? imagen : tipo === "pdf" ? pdf : `Imagen o PDF · hasta ${mb(Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION))} MB`;
 }
@@ -165,18 +187,23 @@ export function SubirArchivo(props: Props) {
       );
       return;
     }
-    const limite = esPdf ? LIMITE_PDF : LIMITE_IMAGEN;
+    // Las imágenes se achican antes de subir, así que el tope es el de lo que puede procesar el navegador; un PDF no se
+    // puede achicar y tiene que entrar tal cual en la petición.
+    const limite = esPdf ? Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION) : LIMITE_ORIGINAL_IMAGEN;
     if (original.size > limite) {
       setError(`El archivo pesa ${mb(original.size)} MB; el máximo es ${mb(limite)} MB.`);
       return;
     }
 
     let archivo = original;
-    if (esImagen && archivo.size > LIMITE_CUERPO_PETICION) {
+    // Las imágenes del bucket público se vuelven a codificar siempre: así se les saca el EXIF (que puede traer el lugar
+    // exacto donde se sacó la foto, y esas URLs son públicas), se aplica la rotación y se limita el tamaño. Las del
+    // privado (documentos) se suben tal cual, salvo que no entren en la petición.
+    if (esImagen && (bucket === "publico" || archivo.size > LIMITE_CUERPO_PETICION)) {
       try {
         archivo = await comprimirImagen(archivo);
       } catch {
-        setError("No pudimos achicar la imagen. Probá con una más liviana.");
+        setError("No pudimos achicar la imagen lo suficiente. Probá con otra o con una captura más liviana.");
         return;
       }
     }
