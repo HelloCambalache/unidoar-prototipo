@@ -1467,7 +1467,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="4">
 <div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
 <img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -1500,7 +1500,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Las que más están buscando en tus zonas.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ institucionesDestacadas }}" as="d" hint-placeholder-count="3">
+<sc-for list="{{ institucionesDestacadas }}" as="d" hint-placeholder-count="4">
 <div onClick="{{ d.onVer }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
 <div style="display:flex;gap:11px;margin-bottom:10px">
 <img src="{{ d.logo }}" alt="" style="width:38px;height:38px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -1533,7 +1533,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Suman en tu perfil y las instituciones los ven.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-<sc-for list="{{ cursosDestacados }}" as="c" hint-placeholder-count="3">
+<sc-for list="{{ cursosDestacados }}" as="c" hint-placeholder-count="4">
 <div onClick="{{ c.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .2s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1)">
 <div style="position:relative">
 <sc-if value="{{ c.tieneFoto }}" hint-placeholder-val="{{ false }}"><img src="{{ c.fotoUrl }}" alt="" style="width:100%;height:116px;object-fit:cover;display:block"></sc-if>
@@ -1636,7 +1636,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 </div>
 <p style="margin:0 0 14px;font:400 13px/1.5 Inter,sans-serif;color:#6B706C">Ordenadas por cuánto coinciden con tus asignaturas, tus zonas y tu disponibilidad.</p>
 <div class="udoar-grid-3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:26px">
-<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="3">
+<sc-for list="{{ recomendadasList }}" as="r" hint-placeholder-count="4">
 <div onClick="{{ r.onClick }}" style="cursor:pointer;background:#fff;border:1px solid #E3E1DC;border-radius:10px;padding:16px;display:flex;flex-direction:column;transition:box-shadow .2s,transform .18s" style-hover="box-shadow:0 8px 20px rgba(31,36,33,.1);transform:translateY(-2px)">
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
 <img src="{{ r.logo }}" alt="" style="width:36px;height:36px;border-radius:8px;object-fit:contain;background:#F5F5F1;flex:none">
@@ -6964,19 +6964,19 @@ class Component extends DCLogic {
       recomendadasList: this.state.oportunidadesMas
         .map(o => ({ ...o, ...this.matchDeOferta(o) }))
         .sort((a, b) => b.match - a.match)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(o => ({ ...o, matchLabel: o.match + '% match', matchStyle: this.colorDeMatch(o.match), onClick: () => this.openOport(o) })),
       institucionesDestacadas: this.state.institucionesList
         .slice()
         .sort((a, b) => b.busquedas - a.busquedas)
-        .slice(0, 3)
+        .slice(0, 4)
         .map(i => ({
           ...i,
           resumen: (i.desc || '').length > 92 ? i.desc.slice(0, 92).trim() + '…' : i.desc,
           busquedasLabel: i.busquedas === 1 ? '1 búsqueda abierta' : i.busquedas + ' búsquedas abiertas',
           onVer: () => this.openInstPerfil(i.key),
         })),
-      cursosDestacados: this.state.cursosDetallados.slice(0, 3).map(c => ({
+      cursosDestacados: this.state.cursosDetallados.slice(0, 4).map(c => ({
         ...c,
         subtitulo: c.subtitulo || '',
         fotoUrl: this.fotoDeCurso(c), tieneFoto: !!this.fotoDeCurso(c), sinFoto: !this.fotoDeCurso(c),
