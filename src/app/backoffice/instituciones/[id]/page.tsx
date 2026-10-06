@@ -82,6 +82,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
                 <h1 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em]">{i.nombre}</h1>
                 <InsigniaCuenta suspendida={i.suspendida} />
                 <InsigniaVerificada verificada={i.verificada} />
+                {ficha.bajaSolicitadaEn && <Insignia tono="ambar">Baja solicitada</Insignia>}
               </div>
               <div className="text-sm leading-[1.4] text-apagado">{[i.tipo, i.zona].filter(Boolean).join(" · ")}</div>
               <Link href={`/instituciones/${i.slug}`} className="mt-1.5 inline-block text-[13px] font-medium">
@@ -103,6 +104,14 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
                 "No hay un motivo registrado."
               )}{" "}
               Nadie de su equipo puede entrar a su área.
+            </div>
+          )}
+
+          {ficha.bajaSolicitadaEn && (
+            <div role="status" className="rounded-ud border border-[#EBD9A8] bg-[#FBF2D8] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#7A5A0B]">
+              <b className="font-semibold">Pidió la baja de la cuenta</b> el {fechaCorta(ficha.bajaSolicitadaEn)}.{" "}
+              {ficha.emailPropietario ? <>Hay que escribirle a {ficha.emailPropietario} para confirmarla, </> : <>Hay que contactarla para confirmarla, </>}
+              cancelar la suscripción y despublicar sus búsquedas. Hasta entonces la cuenta sigue funcionando igual.
             </div>
           )}
 

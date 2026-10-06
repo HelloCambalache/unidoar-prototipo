@@ -7,6 +7,7 @@ import {
   type FiltrosInstituciones,
 } from "@/lib/backoffice-instituciones";
 import { estadoEfectivo, hoyAR } from "@/lib/cobros";
+import { bajaSolicitadaEn } from "@/lib/queries/cuenta";
 import { contiene } from "@/lib/sql-texto";
 
 /*
@@ -147,6 +148,8 @@ export type FichaInstitucion = {
   proximoCobro: { periodo: string; monto: number; fechaCobro: string; estado: ReturnType<typeof estadoEfectivo> } | null;
   /** Motivo de la última suspensión (de la auditoría), mientras la cuenta siga suspendida. */
   motivoSuspension: { motivo: string; nota: string | null; cuando: Date } | null;
+  /** Cuándo pidió la baja la institución, si el pedido sigue en pie. */
+  bajaSolicitadaEn: Date | null;
   actividad: { id: string; accion: string; detalle: Record<string, unknown> | null; cuando: Date; quien: string | null }[];
 };
 
@@ -162,7 +165,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
   const { institucion } = fila;
   const hoy = hoyAR();
 
-  const [equipo, listaBusquedas, [totales], listaFacturas, actividad, [suspension]] = await Promise.all([
+  const [equipo, listaBusquedas, [totales], listaFacturas, actividad, [suspension], baja] = await Promise.all([
     db
       .select({
         id: institucionMiembros.id,
@@ -234,6 +237,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
           .orderBy(desc(auditoria.creadoEn))
           .limit(1)
       : Promise.resolve([]),
+    bajaSolicitadaEn(id),
   ]);
 
   const conEstado = listaFacturas.map((f) => ({
@@ -263,6 +267,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
     proximoCobro: proxima
       ? { periodo: proxima.periodo, monto: proxima.monto, fechaCobro: proxima.fechaCobro, estado: proxima.estado }
       : null,
+    bajaSolicitadaEn: baja,
     motivoSuspension:
       suspension && detalleSuspension?.motivo
         ? { motivo: detalleSuspension.motivo, nota: detalleSuspension.nota ?? null, cuando: suspension.cuando }

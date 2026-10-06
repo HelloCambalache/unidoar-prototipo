@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { transaccion } from "@/db";
-import { institucionMiembros, instituciones } from "@/db/schema";
+import { institucionMiembros, instituciones, usuarios } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
@@ -16,7 +16,9 @@ import {
   bajaSolicitadaEn,
   tieneContrasena,
 } from "@/lib/queries/cuenta";
+import { avisarAVarios } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
+import type { Ejecutor } from "@/lib/queries/pipeline";
 import { fotosDeInstitucion, guardarVitrina } from "@/lib/queries/vitrina";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { traducirErrorAuth } from "@/lib/acceso";
@@ -101,11 +103,16 @@ export async function actualizarCuenta(_previo: Resultado | null, formData: Form
   const esDueno = rol === "dueno";
 
   const r = parsear(cuentaSchema, formData);
-  if (!r.ok) return fallo(r.error, r.campos);
-  const { nombre, apellido, telefono } = r.data;
-  if (esDueno && (telefono ?? "").length < 6) {
-    return fallo("Revisá los campos marcados.", { telefono: "Poné un teléfono de contacto" });
+  // El teléfono de contacto es obligatorio para el dueño: se avisa junto con los otros errores, no de a uno.
+  const telefonoCorto = esDueno && String(formData.get("telefono") ?? "").trim().length < 6;
+  if (!r.ok) {
+    return fallo(r.error, {
+      ...r.campos,
+      ...(telefonoCorto && !r.campos?.telefono ? { telefono: "Poné un teléfono de contacto" } : {}),
+    });
   }
+  const { nombre, apellido, telefono } = r.data;
+  if (telefonoCorto) return fallo("Revisá los campos marcados.", { telefono: "Poné un teléfono de contacto" });
   const completo = `${nombre} ${apellido}`.trim();
 
   await transaccion(async (tx) => {
@@ -169,6 +176,12 @@ export async function cambiarContrasenaCuenta(_previo: Resultado | null, formDat
 
 const bajaSchema = z.object({ confirmacion: z.string().trim().min(1, "Escribí el nombre de tu institución") });
 
+/** Una notificación para todas las cuentas admin (el equipo de UNIDOAR), en la misma transacción que el cambio. */
+async function avisarAAdmins(tx: Ejecutor, aviso: { titulo: string; texto: string; enlace: string }) {
+  const admins = await tx.select({ id: usuarios.id }).from(usuarios).where(eq(usuarios.rol, "admin"));
+  await avisarAVarios(tx, admins.map((a) => a.id), { tipo: "sistema", ...aviso });
+}
+
 const comparable = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
 
 /**
@@ -189,12 +202,22 @@ export async function solicitarBajaCuenta(_previo: Resultado | null, formData: F
   }
 
   if (!(await bajaSolicitadaEn(institucion.id))) {
-    await registrarAuditoria({
-      usuarioId: usuario.id,
-      accion: ACCION_BAJA_SOLICITADA,
-      entidad: "institucion",
-      entidadId: institucion.id,
-      detalle: { institucion: institucion.nombre, email: usuario.email, plan: institucion.plan },
+    await transaccion(async (tx) => {
+      await registrarAuditoria(
+        {
+          usuarioId: usuario.id,
+          accion: ACCION_BAJA_SOLICITADA,
+          entidad: "institucion",
+          entidadId: institucion.id,
+          detalle: { institucion: institucion.nombre, email: usuario.email, plan: institucion.plan },
+        },
+        tx,
+      );
+      await avisarAAdmins(tx, {
+        titulo: institucion.nombre,
+        texto: `pidió la baja de la cuenta. Hay que escribirle a ${usuario.email} para confirmarla.`,
+        enlace: `/backoffice/instituciones/${institucion.id}`,
+      });
     });
   }
 
@@ -210,12 +233,22 @@ export async function retirarBajaCuenta(): Promise<Resultado> {
   }
 
   if (await bajaSolicitadaEn(institucion.id)) {
-    await registrarAuditoria({
-      usuarioId: usuario.id,
-      accion: ACCION_BAJA_RETIRADA,
-      entidad: "institucion",
-      entidadId: institucion.id,
-      detalle: { institucion: institucion.nombre },
+    await transaccion(async (tx) => {
+      await registrarAuditoria(
+        {
+          usuarioId: usuario.id,
+          accion: ACCION_BAJA_RETIRADA,
+          entidad: "institucion",
+          entidadId: institucion.id,
+          detalle: { institucion: institucion.nombre },
+        },
+        tx,
+      );
+      await avisarAAdmins(tx, {
+        titulo: institucion.nombre,
+        texto: "retiró el pedido de baja: la cuenta sigue como estaba.",
+        enlace: `/backoffice/instituciones/${institucion.id}`,
+      });
     });
   }
 

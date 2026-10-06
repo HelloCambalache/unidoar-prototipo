@@ -61,6 +61,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Suspendió la cuenta${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "institucion.reactivar":
       return "Reactivó la cuenta";
+    case "cuenta.baja_solicitada":
+      return "Pidió la baja de la cuenta";
+    case "cuenta.baja_retirada":
+      return "Retiró el pedido de baja";
     case "plan.aprobar":
       return `Aprobó el pedido de cambio de plan${texto("a") ? ` a ${nombreDePlan(texto("a")!)}` : ""}`;
     case "plan.rechazar":
