@@ -8,7 +8,7 @@ import { BotonVerCv } from "@/components/institucion/boton-ver-cv";
 import { BotonVolver } from "@/components/institucion/boton-volver";
 import { DisponibilidadDocente } from "@/components/institucion/disponibilidad-docente";
 import { Icono } from "@/components/icons";
-import { botonClases } from "@/components/ui/button";
+import { Boton, botonClases } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { urlFirmada } from "@/lib/almacenamiento";
@@ -142,7 +142,9 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
               <div className="min-w-0 flex-1">
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   <h1 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em]">{nombre}</h1>
-                  {perfil.verificado ? (
+                  {d.suspendido ? (
+                    <Insignia tono="rosa">Perfil suspendido</Insignia>
+                  ) : perfil.verificado ? (
                     <Insignia tono="verde" className="gap-1">
                       <Icono nombre="tilde" tamano={10} trazo={3.2} />
                       Perfil verificado
@@ -272,14 +274,20 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
           <Tarjeta como="section" className="p-5">
             <EtiquetaSeccion className="mb-3">Acciones</EtiquetaSeccion>
             <div className="flex flex-col gap-2.5">
-              <BotonInvitarDocente
-                docenteId={d.id}
-                nombre={nombre}
-                opciones={opciones}
-                contextoId={contextoId}
-                tamano="md"
-                bloque
-              />
+              {d.suspendido ? (
+                <Boton disabled bloque>
+                  Invitar a postularse
+                </Boton>
+              ) : (
+                <BotonInvitarDocente
+                  docenteId={d.id}
+                  nombre={nombre}
+                  opciones={opciones}
+                  contextoId={contextoId}
+                  tamano="md"
+                  bloque
+                />
+              )}
               {whatsapp && perfil.puedeContactar && (
                 <a
                   href={whatsapp}
@@ -296,6 +304,11 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
               <BotonFavoritoDocente docenteId={d.id} nombre={nombre} favorito={perfil.favorito} variante="boton" />
               <BotonVerCv cvUrl={cvEnlace} sinCv={sinCv} />
             </div>
+            {d.suspendido && (
+              <p className="m-0 mt-3 text-xs leading-normal text-apagado">
+                El equipo de UNIDOAR suspendió este perfil: por ahora no se lo puede invitar a nuevas búsquedas.
+              </p>
+            )}
             {whatsapp && !perfil.puedeContactar && (
               <p className="m-0 mt-3 text-xs leading-normal text-sutil">
                 El contacto directo se habilita cuando se postula a una de tus búsquedas o te manda su CV.
