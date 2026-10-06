@@ -60,7 +60,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon-180.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="./mapa.js?v=2" defer></script>
+<script src="./mapa.js?v=3" defer></script>
 <script src="./image-slot-store.js"></script>
 <script src="./image-slot.js"></script>
 <style>
@@ -1765,7 +1765,7 @@ Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos
 <div id="udoar-mapa-host" style="position:absolute;inset:0"></div>
 <div class="udoar-mapa-leyenda" style="position:absolute;right:14px;top:14px;z-index:500;display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.93);border:1px solid #E3E1DC;border-radius:999px;padding:8px 14px;pointer-events:none">
 <sc-for list="{{ mapaLeyenda }}" as="l" hint-placeholder-count="3">
-<span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span>{{ l.label }}</span>
+<span style="display:flex;align-items:center;gap:7px;font:500 11.5px/1 Inter,sans-serif;color:#3D423E"><sc-if value="{{ l.esPunto }}" hint-placeholder-val="{{ true }}"><span style="width:9px;height:9px;border-radius:999px;flex:none;background:{{ l.color }}"></span></sc-if><sc-if value="{{ l.esReloj }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ l.color }}" stroke-width="2.2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="13" r="8"></circle><path d="M12 9.5V13l2.4 1.6"></path><path d="M9.6 2.8h4.8"></path></svg></sc-if>{{ l.label }}</span>
 </sc-for>
 </div>
 <sc-if value="{{ mapaSel }}" hint-placeholder-val="{{ false }}">
@@ -7023,9 +7023,10 @@ class Component extends DCLogic {
       buscarVistaListaStyle: this.state.docBuscarVista !== 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
       buscarVistaMapaStyle: this.state.docBuscarVista === 'mapa' ? 'background:#16214F;color:#fff' : 'color:#6B706C',
       mapaLeyenda: [
-        { label: 'Docentes', color: '#DD553F' },
-        { label: 'Entrenadores / Instructores', color: '#F0B400' },
-        { label: 'Guardavidas', color: '#82D8E9' },
+        { label: 'Docentes', color: '#DD553F', esPunto: true, esReloj: false },
+        { label: 'Entrenadores / Instructores', color: '#F0B400', esPunto: true, esReloj: false },
+        { label: 'Guardavidas', color: '#82D8E9', esPunto: true, esReloj: false },
+        { label: 'Suplencia rápida', color: '#16214F', esPunto: false, esReloj: true },
       ],
       mapaPines: this._valsMapa = (() => {
         const usadas = {};
@@ -7040,6 +7041,7 @@ class Component extends DCLogic {
             lat: base[0] + Math.sin(ang) * rad,
             lng: base[1] + Math.cos(ang) * rad,
             color: this.colorDeCategoria(o.categoria),
+            rapida: !!o.rapida,
           };
         });
       })(),

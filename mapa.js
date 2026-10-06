@@ -44,7 +44,7 @@
   // Pin de ubicación clásico: la punta cae exactamente sobre la coordenada.
   // Antes era un cuadrado con una esquina en punta y rotado 45°, que terminaba
   // apuntando al costado en vez de al suelo.
-  function icono(color, seleccionado) {
+  function icono(color, seleccionado, rapida) {
     var borde = seleccionado ? '#16214F' : '#ffffff';
     var grosor = seleccionado ? 2.6 : 2;
     var escala = seleccionado ? 1.12 : 1;
@@ -54,7 +54,10 @@
       + ' xmlns="http://www.w3.org/2000/svg" style="display:block">'
       + '<path d="M13 33C13 33 24 20.4 24 12.9A11 11 0 1 0 2 12.9C2 20.4 13 33 13 33Z"'
       + ' fill="' + color + '" stroke="' + borde + '" stroke-width="' + grosor + '" stroke-linejoin="round"/>'
-      + '<circle cx="13" cy="12.7" r="4" fill="#fff" fill-opacity=".9"/>'
+      + (rapida
+        ? '<g stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none">'
+          + '<circle cx="13" cy="13.2" r="4.6"/><path d="M13 10.6v2.8l1.9 1.3"/><path d="M11.1 6.6h3.8"/></g>'
+        : '<circle cx="13" cy="12.7" r="4" fill="#fff" fill-opacity=".9"/>')
       + '</svg>';
     return window.L.divIcon({
       className: '',
@@ -74,7 +77,7 @@
     (datos.pines || []).forEach(function (p, i) {
       if (typeof p.lat !== 'number' || typeof p.lng !== 'number') return;
       var m = window.L.marker([p.lat, p.lng], {
-        icon: icono(p.color, datos.sel === i),
+        icon: icono(p.color, datos.sel === i, !!p.rapida),
         title: p.titulo,
         riseOnHover: true,
       });
