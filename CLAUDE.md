@@ -17,6 +17,7 @@ Marketplace que conecta **instituciones** (colegios, clubes, natatorios) con **d
 pnpm dev            # servidor local
 pnpm typecheck      # tsc --noEmit  (correrlo siempre antes de dar algo por hecho)
 pnpm lint
+pnpm test           # pruebas de la lógica pura (src/**/*.test.ts, node:test vía tsx): sin base, sin red, en menos de un segundo
 pnpm db:push        # aplica src/db/schema.ts a la base (desarrollo)
 pnpm db:rls         # activa RLS en todas las tablas (correrlo después de cada db:push)
 pnpm db:storage     # crea los buckets de Storage
@@ -27,6 +28,8 @@ pnpm db:seed        # catálogos + datos demo (es_demo=true); --solo-catalogos /
 pnpm db:limpiar-archivos [--borrar] [--horas=24] [--usuario=<uuid>]   # lista (y con --borrar elimina) los archivos de Storage que ninguna fila usa
 vercel env pull .env.local --yes   # trae las variables de Supabase
 ```
+
+Las reglas puras (facturación, CSV de contactos, tipos y paths de archivos, validaciones de fechas) tienen su prueba al lado del módulo (`algo.test.ts`): al tocarlas, correr `pnpm test` y sumar el caso que corresponda; si una regla nueva no toca base ni Next, escribirla como función pura para poder probarla así. Lo que toca base, Storage o pantallas se prueba a mano en el navegador.
 
 Las variables viven en `.env.local` (no se commitea). `drizzle-kit` y `tsx` no cargan `.env.local` solos: los scripts `db:*` ya usan `dotenv`.
 
