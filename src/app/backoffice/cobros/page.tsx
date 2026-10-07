@@ -63,7 +63,7 @@ export default async function CobrosBackoffice({
     <>
       <EncabezadoPagina
         titulo="Planes y cobros"
-        bajada="Los pagos se registran a mano: todavía no hay una pasarela conectada."
+        bajada="Los pagos se registran a mano: todavía no hay una pasarela conectada. Las facturas de cada mes se crean solas para las cuentas que ya tienen una cargada."
         acciones={<CobroMarcarVencidas cantidad={resumen.sinMarcar} />}
       />
 

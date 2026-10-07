@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, gte, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { facturas, instituciones, solicitudesPlan, usuarios } from "@/db/schema";
 import {
@@ -10,10 +10,13 @@ import {
   hoyAR,
   montoDePlan,
   periodoActual,
+  planificarFacturas,
   sumarMeses,
   type EstadoCobro,
   type EstadoFactura,
+  type MotivoOmision,
 } from "@/lib/cobros";
+import { registrarAuditoria } from "@/lib/auditoria";
 import type { PlanClave } from "@/lib/planes";
 import type { EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 
@@ -321,6 +324,93 @@ export async function aplicarPlanAlPeriodoActual(
     medio: institucion.medioPago,
   });
   return { resultado: "creada", periodo, monto };
+}
+
+export type ResultadoGeneracion = {
+  periodo: string;
+  creadas: { id: string; institucionId: string }[];
+  /** Instituciones a las que no hacía falta crearles nada, por motivo. */
+  omitidas: Partial<Record<MotivoOmision, number>>;
+  /** Cuentas activas sin ninguna factura: la primera la carga el equipo a mano, no se cobra sola. */
+  sinFacturaPrevia: number;
+};
+
+/**
+ * Crea las facturas del mes en curso (hora argentina) de las suscripciones que ya andan: instituciones no suspendidas,
+ * que no son de demostración y que ya tienen al menos una factura (la primera la carga el equipo a mano, porque
+ * una cuenta nueva todavía no aceptó pagar nada). Se puede correr todas las veces que haga falta: lo que ya existe no
+ * se duplica (índice único por institución y período). Deja una entrada de auditoría por factura, sin usuario.
+ * Las reglas de qué se factura están en `planificarFacturas`.
+ */
+export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = new Date()): Promise<ResultadoGeneracion> {
+  const periodo = periodoActual(ahora);
+  const hoy = hoyAR(ahora);
+
+  const activas = await ejecutor
+    .select({ id: instituciones.id, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })
+    .from(instituciones)
+    .where(and(eq(instituciones.suspendida, false), eq(instituciones.esDemo, false)));
+  if (activas.length === 0) return { periodo, creadas: [], omitidas: {}, sinFacturaPrevia: 0 };
+
+  const ids = activas.map((i) => i.id);
+  const [conFacturas, recientes] = await Promise.all([
+    ejecutor.select({ institucionId: facturas.institucionId }).from(facturas).where(inArray(facturas.institucionId, ids)).groupBy(facturas.institucionId),
+    ejecutor
+      .select({ institucionId: facturas.institucionId, periodo: facturas.periodo, plan: facturas.plan, estado: facturas.estado })
+      .from(facturas)
+      .where(and(inArray(facturas.institucionId, ids), gte(facturas.periodo, sumarMeses(periodo, -11)), lte(facturas.periodo, periodo))),
+  ]);
+
+  const conHistorial = new Set(conFacturas.map((f) => f.institucionId));
+  const { crear, omitidas } = planificarFacturas(
+    activas.filter((i) => conHistorial.has(i.id)),
+    recientes,
+    periodo,
+    hoy,
+  );
+
+  const creadas = crear.length
+    ? await ejecutor
+        .insert(facturas)
+        .values(crear.map((f) => ({ ...f, estado: "pendiente" })))
+        .onConflictDoNothing({ target: [facturas.institucionId, facturas.periodo] })
+        .returning({
+          id: facturas.id,
+          institucionId: facturas.institucionId,
+          plan: facturas.plan,
+          monto: facturas.monto,
+          periodo: facturas.periodo,
+          fechaCobro: facturas.fechaCobro,
+        })
+    : [];
+  for (const f of creadas) {
+    await registrarAuditoria(
+      {
+        usuarioId: null,
+        accion: "factura.crear",
+        entidad: "factura",
+        entidadId: f.id,
+        detalle: {
+          institucionId: f.institucionId,
+          periodo: f.periodo,
+          plan: f.plan,
+          monto: f.monto,
+          fechaCobro: f.fechaCobro,
+          origen: "automatica",
+        },
+      },
+      ejecutor,
+    );
+  }
+
+  const porMotivo: ResultadoGeneracion["omitidas"] = {};
+  for (const o of omitidas) porMotivo[o.motivo] = (porMotivo[o.motivo] ?? 0) + 1;
+  return {
+    periodo,
+    creadas: creadas.map((f) => ({ id: f.id, institucionId: f.institucionId })),
+    omitidas: porMotivo,
+    sinFacturaPrevia: activas.length - conHistorial.size,
+  };
 }
 
 /** Facturas que siguen "pendiente" en la base aunque su fecha ya pasó (las que marca "Marcar vencidas"). */

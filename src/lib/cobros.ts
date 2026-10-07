@@ -143,6 +143,70 @@ export function textoRecordatorio(contacto: string | null, institucion: string, 
   return `${saludo}te escribimos de UNIDOAR. De ${institucion} quedan ${pendientes.length} cobros pendientes (${periodos}) por un total de ${pesos(total)}. Si ya pagaste alguno, avisanos así lo registramos. ¡Gracias!`;
 }
 
+/* ───────── Facturas automáticas ───────── */
+
+export type InstitucionFacturable = { id: string; plan: string; diaCobro: number | null; medioPago: string | null };
+/** Una factura ya existente de la institución, de los últimos 12 períodos (el actual incluido). */
+export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string };
+export type FacturaPorCrear = {
+  institucionId: string;
+  plan: PlanClave;
+  monto: number;
+  periodo: string;
+  fechaCobro: string;
+  medio: string | null;
+};
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido";
+
+/**
+ * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
+ * (`aplicarPlanAlPeriodoActual`): una por institución y mes, nace pendiente, el monto sale del plan, y una factura
+ * anual cubre los 12 meses desde su período. Sin acceso a base: `recientes` trae las facturas de los últimos 12 períodos.
+ *
+ *  - ya tiene factura de ese mes → no se toca;
+ *  - plan anual: si ya hay una factura anual en la ventana (paga o por pagar) no se genera otra hasta que venza el año;
+ *  - plan mensual: si una factura anual paga todavía cubre el mes, no se cobra;
+ *  - si el día de cobro del mes ya pasó, se cobra hoy: no nace vencida.
+ */
+export function planificarFacturas(
+  instituciones: InstitucionFacturable[],
+  recientes: FacturaReciente[],
+  periodo: string,
+  hoy: string,
+): { crear: FacturaPorCrear[]; omitidas: { institucionId: string; motivo: MotivoOmision }[] } {
+  const porInstitucion = new Map<string, FacturaReciente[]>();
+  for (const f of recientes) {
+    const lista = porInstitucion.get(f.institucionId) ?? [];
+    lista.push(f);
+    porInstitucion.set(f.institucionId, lista);
+  }
+
+  const crear: FacturaPorCrear[] = [];
+  const omitidas: { institucionId: string; motivo: MotivoOmision }[] = [];
+  for (const inst of instituciones) {
+    const propias = porInstitucion.get(inst.id) ?? [];
+    const omitir = (motivo: MotivoOmision) => omitidas.push({ institucionId: inst.id, motivo });
+
+    if (!esClavePlan(inst.plan)) omitir("plan_desconocido");
+    else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
+    else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
+    else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
+      omitir("cubierta_por_anual");
+    } else {
+      const fecha = fechaCobroDelPeriodo(periodo, inst.diaCobro);
+      crear.push({
+        institucionId: inst.id,
+        plan: inst.plan,
+        monto: montoDePlan(inst.plan),
+        periodo,
+        fechaCobro: fecha < hoy ? hoy : fecha,
+        medio: inst.medioPago,
+      });
+    }
+  }
+  return { crear, omitidas };
+}
+
 /* ───────── Esquemas de formularios (los reusan cliente y server actions) ───────── */
 
 const vacioAUndefined = <T extends z.ZodType>(schema: T) =>
