@@ -62,7 +62,9 @@ export function TarjetaPostulante({
       </div>
       {p.etapa !== "contratado" && (
         <div className="mt-2.5 flex items-center justify-between gap-2">
-          {p.cv.verificado ? (
+          {p.suspendido ? (
+            <span className="text-xs font-semibold text-rosa">Perfil suspendido</span>
+          ) : p.cv.verificado ? (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-verde">
               <Verificado categoria={p.categoria} tamano={13} />
               Perfil verificado

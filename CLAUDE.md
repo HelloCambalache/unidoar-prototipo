@@ -99,4 +99,4 @@ Copy en español rioplatense (voseo: "Publicá", "Elegí"). Accesibilidad: contr
 - Lectura automática del CV, importación de profesionales por CSV, material adjunto de cursos, y las vistas mobile "app" (`/app/docente`, `/app/institucion`).
 - Login con Google: hay que crear las credenciales en Google Cloud y activarlo en Supabase.
 - Rendimiento: las páginas de contenido (`/planes`, `/terminos`…) se generan en cada visita porque la cabecera consulta la sesión; se puede cachear con Partial Prerendering.
-- Las acciones de las cuentas suspendidas se filtran con `src/lib/visibilidad.ts`: sumar ahí cualquier condición nueva de visibilidad.
+- Las acciones de las cuentas suspendidas se filtran con `src/lib/visibilidad.ts`: sumar ahí cualquier condición nueva de visibilidad. Un docente suspendido que sigue en el historial de una institución (tablero de postulantes, Profesionales, ficha) se muestra como "Perfil suspendido" y **sin su contacto** (teléfono, email, WhatsApp): un lugar nuevo donde una institución vea el contacto de un docente tiene que ocultarlo con `suspendido`.

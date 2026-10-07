@@ -165,7 +165,13 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
                         <Link href={perfil} className="font-semibold text-tinta hover:text-navy-700 hover:underline">
                           {f.nombre}
                         </Link>
-                        {f.email && <div className="text-xs leading-snug text-sutil">{f.email}</div>}
+                        {f.suspendido ? (
+                          <div className="mt-0.5">
+                            <Insignia tono="rosa">Perfil suspendido</Insignia>
+                          </div>
+                        ) : (
+                          f.email && <div className="text-xs leading-snug text-sutil">{f.email}</div>
+                        )}
                       </div>
                     </div>
                   </td>

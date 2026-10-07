@@ -133,6 +133,7 @@ export async function pipelineDeBusqueda(
           }
         : null,
       esFavorito: favoritosSet.has(d.id),
+      suspendido: d.suspendido,
       notas: notasPor.get(p.id) ?? [],
       zonas: d.zonas,
       cv: {
@@ -148,8 +149,9 @@ export async function pipelineDeBusqueda(
         niveles: d.niveles,
         disponibilidad: d.disponibilidad,
         ubicacion: kmLegible(km),
-        telefono: d.telefono,
-        email: d.email ?? emailCuenta ?? null,
+        // De un perfil suspendido no se muestra el contacto (tampoco el WhatsApp, que sale del teléfono).
+        telefono: d.suspendido ? null : d.telefono,
+        email: d.suspendido ? null : (d.email ?? emailCuenta ?? null),
         cvUrl: d.cvUrl,
       },
     };

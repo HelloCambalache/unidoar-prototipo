@@ -24,6 +24,8 @@ export type PostulanteTarjeta = {
   etapaDesde: string;
   entrevista: { texto: string; corta: string; titulo: string | null } | null;
   esFavorito: boolean;
+  /** El equipo suspendió el perfil: el cajón avisa y no muestra su teléfono ni su email. */
+  suspendido: boolean;
   notas: NotaVista[];
   zonas: string[];
   cv: {

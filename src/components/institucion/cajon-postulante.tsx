@@ -130,7 +130,13 @@ function Ficha({
           <h2 className="m-0 text-[20px] leading-tight font-semibold tracking-[-0.015em]">{p.nombre}</h2>
           <div className="mt-1 text-[13px] leading-snug text-apagado">{cv.subtitulo ?? p.subtitulo}</div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {cv.verificado ? <Insignia tono="verde">✓ Perfil verificado</Insignia> : <Insignia>Sin verificar</Insignia>}
+            {p.suspendido ? (
+              <Insignia tono="rosa">Perfil suspendido</Insignia>
+            ) : cv.verificado ? (
+              <Insignia tono="verde">✓ Perfil verificado</Insignia>
+            ) : (
+              <Insignia>Sin verificar</Insignia>
+            )}
             <Insignia tono={insignia.tono} className={insignia.clase}>
               {ETAPA_LABEL[p.etapa]}
             </Insignia>
@@ -208,8 +214,16 @@ function Ficha({
 
       {/* Contacto */}
       <section aria-label="Contacto" className="flex flex-col gap-2 text-[13px]">
-        <Fila etiqueta="Teléfono" valor={cv.telefono} />
-        <Fila etiqueta="Email" valor={cv.email} />
+        {p.suspendido ? (
+          <p className="m-0 text-xs leading-normal text-apagado">
+            El equipo de UNIDOAR suspendió este perfil: por ahora no mostramos su teléfono ni su email.
+          </p>
+        ) : (
+          <>
+            <Fila etiqueta="Teléfono" valor={cv.telefono} />
+            <Fila etiqueta="Email" valor={cv.email} />
+          </>
+        )}
         <Fila etiqueta="Ubicación" valor={cv.ubicacion ?? (p.zonas.length ? p.zonas.join(", ") : null)} />
       </section>
 

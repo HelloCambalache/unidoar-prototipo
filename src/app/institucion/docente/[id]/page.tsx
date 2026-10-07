@@ -103,7 +103,8 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
 
   const info = CATEGORIA_INFO[d.categoria];
   const nombre = `${d.nombre} ${d.apellido}`.trim();
-  const whatsapp = enlaceWhatsApp(d.telefono);
+  // De un perfil suspendido no se muestra el contacto.
+  const whatsapp = d.suspendido ? null : enlaceWhatsApp(d.telefono);
   const opciones = opcionesDeInvitacion(
     perfil.busquedasDelDocente,
     perfil.busquedasDelDocente.flatMap((b) => (b.relacion ? [{ busquedaId: b.id, origen: b.relacion.origen }] : [])),
@@ -306,7 +307,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             </div>
             {d.suspendido && (
               <p className="m-0 mt-3 text-xs leading-normal text-apagado">
-                El equipo de UNIDOAR suspendió este perfil: por ahora no se lo puede invitar a nuevas búsquedas.
+                El equipo de UNIDOAR suspendió este perfil: por ahora no se lo puede invitar a nuevas búsquedas y no mostramos su contacto.
               </p>
             )}
             {whatsapp && !perfil.puedeContactar && (

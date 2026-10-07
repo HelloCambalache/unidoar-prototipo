@@ -593,6 +593,8 @@ export type FilaBase = {
   fotoUrl: string | null;
   categoria: CategoriaDocente;
   disciplina: string;
+  /** El equipo suspendió el perfil: se avisa en la fila y no se muestra su contacto. */
+  suspendido: boolean;
   /** Cómo llegó a la base, por orden de importancia. */
   origen: "contratado" | "postulo" | "cv" | "invitado" | "favorito";
   busqueda: string | null;
@@ -637,6 +639,7 @@ export async function baseDeDocentes(
     categoria: docentes.categoria,
     asignaturas: docentes.asignaturas,
     subtitulo: docentes.subtitulo,
+    suspendido: docentes.suspendido,
   };
   const [pos, favs, cvs] = await Promise.all([
     db
@@ -671,7 +674,9 @@ export async function baseDeDocentes(
       a = {
         docenteId: d.docenteId,
         nombre: `${d.nombre} ${d.apellido}`.trim(),
-        email: d.email,
+        // De un perfil suspendido no se muestra el contacto.
+        email: d.suspendido ? null : d.email,
+        suspendido: d.suspendido,
         fotoUrl: d.fotoUrl,
         categoria: d.categoria,
         disciplina: d.asignaturas.slice(0, 2).join(", ") || d.subtitulo || "—",
@@ -755,6 +760,7 @@ export async function baseDeDocentes(
     docenteId: a.docenteId,
     nombre: a.nombre,
     email: a.email,
+    suspendido: a.suspendido,
     fotoUrl: a.fotoUrl,
     categoria: a.categoria,
     disciplina: a.disciplina,
