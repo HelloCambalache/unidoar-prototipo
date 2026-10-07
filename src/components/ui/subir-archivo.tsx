@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Boton } from "@/components/ui/button";
 import { Icono } from "@/components/icons";
+import { crearClienteNavegador } from "@/lib/supabase/client";
 import { supabaseUrl } from "@/lib/supabase/env";
 import {
   LIMITE_CUERPO_PETICION,
@@ -121,10 +122,49 @@ async function enviar(archivo: File, destino: Destino): Promise<Resultado> {
   }
 }
 
+type RespuestaDeSubida =
+  | { ok: true; path: string; url: string | null; nombre: string; tamano: number }
+  | { ok: false; error: string }
+  | null;
+
+/**
+ * Un PDF que no entra en una petición de Vercel (más de ~4 MB) se sube directo a Storage con una URL firmada, y el
+ * servidor después lo revisa y guarda lo revisado en su carpeta: /api/subir/firmar → Storage → /api/subir/confirmar.
+ */
+async function enviarGrande(archivo: File, destino: Destino): Promise<Resultado> {
+  const fallo: Resultado = { ok: false, error: "No pudimos subir el archivo. Probá de nuevo." };
+  const json = { "Content-Type": "application/json" };
+  try {
+    const pedido = await fetch("/api/subir/firmar", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({ carpeta: destino.carpeta, tamano: archivo.size }),
+    });
+    const firma = (await pedido.json().catch(() => null)) as { ok: true; path: string; token: string } | { ok: false; error: string } | null;
+    if (!firma?.ok) return firma ?? fallo;
+
+    const { error } = await crearClienteNavegador()
+      .storage.from("privado")
+      .uploadToSignedUrl(firma.path, firma.token, archivo, { contentType: MIME_PDF });
+    if (error) return { ok: false, error: "No pudimos subir el archivo. Revisá tu conexión y probá de nuevo." };
+
+    const revision = await fetch("/api/subir/confirmar", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({ carpeta: destino.carpeta, path: firma.path, nombre: archivo.name }),
+    });
+    const datos = (await revision.json().catch(() => null)) as RespuestaDeSubida;
+    if (revision.ok && datos?.ok) return datos;
+    return datos && !datos.ok ? datos : fallo;
+  } catch {
+    return { ok: false, error: "No pudimos subir el archivo. Revisá tu conexión y probá de nuevo." };
+  }
+}
+
 function ayudaPorDefecto(tipo: TipoArchivo) {
   const imagen = `JPG, PNG o WebP · hasta ${mb(LIMITE_ORIGINAL_IMAGEN)} MB (la achicamos si hace falta)`;
-  const pdf = `PDF · hasta ${mb(Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION))} MB`;
-  return tipo === "imagen" ? imagen : tipo === "pdf" ? pdf : `Imagen o PDF · hasta ${mb(Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION))} MB`;
+  const pdf = `PDF · hasta ${mb(LIMITE_PDF)} MB`;
+  return tipo === "imagen" ? imagen : tipo === "pdf" ? pdf : `Imagen o PDF · hasta ${mb(LIMITE_PDF)} MB`;
 }
 
 const esImagenUrl = (u: string) => /\.(jpe?g|png|webp)(\?|$)/i.test(u);
@@ -188,8 +228,8 @@ export function SubirArchivo(props: Props) {
       return;
     }
     // Las imágenes se achican antes de subir, así que el tope es el de lo que puede procesar el navegador; un PDF no se
-    // puede achicar y tiene que entrar tal cual en la petición.
-    const limite = esPdf ? Math.min(LIMITE_PDF, LIMITE_CUERPO_PETICION) : LIMITE_ORIGINAL_IMAGEN;
+    // puede achicar: hasta ~4 MB va por el servidor y de ahí hasta el máximo se sube directo a Storage.
+    const limite = esPdf ? LIMITE_PDF : LIMITE_ORIGINAL_IMAGEN;
     if (original.size > limite) {
       setError(`El archivo pesa ${mb(original.size)} MB; el máximo es ${mb(limite)} MB.`);
       return;
@@ -207,13 +247,14 @@ export function SubirArchivo(props: Props) {
         return;
       }
     }
-    if (archivo.size > LIMITE_CUERPO_PETICION) {
+    const directo = esPdf && archivo.size > LIMITE_CUERPO_PETICION;
+    if (!directo && archivo.size > LIMITE_CUERPO_PETICION) {
       setError(`El archivo pesa ${mb(archivo.size)} MB; el máximo es ${mb(LIMITE_CUERPO_PETICION)} MB.`);
       return;
     }
 
     setSubiendo(true);
-    const resultado = await enviar(archivo, props);
+    const resultado = directo ? await enviarGrande(archivo, props) : await enviar(archivo, props);
     setSubiendo(false);
     if (!resultado.ok) {
       setError(resultado.error);

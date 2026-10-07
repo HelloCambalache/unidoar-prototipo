@@ -35,10 +35,16 @@ export const LIMITE_IMAGEN = 5 * 1024 * 1024;
 export const LIMITE_ORIGINAL_IMAGEN = 25 * 1024 * 1024;
 export const LIMITE_PDF = 10 * 1024 * 1024;
 /**
- * Las funciones de Vercel rechazan cuerpos de más de 4,5 MB: el navegador comprime las imágenes
- * grandes antes de subirlas y no deja subir PDF por encima de este tope práctico.
+ * Las funciones de Vercel rechazan cuerpos de más de 4,5 MB: el navegador comprime las imágenes grandes antes de
+ * subirlas, y los PDF que pasan de este tope se suben directo a Storage con una URL firmada (ver `CARPETA_DE_PASO`).
  */
 export const LIMITE_CUERPO_PETICION = 4 * 1024 * 1024;
+
+/**
+ * Carpeta (dentro del bucket `privado`) donde llegan los PDF grandes subidos directo a Storage. Ninguna acción acepta
+ * un path de acá como valor guardado: /api/subir/confirmar revisa los bytes y guarda lo revisado en su carpeta definitiva.
+ */
+export const CARPETA_DE_PASO = "subidas";
 
 export const MIME_IMAGEN = ["image/jpeg", "image/png", "image/webp"] as const;
 export const MIME_PDF = "application/pdf";
