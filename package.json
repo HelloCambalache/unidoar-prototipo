@@ -17,7 +17,8 @@
     "db:storage": "dotenv -e .env.local -- tsx src/db/storage.ts",
     "db:setup": "pnpm db:push && pnpm db:rls && pnpm db:storage && pnpm db:seed",
     "db:vincular": "dotenv -e .env.local -- tsx src/db/vincular-cuentas.ts",
-    "db:admin": "dotenv -e .env.local -- tsx src/db/hacer-admin.ts"
+    "db:admin": "dotenv -e .env.local -- tsx src/db/hacer-admin.ts",
+    "db:limpiar-archivos": "dotenv -e .env.local -- tsx src/db/limpiar-archivos.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

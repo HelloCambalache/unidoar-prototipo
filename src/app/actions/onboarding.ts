@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { quitados } from "@/lib/archivos";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { eq, like } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
@@ -181,6 +183,7 @@ export async function actualizarPerfilInstitucion(_previo: EstadoFormulario, for
     .update(instituciones)
     .set({ descripcion: orNull(descripcion), logoUrl: orNull(logoUrl), portadaUrl: orNull(portadaUrl) })
     .where(eq(instituciones.id, institucion.id));
+  await borrarArchivos(quitados([institucion.logoUrl, institucion.portadaUrl], [logoUrl, portadaUrl]));
 
   revalidatePath("/institucion", "layout");
   revalidatePath(`/instituciones/${institucion.slug}`);
@@ -316,6 +319,7 @@ export async function guardarCvDocente(_previo: EstadoFormulario, formData: Form
   }
 
   await getDb().update(docentes).set({ cvUrl: orNull(path) }).where(eq(docentes.id, docente.id));
+  await borrarArchivos(quitados([docente.cvUrl], [path]));
 
   revalidatePath("/docente", "layout");
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/docente/asignaturas");
@@ -404,6 +408,8 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
     .insert(docenteDetalle)
     .values({ docenteId: docente.id, documentos })
     .onConflictDoUpdate({ target: docenteDetalle.docenteId, set: { documentos, actualizadoEn: new Date() } });
+  // Un DNI o un título que se vuelve a subir no tiene por qué seguir guardado.
+  await borrarArchivos(quitados(Object.values(previos), Object.values(documentos)));
 
   if (destino === "salir") {
     revalidatePath("/docente", "layout");

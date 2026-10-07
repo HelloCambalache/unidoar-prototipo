@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { quitados } from "@/lib/archivos";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
@@ -76,6 +78,7 @@ export async function editarCurso(
     .update(cursos)
     .set(valoresDeCurso(datos.data))
     .where(and(eq(cursos.id, actual.id), eq(cursos.institucionId, institucion.id)));
+  await borrarArchivos(quitados([actual.fotoUrl], [datos.data.fotoUrl]));
 
   revalidarCursos();
   redirect(`/institucion/cursos/${actual.id}?aviso=editado`);
@@ -89,6 +92,7 @@ export async function editarCurso(
 export async function borrarCurso(cursoId: string, confirmado = false): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
   if (!esUuid(cursoId)) return fallo(NO_ENCONTRADO);
+  let fotoDelCurso: string | null = null;
 
   const resultado = await transaccion(async (tx) => {
     const curso = await cursoPropio(institucion.id, cursoId, tx);
@@ -114,11 +118,15 @@ export async function borrarCurso(cursoId: string, confirmado = false): Promise<
         enlace: "/docente/cursos",
       },
     );
+    fotoDelCurso = curso.fotoUrl;
     await tx.delete(cursos).where(and(eq(cursos.id, curso.id), eq(cursos.institucionId, institucion.id)));
     return ok();
   });
 
-  if (resultado.ok) revalidarCursos();
+  if (resultado.ok) {
+    await borrarArchivos([fotoDelCurso]);
+    revalidarCursos();
+  }
   return resultado;
 }
 

@@ -8,7 +8,7 @@ Marketplace que conecta **instituciones** (colegios, clubes, natatorios) con **d
 
 - Next.js 16 (App Router, `src/`), React 19, TypeScript estricto, Tailwind 4, pnpm.
 - **Supabase** (Vercel Marketplace) para todo lo de backend: **Postgres** accedido con **Drizzle ORM** + `postgres-js` (`src/db`), **Auth** (`@supabase/ssr`, sesión en cookies) y **Storage** (buckets `publico` y `privado`).
-- Deploy: Vercel, proyecto `unidoar-prototipo` (equipo Cambalaches). `main` sigue sirviendo el prototipo estático; el trabajo vive en `feat/app-dinamica`.
+- Deploy: Vercel, proyecto `unidoar-prototipo` (equipo Cambalaches), funciones en `gru1` (junto a la base). `main` es producción y es donde se trabaja: se despliega solo en cada push. El prototipo estático quedó en `prototipo/` como referencia.
 - En Next 16 el antiguo `middleware` se llama **`proxy.ts`** (`src/proxy.ts`). Antes de usar una API de Next, leé la guía correspondiente en `node_modules/next/dist/docs/`.
 
 ## Comandos
@@ -24,6 +24,7 @@ pnpm db:setup       # push + rls + storage + seed, de una
 pnpm db:admin --email=<correo> [--rol=institucion]   # da (o quita) el rol admin: entra a /backoffice
 pnpm db:vincular --institucion=<correo> --docente=<correo>   # liga cuentas reales de Supabase con los datos demo (rehacer tras cada db:seed)
 pnpm db:seed        # catálogos + datos demo (es_demo=true); --solo-catalogos / --borrar-demo
+pnpm db:limpiar-archivos [--borrar] [--horas=24] [--usuario=<uuid>]   # lista (y con --borrar elimina) los archivos de Storage que ninguna fila usa
 vercel env pull .env.local --yes   # trae las variables de Supabase
 ```
 
@@ -41,7 +42,8 @@ La app se conecta por el **pooler de sesión** de Supabase (`DATABASE_URL`, puer
 - Archivos: las subidas pasan por `/api/subir` (servidor); `publico` se lee por URL pública, `privado` (CV, documentos) solo con URL firmada generada en el servidor.
   - Vercel corta los pedidos de más de ~4,5 MB (`FUNCTION_PAYLOAD_TOO_LARGE`, medido en producción). Por eso el navegador achica las imágenes (hasta 3 intentos de calidad) y los **PDF quedan en 4 MB**; para más habría que subir directo a Storage con URLs firmadas.
   - Las imágenes que van al bucket `publico` se vuelven a codificar siempre en el navegador: se les saca el EXIF (puede traer el lugar donde se sacó la foto y esas URLs son públicas) y se limitan a 2000 px. Las del `privado` (documentos) se suben tal cual.
-  - Nada borra archivos de Storage: los reemplazados, quitados o abandonados quedan ahí (pendiente decidir una limpieza).
+  - Los archivos reemplazados o quitados se borran de Storage al guardar: `borrarArchivos(quitados(antes, despues))` (`src/lib/queries/archivos.ts`), que corre después de guardar con éxito, no rompe la acción si falla y no borra un archivo que otra fila siga usando. Una acción nueva que guarde archivos tiene que llamarla, y la columna nueva sumarse a `estaEnUso`.
+  - Lo que quedó huérfano igual (subidas abandonadas, o anteriores a esto) se limpia con `pnpm db:limpiar-archivos`: por defecto solo muestra qué borraría; `--borrar` borra. Mira toda la base (no una lista de columnas) y respeta un margen de 24 h para no tocar subidas en curso.
 
 ## Principio rector: nada hardcodeado
 

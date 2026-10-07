@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { quitados } from "@/lib/archivos";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, transaccion } from "@/db";
@@ -211,6 +213,7 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     .where(eq(docenteDetalle.docenteId, docente.id))
     .limit(1);
   const documentos = { ...(detalle?.documentos ?? {}) };
+  const conductaAnterior = documentos.conducta;
   let conductaCambio = false;
   if (datos.conducta !== undefined && datos.conducta !== (documentos.conducta ?? "")) {
     if (datos.conducta && !esPathPrivadoPropio(datos.conducta, usuario.id, "documentos")) {
@@ -278,6 +281,18 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         set: { grillaDisponibilidad: datos.grilla, ...(conductaCambio ? { documentos } : {}) },
       });
   });
+
+  // Foto, CV y certificado que se reemplazaron o se quitaron: se borran de Storage (lo que no vino en el formulario no cambió).
+  await borrarArchivos(
+    quitados(
+      [docente.fotoUrl, docente.cvUrl, conductaAnterior],
+      [
+        datos.fotoUrl !== undefined ? datos.fotoUrl : docente.fotoUrl,
+        datos.cvUrl !== undefined ? datos.cvUrl : docente.cvUrl,
+        documentos.conducta,
+      ],
+    ),
+  );
 
   // El layout muestra "Perfil 80%": se refresca junto con las pantallas que dependen del perfil.
   revalidatePath("/docente", "layout");

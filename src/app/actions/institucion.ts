@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { quitados } from "@/lib/archivos";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { transaccion } from "@/db";
@@ -75,6 +77,14 @@ export async function actualizarVitrina(entrada: unknown): Promise<Resultado<Vit
   if (Object.keys(campos).length > 0) return fallo("Revisá los campos marcados.", campos);
 
   const guardado = await guardarVitrina(institucion.id, d);
+
+  // Lo que se reemplazó o se quitó (logo, portada, fotos de la galería) deja de ocupar lugar en Storage.
+  await borrarArchivos(
+    quitados(
+      [institucion.logoUrl, institucion.portadaUrl, ...[...porId.values()].map((f) => f.url)],
+      [d.logoUrl, d.portadaUrl, ...guardado.fotos.map((f) => f.url)],
+    ),
+  );
 
   // El nombre y el logo se ven en el menú de toda el área, y la vitrina en las dos páginas de perfil.
   revalidatePath("/institucion", "layout");
