@@ -449,6 +449,37 @@ export const cvEnviados = pgTable(
   (t) => [primaryKey({ columns: [t.docenteId, t.institucionId] })],
 );
 
+/**
+ * Contactos privados de una institución: profesionales que ya conoce o tiene en una planilla, cargados a mano o por
+ * CSV desde Profesionales. No son docentes de UNIDOAR (sin cuenta, sin verificación, fuera de las búsquedas): los ve
+ * solo la institución, y todo lo que se lea o escriba se filtra por `institucion_id`.
+ */
+export const contactosInstitucion = pgTable(
+  "contactos_institucion",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** Nombre y apellido, como lo escribió la institución. */
+    nombre: text("nombre").notNull(),
+    /** En minúsculas. Hay siempre al menos uno de email y teléfono (lo valida src/lib/contactos.ts). */
+    email: text("email"),
+    telefono: text("telefono"),
+    disciplina: text("disciplina"),
+    nota: text("nota"),
+    /** manual | csv */
+    origen: text("origen").notNull().default("manual"),
+    creadoPor: uuid("creado_por").references(() => usuarios.id, { onDelete: "set null" }),
+    ...marcasDeTiempo,
+  },
+  (t) => [
+    index("contactos_institucion_idx").on(t.institucionId, t.creadoEn),
+    // Los NULL no chocan entre sí: solo evita repetir un mismo email dentro de una institución.
+    uniqueIndex("contactos_institucion_email_uq").on(t.institucionId, t.email),
+  ],
+);
+
 /* ───────────────────────────── Paquete A1 · Sitio público ───────────────────────────── */
 
 /** Mensajes del formulario de /contacto (los lee el equipo desde el backoffice o la base). */
@@ -609,3 +640,4 @@ export type InstitucionNovedad = typeof institucionNovedades.$inferSelect;
 export type InstitucionFoto = typeof institucionFotos.$inferSelect;
 export type Factura = typeof facturas.$inferSelect;
 export type SolicitudPlan = typeof solicitudesPlan.$inferSelect;
+export type ContactoInstitucion = typeof contactosInstitucion.$inferSelect;

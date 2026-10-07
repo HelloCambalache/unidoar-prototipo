@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { AccionesContacto, AccionesContactos } from "@/components/institucion/contactos-privados";
 import { PaginacionLista } from "@/components/institucion/paginacion-lista";
-import { Boton, BotonLink } from "@/components/ui/button";
+import { BotonLink } from "@/components/ui/button";
 import { Input } from "@/components/ui/campos";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { Pestanas } from "@/components/ui/pestanas";
@@ -26,6 +27,7 @@ const ORIGEN: Record<FilaBase["origen"], { etiqueta: string; tono: "verde" | "az
   cv: { etiqueta: "Envió CV", tono: "ambar" },
   invitado: { etiqueta: "Invitado/a", tono: "ambar" },
   favorito: { etiqueta: "Favorito", tono: "neutro" },
+  cargado: { etiqueta: "Cargado por vos", tono: "neutro" },
 };
 
 export default async function BaseDeDocentesPage({ searchParams }: Props) {
@@ -52,34 +54,15 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
     { etiqueta: "Enviaron CV", valor: base.stats.cv },
     { etiqueta: "Invitados", valor: base.stats.invitados },
     { etiqueta: "Contratados", valor: base.stats.contratados },
+    { etiqueta: "Cargados por vos", valor: base.stats.cargados },
   ];
 
   return (
     <div>
       <EncabezadoPagina
         titulo="Profesionales"
-        bajada="Todos los perfiles que pasaron por tu institución: se postularon, te mandaron su CV, los invitaste, los contrataste o los guardaste en favoritos."
-        acciones={
-          <>
-            <Boton
-              variante="secundario"
-              disabled
-              title="Próximamente"
-              className="border-navy-700 text-navy-700"
-            >
-              Importar CSV
-              <Insignia tono="azul" className="px-2 py-1 text-[10px]">
-                Próximamente
-              </Insignia>
-            </Boton>
-            <Boton disabled title="Próximamente">
-              + Cargar perfil
-              <Insignia tono="azul" className="px-2 py-1 text-[10px]">
-                Próximamente
-              </Insignia>
-            </Boton>
-          </>
-        }
+        bajada="Todos los perfiles que pasaron por tu institución: se postularon, te mandaron su CV, los invitaste, los contrataste o los guardaste en favoritos. También van los que cargues vos."
+        acciones={<AccionesContactos />}
       />
 
       <dl className="m-0 mb-5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
@@ -117,7 +100,7 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
       {base.cantidades.todos === 0 ? (
         <EstadoVacio
           titulo="Todavía no hay profesionales en tu base"
-          texto="Acá van a aparecer quienes se postulen a tus búsquedas o te manden su CV, a quienes invites y los perfiles que guardes como favoritos."
+          texto="Acá van a aparecer quienes se postulen a tus búsquedas o te manden su CV, a quienes invites y los perfiles que guardes como favoritos. También podés cargar o importar a los profesionales que ya conocés."
           accion={<BotonLink href="/institucion/buscar-docentes">Buscar profesionales</BotonLink>}
         />
       ) : base.total === 0 ? (
@@ -148,29 +131,40 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
           <tbody>
             {base.filas.map((f) => {
               const origen = ORIGEN[f.origen];
-              const info = CATEGORIA_INFO[f.categoria];
-              const perfil = `/institucion/docente/${f.docenteId}?desde=base`;
+              const info = f.categoria ? CATEGORIA_INFO[f.categoria] : null;
+              // Los contactos cargados por la institución no tienen ficha: solo se editan o se borran.
+              const perfil = f.docenteId ? `/institucion/docente/${f.docenteId}?desde=base` : null;
+              const contactoDe = [f.email, f.contacto?.telefono].filter(Boolean).join(" · ");
               return (
-                <tr key={f.docenteId}>
+                <tr key={f.clave}>
                   <td>
                     <div className="flex items-center gap-[11px]">
                       <Avatar
                         iniciales={iniciales(f.nombre)}
                         fotoUrl={f.fotoUrl}
                         tamano={34}
-                        fondo={info.tint}
-                        texto={info.ink}
+                        fondo={info?.tint}
+                        texto={info?.ink}
                       />
                       <div className="min-w-0">
-                        <Link href={perfil} className="font-semibold text-tinta hover:text-navy-700 hover:underline">
-                          {f.nombre}
-                        </Link>
+                        {perfil ? (
+                          <Link href={perfil} className="font-semibold text-tinta hover:text-navy-700 hover:underline">
+                            {f.nombre}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold text-tinta">{f.nombre}</span>
+                        )}
                         {f.suspendido ? (
                           <div className="mt-0.5">
                             <Insignia tono="rosa">Perfil suspendido</Insignia>
                           </div>
                         ) : (
-                          f.email && <div className="text-xs leading-snug text-sutil">{f.email}</div>
+                          contactoDe && <div className="text-xs leading-snug text-sutil">{contactoDe}</div>
+                        )}
+                        {f.contacto?.nota && (
+                          <div className="line-clamp-1 max-w-[260px] text-xs leading-snug text-apagado" title={f.contacto.nota}>
+                            {f.contacto.nota}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -181,13 +175,17 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
                   </td>
                   <td className="text-apagado">{f.busqueda ?? "—"}</td>
                   <td className="whitespace-nowrap text-apagado">{f.fecha.getTime() > 0 ? fechaCorta(f.fecha) : "—"}</td>
-                  <td>
-                    <Insignia>{f.estado}</Insignia>
-                  </td>
+                  <td>{f.contacto ? <span className="text-apagado">—</span> : <Insignia>{f.estado}</Insignia>}</td>
                   <td className="text-right whitespace-nowrap">
-                    <Link href={perfil} className="text-[13px] leading-none font-medium text-navy-700">
-                      Ver perfil →
-                    </Link>
+                    {f.contacto ? (
+                      <AccionesContacto contacto={f.contacto} />
+                    ) : (
+                      perfil && (
+                        <Link href={perfil} className="text-[13px] leading-none font-medium text-navy-700">
+                          Ver perfil →
+                        </Link>
+                      )
+                    )}
                   </td>
                 </tr>
               );

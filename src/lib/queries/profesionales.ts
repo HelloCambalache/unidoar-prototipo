@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import {
   asignaturas,
   busquedas,
+  contactosInstitucion,
   cvEnviados,
   docenteDetalle,
   docentes,
@@ -576,7 +577,7 @@ export async function perfilDeDocente(
 
 /* ───────────────────────────── Base de la institución ("Profesionales") ───────────────────────────── */
 
-export type PestanaBase = "todos" | "postularon" | "cv" | "invitados" | "contratados" | "favoritos";
+export type PestanaBase = "todos" | "postularon" | "cv" | "invitados" | "contratados" | "favoritos" | "cargados";
 export const PESTANAS_BASE: { clave: PestanaBase; etiqueta: string }[] = [
   { clave: "todos", etiqueta: "Todos" },
   { clave: "postularon", etiqueta: "Se postularon" },
@@ -584,20 +585,40 @@ export const PESTANAS_BASE: { clave: PestanaBase; etiqueta: string }[] = [
   { clave: "invitados", etiqueta: "Invitados" },
   { clave: "contratados", etiqueta: "Contratados" },
   { clave: "favoritos", etiqueta: "Favoritos" },
+  { clave: "cargados", etiqueta: "Cargados por vos" },
 ];
 
-export type FilaBase = {
-  docenteId: string;
+/** Un contacto que la institución cargó a mano o por CSV (tabla `contactos_institucion`). */
+export type ContactoVista = {
+  id: string;
   nombre: string;
-  /** Solo si se postuló a una búsqueda o mandó su CV (igual que el contacto de la ficha) y el perfil no está suspendido. */
+  email: string | null;
+  telefono: string | null;
+  disciplina: string | null;
+  nota: string | null;
+};
+
+export type FilaBase = {
+  /** Clave estable de la fila: el id del docente, o "contacto:<id>" en los cargados por la institución. */
+  clave: string;
+  /** Null en los contactos cargados por la institución (no son docentes de UNIDOAR). */
+  docenteId: string | null;
+  /** Solo en los contactos cargados: sus datos, para editarlos. */
+  contacto: ContactoVista | null;
+  nombre: string;
+  /**
+   * Docentes: solo si se postuló a una búsqueda o mandó su CV (igual que el contacto de la ficha) y el perfil no está
+   * suspendido. Contactos cargados: el que escribió la institución.
+   */
   email: string | null;
   fotoUrl: string | null;
-  categoria: CategoriaDocente;
+  /** Null en los contactos cargados: no tienen categoría. */
+  categoria: CategoriaDocente | null;
   disciplina: string;
   /** El equipo suspendió el perfil: se avisa en la fila y no se muestra su contacto. */
   suspendido: boolean;
   /** Cómo llegó a la base, por orden de importancia. */
-  origen: "contratado" | "postulo" | "cv" | "invitado" | "favorito";
+  origen: "contratado" | "postulo" | "cv" | "invitado" | "favorito" | "cargado";
   busqueda: string | null;
   fecha: Date;
   estado: string;
@@ -609,10 +630,11 @@ type Acumulado = FilaBase & {
   esInvitado: boolean;
   esContratado: boolean;
   esFavorito: boolean;
+  esCargado: boolean;
 };
 
 export type BaseDeDocentes = {
-  stats: { perfiles: number; postularon: number; cv: number; invitados: number; contratados: number };
+  stats: { perfiles: number; postularon: number; cv: number; invitados: number; contratados: number; cargados: number };
   cantidades: Record<PestanaBase, number>;
   filas: FilaBase[];
   total: number;
@@ -621,9 +643,9 @@ export type BaseDeDocentes = {
 };
 
 /**
- * Docentes que pasaron por la institución: se postularon, le mandaron su CV, los invitó, los contrató, o los
- * guardó como favoritos el usuario de la sesión (los favoritos son por cuenta). Se arma en memoria: el
- * universo es el de una sola institución.
+ * Personas que pasaron por la institución: docentes que se postularon, le mandaron su CV, los invitó, los contrató, o
+ * los guardó como favoritos el usuario de la sesión (los favoritos son por cuenta), más los contactos que la propia
+ * institución cargó a mano o por CSV. Se arma en memoria: el universo es el de una sola institución.
  */
 export async function baseDeDocentes(
   institucionId: string,
@@ -642,7 +664,7 @@ export async function baseDeDocentes(
     subtitulo: docentes.subtitulo,
     suspendido: docentes.suspendido,
   };
-  const [pos, favs, cvs] = await Promise.all([
+  const [pos, favs, cvs, cargados] = await Promise.all([
     db
       .select({
         ...datosDocente,
@@ -666,6 +688,18 @@ export async function baseDeDocentes(
       .from(cvEnviados)
       .innerJoin(docentes, eq(docentes.id, cvEnviados.docenteId))
       .where(eq(cvEnviados.institucionId, institucionId)),
+    db
+      .select({
+        id: contactosInstitucion.id,
+        nombre: contactosInstitucion.nombre,
+        email: contactosInstitucion.email,
+        telefono: contactosInstitucion.telefono,
+        disciplina: contactosInstitucion.disciplina,
+        nota: contactosInstitucion.nota,
+        creadoEn: contactosInstitucion.creadoEn,
+      })
+      .from(contactosInstitucion)
+      .where(eq(contactosInstitucion.institucionId, institucionId)),
   ]);
 
   const mapa = new Map<string, Acumulado>();
@@ -673,7 +707,9 @@ export async function baseDeDocentes(
     let a = mapa.get(d.docenteId);
     if (!a) {
       a = {
+        clave: d.docenteId,
         docenteId: d.docenteId,
+        contacto: null,
         nombre: `${d.nombre} ${d.apellido}`.trim(),
         email: d.email,
         suspendido: d.suspendido,
@@ -689,6 +725,7 @@ export async function baseDeDocentes(
         esInvitado: false,
         esContratado: false,
         esFavorito: false,
+        esCargado: false,
       };
       mapa.set(d.docenteId, a);
     }
@@ -716,18 +753,44 @@ export async function baseDeDocentes(
     a.esCv = true;
     a.fecha = c.enviadoEn > a.fecha ? c.enviadoEn : a.fecha;
   }
+  for (const c of cargados) {
+    const clave = `contacto:${c.id}`;
+    mapa.set(clave, {
+      clave,
+      docenteId: null,
+      contacto: { id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, disciplina: c.disciplina, nota: c.nota },
+      nombre: c.nombre,
+      email: c.email,
+      suspendido: false,
+      fotoUrl: null,
+      categoria: null,
+      disciplina: c.disciplina ?? "—",
+      origen: "cargado",
+      busqueda: null,
+      fecha: c.creadoEn,
+      estado: "—",
+      esPostulo: false,
+      esCv: false,
+      esInvitado: false,
+      esContratado: false,
+      esFavorito: false,
+      esCargado: true,
+    });
+  }
 
   const todos = [...mapa.values()];
   for (const a of todos) {
-    a.origen = a.esContratado
-      ? "contratado"
-      : a.esPostulo
-        ? "postulo"
-        : a.esCv
-          ? "cv"
-          : a.esInvitado
-            ? "invitado"
-            : "favorito";
+    a.origen = a.esCargado
+      ? "cargado"
+      : a.esContratado
+        ? "contratado"
+        : a.esPostulo
+          ? "postulo"
+          : a.esCv
+            ? "cv"
+            : a.esInvitado
+              ? "invitado"
+              : "favorito";
     if (a.esContratado) a.estado = "Contratado/a";
   }
 
@@ -738,6 +801,7 @@ export async function baseDeDocentes(
     invitados: todos.filter((a) => a.esInvitado).length,
     contratados: todos.filter((a) => a.esContratado).length,
     favoritos: todos.filter((a) => a.esFavorito).length,
+    cargados: todos.filter((a) => a.esCargado).length,
   };
 
   const pertenece: Record<PestanaBase, (a: Acumulado) => boolean> = {
@@ -747,6 +811,7 @@ export async function baseDeDocentes(
     invitados: (a) => a.esInvitado,
     contratados: (a) => a.esContratado,
     favoritos: (a) => a.esFavorito,
+    cargados: (a) => a.esCargado,
   };
   const consulta = normalizarTexto(opciones.q);
   const visibles = todos
@@ -757,9 +822,12 @@ export async function baseDeDocentes(
   const paginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA_BASE));
   const pagina = Math.min(Math.max(1, opciones.pagina), paginas);
   const filas = visibles.slice((pagina - 1) * POR_PAGINA_BASE, pagina * POR_PAGINA_BASE).map((a): FilaBase => ({
+    clave: a.clave,
     docenteId: a.docenteId,
+    contacto: a.contacto,
     nombre: a.nombre,
-    email: !a.suspendido && (a.esPostulo || a.esCv) ? a.email : null,
+    // El de un docente solo se muestra si se postuló o mandó su CV y no está suspendido; el de un contacto cargado es de la institución.
+    email: a.esCargado || (!a.suspendido && (a.esPostulo || a.esCv)) ? a.email : null,
     suspendido: a.suspendido,
     fotoUrl: a.fotoUrl,
     categoria: a.categoria,
@@ -777,6 +845,7 @@ export async function baseDeDocentes(
       cv: cantidades.cv,
       invitados: cantidades.invitados,
       contratados: cantidades.contratados,
+      cargados: cantidades.cargados,
     },
     cantidades,
     filas,
