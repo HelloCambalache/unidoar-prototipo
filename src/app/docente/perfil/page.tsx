@@ -44,26 +44,33 @@ export default async function PerfilDocentePage() {
   const estado = (verificado: boolean, subido: boolean): EstadoDocumento =>
     verificado ? "verificado" : subido ? "revision" : "sin";
   const conductaEstado = estado(docente.antecedentesVerificados, !!docs.conducta);
+  // A quien todavía cursa no se le pide el título (salvo que ya lo haya subido): ni en la lista de arriba ni en la sección de documentación.
+  const credencialPide = datos.situacionEstudio !== "estudiante" || !!docs.credencial;
   const requisitos: RequisitoVerificacion[] = [
     {
       clave: "dni",
       nombre: "Identidad (DNI)",
       estado: estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso),
     },
-    {
-      clave: "credencial",
-      nombre: CATEGORIA_ALTA[docente.categoria].credencial.nombre,
-      estado: estado(docente.tituloVerificado, !!docs.credencial),
-    },
+    ...(credencialPide
+      ? [
+          {
+            clave: "credencial" as const,
+            nombre: CATEGORIA_ALTA[docente.categoria].credencial.nombre,
+            estado: estado(docente.tituloVerificado, !!docs.credencial),
+          },
+        ]
+      : []),
     { clave: "conducta", nombre: "Certificado de buena conducta", opcional: true, estado: conductaEstado },
   ];
 
   // Cargar o corregir la documentación: se puede mientras no esté verificada ni rechazada la verificación.
   const abierta = docente.verificacion !== "rechazado";
   const dniEstado = estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso);
-  const credencialPide = datos.situacionEstudio !== "estudiante" || !!docs.credencial;
   const credencialEstado = estado(docente.tituloVerificado, !!docs.credencial);
   const credencial = CATEGORIA_ALTA[docente.categoria].credencial;
+  // Con la verificación rechazada no se puede cargar nada desde acá: el texto explica por qué en vez de pedir que se suba.
+  const RECHAZADA = "Rechazamos tu verificación: si querés corregir algo, escribinos desde Contacto.";
   const documentacion: DocumentacionPerfil = {
     dni: {
       estado: dniEstado,
@@ -71,7 +78,9 @@ export default async function PerfilDocentePage() {
       detalle:
         dniEstado === "verificado"
           ? "Ya lo verificamos."
-          : dniEstado === "revision"
+          : !abierta
+            ? RECHAZADA
+            : dniEstado === "revision"
             ? "Lo recibimos y lo estamos revisando."
             : docs.dniFrente
               ? "Falta el dorso."
@@ -87,7 +96,9 @@ export default async function PerfilDocentePage() {
           detalle:
             credencialEstado === "verificado"
               ? "Ya lo verificamos."
-              : credencialEstado === "revision"
+              : !abierta
+                ? RECHAZADA
+                : credencialEstado === "revision"
                 ? "Lo recibimos y lo estamos revisando."
                 : credencial.vacio,
         }
