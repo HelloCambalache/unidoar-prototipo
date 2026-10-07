@@ -589,6 +589,7 @@ export const PESTANAS_BASE: { clave: PestanaBase; etiqueta: string }[] = [
 export type FilaBase = {
   docenteId: string;
   nombre: string;
+  /** Solo si se postuló a una búsqueda o mandó su CV (igual que el contacto de la ficha) y el perfil no está suspendido. */
   email: string | null;
   fotoUrl: string | null;
   categoria: CategoriaDocente;
@@ -674,8 +675,7 @@ export async function baseDeDocentes(
       a = {
         docenteId: d.docenteId,
         nombre: `${d.nombre} ${d.apellido}`.trim(),
-        // De un perfil suspendido no se muestra el contacto.
-        email: d.suspendido ? null : d.email,
+        email: d.email,
         suspendido: d.suspendido,
         fotoUrl: d.fotoUrl,
         categoria: d.categoria,
@@ -759,7 +759,7 @@ export async function baseDeDocentes(
   const filas = visibles.slice((pagina - 1) * POR_PAGINA_BASE, pagina * POR_PAGINA_BASE).map((a): FilaBase => ({
     docenteId: a.docenteId,
     nombre: a.nombre,
-    email: a.email,
+    email: !a.suspendido && (a.esPostulo || a.esCv) ? a.email : null,
     suspendido: a.suspendido,
     fotoUrl: a.fotoUrl,
     categoria: a.categoria,
