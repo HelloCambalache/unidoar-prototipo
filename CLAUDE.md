@@ -44,6 +44,7 @@ La app se conecta por el **pooler de sesión** de Supabase (`DATABASE_URL`, puer
   - Las imágenes que van al bucket `publico` se vuelven a codificar siempre en el navegador: se les saca el EXIF (puede traer el lugar donde se sacó la foto y esas URLs son públicas) y se limitan a 2000 px. Las del `privado` (documentos) se suben tal cual.
   - Los archivos reemplazados o quitados se borran de Storage al guardar: `borrarArchivos(quitados(antes, despues))` (`src/lib/queries/archivos.ts`), que corre después de guardar con éxito, no rompe la acción si falla y no borra un archivo que otra fila siga usando. Una acción nueva que guarde archivos tiene que llamarla, y la columna nueva sumarse a `estaEnUso`.
   - Lo que quedó huérfano igual (subidas abandonadas, o anteriores a esto) se limpia con `pnpm db:limpiar-archivos`: por defecto solo muestra qué borraría; `--borrar` borra. Mira toda la base (no una lista de columnas) y respeta un margen de 24 h para no tocar subidas en curso.
+  - Documentación del docente (`docente_detalle.documentos`: `dniFrente`, `dniDorso`, `credencial`, `conducta`, todo en `privado`): se sube en el alta o después desde `/docente/perfil#documentacion` (`actualizarPerfilDocente`). Subir algo nuevo mientras está en `correccion` lo devuelve a `pendiente`, y si queda en revisión avisa a los admins (`avisarAAdmins`). Con la verificación hecha (DNI) o el título verificado no se puede cambiar desde el perfil, y con la verificación rechazada solo queda el certificado: el equipo lo resuelve por Contacto.
 
 ## Principio rector: nada hardcodeado
 
@@ -95,7 +96,7 @@ Copy en español rioplatense (voseo: "Publicá", "Elegí"). Accesibilidad: contr
 **Pendiente:**
 - **Cobro real:** no hay pasarela de pago. "Cambiar de plan" crea un pedido (`solicitudes_plan`) que el backoffice atiende; las facturas se cargan a mano. Integrar Mercado Pago.
 - **Correo:** no hay servicio de mails. Las invitaciones al equipo muestran un enlace para copiar; Supabase usa su correo de prueba (muy limitado) para confirmar cuentas. Falta configurar SMTP propio, las URLs de Auth y las plantillas en español: guía en `docs/supabase-auth.md` (plantillas en `supabase/plantillas-correo/`).
-- Lectura automática del CV, importación de profesionales por CSV, resubida de DNI/título por el docente tras una corrección, material adjunto de cursos, y las vistas mobile "app" (`/app/docente`, `/app/institucion`).
+- Lectura automática del CV, importación de profesionales por CSV, material adjunto de cursos, y las vistas mobile "app" (`/app/docente`, `/app/institucion`).
 - Login con Google: hay que crear las credenciales en Google Cloud y activarlo en Supabase.
 - Rendimiento: las páginas de contenido (`/planes`, `/terminos`…) se generan en cada visita porque la cabecera consulta la sesión; se puede cachear con Partial Prerendering.
 - Las acciones de las cuentas suspendidas se filtran con `src/lib/visibilidad.ts`: sumar ahí cualquier condición nueva de visibilidad.

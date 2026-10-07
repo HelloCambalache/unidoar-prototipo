@@ -39,6 +39,10 @@ export const perfilDocenteSchema = z.object({
   cvUrl: rutaArchivo.optional(),
   /** Certificado de buena conducta (optativo): path del bucket privado, en `docente_detalle.documentos`. */
   conducta: rutaArchivo.optional(),
+  /** DNI (frente y dorso) y título o credencial: paths del bucket privado, en `docente_detalle.documentos`. */
+  dniFrente: rutaArchivo.optional(),
+  dniDorso: rutaArchivo.optional(),
+  credencial: rutaArchivo.optional(),
 });
 
 export type DatosPerfil = z.infer<typeof perfilDocenteSchema>;

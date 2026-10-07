@@ -104,7 +104,7 @@ export function PasoDocumentacion({
         bajada={
           <>
             Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong className="font-semibold text-tinta">Sin verificar</strong>{" "}
-            hasta que revisemos la documentación — normalmente en menos de 48 horas.
+            hasta que revisemos la documentación — normalmente en menos de 48 horas. Si no la tenés a mano, la podés subir después desde Mi perfil.
           </>
         }
       />

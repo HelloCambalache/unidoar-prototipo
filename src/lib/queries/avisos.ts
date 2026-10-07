@@ -1,5 +1,6 @@
 import "server-only";
-import { notificaciones, type EtapaPostulacion } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { notificaciones, usuarios, type EtapaPostulacion } from "@/db/schema";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
 type Aviso = { tipo: string; titulo: string; texto: string; enlace?: string };
@@ -17,6 +18,12 @@ export async function avisar(ejecutor: Ejecutor, usuarioId: string | null | unde
 export async function avisarAVarios(ejecutor: Ejecutor, usuarioIds: string[], aviso: Aviso) {
   if (usuarioIds.length === 0) return;
   await ejecutor.insert(notificaciones).values(usuarioIds.map((usuarioId) => ({ usuarioId, ...aviso })));
+}
+
+/** Una notificación para todas las cuentas admin (el equipo de UNIDOAR), en la misma transacción que el cambio. */
+export async function avisarAAdmins(ejecutor: Ejecutor, aviso: { titulo: string; texto: string; enlace: string }) {
+  const admins = await ejecutor.select({ id: usuarios.id }).from(usuarios).where(eq(usuarios.rol, "admin"));
+  await avisarAVarios(ejecutor, admins.map((a) => a.id), { tipo: "sistema", ...aviso });
 }
 
 /** Qué le decimos al docente cuando la institución lo cambia de etapa. Null = no vale la pena avisar. */

@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
  * Aviso para el docente cuando el equipo le pidió una corrección o rechazó su verificación, con el motivo que
  * escribió quien revisó (`docentes.verificacion_nota`). No muestra nada en los demás estados.
  *
- * Hoy el docente puede actualizar el CV y el certificado de buena conducta desde su perfil; el DNI y el título
- * se subieron en el alta y para cambiarlos escribe al equipo desde Contacto.
+ * El docente corrige desde su perfil (DNI, título, certificado de buena conducta y CV): al subir documentación nueva
+ * vuelve a la cola de revisión del equipo. Si la verificación se rechazó, el equipo lo atiende desde Contacto.
  */
 export function AvisoVerificacion({
   verificacion,
@@ -50,11 +50,11 @@ export function AvisoVerificacion({
       <p className="m-0 mt-1.5 text-[13px] leading-normal opacity-90">
         {rechazado
           ? "Si creés que es un error, escribinos y lo revisamos."
-          : "Podés actualizar tu CV y tu certificado de buena conducta desde tu perfil. Para el DNI o el título, escribinos desde Contacto y lo revisamos de nuevo."}
+          : "Subí de nuevo lo que haga falta desde tu perfil (el DNI, el título, el certificado o el CV): cuando lo guardes, vuelve a revisión. Si algo no queda claro, escribinos."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2.5">
         {enlacePerfil && !rechazado && (
-          <BotonLink href="/docente/perfil" tamano="sm" variante="secundario">
+          <BotonLink href="/docente/perfil#documentacion" tamano="sm" variante="secundario">
             Ir a mi perfil
           </BotonLink>
         )}

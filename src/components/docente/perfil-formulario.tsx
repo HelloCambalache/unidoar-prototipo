@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { Icono } from "@/components/icons";
 import { PerfilDisponibilidad } from "@/components/docente/perfil-disponibilidad";
 import { PerfilEtiquetas } from "@/components/docente/perfil-etiquetas";
-import type { EstadoDocumento } from "@/components/docente/perfil-server";
+import type { DocumentacionPerfil, EstadoDocumento } from "@/components/docente/perfil-server";
 import type { Resultado } from "@/lib/acciones";
 import { NIVELES } from "@/lib/catalogo";
 import type { DatosPerfil } from "@/lib/perfil-docente";
@@ -37,6 +37,8 @@ type Props = {
   /** URL firmada para ver el CV subido, si hay uno. */
   cvEnlace: string | null;
   conductaEstado: EstadoDocumento;
+  /** DNI y título: en qué está cada uno y si se puede cargar o corregir. */
+  documentacion: DocumentacionPerfil;
   /** Bloque "Estado de verificación" (servidor). */
   verificacion: ReactNode;
   /** Tarjeta "Cursos hechos en UNIDOAR" (servidor). */
@@ -51,6 +53,55 @@ const DETALLE_CONDUCTA: Record<EstadoDocumento, string> = {
   sin: "Es optativo. Sumarlo da más confianza a las instituciones que lo piden.",
 };
 
+/** Una fila de documentación: ícono según el estado, qué es, en qué está y los botones para cargarlo. */
+function FilaDocumento({
+  id,
+  estado,
+  titulo,
+  optativo,
+  detalle,
+  error,
+  children,
+}: {
+  id?: string;
+  estado: EstadoDocumento;
+  titulo: string;
+  optativo?: boolean;
+  detalle: string;
+  error?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div id={id} className="mt-3.5 flex scroll-mt-24 flex-wrap items-center gap-3.5 rounded-lg border border-borde bg-white px-[18px] py-4">
+      <span
+        aria-hidden
+        className={cn(
+          "inline-flex size-[34px] flex-none items-center justify-center rounded-lg",
+          estado === "verificado" ? "bg-verde-tint text-verde" : "bg-[#F0EFEA] text-apagado",
+        )}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+          <path d="M14 3v5h5" />
+          <path d="M9.5 14.5l1.8 1.8 3.2-3.6" />
+        </svg>
+      </span>
+      <div className="min-w-[220px] flex-1">
+        <div className="mb-[3px] flex items-center gap-1.5 text-sm leading-[1.3] font-semibold">
+          {titulo} {optativo && <Insignia className="text-apagado">Optativo</Insignia>}
+        </div>
+        <div className="text-[13px] leading-[1.45] text-apagado">{detalle}</div>
+        {error && (
+          <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
+            {error}
+          </p>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /**
  * Formulario completo de "Mi perfil". Todo el estado vive acá y se manda como JSON en un campo
  * oculto; la acción lo valida con Zod y guarda. Los bloques sin estado llegan ya renderizados.
@@ -62,6 +113,7 @@ export function PerfilFormulario({
   sugerencias,
   cvEnlace,
   conductaEstado,
+  documentacion,
   verificacion,
   cursosHechos,
   lateral,
@@ -171,31 +223,62 @@ export function PerfilFormulario({
 
             {verificacion}
 
-            <div className="mt-3.5 flex flex-wrap items-center gap-3.5 rounded-lg border border-borde bg-white px-[18px] py-4">
-              <span
-                aria-hidden
-                className={cn(
-                  "inline-flex size-[34px] flex-none items-center justify-center rounded-lg",
-                  conductaEstado === "verificado" ? "bg-verde-tint text-verde" : "bg-[#F0EFEA] text-apagado",
-                )}
+            <FilaDocumento
+              id="documentacion"
+              estado={documentacion.dni.estado}
+              titulo="Identidad (DNI)"
+              detalle={documentacion.dni.detalle}
+              error={error("dniFrente") ?? error("dniDorso")}
+            >
+              {documentacion.dni.editable && (
+                <>
+                  <SubirArchivo
+                    bucket="privado"
+                    carpeta="documentos"
+                    nombre="dniFrente"
+                    etiqueta="DNI, frente"
+                    variante="boton"
+                    textoBoton={d.dniFrente ? "Frente cargado" : "Frente"}
+                    valorInicial={inicial.dniFrente}
+                    onCambio={(v) => set("dniFrente", v)}
+                  />
+                  <SubirArchivo
+                    bucket="privado"
+                    carpeta="documentos"
+                    nombre="dniDorso"
+                    etiqueta="DNI, dorso"
+                    variante="boton"
+                    textoBoton={d.dniDorso ? "Dorso cargado" : "Dorso"}
+                    valorInicial={inicial.dniDorso}
+                    onCambio={(v) => set("dniDorso", v)}
+                  />
+                </>
+              )}
+            </FilaDocumento>
+
+            {documentacion.credencial && (
+              <FilaDocumento
+                estado={documentacion.credencial.estado}
+                titulo={documentacion.credencial.nombre}
+                detalle={documentacion.credencial.detalle}
+                error={error("credencial")}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-                  <path d="M14 3v5h5" />
-                  <path d="M9.5 14.5l1.8 1.8 3.2-3.6" />
-                </svg>
-              </span>
-              <div className="min-w-[220px] flex-1">
-                <div className="mb-[3px] flex items-center gap-1.5 text-sm leading-[1.3] font-semibold">
-                  Certificado de buena conducta <Insignia className="text-apagado">Optativo</Insignia>
-                </div>
-                <div className="text-[13px] leading-[1.45] text-apagado">{DETALLE_CONDUCTA[conductaEstado]}</div>
-                {error("conducta") && (
-                  <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
-                    {error("conducta")}
-                  </p>
+                {documentacion.credencial.editable && (
+                  <SubirArchivo
+                    bucket="privado"
+                    carpeta="documentos"
+                    nombre="credencial"
+                    etiqueta={documentacion.credencial.nombre}
+                    variante="boton"
+                    textoBoton={d.credencial ? "Archivo cargado" : "Subir archivo"}
+                    valorInicial={inicial.credencial}
+                    onCambio={(v) => set("credencial", v)}
+                  />
                 )}
-              </div>
+              </FilaDocumento>
+            )}
+
+            <FilaDocumento estado={conductaEstado} titulo="Certificado de buena conducta" optativo detalle={DETALLE_CONDUCTA[conductaEstado]} error={error("conducta")}>
               <SubirArchivo
                 bucket="privado"
                 carpeta="documentos"
@@ -206,7 +289,7 @@ export function PerfilFormulario({
                 valorInicial={inicial.conducta}
                 onCambio={(v) => set("conducta", v)}
               />
-            </div>
+            </FilaDocumento>
           </Tarjeta>
 
           {/* Datos de contacto y de trabajo */}

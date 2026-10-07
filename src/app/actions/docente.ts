@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
 import { borrarArchivos } from "@/lib/queries/archivos";
+import { avisarAAdmins } from "@/lib/queries/avisos";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, transaccion } from "@/db";
@@ -213,16 +214,33 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     .where(eq(docenteDetalle.docenteId, docente.id))
     .limit(1);
   const documentos = { ...(detalle?.documentos ?? {}) };
-  const conductaAnterior = documentos.conducta;
+  const documentosAnteriores = { ...documentos };
   let conductaCambio = false;
-  if (datos.conducta !== undefined && datos.conducta !== (documentos.conducta ?? "")) {
-    if (datos.conducta && !esPathPrivadoPropio(datos.conducta, usuario.id, "documentos")) {
-      return fallo("No pudimos validar el certificado. Subilo de nuevo.", { conducta: "Archivo inválido" });
+  // Se subió (o se cambió) algo de lo que el equipo tiene que revisar: el DNI o el título.
+  let documentacionNueva = false;
+  const QUE_ES = { conducta: "el certificado", dniFrente: "el frente del DNI", dniDorso: "el dorso del DNI", credencial: "el título" } as const;
+  for (const clave of ["conducta", "dniFrente", "dniDorso", "credencial"] as const) {
+    const nuevo = datos[clave];
+    if (nuevo === undefined || nuevo === (documentos[clave] ?? "")) continue;
+    // Lo ya verificado no se reemplaza desde acá, y a quien se le rechazó la verificación lo atiende el equipo.
+    if (clave !== "conducta") {
+      if (docente.verificacion === "rechazado") {
+        return fallo("Rechazamos tu verificación: escribinos desde Contacto y lo revisamos.", { [clave]: "No se puede cambiar" });
+      }
+      const verificado = clave === "credencial" ? docente.tituloVerificado : docente.verificacion === "verificado";
+      if (verificado) {
+        return fallo("Ya lo verificamos: si necesitás cambiarlo, escribinos desde Contacto.", { [clave]: "Ya está verificado" });
+      }
     }
-    if (datos.conducta) documentos.conducta = datos.conducta;
-    else delete documentos.conducta;
-    conductaCambio = true;
+    if (nuevo && !esPathPrivadoPropio(nuevo, usuario.id, "documentos")) {
+      return fallo(`No pudimos validar ${QUE_ES[clave]}. Subilo de nuevo.`, { [clave]: "Archivo inválido" });
+    }
+    if (nuevo) documentos[clave] = nuevo;
+    else delete documentos[clave];
+    if (clave === "conducta") conductaCambio = true;
+    else if (nuevo) documentacionNueva = true;
   }
+  const documentosCambio = conductaCambio || documentacionNueva || Object.keys(documentosAnteriores).some((k) => !(k in documentos));
 
   const sinRepetir = (items: string[]) => {
     const vistos = new Set<string>();
@@ -270,29 +288,44 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         ...(datos.cvUrl !== undefined ? { cvUrl: datos.cvUrl || null } : {}),
         // Un certificado nuevo hay que volver a revisarlo.
         ...(conductaCambio ? { antecedentesVerificados: false } : {}),
+        // Quien tenía una corrección pedida y sube documentación nueva vuelve a la cola de revisión.
+        ...(documentacionNueva && docente.verificacion === "correccion" ? { verificacion: "pendiente" as const } : {}),
       })
       .where(eq(docentes.id, docente.id));
+    // El equipo se entera de que hay documentación para revisar (solo si todavía no está verificado ni rechazado).
+    if (documentacionNueva && (docente.verificacion === "pendiente" || docente.verificacion === "correccion")) {
+      await avisarAAdmins(tx, {
+        titulo: `${datos.nombre} ${datos.apellido}`.trim(),
+        texto: "subió documentación para que la revisen.",
+        enlace: `/backoffice/docentes/${docente.id}`,
+      });
+    }
     // La grilla vive en docente_detalle; si el docente no tiene fila (perfil cargado a mano), se crea.
     await tx
       .insert(docenteDetalle)
       .values({ docenteId: docente.id, grillaDisponibilidad: datos.grilla, documentos })
       .onConflictDoUpdate({
         target: docenteDetalle.docenteId,
-        set: { grillaDisponibilidad: datos.grilla, ...(conductaCambio ? { documentos } : {}) },
+        set: { grillaDisponibilidad: datos.grilla, ...(documentosCambio ? { documentos } : {}) },
       });
   });
 
   // Foto, CV y certificado que se reemplazaron o se quitaron: se borran de Storage (lo que no vino en el formulario no cambió).
   await borrarArchivos(
     quitados(
-      [docente.fotoUrl, docente.cvUrl, conductaAnterior],
+      [docente.fotoUrl, docente.cvUrl, ...Object.values(documentosAnteriores)],
       [
         datos.fotoUrl !== undefined ? datos.fotoUrl : docente.fotoUrl,
         datos.cvUrl !== undefined ? datos.cvUrl : docente.cvUrl,
-        documentos.conducta,
+        ...Object.values(documentos),
       ],
     ),
   );
+
+  if (documentacionNueva) {
+    revalidatePath("/backoffice/verificacion");
+    revalidatePath("/backoffice/docentes");
+  }
 
   // El layout muestra "Perfil 80%": se refresca junto con las pantallas que dependen del perfil.
   revalidatePath("/docente", "layout");

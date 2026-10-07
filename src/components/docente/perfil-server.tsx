@@ -13,6 +13,13 @@ import { cn } from "@/lib/utils";
 
 export type EstadoDocumento = "verificado" | "revision" | "sin";
 
+/** Lo que el perfil ofrece para cargar o corregir la documentación de verificación (se arma en la página). */
+export type DocumentacionPerfil = {
+  dni: { estado: EstadoDocumento; detalle: string; editable: boolean };
+  /** Null cuando no se pide título (quien todavía está estudiando). */
+  credencial: { nombre: string; estado: EstadoDocumento; detalle: string; editable: boolean } | null;
+};
+
 /** Estado de cada requisito de verificación (se arma en la página con lo que hay en la base). */
 export type RequisitoVerificacion = { clave: string; nombre: string; opcional?: boolean; estado: EstadoDocumento };
 

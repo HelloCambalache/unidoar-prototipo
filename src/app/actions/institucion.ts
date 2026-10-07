@@ -6,7 +6,7 @@ import { borrarArchivos } from "@/lib/queries/archivos";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { transaccion } from "@/db";
-import { institucionMiembros, instituciones, usuarios } from "@/db/schema";
+import { institucionMiembros, instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
@@ -18,9 +18,8 @@ import {
   bajaSolicitadaEn,
   tieneContrasena,
 } from "@/lib/queries/cuenta";
-import { avisarAVarios } from "@/lib/queries/avisos";
+import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
-import type { Ejecutor } from "@/lib/queries/pipeline";
 import { fotosDeInstitucion, guardarVitrina } from "@/lib/queries/vitrina";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { traducirErrorAuth } from "@/lib/acceso";
@@ -185,12 +184,6 @@ export async function cambiarContrasenaCuenta(_previo: Resultado | null, formDat
 /* ───────────────────────────── Baja de la cuenta ───────────────────────────── */
 
 const bajaSchema = z.object({ confirmacion: z.string().trim().min(1, "Escribí el nombre de tu institución") });
-
-/** Una notificación para todas las cuentas admin (el equipo de UNIDOAR), en la misma transacción que el cambio. */
-async function avisarAAdmins(tx: Ejecutor, aviso: { titulo: string; texto: string; enlace: string }) {
-  const admins = await tx.select({ id: usuarios.id }).from(usuarios).where(eq(usuarios.rol, "admin"));
-  await avisarAVarios(tx, admins.map((a) => a.id), { tipo: "sistema", ...aviso });
-}
 
 const comparable = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
 

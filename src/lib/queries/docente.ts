@@ -315,7 +315,11 @@ export async function datosParaPerfil(docente: Docente) {
       .from(asignaturas)
       .orderBy(asc(asignaturas.orden)),
     db
-      .select({ grilla: docenteDetalle.grillaDisponibilidad, documentos: docenteDetalle.documentos })
+      .select({
+        grilla: docenteDetalle.grillaDisponibilidad,
+        documentos: docenteDetalle.documentos,
+        situacionEstudio: docenteDetalle.situacionEstudio,
+      })
       .from(docenteDetalle)
       .where(eq(docenteDetalle.docenteId, docente.id))
       .limit(1),
@@ -331,6 +335,7 @@ export async function datosParaPerfil(docente: Docente) {
     asignaturas: [...new Set([...propias, ...otras])],
     grilla: guardada && grillaTieneHorarios(guardada) ? guardada : grillaDesdeLista(docente.disponibilidad),
     documentos: (detalle[0]?.documentos ?? {}) as DocumentosDocente,
+    situacionEstudio: detalle[0]?.situacionEstudio ?? null,
   };
 }
 

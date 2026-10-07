@@ -6,6 +6,7 @@ import {
   PerfilCompletitud,
   PerfilCursosHechos,
   PerfilVerificacion,
+  type DocumentacionPerfil,
   type EstadoDocumento,
   type RequisitoVerificacion,
 } from "@/components/docente/perfil-server";
@@ -44,7 +45,11 @@ export default async function PerfilDocentePage() {
     verificado ? "verificado" : subido ? "revision" : "sin";
   const conductaEstado = estado(docente.antecedentesVerificados, !!docs.conducta);
   const requisitos: RequisitoVerificacion[] = [
-    { clave: "dni", nombre: "Identidad (DNI)", estado: estado(docente.verificacion === "verificado", !!docs.dniFrente) },
+    {
+      clave: "dni",
+      nombre: "Identidad (DNI)",
+      estado: estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso),
+    },
     {
       clave: "credencial",
       nombre: CATEGORIA_ALTA[docente.categoria].credencial.nombre,
@@ -52,6 +57,42 @@ export default async function PerfilDocentePage() {
     },
     { clave: "conducta", nombre: "Certificado de buena conducta", opcional: true, estado: conductaEstado },
   ];
+
+  // Cargar o corregir la documentación: se puede mientras no esté verificada ni rechazada la verificación.
+  const abierta = docente.verificacion !== "rechazado";
+  const dniEstado = estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso);
+  const credencialPide = datos.situacionEstudio !== "estudiante" || !!docs.credencial;
+  const credencialEstado = estado(docente.tituloVerificado, !!docs.credencial);
+  const credencial = CATEGORIA_ALTA[docente.categoria].credencial;
+  const documentacion: DocumentacionPerfil = {
+    dni: {
+      estado: dniEstado,
+      editable: abierta && docente.verificacion !== "verificado",
+      detalle:
+        dniEstado === "verificado"
+          ? "Ya lo verificamos."
+          : dniEstado === "revision"
+            ? "Lo recibimos y lo estamos revisando."
+            : docs.dniFrente
+              ? "Falta el dorso."
+              : docs.dniDorso
+                ? "Falta el frente."
+                : "Subí una foto o un PDF de cada lado. Sin esto no podemos verificar tu perfil.",
+    },
+    credencial: credencialPide
+      ? {
+          nombre: credencial.nombre,
+          estado: credencialEstado,
+          editable: abierta && !docente.tituloVerificado,
+          detalle:
+            credencialEstado === "verificado"
+              ? "Ya lo verificamos."
+              : credencialEstado === "revision"
+                ? "Lo recibimos y lo estamos revisando."
+                : credencial.vacio,
+        }
+      : null,
+  };
 
   const inicial: DatosPerfil = {
     nombre: docente.nombre,
@@ -70,6 +111,9 @@ export default async function PerfilDocentePage() {
     fotoUrl: docente.fotoUrl ?? "",
     cvUrl: docente.cvUrl ?? "",
     conducta: docs.conducta ?? "",
+    dniFrente: docs.dniFrente ?? "",
+    dniDorso: docs.dniDorso ?? "",
+    credencial: docs.credencial ?? "",
   };
 
   return (
@@ -83,6 +127,7 @@ export default async function PerfilDocentePage() {
         sugerencias={{ zonas: datos.zonas, asignaturas: datos.asignaturas }}
         cvEnlace={cvEnlace}
         conductaEstado={conductaEstado}
+        documentacion={documentacion}
         verificacion={<PerfilVerificacion requisitos={requisitos} />}
         cursosHechos={<PerfilCursosHechos cursos={historial} />}
         lateral={<PerfilCompletitud perfil={perfil} />}
