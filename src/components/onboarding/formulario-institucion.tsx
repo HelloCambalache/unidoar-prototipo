@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { crearInstitucion } from "@/app/actions/onboarding";
 import { Boton } from "@/components/ui/button";
+import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
@@ -93,9 +94,15 @@ export function FormularioInstitucion({
           )}
         </div>
 
-        <Campo etiqueta="Dirección" error={campos.direccion}>
-          <Input name="direccion" autoComplete="street-address" placeholder="Ej. Av. Maipú 1234" required defaultValue={v("direccion")} aria-invalid={Boolean(campos.direccion)} />
-        </Campo>
+        <CampoDireccion
+          proposito="institucion"
+          defaultValue={v("direccion")}
+          campoPartido="partido"
+          campoProvincia="provincia"
+          ayuda="Escribí calle, número y localidad: ubicamos la institución y completamos el partido y la provincia."
+          error={campos.direccion}
+          required
+        />
 
         <div className="flex gap-3.5 max-[640px]:flex-col">
           <Campo etiqueta="Partido" className="flex-1" error={campos.partido}>

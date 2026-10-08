@@ -29,6 +29,8 @@ import {
 import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
+import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
+import { ubicacionDeInstitucion } from "@/lib/ubicacion";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
 import { slugify } from "@/lib/utils";
 
@@ -48,6 +50,11 @@ function destinoDe(formData: FormData): Destino {
 
 const textos = (formData: FormData, clave: string) =>
   formData.getAll(clave).filter((v): v is string => typeof v === "string");
+
+const textoDe = (formData: FormData, clave: string) => {
+  const v = formData.get(clave);
+  return typeof v === "string" ? v : null;
+};
 
 /** Lo escrito en el formulario, para devolverlo y que React no lo pierda al reiniciar los campos. */
 function valoresDe(formData: FormData): Record<string, string | string[]> {
@@ -110,7 +117,16 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   // La institución acepta los términos en este paso (el formulario no se valida sin la casilla).
   await registrarAceptacionDeTerminos(usuario.id);
 
-  const ubicacion = await ubicarInstitucion({ direccion: d.direccion, partido: d.partido });
+  // Coordenadas: las de la dirección (Georef / OpenStreetMap) si se pudo ubicar; si no, las del catálogo de zonas.
+  const delCatalogo = await ubicarInstitucion({ direccion: d.direccion, partido: d.partido });
+  const deLaDireccion = await ubicarPorDireccion({
+    direccion: d.direccion,
+    partido: d.partido,
+    provincia: d.provincia,
+    token: textoDe(formData, "ubicacion"),
+    osm: true,
+  });
+  const ubicacion = ubicacionDeInstitucion(delCatalogo, deLaDireccion);
   const db = getDb();
   const existente = await institucionPropia(usuario.id);
   const datos = {

@@ -73,7 +73,8 @@ const centroide = (puntos: { lat: number | null; lng: number | null }[]) => {
  * Ubica una institución a partir de su dirección y partido, con la tabla `zonas`:
  * 1) alguna zona nombrada en la dirección ("…, Villa Adelina"); 2) una zona que se llama como el partido;
  * 3) el centro de las zonas de ese partido. Si nada coincide, queda sin coordenadas (no se inventan).
- * `zona` es el texto para mostrar ("Villa Adelina, Vicente López").
+ * `zona` es el texto para mostrar ("Villa Adelina, Vicente López"); `enCatalogo` dice si salió de una zona del catálogo
+ * (y no solo del partido escrito).
  */
 export async function ubicarInstitucion(entrada: { direccion: string; partido: string }) {
   const todas = await zonasConocidas();
@@ -88,10 +89,10 @@ export async function ubicarInstitucion(entrada: { direccion: string; partido: s
   const exacta = enDireccion ?? comoPartido;
   if (exacta) {
     const zona = exacta.partido && exacta.nombre !== exacta.partido ? `${exacta.nombre}, ${exacta.partido}` : exacta.nombre;
-    return { zona, lat: exacta.lat, lng: exacta.lng };
+    return { zona, lat: exacta.lat, lng: exacta.lng, enCatalogo: true };
   }
-  if (delPartido.length > 0) return { zona: entrada.partido, ...centroide(delPartido) };
-  return { zona: entrada.partido, lat: null, lng: null };
+  if (delPartido.length > 0) return { zona: entrada.partido, ...centroide(delPartido), enCatalogo: false };
+  return { zona: entrada.partido, lat: null, lng: null, enCatalogo: false };
 }
 
 /**

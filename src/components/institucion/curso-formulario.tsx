@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { crearCurso, editarCurso } from "@/app/actions/cursos";
 import { CursoHorario } from "@/components/institucion/curso-horario";
 import { Boton, BotonLink } from "@/components/ui/button";
+import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Input, Textarea } from "@/components/ui/campos";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
 import {
@@ -226,16 +227,13 @@ export function CursoFormulario({
       </div>
 
       {v.modalidad === "Presencial" ? (
-        <Campo etiqueta="Dirección" error={errores.direccion}>
-          <Input
-            name="direccion"
-            value={v.direccion}
-            onChange={(e) => set("direccion", e.target.value)}
-            maxLength={200}
-            aria-invalid={!!errores.direccion}
-            placeholder="Ej. Av. Maipú 1234, Vicente López"
-          />
-        </Campo>
+        <CampoDireccion
+          proposito="curso"
+          defaultValue={v.direccion}
+          onCambioTexto={(t) => set("direccion", t)}
+          ayuda="Escribí calle, número y localidad: ubicamos el curso para mostrarles a los docentes a cuántos km queda."
+          error={errores.direccion}
+        />
       ) : (
         <Campo
           etiqueta="Link para conectarse"

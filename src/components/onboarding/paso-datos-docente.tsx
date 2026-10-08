@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { guardarDatosDocente } from "@/app/actions/onboarding";
+import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Input } from "@/components/ui/campos";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
 import { Boton } from "@/components/ui/button";
@@ -101,9 +102,16 @@ export function PasoDatosDocente({
               <Input name="cuil" inputMode="numeric" placeholder="Ej. 27-30123456-4" defaultValue={v("cuil")} aria-invalid={Boolean(campos.cuil)} />
             </Campo>
           </div>
-          <Campo etiqueta="Dirección" error={campos.direccion}>
-            <Input name="direccion" autoComplete="street-address" placeholder="Ej. Av. Maipú 1234" defaultValue={v("direccion")} aria-invalid={Boolean(campos.direccion)} />
-          </Campo>
+          {/* El domicilio es privado: se consulta solo en Georef y solo sirve para completar el partido y la provincia. */}
+          <CampoDireccion
+            proposito="docente"
+            defaultValue={v("direccion")}
+            campoPartido="partido"
+            campoProvincia="provincia"
+            enviarFirma={false}
+            ayuda="Escribí calle, número y localidad: completamos el partido y la provincia."
+            error={campos.direccion}
+          />
           <div className="flex gap-3.5 max-[640px]:flex-col">
             <Campo etiqueta="Partido" className="flex-1" error={campos.partido}>
               <Input name="partido" list="docente-partidos" placeholder="Ej. Vicente López" defaultValue={v("partido")} aria-invalid={Boolean(campos.partido)} />

@@ -107,6 +107,8 @@ export const vitrinaSchema = z.object({
   vision: corto(600),
   valores: z.array(z.string().trim().min(1).max(40, "Cada valor puede tener hasta 40 caracteres")).max(MAX_VALORES, `Hasta ${MAX_VALORES} valores`),
   direccion: z.string().trim().min(3, "Completá la dirección").max(200, "Máximo 200 caracteres"),
+  /** Firma de la sugerencia de ubicación que eligió la persona (/api/ubicacion); el servidor la verifica antes de usarla. */
+  ubicacion: z.string().max(4000).optional(),
   horarioAdministracion: corto(120),
   fotos: z.array(vitrinaFotoSchema).max(MAX_FOTOS, `Hasta ${MAX_FOTOS} fotos`),
   novedades: z.array(vitrinaNovedadSchema).max(MAX_NOVEDADES, `Hasta ${MAX_NOVEDADES} novedades`),

@@ -3,6 +3,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { CursoFoto } from "@/components/docente/curso-foto";
 import { Icono } from "@/components/icons";
 import { diaDelMes, etiquetaFechas, mesYAnio } from "@/lib/fechas-curso";
+import { kmLegible } from "@/lib/geo";
 import type { CursoVista } from "@/lib/queries/cursos";
 
 const PUNTOS = "bg-[#FDF1C7] text-[#7A5900] font-semibold";
@@ -108,7 +109,7 @@ export function CursoAgenda({ cursos }: { cursos: CursoVista[] }) {
         <div className="min-w-0 flex-[1_1_220px]">
           <div className="mb-0.5 text-[14.5px] leading-[1.3] font-semibold text-tinta">{c.titulo}</div>
           <div className="text-[12.5px] leading-[1.4] text-apagado">
-            {[c.horario, c.modalidad, c.institucion.nombre].filter(Boolean).join(" · ")}
+            {[c.horario, c.modalidad, c.institucion.nombre, kmLegible(c.distanciaKm)].filter(Boolean).join(" · ")}
           </div>
         </div>
         {c.certifica && <Insignia className={`flex-none ${PUNTOS}`}>{etiquetaPuntos(c.puntaje)}</Insignia>}

@@ -20,7 +20,9 @@ import {
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { avisar, avisarAVarios } from "@/lib/queries/avisos";
 import { cursoPropio, inscripcionPropia, inscriptosDelCurso } from "@/lib/queries/cursos-institucion";
+import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { esUrlPublicaPropia } from "@/lib/subidas";
+import { claveDeDireccion } from "@/lib/ubicacion";
 
 const NO_ENCONTRADO = "No encontramos ese curso.";
 const NO_INSCRIPTO = "No encontramos esa inscripción.";
@@ -41,6 +43,26 @@ function fotoAceptable(url: string, actual: string | null, usuarioId: string) {
 
 const FOTO_INVALIDA = fallo("No pudimos validar la foto. Subila de nuevo.", { fotoUrl: "Archivo inválido" });
 
+const SIN_UBICACION = { lat: null, lng: null, partido: null, provincia: null };
+
+/**
+ * Dónde queda el curso. Solo los presenciales con dirección tienen ubicación. Al editar, si la dirección no cambió y ya
+ * estaba ubicada se conserva; si cambió (o no se la había podido ubicar) se busca de nuevo. Si no se encuentra, queda sin
+ * ubicación: el curso se guarda igual y simplemente no muestra distancia.
+ */
+async function ubicacionDeCurso(
+  d: { modalidad: string; direccion?: string; ubicacion?: string },
+  actual: { direccion: string | null; lat: number | null; lng: number | null; partido: string | null; provincia: string | null } | null,
+) {
+  if (d.modalidad !== "Presencial" || !d.direccion) return SIN_UBICACION;
+  const mismaDireccion = actual && claveDeDireccion(actual.direccion ?? "") === claveDeDireccion(d.direccion);
+  if (mismaDireccion && actual.lat != null && actual.lng != null) {
+    return { lat: actual.lat, lng: actual.lng, partido: actual.partido, provincia: actual.provincia };
+  }
+  const u = await ubicarPorDireccion({ direccion: d.direccion, token: d.ubicacion, osm: true });
+  return u ? { lat: u.lat, lng: u.lng, partido: u.partido, provincia: u.provincia } : SIN_UBICACION;
+}
+
 /* ───────────────────────────── Crear, editar y borrar ───────────────────────────── */
 
 /** Crea un curso de la institución de la sesión y lleva a su ficha. */
@@ -52,7 +74,7 @@ export async function crearCurso(_estado: EstadoFormularioCurso, formData: FormD
 
   const [creado] = await getDb()
     .insert(cursos)
-    .values({ institucionId: institucion.id, ...valoresDeCurso(datos.data) })
+    .values({ institucionId: institucion.id, ...valoresDeCurso(datos.data), ...(await ubicacionDeCurso(datos.data, null)) })
     .returning({ id: cursos.id });
 
   revalidarCursos();
@@ -76,7 +98,7 @@ export async function editarCurso(
 
   await getDb()
     .update(cursos)
-    .set(valoresDeCurso(datos.data))
+    .set({ ...valoresDeCurso(datos.data), ...(await ubicacionDeCurso(datos.data, actual)) })
     .where(and(eq(cursos.id, actual.id), eq(cursos.institucionId, institucion.id)));
   await borrarArchivos(quitados([actual.fotoUrl], [datos.data.fotoUrl]));
 

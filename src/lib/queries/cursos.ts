@@ -1,9 +1,10 @@
 import "server-only";
 import { asc, count, desc, eq, getTableColumns } from "drizzle-orm";
 import { getDb } from "@/db";
-import { cursos, inscripcionesCurso, instituciones } from "@/db/schema";
+import { cursos, docentes, inscripcionesCurso, instituciones } from "@/db/schema";
 import { normalizar } from "@/lib/coincidencia";
 import { avancePorFechas, hoyArgentina } from "@/lib/fechas-curso";
+import { distanciaKm } from "@/lib/geo";
 
 export type CursoBase = {
   id: string;
@@ -28,6 +29,8 @@ export type CursoVista = CursoBase & {
   inscriptos: number;
   /** El docente que mira está anotado. */
   inscripto: boolean;
+  /** Kilómetros desde las zonas del docente hasta el curso presencial; null si falta alguno de los dos puntos. */
+  distanciaKm: number | null;
   terminoEn: string | null;
   certificadoEnviado: boolean;
 };
@@ -69,7 +72,7 @@ function base(f: typeof cursos.$inferSelect, inst: CursoBase["institucion"]): Cu
 /** Todos los cursos con cuántos anotados tienen y si el docente está anotado. */
 async function consultar(docenteId: string, soloId?: string): Promise<CursoVista[]> {
   const db = getDb();
-  const [filas, mias] = await Promise.all([
+  const [filas, mias, [origen]] = await Promise.all([
     db
       .select({
         curso: columnasCurso,
@@ -93,6 +96,7 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
       })
       .from(inscripcionesCurso)
       .where(eq(inscripcionesCurso.docenteId, docenteId)),
+    db.select({ lat: docentes.lat, lng: docentes.lng }).from(docentes).where(eq(docentes.id, docenteId)).limit(1),
   ]);
   const porCurso = new Map(mias.map((m) => [m.cursoId, m]));
   return filas.map((f) => {
@@ -101,6 +105,10 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
       ...base(f.curso, { id: f.instId, nombre: f.instNombre, slug: f.instSlug, logoUrl: f.instLogo }),
       inscriptos: f.inscriptos,
       inscripto: !!mia,
+      distanciaKm:
+        origen?.lat != null && origen.lng != null && f.curso.modalidad === "Presencial" && f.curso.lat != null && f.curso.lng != null
+          ? distanciaKm({ lat: origen.lat, lng: origen.lng }, { lat: f.curso.lat, lng: f.curso.lng })
+          : null,
       terminoEn: mia?.terminoEn ?? null,
       certificadoEnviado: mia?.certificadoEnviado ?? false,
     };

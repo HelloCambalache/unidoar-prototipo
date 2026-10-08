@@ -310,6 +310,11 @@ export const cursos = pgTable(
     fechaFinal: date("fecha_final"),
     horario: text("horario"),
     direccion: text("direccion"),
+    // Dónde queda la dirección (se ubica sola al guardar un curso presencial): sirve para mostrar a cuántos km está.
+    lat: doublePrecision("lat"),
+    lng: doublePrecision("lng"),
+    partido: text("partido"),
+    provincia: text("provincia"),
     link: text("link"),
     certifica: boolean("certifica").notNull().default(true),
     puntaje: integer("puntaje"),

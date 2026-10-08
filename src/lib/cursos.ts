@@ -247,6 +247,8 @@ export const cursoSchema = z
     fechaFinal: fechaOpcional,
     horario: textoOpcional(200),
     direccion: textoOpcional(200),
+    /** Firma de la sugerencia de ubicación que eligió la persona (/api/ubicacion); el servidor la verifica antes de usarla. */
+    ubicacion: textoOpcional(4000),
     link: linkOpcional,
     fotoUrl: textoOpcional(500),
   })

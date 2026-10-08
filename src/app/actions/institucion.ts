@@ -20,8 +20,10 @@ import {
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
-import { fotosDeInstitucion, guardarVitrina } from "@/lib/queries/vitrina";
+import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
+import { fotosDeInstitucion, guardarVitrina, type UbicacionParaGuardar } from "@/lib/queries/vitrina";
 import { esUrlPublicaPropia } from "@/lib/subidas";
+import { claveDeDireccion, zonaDeUbicacion } from "@/lib/ubicacion";
 import { camposDeError, vitrinaSchema, type VitrinaFotoVista, type VitrinaNovedadVista } from "@/lib/vitrina";
 
 /*
@@ -33,6 +35,28 @@ import { camposDeError, vitrinaSchema, type VitrinaFotoVista, type VitrinaNoveda
 /* ───────────────────────────── Vitrina ───────────────────────────── */
 
 export type VitrinaGuardada = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[] };
+
+/**
+ * Ubica la dirección de la vitrina cuando cambió (o cuando la institución todavía no tenía coordenadas). Con la dirección
+ * nueva se actualizan también el partido y la provincia; si no se la encuentra, todo queda como estaba.
+ */
+async function ubicacionDeLaVitrina(
+  institucion: { direccion: string | null; partido: string | null; provincia: string | null; lat: number | null; lng: number | null },
+  d: { direccion: string; ubicacion?: string },
+): Promise<UbicacionParaGuardar | null> {
+  const cambio = claveDeDireccion(d.direccion) !== claveDeDireccion(institucion.direccion ?? "");
+  if (!cambio && institucion.lat != null && institucion.lng != null) return null;
+  const u = await ubicarPorDireccion({
+    direccion: d.direccion,
+    // Con la dirección nueva el partido de antes no sirve de pista; sin cambios, sí.
+    partido: cambio ? null : institucion.partido,
+    provincia: cambio ? null : institucion.provincia,
+    token: d.ubicacion,
+    osm: true,
+  });
+  if (!u) return null;
+  return { lat: u.lat, lng: u.lng, zona: zonaDeUbicacion(u), ...(cambio ? { partido: u.partido, provincia: u.provincia } : {}) };
+}
 
 /**
  * "Guardar cambios" de Mi perfil: datos de la institución, valores, galería de instalaciones y novedades en una
@@ -73,7 +97,7 @@ export async function actualizarVitrina(entrada: unknown): Promise<Resultado<Vit
   });
   if (Object.keys(campos).length > 0) return fallo("Revisá los campos marcados.", campos);
 
-  const guardado = await guardarVitrina(institucion.id, d);
+  const guardado = await guardarVitrina(institucion.id, d, await ubicacionDeLaVitrina(institucion, d));
 
   // Lo que se reemplazó o se quitó (logo, portada, fotos de la galería) deja de ocupar lugar en Storage.
   await borrarArchivos(

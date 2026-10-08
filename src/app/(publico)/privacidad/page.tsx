@@ -51,6 +51,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     titulo: "4. Proveedores que nos ayudan a operar",
     parrafos: [
       "Para funcionar usamos servicios de terceros que tratan datos por cuenta nuestra: Supabase (base de datos, ingreso a la cuenta y archivos), Vercel (alojamiento de la aplicación) y un servicio de envío de correo para los mails de cuenta, de avisos y de facturación. Si elegís ingresar con Google, Google interviene en ese ingreso.",
+      "Para ubicar en el mapa las direcciones que se cargan al escribirlas (las de las instituciones y las de sus cursos presenciales, que son las que la institución publica) las consultamos en Georef, el servicio de datos abiertos del Estado argentino y, si ahí no aparece, en OpenStreetMap. El domicilio de las personas se consulta solo en Georef, nunca en OpenStreetMap, y lo usamos únicamente para completar el partido y la provincia: no se usa para calcular distancias ni se muestra a las instituciones. A esos servicios les llega el texto de la dirección desde nuestros servidores, sin tu nombre ni los datos de tu cuenta.",
       "Los datos se guardan en servidores ubicados en São Paulo, Brasil.",
     ],
   },
