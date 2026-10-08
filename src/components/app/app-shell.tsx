@@ -194,7 +194,10 @@ export function AppShell({
         <main
           className={cn(
             "flex min-w-0 flex-1 flex-col overflow-auto px-4 py-5 min-[861px]:px-10 min-[861px]:py-8",
-            "[&>*]:max-w-[1320px] [&>*]:shrink-0",
+            // El contenido de la página no pasa de 1320px ni se encoge. Las capas que se pegan a la ventana (el cajón y su fondo,
+            // que son `fixed`, y los <dialog>) quedan afuera: con este tope el fondo atenuado medía 1320px en una pantalla
+            // de 1920 y dejaba una franja sin atenuar, y su `max-w-[92vw]` quedaba pisado (en un celular se pasaban de ancho).
+            "[&>*:not(.fixed):not(dialog)]:max-w-[1320px] [&>*:not(.fixed):not(dialog)]:shrink-0",
           )}
         >
           {children}
