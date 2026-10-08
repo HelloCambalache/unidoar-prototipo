@@ -52,8 +52,8 @@ export function FiltrosBusquedas({
           type="search"
           name="q"
           value={texto}
-          aria-label="Buscar por puesto o docente"
-          placeholder="Buscar por puesto o docente"
+          aria-label="Buscar por puesto o profesional"
+          placeholder="Buscar por puesto o profesional"
           onChange={(e) => {
             setTexto(e.target.value);
             actual.current.texto = e.target.value;

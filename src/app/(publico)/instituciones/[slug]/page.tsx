@@ -40,7 +40,7 @@ export default async function PerfilInstitucion({ params }: Props) {
     inst.alumnos != null && { valor: num(inst.alumnos), etiqueta: "alumnos", grande: true },
     inst.niveles && { valor: inst.niveles, etiqueta: "niveles", grande: false },
     inst.turnos && { valor: inst.turnos, etiqueta: "turnos", grande: false },
-    inst.docentesPlanta != null && { valor: num(inst.docentesPlanta), etiqueta: "docentes en planta", grande: true },
+    inst.docentesPlanta != null && { valor: num(inst.docentesPlanta), etiqueta: "profesionales en planta", grande: true },
     inst.fundada != null && { valor: String(inst.fundada), etiqueta: "fundación", grande: true },
   ].filter((d): d is { valor: string; etiqueta: string; grande: boolean } => !!d);
 
@@ -183,7 +183,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                 <p className="m-0 mb-4 text-[13px] leading-normal text-apagado">
                   {sesion.rol
                     ? "Desde tu panel podés enviarle tu CV, guardarla y postularte a sus búsquedas."
-                    : "Gratis para docentes. Te lleva dos minutos y después te postulás con un clic."}
+                    : "Gratis para profesionales. Te lleva dos minutos y después te postulás con un clic."}
                 </p>
                 {sesion.rol ? (
                   <BotonLink href={`/docente/instituciones/${inst.slug}`} variante="primario" bloque>

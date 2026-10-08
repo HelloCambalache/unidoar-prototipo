@@ -17,7 +17,7 @@ export function DocTabla({ filas }: { filas: FilaDocenteBo[] }) {
     <Tabla className="min-w-[820px]">
       <thead>
         <tr>
-          <th>Docente</th>
+          <th>Profesional</th>
           <th>Disciplina</th>
           <th>Zona</th>
           <th>Verificación</th>

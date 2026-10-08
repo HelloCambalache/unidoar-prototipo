@@ -104,10 +104,10 @@ export const CATEGORIA_ALTA: Record<
   { label: string; desc: string; credencial: { nombre: string; vacio: string; corto: string } }
 > = {
   educador: {
-    label: "Docente",
+    label: "Educador/a",
     desc: "Nivel inicial, primario, secundario y superior.",
     credencial: {
-      nombre: "Título docente",
+      nombre: "Título profesional",
       vacio: "PDF del título o certificado analítico",
       corto: "La institución lo valida al contratarte",
     },

@@ -48,7 +48,7 @@ export default async function CategoriasBackoffice({
         <h1 className="m-0 mb-1.5 text-[24px] leading-[1.2] font-semibold tracking-[-0.018em] max-[860px]:text-[22px]">Categorías</h1>
         <p className="m-0 text-sm leading-normal text-apagado">
           Categorías de cargo y sus asignaturas o disciplinas. Es lo que ven las instituciones al publicar una búsqueda y los
-          docentes al armar su perfil.
+          profesionales al armar su perfil.
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export default async function CategoriasBackoffice({
               items={[
                 { valor: catalogo.rubros.length, etiqueta: "Rubros" },
                 { valor: totalAsignaturas, etiqueta: "Asignaturas" },
-                { valor: catalogo.docentes, etiqueta: "Docentes con perfil" },
+                { valor: catalogo.docentes, etiqueta: "Profesionales con perfil" },
                 { valor: catalogo.busquedasActivas, etiqueta: "Búsquedas activas" },
               ]}
             />
@@ -108,7 +108,7 @@ export default async function CategoriasBackoffice({
           />
 
           <p className="m-0 text-[12.5px] leading-normal text-sutil">
-            Al renombrar una asignatura se actualiza también en los perfiles docentes y en las búsquedas que ya la usan. Si la
+            Al renombrar una asignatura se actualiza también en los perfiles profesionales y en las búsquedas que ya la usan. Si la
             eliminás, deja de ofrecerse al publicar búsquedas y en el alta, pero se mantiene en lo que ya existe. Las categorías de
             cargo son fijas: Educador, Entrenador y Guardavidas.
           </p>

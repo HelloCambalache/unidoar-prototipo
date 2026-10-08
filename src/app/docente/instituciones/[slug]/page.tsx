@@ -33,7 +33,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
   if (i.alumnos != null) cifras.push({ valor: String(i.alumnos), etiqueta: "alumnos", grande: true });
   if (i.niveles) cifras.push({ valor: i.niveles, etiqueta: "niveles", grande: false });
   if (i.turnos) cifras.push({ valor: i.turnos, etiqueta: "turnos", grande: false });
-  if (i.docentesPlanta != null) cifras.push({ valor: String(i.docentesPlanta), etiqueta: "docentes en planta", grande: true });
+  if (i.docentesPlanta != null) cifras.push({ valor: String(i.docentesPlanta), etiqueta: "profesionales en planta", grande: true });
   if (i.fundada != null) cifras.push({ valor: String(i.fundada), etiqueta: "fundación", grande: true });
 
   const mapaOsm =

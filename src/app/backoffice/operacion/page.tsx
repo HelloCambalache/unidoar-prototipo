@@ -51,7 +51,7 @@ export default async function OperacionPage({ searchParams }: { searchParams: Pr
 
       <div className="mb-4 grid grid-cols-4 gap-3.5 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
         <TarjetaMetrica
-          etiqueta="Docentes activos"
+          etiqueta="Profesionales activos"
           valor={enteroAR(activos.total)}
           nota={
             activos.nuevosEnPeriodo > 0
@@ -85,7 +85,7 @@ export default async function OperacionPage({ searchParams }: { searchParams: Pr
 
       <div className="mb-4 grid grid-cols-2 gap-4 max-[700px]:grid-cols-1">
         <section className={panel}>
-          <h2 className={tituloPanel}>Docentes por zona</h2>
+          <h2 className={tituloPanel}>Profesionales por zona</h2>
           <p className={bajadaPanel}>Dónde falta oferta para las búsquedas abiertas</p>
           {m.zonas.length > 0 ? (
             <OpBarrasZona zonas={m.zonas} sinZona={m.busquedasSinZona} />
@@ -160,19 +160,19 @@ export default async function OperacionPage({ searchParams }: { searchParams: Pr
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 id="calidad-perfil" className="m-0 inline text-[15px] leading-[1.3] font-semibold">
-              Docentes por calidad de perfil
+              Profesionales por calidad de perfil
             </h2>{" "}
-            <span className="text-xs leading-none text-sutil">scoring interno — nunca visible para instituciones ni docentes</span>
+            <span className="text-xs leading-none text-sutil">scoring interno — nunca visible para instituciones ni profesionales</span>
           </div>
           <Link href="/backoffice/docentes" className="text-[13px] leading-none font-medium text-navy-700 hover:underline">
-            Ver todos los docentes →
+            Ver todos los profesionales →
           </Link>
         </div>
         {m.docentesPorScoring.length > 0 ? (
           <DocTabla filas={m.docentesPorScoring} />
         ) : (
           <EstadoVacio
-            titulo="Todavía no hay docentes con el alta completa"
+            titulo="Todavía no hay profesionales con el alta completa"
             texto="Cuando los haya, acá ves quiénes tienen el perfil más sólido."
             accion={
               <BotonLink href="/backoffice/verificacion" variante="secundario">

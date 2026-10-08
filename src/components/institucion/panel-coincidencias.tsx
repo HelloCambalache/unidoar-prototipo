@@ -87,8 +87,8 @@ export function PanelCoincidencias({
             {fallo
               ? "No pudimos calcular las coincidencias. Seguí completando: se vuelve a intentar al cambiar algo."
               : !resumen
-                ? "Calculando cuántos docentes coinciden…"
-                : `${total === 1 ? "docente coincide" : "docentes coinciden"} con estos criterios en tu zona`}
+                ? "Calculando cuántos profesionales coinciden…"
+                : `${total === 1 ? "profesional coincide" : "profesionales coinciden"} con estos criterios en tu zona`}
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export function PanelCoincidencias({
           </div>
           {!resumen.zonaResuelta && (
             <p className="mt-3 mb-0 text-xs leading-normal text-sutil">
-              No pudimos ubicar esa zona en nuestro catálogo, así que contamos docentes de todas las zonas.
+              No pudimos ubicar esa zona en nuestro catálogo, así que contamos profesionales de todas las zonas.
             </p>
           )}
         </div>
@@ -172,10 +172,10 @@ export function PanelCoincidencias({
 
       <p className="m-0 text-xs leading-normal text-sutil">
         {modo === "editar"
-          ? "Al guardar los cambios no se vuelve a avisar a los docentes."
+          ? "Al guardar los cambios no se vuelve a avisar a los profesionales."
           : resumen && resumen.conCuenta > 0
             ? `Al publicar, les avisamos a ${resumen.conCuenta === 1 ? "la persona que tiene" : `los ${Math.min(resumen.conCuenta, TOPE_AVISOS)} que tienen`} cuenta en UNIDOAR${resumen.conCuenta > TOPE_AVISOS ? ` (el aviso llega a los primeros ${TOPE_AVISOS})` : ""}. El resto la ve cuando busca trabajo.`
-            : "Al publicar, la búsqueda queda visible para los docentes que busquen trabajo en tu zona."}
+            : "Al publicar, la búsqueda queda visible para los profesionales que busquen trabajo en tu zona."}
       </p>
     </div>
   );

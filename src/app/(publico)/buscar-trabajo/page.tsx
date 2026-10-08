@@ -14,7 +14,7 @@ import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunid
 export const metadata: Metadata = {
   title: "Búsquedas abiertas",
   description:
-    "Todo lo que las instituciones están buscando ahora mismo: docentes, entrenadores y guardavidas. Mirá sin cuenta; para postularte necesitás una.",
+    "Todo lo que las instituciones están buscando ahora mismo: educadores, entrenadores y guardavidas. Mirá sin cuenta; para postularte necesitás una.",
 };
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
@@ -60,7 +60,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
         {!sesion.rol && (
           <MuroCuenta
             titulo="Creá tu cuenta para postularte"
-            bajada="Gratis para docentes. Te lleva dos minutos y después te postulás con un clic."
+            bajada="Gratis para profesionales. Te lleva dos minutos y después te postulás con un clic."
           />
         )}
 

@@ -4,7 +4,7 @@ import { CONTACTO_SITIO } from "@/lib/publico";
 
 export const metadata: Metadata = {
   title: "Contacto",
-  description: "¿Tenés dudas sobre tu institución, tu perfil docente o algo puntual? Escribinos y te respondemos en el día.",
+  description: "¿Tenés dudas sobre tu institución, tu perfil profesional o algo puntual? Escribinos y te respondemos en el día.",
 };
 
 export default function Contacto() {
@@ -12,7 +12,7 @@ export default function Contacto() {
     <div className="mx-auto w-full max-w-[900px] flex-1 px-12 py-14 max-[560px]:px-6 max-[560px]:py-10">
       <h1 className="mb-2 text-[30px] leading-[1.2] font-semibold tracking-[-0.02em] text-tinta">Contacto</h1>
       <p className="mb-9 max-w-[56ch] text-[15px] leading-[1.6] text-apagado">
-        ¿Tenés dudas sobre tu institución, tu perfil docente o algo puntual? Escribinos y te respondemos en el día.
+        ¿Tenés dudas sobre tu institución, tu perfil profesional o algo puntual? Escribinos y te respondemos en el día.
       </p>
       <div className="flex flex-wrap gap-10">
         <div className="min-w-0 flex-[1_1_280px]">

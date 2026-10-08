@@ -244,7 +244,7 @@ export function FormularioBusqueda({
               value={v.requisitos}
               onChange={(e) => set("requisitos", e.target.value)}
               maxLength={2000}
-              placeholder={"Título docente vigente\nExperiencia en Primario"}
+              placeholder={"Título profesional vigente\nExperiencia en Primario"}
             />
           </Campo>
           <Campo etiqueta="Beneficios" ayuda="Uno por línea." error={errores.beneficios}>

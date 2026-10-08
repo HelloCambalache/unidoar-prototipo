@@ -7,7 +7,7 @@ import { cuposFundadorRestantes } from "@/lib/queries/publico";
 
 export const metadata: Metadata = {
   title: "Planes",
-  description: "Un solo plan para instituciones, sin comisión por contratación. Para docentes, UNIDOAR es siempre gratis.",
+  description: "Un solo plan para instituciones, sin comisión por contratación. Para profesionales, UNIDOAR es siempre gratis.",
 };
 
 // Los cupos del plan Fundador salen de la base: no se prerenderiza (en el build puede no haber DATABASE_URL).
@@ -21,9 +21,9 @@ const BENEFICIOS_DOCENTE = [
 
 const BENEFICIOS_INSTITUCION = [
   "Búsquedas ilimitadas, sin comisión por contratación",
-  "Catálogo completo de docentes de tu zona",
+  "Catálogo completo de profesionales de tu zona",
   "Pipeline de contratación: quién contestó, a quién le ofreciste el puesto",
-  "Perfil vitrina para que los docentes te encuentren",
+  "Perfil vitrina para que los profesionales te encuentren",
   "Cupos de equipo para invitar a quien contrata con vos",
 ];
 
@@ -39,7 +39,7 @@ export default async function Planes() {
           Disponible en todo el país
         </span>
         <h1 className="mx-auto mt-3.5 mb-3.5 max-w-[24ch] text-[42px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance text-tinta max-[560px]:text-[30px]">
-          Un solo plan para instituciones. Docentes, siempre gratis.
+          Un solo plan para instituciones. Profesionales, siempre gratis.
         </h1>
         <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-apagado">
           Sin comisión por contratación y sin costo por publicación. Pagás una suscripción mensual y usás el catálogo
@@ -50,7 +50,7 @@ export default async function Planes() {
       <section className="mx-auto w-full max-w-[1200px] flex-1 px-12 pb-16 max-[560px]:px-5">
         <div className="flex flex-wrap items-stretch gap-6">
           <article className="flex min-w-[300px] flex-1 flex-col rounded-[14px] border border-borde bg-white px-8 py-9 max-[560px]:px-6">
-            <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-300 uppercase">Docentes</h2>
+            <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-300 uppercase">Profesionales</h2>
             <div className="mt-3.5 mb-1 text-[38px] leading-none font-bold tracking-[-0.02em] text-tinta">Gratis</div>
             <p className="mb-[22px] text-sm leading-normal text-apagado">Para siempre, sin letra chica.</p>
             <ul className="m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-tinta-2">
@@ -62,7 +62,7 @@ export default async function Planes() {
               ))}
             </ul>
             <BotonLink href={RUTA_REGISTRO_DOCENTE} variante="secundario" tamano="lg" bloque className="mt-[26px]">
-              Soy docente
+              Soy profesional
             </BotonLink>
           </article>
 

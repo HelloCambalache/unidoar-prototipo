@@ -78,14 +78,14 @@ export function hrefPostulaciones(
 }
 
 export const ETIQUETA_FILTRO_CATEGORIA: Record<CategoriaDocente, string> = {
-  educador: "Docente",
+  educador: "Educador/a",
   entrenador: "Entrenador/a / Instructor/a",
   guardavidas: "Guardavidas",
 };
 
 /** Leyenda del mapa: se muestra solo para las categorías que tienen pines. */
 export const LEYENDA_CATEGORIA: Record<CategoriaDocente, string> = {
-  educador: "Docentes",
+  educador: "Educadores",
   entrenador: "Entrenadores / Instructores",
   guardavidas: "Guardavidas",
 };

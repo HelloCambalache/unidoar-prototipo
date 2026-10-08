@@ -16,7 +16,7 @@ import { esUuid } from "@/lib/busquedas";
  * transacción (src/lib/backoffice-docentes-escrituras.ts) que también avisa al docente y deja la auditoría.
  */
 
-const NO_ENCONTRADO = "No encontramos a ese docente.";
+const NO_ENCONTRADO = "No encontramos a ese profesional.";
 
 /** Pantallas que muestran el estado de verificación, del lado del equipo y del docente. */
 function revalidarVerificacion(docenteId: string) {

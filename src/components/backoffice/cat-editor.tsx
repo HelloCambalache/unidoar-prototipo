@@ -29,7 +29,7 @@ type Dialogo =
 /** "3 docentes y 2 búsquedas (1 activa)" · null si nadie la usa. */
 function textoDeUso(a: AsignaturaFila) {
   const partes: string[] = [];
-  if (a.docentes > 0) partes.push(plural(a.docentes, "docente", "docentes"));
+  if (a.docentes > 0) partes.push(plural(a.docentes, "profesional", "profesionales"));
   if (a.busquedasTotal > 0) {
     const activas = a.busquedasActivas > 0 ? ` (${plural(a.busquedasActivas, "activa", "activas")})` : "";
     partes.push(`${plural(a.busquedasTotal, "búsqueda", "búsquedas")}${activas}`);
@@ -230,7 +230,7 @@ export function CatEditor({
             <thead>
               <tr>
                 <th>Asignatura / disciplina</th>
-                <th>Docentes</th>
+                <th>Profesionales</th>
                 <th>Búsquedas activas</th>
                 <th>
                   <span className="sr-only">Acciones</span>

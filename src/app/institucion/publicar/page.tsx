@@ -65,7 +65,7 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         bajada={
           existente
             ? "Actualizá los datos de la búsqueda publicada."
-            : "Un solo paso. Los docentes de tu zona la ven en el momento en que la publicás."
+            : "Un solo paso. Los profesionales de tu zona la ven en el momento en que la publicás."
         }
         className="mb-[22px]"
       />

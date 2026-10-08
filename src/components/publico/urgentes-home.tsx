@@ -100,7 +100,7 @@ export function UrgentesHome({
             />
             <span className="absolute top-1/2 right-6 left-6 -translate-y-1/2 text-white">
               <span className="block font-display text-[19px] leading-tight font-bold tracking-[-0.015em]">
-                Docentes disponibles hoy
+                Profesionales disponibles hoy
               </span>
               <span className="mt-[5px] block text-[13.5px] leading-normal text-white/80">
                 Filtrados por zona, turno y disciplina.

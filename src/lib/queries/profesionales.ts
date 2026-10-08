@@ -330,9 +330,9 @@ function armarCondiciones(
     const pajar = plano(sql`coalesce(${D.nombre}, '') || ' ' || coalesce(${D.apellido}, '') || ' ' || coalesce(${D.subtitulo}, '')
       || ' ' || array_to_string(${D.asignaturas}, ' ') || ' ' || array_to_string(${D.zonas}, ' ')
       || ' ' || case ${D.categoria}
-        when 'educador' then 'docente educador educadora profesor profesora maestro maestra'
-        when 'entrenador' then 'entrenador entrenadora instructor instructora profesor profesora'
-        else 'guardavidas salvavidas' end`);
+        when 'educador' then 'docente educador educadora profesional profesor profesora maestro maestra'
+        when 'entrenador' then 'entrenador entrenadora instructor instructora profesional profesor profesora'
+        else 'guardavidas salvavidas profesional' end`);
     c.push(sql`${pajar} like ${`%${escaparLike(palabra)}%`}`);
   }
   return c;

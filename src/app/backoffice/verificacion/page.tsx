@@ -36,7 +36,7 @@ export default async function VerificacionPage({ searchParams }: { searchParams:
     <>
       <EncabezadoPagina
         titulo="Verificación"
-        bajada="Docentes con el alta completa esperando que revisemos su identidad y sus antecedentes. Los más antiguos van primero."
+        bajada="Profesionales con el alta completa esperando que revisemos su identidad y sus antecedentes. Los más antiguos van primero."
       />
 
       <Pestanas
@@ -54,13 +54,13 @@ export default async function VerificacionPage({ searchParams }: { searchParams:
           titulo={cola.cantidades.todos === 0 ? "No hay nadie esperando verificación" : "No hay perfiles en este estado"}
           texto={
             cola.cantidades.todos === 0
-              ? "Cuando un docente termine su alta con la documentación, aparece acá para que lo revises."
+              ? "Cuando un profesional termine su alta con la documentación, aparece acá para que lo revises."
               : "Probá con otra pestaña para ver el resto de la cola."
           }
           accion={
             cola.cantidades.todos === 0 ? (
               <BotonLink href="/backoffice/docentes" variante="secundario">
-                Ver todos los docentes
+                Ver todos los profesionales
               </BotonLink>
             ) : (
               <BotonLink href={hrefCola("todos")} variante="secundario">

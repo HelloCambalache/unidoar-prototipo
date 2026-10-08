@@ -57,7 +57,7 @@ export function CursoBorrar({
       </h2>
       {conTerminados ? (
         <p className="m-0 text-[13px] leading-normal text-apagado">
-          No se puede borrar porque hay docentes que ya lo terminaron o recibieron su certificado: el curso forma parte de su
+          No se puede borrar porque hay profesionales que ya lo terminaron o recibieron su certificado: el curso forma parte de su
           formación en UNIDOAR.
         </p>
       ) : (

@@ -7,7 +7,7 @@ import { sesionActual } from "@/lib/auth";
 import { PASOS_DOCENTE } from "@/lib/onboarding";
 import { googleHabilitado } from "@/lib/supabase/proveedores";
 
-export const metadata: Metadata = { title: "Creá tu cuenta · Docente" };
+export const metadata: Metadata = { title: "Creá tu cuenta · Profesional" };
 
 /** Paso 1: registro (email + contraseña o Google). Pública: con sesión ya abierta salta a "¿Qué sos?". */
 export default async function PasoDocente1() {

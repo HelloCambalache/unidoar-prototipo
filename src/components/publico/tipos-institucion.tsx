@@ -104,7 +104,7 @@ const TIPOS: {
   },
   {
     titulo: "Universidades",
-    texto: "Docentes de cátedra y ayudantías, por cuatrimestre o por materia.",
+    texto: "Profesionales de cátedra y ayudantías, por cuatrimestre o por materia.",
     href: "/educadores",
     estilo: "claro",
     icono: (
@@ -231,7 +231,7 @@ export function TiposInstitucion({ tiposEnUso }: { tiposEnUso: number }) {
               <span className="text-xs leading-none font-semibold tracking-[.09em] text-ambar uppercase">Para quién es</span>
             </div>
             <h2 className="mb-3 font-display text-[33px] leading-[1.15] font-bold tracking-[-0.025em] text-balance text-white max-[900px]:text-[30px]">
-              Si contratás docentes, entrenadores, instructores, guardavidas. Sumate a nuestra red.
+              Si contratás educadores, entrenadores, instructores, guardavidas. Sumate a nuestra red.
             </h2>
             <p className="text-base leading-[1.6] text-white/75">
               Colegios, institutos de idiomas, clubes, gimnasios, natatorios y escuelas deportivas comparten el mismo

@@ -15,7 +15,7 @@ import { esUuid } from "@/lib/busquedas";
  * transacción y avisa al docente si tiene cuenta (src/lib/backoffice-docentes-escrituras.ts).
  */
 
-const NO_ENCONTRADO = "No encontramos a ese docente.";
+const NO_ENCONTRADO = "No encontramos a ese profesional.";
 
 function revalidarDocente(docenteId: string) {
   revalidatePath("/backoffice/docentes");
@@ -28,7 +28,7 @@ const motivoSchema = z.object({
   motivo: z
     .string()
     .trim()
-    .min(5, "Contá el motivo (mínimo 5 caracteres): queda en el registro y se le avisa al docente.")
+    .min(5, "Contá el motivo (mínimo 5 caracteres): queda en el registro y se le avisa al profesional.")
     .max(500, "El motivo puede tener hasta 500 caracteres."),
 });
 

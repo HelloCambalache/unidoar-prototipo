@@ -17,10 +17,10 @@ export function PublicidadAncha({ fondo = "azul", className }: { fondo?: "azul" 
         <div className="min-w-0 flex-[1_1_300px]">
           <Insignia className="mb-2.5 bg-white/[.14] text-navy-100">Publicidad</Insignia>
           <div className="font-display mb-1.5 text-[22px] leading-[1.25] font-bold text-white">
-            Mutual Docente · préstamos y descuentos
+            Mutual Profesional · préstamos y descuentos
           </div>
           <div className="max-w-[52ch] text-sm leading-[1.55] text-white/75">
-            Créditos a sola firma, turismo y farmacia con descuento para docentes y personal de instituciones educativas.
+            Créditos a sola firma, turismo y farmacia con descuento para profesionales y personal de instituciones educativas.
             Asociarse es gratis.
           </div>
         </div>
@@ -45,7 +45,7 @@ const AVISOS: Aviso[] = [
   {
     fondo: "#16214F",
     foto: "/assets/hero-aula.jpg",
-    titulo: "Librería El Aula · 25% para docentes",
+    titulo: "Librería El Aula · 25% para profesionales",
     texto:
       "Manuales, material didáctico y literatura infantil. Mostrás tu perfil verificado de UNIDOAR en la caja y tenés el descuento todo el año.",
     icono: (
@@ -59,7 +59,7 @@ const AVISOS: Aviso[] = [
   {
     fondo: "#97125F",
     foto: "/assets/cat-guardavidas-pileta.jpg",
-    titulo: "Seguro de responsabilidad civil docente",
+    titulo: "Seguro de responsabilidad civil profesional",
     texto:
       "Cobertura para quienes trabajan con grupos: educación física, natación, colonias y salidas. Desde $4.900 por mes, sin trámite presencial.",
     icono: (

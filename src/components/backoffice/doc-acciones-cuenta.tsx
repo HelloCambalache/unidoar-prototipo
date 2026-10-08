@@ -37,7 +37,7 @@ export function DocAccionesCuenta({
 
   const confirmar = () => {
     if (!suspendido && texto.trim().length < 5) {
-      setError("Contá el motivo (mínimo 5 caracteres): queda en el registro y se le avisa al docente.");
+      setError("Contá el motivo (mínimo 5 caracteres): queda en el registro y se le avisa al profesional.");
       document.getElementById(idCampo)?.focus();
       return;
     }

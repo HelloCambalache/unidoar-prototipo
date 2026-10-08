@@ -30,7 +30,7 @@ export type OrdenDocentes = (typeof ORDENES)[number]["clave"];
 export const TERMINOS_ROL = [
   "Profesor",
   "Profesora",
-  "Docente",
+  "Educador",
   "Maestra",
   "Maestro",
   "Entrenador",

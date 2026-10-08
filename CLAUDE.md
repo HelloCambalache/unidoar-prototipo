@@ -141,6 +141,8 @@ Dos canales que no se mezclan: los mails de **Auth** (confirmación, recuperaci�
 
 Alta fidelidad al prototipo. Tokens de marca ya definidos como tema de Tailwind (`src/app/globals.css`): `navy-*`, `naranja`, `ambar`, `celeste`, `rosa`, `verde`, `app`, `superficie`, `borde`, `tinta`, `apagado`, `sutil`. Tipografía: Inter (cuerpo) y Sora (títulos display, `font-display`). Botones con altura mínima 46/34/52px (`<Boton tamano>`), nunca "finitos". El HTML de cada pantalla del prototipo está en `prototipo/index.html` (mapa de líneas en `HANDOFF.md` y por `isXxx`); portá estructura, copy y estilos a Tailwind, no el runtime. Breakpoints responsive del prototipo: 560 / 640 / 760 / 860 / 900 / 1000 px.
 
+**Vocabulario:** en pantalla la persona que busca trabajo se llama **"profesional"** (nunca "docente"): en mails, avisos, textos legales y backoffice. La categoría de quienes enseñan es **"Educador/a"** (plural "Educadores", como la ruta `/educadores`), y las listas de las tres categorías dicen "educadores, entrenadores y guardavidas". Lo que **no** se renombra es código: las tablas y columnas (`docentes`, `docente_id`), el rol `docente`, las rutas (`/docente/…`), los identificadores y los vocabularios guardados (`ROLES_CONTACTO` conserva "Docente": es el cargo de quien contacta en una institución). Un texto nuevo para esa persona dice "profesional". Los 13 mails de `supabase/plantillas-correo/` también (pegarlos de nuevo en Supabase si cambia el pie).
+
 Copy en español rioplatense (voseo: "Publicá", "Elegí"). Accesibilidad: controles reales (`button`/`a`), `label` en inputs, foco visible, contraste AA.
 
 ## Estado de la migración

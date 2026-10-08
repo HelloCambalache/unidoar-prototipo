@@ -142,7 +142,7 @@ export default async function DashboardInstitucion() {
         >
           <div className="min-w-[280px] flex-1 max-[560px]:min-w-0">
             <h2 className="m-0 mb-1.5 text-base leading-snug font-semibold">
-              Completá el perfil de tu institución para que los docentes te encuentren
+              Completá el perfil de tu institución para que los profesionales te encuentren
             </h2>
             <p className="m-0 mb-2.5 text-[13px] leading-normal text-apagado">
               Te falta {enumerar(perfil.faltan)}. Es lo primero que miran los profesionales antes de decidir si se postulan.

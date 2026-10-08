@@ -4,14 +4,14 @@ import { BandaCTA } from "@/components/publico/banda-cta";
 
 export const metadata: Metadata = {
   title: "Quiénes somos",
-  description: "Conectamos instituciones con los docentes, entrenadores y guardavidas de su zona.",
+  description: "Conectamos instituciones con los educadores, entrenadores y guardavidas de su zona.",
 };
 
 const VALORES = [
   {
     titulo: "Confianza verificable",
     texto:
-      "Identidad, título docente y certificado de buena conducta, chequeados antes de que la institución vea el perfil.",
+      "Identidad, título profesional y certificado de buena conducta, chequeados antes de que la institución vea el perfil.",
   },
   {
     titulo: "Velocidad real",
@@ -19,7 +19,7 @@ const VALORES = [
   },
   {
     titulo: "Cercanía de zona",
-    texto: "Docentes e instituciones del mismo radio geográfico, para que el traslado nunca sea el problema.",
+    texto: "Profesionales e instituciones del mismo radio geográfico, para que el traslado nunca sea el problema.",
   },
 ];
 
@@ -31,7 +31,7 @@ export default function QuienesSomos() {
           Quiénes somos
         </span>
         <h1 className="mx-auto mt-3.5 mb-3.5 max-w-[24ch] text-[40px] leading-[1.15] font-semibold tracking-[-0.025em] text-balance max-[560px]:text-[30px]">
-          Conectamos instituciones con los docentes de su zona.
+          Conectamos instituciones con los profesionales de su zona.
         </h1>
         <p className="mx-auto max-w-[660px] text-[17px] leading-[1.6] text-white/70">
           UNIDOAR nace para resolver un problema simple y frecuente: encontrar un profesor, una maestra, un entrenador o
@@ -48,7 +48,7 @@ export default function QuienesSomos() {
             <p className="text-[15px] leading-[1.7] text-tinta-2">
               Empezamos viendo cómo colegios, jardines, clubes y natatorios de todo el país cubrían sus búsquedas a las
               apuradas: mensajes de texto, recomendaciones de boca en boca y currículums sin verificar. Del otro lado,
-              docentes y entrenadores con buena formación que no tenían forma de mostrarse frente a instituciones que
+              educadores y entrenadores con buena formación que no tenían forma de mostrarse frente a instituciones que
               los estaban buscando. UNIDOAR conecta a los dos lados con perfiles verificados y un proceso ordenado, para
               que contratar y postularse dejen de ser un problema.
             </p>
@@ -75,8 +75,8 @@ export default function QuienesSomos() {
             ¿Te sumás?
           </span>
         }
-        titulo="Sumate como institución o como docente"
-        texto="Es gratis para docentes y toma dos minutos empezar."
+        titulo="Sumate como institución o como profesional"
+        texto="Es gratis para profesionales y toma dos minutos empezar."
         acciones={
           <BotonLink href="/registro" variante="cta" tamano="lg">
             Empezar ahora

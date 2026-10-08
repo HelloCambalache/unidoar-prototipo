@@ -242,7 +242,7 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     await db.update(docentes).set({ categoria, asignaturas }).where(eq(docentes.id, docente.id));
   } else {
     const sesion = await datosDeSesion();
-    const { nombre, apellido } = partirNombre(sesion?.nombre ?? "", usuario.email.split("@")[0] ?? "Docente");
+    const { nombre, apellido } = partirNombre(sesion?.nombre ?? "", usuario.email.split("@")[0] ?? "Profesional");
     await db
       .insert(docentes)
       .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, fotoUrl: sesion?.fotoUrl ?? null, categoria, asignaturas })

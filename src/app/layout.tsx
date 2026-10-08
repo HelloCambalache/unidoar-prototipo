@@ -7,9 +7,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const sora = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap", weight: ["600", "700"] });
 
 export const metadata: Metadata = {
-  title: { default: "UNIDOAR — Docentes, entrenadores y guardavidas verificados", template: "%s · UNIDOAR" },
+  title: { default: "UNIDOAR — Educadores, entrenadores y guardavidas verificados", template: "%s · UNIDOAR" },
   description:
-    "Conectamos instituciones con docentes, profesores, entrenadores y guardavidas verificados. Cubrí cargos y suplencias en días.",
+    "Conectamos instituciones con profesionales, profesores, entrenadores y guardavidas verificados. Cubrí cargos y suplencias en días.",
   icons: {
     icon: [
       { url: "/assets/favicon-32.png", sizes: "32x32", type: "image/png" },

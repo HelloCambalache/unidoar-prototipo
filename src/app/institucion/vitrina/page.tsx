@@ -18,7 +18,7 @@ export default async function Vitrina() {
     return (
       <EstadoVacio
         titulo="Solo el dueño y los administradores editan el perfil público"
-        texto="Pedile a alguien con ese rol que actualice la vitrina. Mientras tanto podés ver cómo la ven los docentes."
+        texto="Pedile a alguien con ese rol que actualice la vitrina. Mientras tanto podés ver cómo la ven los profesionales."
         accion={
           <BotonLink href={`/instituciones/${i.slug}`} target="_blank" rel="noopener noreferrer" variante="secundario">
             Ver perfil público

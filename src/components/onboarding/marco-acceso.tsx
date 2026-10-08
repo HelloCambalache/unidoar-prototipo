@@ -6,7 +6,7 @@ import Link from "next/link";
  * panel claro con grilla suave a la derecha. En ≤ 860 px la foto pasa arriba (230 px).
  */
 export function MarcoAcceso({
-  titulo = "Docentes verificados, sin vueltas",
+  titulo = "Profesionales verificados, sin vueltas",
   bajada = "Identidad y título confirmados antes de que los veas.",
   volverHref = "/",
   volverTexto = "‹ Volver al inicio",

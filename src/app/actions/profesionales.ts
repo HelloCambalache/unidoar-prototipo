@@ -95,7 +95,7 @@ export async function invitarDocente(docenteId: string, busquedaId: string): Pro
     });
     await correoDeInvitacion(db, { usuarioId: docente.usuarioId, institucion: institucion.nombre, puesto: busqueda.puesto, busquedaId: busqueda.id });
   } catch (error) {
-    console.error("No se pudo avisar la invitación al docente", error);
+    console.error("No se pudo avisar la invitación al profesional", error);
   }
 
   refrescarProfesionales();

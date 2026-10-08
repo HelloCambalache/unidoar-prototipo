@@ -67,7 +67,7 @@ export function VitrinaGaleria({
 
       {fotos.length === 0 ? (
         <p className="m-0 rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-8 text-center text-[13.5px] leading-normal text-apagado">
-          Todavía no cargaste fotos. Mostrales a los docentes el patio, las aulas, el natatorio, la biblioteca…
+          Todavía no cargaste fotos. Mostrales a los profesionales el patio, las aulas, el natatorio, la biblioteca…
         </p>
       ) : (
         <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 p-0 max-[560px]:grid-cols-2">

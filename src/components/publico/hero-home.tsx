@@ -53,11 +53,11 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
               variante="cta"
               className="h-10 min-h-10 rounded-full px-5 text-sm"
             >
-              Busco docentes
+              Busco profesionales
             </BotonLink>
           </div>
           <div className="flex items-center gap-3 rounded-full border border-borde bg-white py-[7px] pr-[7px] pl-5 max-[560px]:w-full max-[560px]:justify-between">
-            <span className="text-sm leading-none font-medium whitespace-nowrap text-apagado">Soy docente</span>
+            <span className="text-sm leading-none font-medium whitespace-nowrap text-apagado">Soy profesional</span>
             <BotonLink
               href={RUTA_REGISTRO_DOCENTE}
               variante="primario"
@@ -84,7 +84,7 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
             <span aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,0)_40%,rgba(4,11,53,.78)_100%)]" />
             <span className="absolute right-6 bottom-[22px] left-6 text-white">
               <span className="mb-[5px] block font-display text-[26px] leading-[1.15] font-bold tracking-[-0.02em] max-[560px]:text-xl">
-                Docentes, entrenadores y guardavidas
+                Educadores, entrenadores y guardavidas
               </span>
               <span className="block text-sm leading-normal text-white/80">Una sola red para todas las categorías.</span>
             </span>

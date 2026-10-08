@@ -14,7 +14,7 @@ import { cursoConInscriptos } from "@/lib/queries/cursos-institucion";
 export const metadata: Metadata = { title: "Curso" };
 
 const AVISOS: Record<string, string> = {
-  creado: "Curso creado. Los docentes ya lo ven en su sección de Cursos.",
+  creado: "Curso creado. Los profesionales ya lo ven en su sección de Cursos.",
   editado: "Cambios guardados.",
 };
 
@@ -145,7 +145,7 @@ export default async function FichaCurso({
             </>
           ) : (
             <p className="m-0 text-sm leading-normal text-apagado">
-              Todavía no se anotó nadie. Los docentes lo ven en su sección de Cursos.
+              Todavía no se anotó nadie. Los profesionales lo ven en su sección de Cursos.
             </p>
           )}
         </section>

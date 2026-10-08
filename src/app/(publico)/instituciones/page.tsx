@@ -43,7 +43,7 @@ export default async function Instituciones({ searchParams }: { searchParams: Pa
         {!sesion.rol && (
           <MuroCuenta
             titulo="Creá tu cuenta y mandales tu CV"
-            bajada="Gratis para docentes. Guardás las instituciones que te interesan y te avisamos cuando publican."
+            bajada="Gratis para profesionales. Guardás las instituciones que te interesan y te avisamos cuando publican."
           />
         )}
 

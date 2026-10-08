@@ -153,7 +153,7 @@ export function CursoFormulario({
           <span className="min-w-0 flex-1">
             <span className="mb-0.5 block text-sm leading-[1.3] font-semibold text-tinta">Entrega certificado</span>
             <span className="block text-[12.5px] leading-[1.4] text-apagado">
-              Al terminarlo, el docente recibe el certificado y el curso le suma puntaje.
+              Al terminarlo, el profesional recibe el certificado y el curso le suma puntaje.
             </span>
           </span>
           <span
@@ -231,13 +231,13 @@ export function CursoFormulario({
           proposito="curso"
           defaultValue={v.direccion}
           onCambioTexto={(t) => set("direccion", t)}
-          ayuda="Escribí calle, número y localidad: ubicamos el curso para mostrarles a los docentes a cuántos km queda."
+          ayuda="Escribí calle, número y localidad: ubicamos el curso para mostrarles a los profesionales a cuántos km queda."
           error={errores.direccion}
         />
       ) : (
         <Campo
           etiqueta="Link para conectarse"
-          ayuda="Lo ven los docentes que se inscriben."
+          ayuda="Lo ven los profesionales que se inscriben."
           error={errores.link}
         >
           <Input

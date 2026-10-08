@@ -6,7 +6,7 @@ import type { CategoriaDocente } from "@/db/schema";
 
 /** Bajada de cada categoría de cargo en el menú del ABM. */
 export const DESCRIPCION_CATEGORIA: Record<CategoriaDocente, string> = {
-  educador: "Docentes de aula: materias, niveles e idiomas de colegios, jardines e institutos.",
+  educador: "Profesionales de aula: materias, niveles e idiomas de colegios, jardines e institutos.",
   entrenador: "Entrenadores e instructores de clubes, gimnasios y escuelas deportivas.",
   guardavidas: "Guardavidas de piletas, natatorios, playas, ríos y colonias.",
 };

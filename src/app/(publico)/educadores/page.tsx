@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LandingCategoria } from "@/components/publico/landing-categoria";
 
 export const metadata: Metadata = {
-  title: "Docentes y maestros verificados",
+  title: "Profesionales y maestros verificados",
   description:
     "Profesores de Secundario y Terciario, y maestras y maestros de Nivel Inicial y Primario de tu zona, con identidad y título verificados.",
 };

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const COLOR: Record<NivelZona, string> = { ok: "bg-navy-700", justo: "bg-[#F0B400]", falta: "bg-naranja" };
 const LEYENDA: { nivel: NivelZona; texto: string }[] = [
-  { nivel: "ok", texto: `Hay oferta (${DOCENTES_POR_BUSQUEDA_OK} o más docentes por búsqueda)` },
+  { nivel: "ok", texto: `Hay oferta (${DOCENTES_POR_BUSQUEDA_OK} o más profesionales por búsqueda)` },
   { nivel: "justo", texto: "Justo" },
   { nivel: "falta", texto: `Falta oferta (menos de ${DOCENTES_POR_BUSQUEDA_MINIMO} por búsqueda)` },
 ];
@@ -31,7 +31,7 @@ export function OpBarrasZona({ zonas, sinZona }: { zonas: ZonaOperacion[]; sinZo
             </span>
             <span
               role="img"
-              aria-label={`${z.zona}: ${plural(z.docentes, "docente", "docentes")} y ${plural(z.busquedas, "búsqueda abierta", "búsquedas abiertas")}`}
+              aria-label={`${z.zona}: ${plural(z.docentes, "profesional", "profesionales")} y ${plural(z.busquedas, "búsqueda abierta", "búsquedas abiertas")}`}
               className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0EFEA]"
             >
               <span className={cn("block h-full rounded-full", COLOR[z.nivel])} style={{ width: `${(z.docentes / maximo) * 100}%` }} />
@@ -57,8 +57,8 @@ export function OpBarrasZona({ zonas, sinZona }: { zonas: ZonaOperacion[]; sinZo
         )}
       >
         {faltantes.length > 0
-          ? `${listaLegible(faltantes)}: hay búsquedas abiertas sin docentes suficientes. Sumar oferta ahí.`
-          : "Todas las zonas tienen docentes de sobra para las búsquedas abiertas."}
+          ? `${listaLegible(faltantes)}: hay búsquedas abiertas sin profesionales suficientes. Sumar oferta ahí.`
+          : "Todas las zonas tienen profesionales de sobra para las búsquedas abiertas."}
         {sinZona > 0 && (
           <span className="mt-1 block text-xs opacity-80">
             {plural(sinZona, "búsqueda abierta no menciona", "búsquedas abiertas no mencionan")} una zona del catálogo y no entra en este cálculo.

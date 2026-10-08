@@ -52,7 +52,7 @@ export default async function InscriptosDelCurso({ params }: { params: Promise<{
         {inscriptos.length === 0 ? (
           <EstadoVacio
             titulo="Todavía no se anotó nadie en este curso"
-            texto="Cuando un docente se inscriba, aparece acá y te llega un aviso."
+            texto="Cuando un profesional se inscriba, aparece acá y te llega un aviso."
             accion={
               <BotonLink href={`/institucion/cursos/${c.id}`} variante="secundario">
                 Volver al curso

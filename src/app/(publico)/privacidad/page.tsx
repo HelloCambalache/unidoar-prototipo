@@ -17,7 +17,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     titulo: "1. Qué datos tratamos",
     intro: "Depende de cómo uses UNIDOAR:",
     items: [
-      "Docentes, entrenadores y guardavidas: nombre, email, teléfono, zonas de trabajo, disponibilidad, experiencia, formación, foto y CV. Para verificar tu identidad y tu título también pedimos el DNI (número, CUIL, fecha de nacimiento, domicilio y fotos de ambos lados), tu título o credencial y, si querés, el certificado de buena conducta.",
+      "Educadores, entrenadores y guardavidas: nombre, email, teléfono, zonas de trabajo, disponibilidad, experiencia, formación, foto y CV. Para verificar tu identidad y tu título también pedimos el DNI (número, CUIL, fecha de nacimiento, domicilio y fotos de ambos lados), tu título o credencial y, si querés, el certificado de buena conducta.",
       "Instituciones: los datos de la institución (nombre, CUIT, dirección, contacto), los de las personas que administran la cuenta, el plan contratado y las facturas.",
       "Tu cuenta: tu email y tu contraseña (la guarda de forma cifrada nuestro proveedor de ingreso: nosotros no la vemos). Si ingresás con Google, el nombre, el email y la foto que Google nos informa. También guardamos cuándo aceptaste los términos y condiciones.",
       "Examen preocupacional: si una institución te lo pide antes de que ingreses a trabajar, anota en tu postulación que lo hiciste y la fecha, y puede guardar el archivo del estudio (PDF o foto). Es información de salud: queda en un espacio privado, la ve solo esa institución y se abre con un enlace que comprueba que sea de su equipo. Vos ves en tu postulación si el examen figura como pendiente o realizado.",
@@ -29,7 +29,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     titulo: "2. Para qué los usamos",
     items: [
       "Operar el catálogo: mostrar perfiles a las instituciones, publicar búsquedas y gestionar postulaciones, entrevistas y contrataciones.",
-      "Verificar la identidad y la formación de docentes, entrenadores y guardavidas (lo hace a mano el equipo de UNIDOAR).",
+      "Verificar la identidad y la formación de educadores, entrenadores y guardavidas (lo hace a mano el equipo de UNIDOAR).",
       "Avisarte lo que pasa en tu cuenta: notificaciones dentro de la app y mails, como la confirmación del email, la recuperación de la contraseña, el resultado de la verificación de tu perfil, las invitaciones, entrevistas y ofertas de las búsquedas, y las facturas de los planes. Los avisos de búsquedas y postulaciones los podés desactivar desde Mi cuenta o con el enlace que viene al pie de cada mail; los de cuenta, verificación y facturación no se pueden desactivar porque son parte del servicio.",
       "Cobrar y facturar los planes de las instituciones.",
       "Cuidar el servicio: seguridad, prevención de abusos y soporte.",
@@ -43,7 +43,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
       "Cuando una institución mira tu perfil, te lo avisamos con una notificación que dice cuál fue (como máximo una por institución y por día).",
       "Tus documentos (DNI, título y certificado de buena conducta) los ve solo el equipo de UNIDOAR, para verificarte. Las instituciones solo ven si tu perfil está verificado, nunca los documentos. Se guardan en un espacio privado y se abren con enlaces temporales.",
       "Tu foto de perfil se guarda en un espacio cuyos enlaces no piden iniciar sesión: quien tenga el enlace puede verla. Antes de guardarla le sacamos los datos de ubicación que pueda traer la imagen.",
-      "Los docentes ven lo que cada institución publica en su perfil y en sus búsquedas.",
+      "Los profesionales ven lo que cada institución publica en su perfil y en sus búsquedas.",
       "No vendemos tus datos ni los usamos para publicidad de terceros.",
     ],
   },

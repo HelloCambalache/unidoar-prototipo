@@ -38,7 +38,7 @@ export default async function Landing() {
         items={[
           {
             valor: num(resumen.docentesVerificados),
-            etiqueta: resumen.docentesVerificados === 1 ? "docente verificado" : "docentes verificados",
+            etiqueta: resumen.docentesVerificados === 1 ? "profesional verificado" : "profesionales verificados",
             color: "#16214F",
             icono: "equipo",
           },

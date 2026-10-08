@@ -19,7 +19,7 @@ import { enlaceWhatsApp } from "@/lib/backoffice-docentes";
 import { esUuid } from "@/lib/busquedas";
 import { fichaDocenteBo } from "@/lib/queries/backoffice-docentes";
 
-export const metadata: Metadata = { title: "Ficha del docente" };
+export const metadata: Metadata = { title: "Ficha del profesional" };
 // DNI, CUIL y enlaces firmados a documentos: nada de esta pantalla se cachea.
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,7 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
         <BotonVolver fallback="/backoffice/docentes" />
         <span className="min-w-0 truncate text-[13px] leading-none text-apagado">
           <Link href="/backoffice/docentes" className="text-apagado hover:text-tinta">
-            Docentes
+            Profesionales
           </Link>
           <span className="px-[7px] text-borde-fuerte">/</span>
           <span className="font-medium text-tinta">{nombre}</span>

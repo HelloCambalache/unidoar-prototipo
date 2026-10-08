@@ -26,7 +26,7 @@ export function FormularioPerfilInstitucion({
   return (
     <form id={ID_FORMULARIO_ONBOARDING} action={accion}>
       <input type="hidden" name="destino" defaultValue="continuar" />
-      <TituloPaso titulo="Completá tu perfil" bajada="Así te ven los docentes cuando entran a tu perfil. Podés cambiarlo después." />
+      <TituloPaso titulo="Completá tu perfil" bajada="Así te ven los profesionales cuando entran a tu perfil. Podés cambiarlo después." />
       <div className="flex flex-col gap-[22px]">
         <div>
           <SubirArchivo
@@ -65,7 +65,7 @@ export function FormularioPerfilInstitucion({
             name="descripcion"
             rows={3}
             maxLength={1000}
-            placeholder="Contanos brevemente quién es tu institución y qué tipo de docentes buscás habitualmente."
+            placeholder="Contanos brevemente quién es tu institución y qué tipo de profesionales buscás habitualmente."
             defaultValue={v("descripcion")}
             aria-invalid={Boolean(campos.descripcion)}
           />

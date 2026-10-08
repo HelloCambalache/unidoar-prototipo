@@ -17,7 +17,7 @@ import type { Ejecutor } from "@/lib/queries/pipeline";
 
 type Detalle = Record<string, unknown>;
 
-const NO_ENCONTRADO = "No encontramos a ese docente.";
+const NO_ENCONTRADO = "No encontramos a ese profesional.";
 const ENLACE_PERFIL = "/docente/perfil";
 const AVISO_DE = "UNIDOAR";
 
@@ -42,7 +42,7 @@ async function docenteEnCola(tx: Ejecutor, docenteId: string): Promise<EnCola> {
     .limit(1)
     .for("update");
   if (!d) return { error: fallo(NO_ENCONTRADO) };
-  if (!d.onboardingCompleto) return { error: fallo("Este docente todavía no terminó el alta.") };
+  if (!d.onboardingCompleto) return { error: fallo("Este profesional todavía no terminó el alta.") };
   if (d.verificacion !== "pendiente" && d.verificacion !== "correccion") {
     return { error: fallo(`Este perfil ya figura como «${VERIFICACION_BO[d.verificacion].etiqueta}». Actualizá la pantalla.`) };
   }

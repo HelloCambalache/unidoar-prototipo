@@ -22,7 +22,7 @@ export default async function PaginaRegistro() {
           Soy institución
         </BotonLink>
         <BotonLink href="/onboarding/docente/1" variante="primario" tamano="lg" bloque>
-          Soy docente
+          Soy profesional
         </BotonLink>
       </div>
       <p className="mt-6 mb-0 text-[13px] leading-snug text-apagado">

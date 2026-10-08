@@ -74,7 +74,7 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
   ) => {
     setErrorRevision(null);
     if (motivo.trim().length < MIN_MOTIVO) {
-      setErrorMotivo("Escribí el motivo: se lo mostramos al docente (mínimo 5 caracteres).");
+      setErrorMotivo("Escribí el motivo: se lo mostramos al profesional (mínimo 5 caracteres).");
       document.getElementById(idMotivo)?.focus();
       return;
     }
@@ -106,7 +106,7 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
       )}
 
       <Campo
-        etiqueta="Motivo (obligatorio para pedir corrección o rechazar; lo ve el docente)"
+        etiqueta="Motivo (obligatorio para pedir corrección o rechazar; lo ve el profesional)"
         error={errorMotivo ?? undefined}
         className="mb-4 max-w-[640px]"
       >

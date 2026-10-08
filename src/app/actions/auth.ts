@@ -40,7 +40,7 @@ function errores(error: z.ZodError) {
  */
 export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: FormData): Promise<EstadoAuth> {
   const rolValido = z.enum(ROLES_ALTA).safeParse(rol);
-  if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o docente." };
+  if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o profesional." };
   if (!supabaseConfigurado()) return { ok: false, error: SIN_CONFIGURAR };
 
   const valores = { email: texto(formData.get("email")).trim(), nombre: texto(formData.get("nombre")).trim() };
@@ -144,7 +144,7 @@ export async function ingresar(_previo: EstadoAuth, formData: FormData): Promise
 export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData): Promise<EstadoAuth> {
   if (!supabaseConfigurado()) return { ok: false, error: SIN_CONFIGURAR };
   const rolValido = z.enum(ROLES_ALTA).nullable().safeParse(rol);
-  if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o docente." };
+  if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o profesional." };
 
   if (rolValido.data === "docente" && texto(formData.get("aceptaTerminos")) !== "on") {
     return {

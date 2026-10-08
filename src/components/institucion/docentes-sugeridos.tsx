@@ -17,8 +17,8 @@ export function RecomendadosLateral({
   busquedaId?: string;
 }) {
   return (
-    <section aria-label="Docentes recomendados" className="w-[300px] flex-none rounded-ud border border-borde bg-white p-5 max-[760px]:w-full">
-      <h2 className="m-0 mb-1 text-[15px] leading-tight font-semibold">Docentes recomendados para vos</h2>
+    <section aria-label="Profesionales recomendados" className="w-[300px] flex-none rounded-ud border border-borde bg-white p-5 max-[760px]:w-full">
+      <h2 className="m-0 mb-1 text-[15px] leading-tight font-semibold">Profesionales recomendados para vos</h2>
       <p className="m-0 mb-4 text-[13px] leading-snug text-apagado">De tu zona y de tus búsquedas abiertas</p>
       {docentes.length === 0 ? (
         <p className="m-0 text-[13px] leading-normal text-sutil">

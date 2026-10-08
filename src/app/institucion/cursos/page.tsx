@@ -16,7 +16,7 @@ export default async function MisCursos() {
     <>
       <EncabezadoPagina
         titulo="Mis cursos"
-        bajada="Cursos cortos o certificaciones que ofrecés. Los docentes los ven en su sección de Cursos y se inscriben desde ahí."
+        bajada="Cursos cortos o certificaciones que ofrecés. Los profesionales los ven en su sección de Cursos y se inscriben desde ahí."
         className="mb-5"
         acciones={
           <BotonLink href="/institucion/cursos/nuevo" variante="cta" tamano="lg" className="text-[15px]">
@@ -28,7 +28,7 @@ export default async function MisCursos() {
       {cursos.length === 0 ? (
         <EstadoVacio
           titulo="Todavía no creaste ningún curso"
-          texto="Ofrecé un curso corto o una certificación: los docentes pueden inscribirse y vos llevás el control de quiénes lo terminan y reciben su certificado."
+          texto="Ofrecé un curso corto o una certificación: los profesionales pueden inscribirse y vos llevás el control de quiénes lo terminan y reciben su certificado."
           accion={
             <BotonLink href="/institucion/cursos/nuevo" variante="cta">
               Crear tu primer curso

@@ -18,7 +18,7 @@ export function PiePublico() {
             <img src="/assets/unidoar-logo-horizontal.png" alt="UNIDOAR" className="h-[34px] w-auto object-contain" />
           </Link>
           <p className="m-0 max-w-[26ch] text-[13px] leading-[1.6] text-white/55">
-            Red y conexión educativa: docentes verificados de tu zona, sin comisión por contratación.
+            Red y conexión educativa: profesionales verificados de tu zona, sin comisión por contratación.
           </p>
         </div>
         <nav aria-label="Categorías">

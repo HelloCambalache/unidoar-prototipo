@@ -49,8 +49,8 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
         <p role="status" className="mt-3 mb-0 rounded-lg bg-verde-tint px-4 py-3 text-[13.5px] leading-normal text-verde">
           Tu búsqueda quedó publicada.{" "}
           {publicada > 0
-            ? `Les avisamos a ${plural(publicada, "docente que coincide", "docentes que coinciden")} con tu búsqueda.`
-            : "Los docentes la van a ver cuando entren a buscar trabajo en tu zona."}
+            ? `Les avisamos a ${plural(publicada, "profesional que coincide", "profesionales que coinciden")} con tu búsqueda.`
+            : "Los profesionales la van a ver cuando entren a buscar trabajo en tu zona."}
         </p>
       )}
 
@@ -101,7 +101,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
         ) : pestana === "activas" ? (
           <EstadoVacio
             titulo="Todavía no tenés búsquedas abiertas"
-            texto="Publicá una búsqueda y los docentes de tu zona la ven en el momento."
+            texto="Publicá una búsqueda y los profesionales de tu zona la ven en el momento."
             accion={
               <BotonLink href="/institucion/publicar" variante="cta">
                 Publicar una búsqueda
@@ -167,7 +167,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
           <thead>
             <tr>
               <th>Puesto</th>
-              <th>Docente contratado</th>
+              <th>Profesional contratado</th>
               <th>Duración</th>
               <th>
                 <span className="sr-only">Acciones</span>

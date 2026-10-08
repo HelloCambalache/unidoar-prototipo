@@ -4,7 +4,7 @@ import { TERMINOS_ACTUALIZADOS } from "@/lib/terminos";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
-  description: "Las reglas de uso de UNIDOAR para instituciones, docentes, entrenadores y guardavidas.",
+  description: "Las reglas de uso de UNIDOAR para instituciones, educadores, entrenadores y guardavidas.",
 };
 
 const SECCIONES = [
@@ -12,25 +12,25 @@ const SECCIONES = [
     id: "que-es",
     titulo: "1. Qué es UNIDOAR",
     texto:
-      "UNIDOAR es un catálogo que conecta instituciones educativas, deportivas y de natación con docentes, entrenadores y guardavidas de su zona. No somos empleadores ni intermediamos la relación laboral entre las partes.",
+      "UNIDOAR es un catálogo que conecta instituciones educativas, deportivas y de natación con educadores, entrenadores y guardavidas de su zona. No somos empleadores ni intermediamos la relación laboral entre las partes.",
   },
   {
     id: "cuentas",
     titulo: "2. Cuentas y verificación",
     texto:
-      "Los datos de identidad y formación que cargás pueden ser verificados por UNIDOAR antes de mostrarse a instituciones o docentes. Sos responsable de la veracidad de la información que subís.",
+      "Los datos de identidad y formación que cargás pueden ser verificados por UNIDOAR antes de mostrarse a instituciones o profesionales. Sos responsable de la veracidad de la información que subís.",
   },
   {
     id: "uso",
     titulo: "3. Uso del catálogo",
     texto:
-      "Las instituciones se comprometen a usar el catálogo únicamente para búsquedas reales de personal. Los docentes se comprometen a mantener actualizada su disponibilidad y zonas de trabajo.",
+      "Las instituciones se comprometen a usar el catálogo únicamente para búsquedas reales de personal. Los profesionales se comprometen a mantener actualizada su disponibilidad y zonas de trabajo.",
   },
   {
     id: "planes",
     titulo: "4. Planes y pagos",
     texto:
-      "Las instituciones acceden mediante una suscripción mensual. El uso del catálogo por parte de los docentes es y seguirá siendo gratuito.",
+      "Las instituciones acceden mediante una suscripción mensual. El uso del catálogo por parte de los profesionales es y seguirá siendo gratuito.",
   },
   {
     id: "privacidad",

@@ -123,7 +123,7 @@ export async function borrarCurso(cursoId: string, confirmado = false): Promise<
     const inscriptos = await inscriptosDelCurso(curso.id, tx);
     if (inscriptos.some((i) => i.terminoEn || i.certificadoEnviado)) {
       return fallo(
-        "No se puede borrar: hay docentes que ya lo terminaron o recibieron su certificado, y quedaría sin registro en su perfil.",
+        "No se puede borrar: hay profesionales que ya lo terminaron o recibieron su certificado, y quedaría sin registro en su perfil.",
       );
     }
     if (inscriptos.length > 0 && !confirmado) {

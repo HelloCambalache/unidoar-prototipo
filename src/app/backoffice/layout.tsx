@@ -5,7 +5,7 @@ import { requerirUsuario } from "@/lib/auth";
 const NAV: NavItem[] = [
   { href: "/backoffice/operacion", label: "Operación", icono: "grafico" },
   { href: "/backoffice/verificacion", label: "Verificación", icono: "escudo" },
-  { href: "/backoffice/docentes", label: "Docentes", icono: "perfil" },
+  { href: "/backoffice/docentes", label: "Profesionales", icono: "perfil" },
   { href: "/backoffice/instituciones", label: "Instituciones", icono: "instituciones" },
   { href: "/backoffice/categorias", label: "Categorías", icono: "etiqueta" },
   { href: "/backoffice/cobros", label: "Cobros", icono: "plan" },
