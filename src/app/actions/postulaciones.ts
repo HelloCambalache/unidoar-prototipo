@@ -16,6 +16,7 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirDocente } from "@/lib/auth";
 import { instanteArgentina } from "@/lib/calendario";
 import { postulacionMensajeSchema } from "@/lib/catalogo";
+import { correoDePostulantes } from "@/lib/correo/eventos";
 import { busquedaAbierta, esId, nombreCompleto } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
@@ -112,6 +113,7 @@ export async function postular(
           enlace: `/institucion/postulantes?busqueda=${busqueda.id}`,
         })),
       );
+      await correoDePostulantes(tx, { usuarioIds: destinatarios, busquedaId: busqueda.id, puesto: busqueda.puesto, rapida: busqueda.rapida });
     }
     return nueva;
   });

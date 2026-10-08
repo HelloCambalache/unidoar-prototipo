@@ -2,19 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { and, eq, ne, sql } from "drizzle-orm";
-import { getDb } from "@/db";
+import { getDb, transaccion } from "@/db";
 import { institucionMiembros, instituciones, usuarios } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
-import { cambioRolSchema, esRolGestor, invitacionSchema } from "@/lib/equipo";
-import { miembroDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
+import { encolarCorreo } from "@/lib/correo/cola";
+import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema } from "@/lib/equipo";
+import { membresiaDeUsuario, miembroDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
 
 /*
  * Equipo de la institución. Invitar, cambiar el rol y quitar gente es cosa del dueño y de los administradores;
- * cada acción lo verifica acá (no alcanza con esconder los botones). Todavía no hay envío de mails: invitar crea
- * la membresía con estado "invitado" y la persona se une al registrarse con ese mismo email
- * (ver `institucionComoMiembro` en src/lib/queries/equipo.ts).
+ * cada acción lo verifica acá (no alcanza con esconder los botones). Invitar crea la membresía con estado "invitado"
+ * y le manda un mail con el enlace al registro (si el envío está encendido; si no, el panel muestra el enlace para
+ * copiar). La persona se une al registrarse con ese mismo email (ver `institucionComoMiembro` en src/lib/queries/equipo.ts).
  */
 
 const SOLO_GESTORES = "Solo el dueño y los administradores pueden manejar el equipo.";
@@ -36,7 +37,7 @@ function esViolacionUnica(e: unknown): boolean {
 async function gestor() {
   const { usuario, institucion } = await requerirInstitucion();
   const rol = await rolEnInstitucion(institucion, usuario.id);
-  return { usuario, institucion, permitido: esRolGestor(rol) };
+  return { usuario, institucion, rol, permitido: esRolGestor(rol) };
 }
 
 /* ───────────────────────────── Invitar ───────────────────────────── */
@@ -49,7 +50,7 @@ export type InvitacionCreada = { id: string; email: string; rol: string };
  * unirse (de docente, o que ya pertenecen a otra institución).
  */
 export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null, formData: FormData): Promise<Resultado<InvitacionCreada>> {
-  const { usuario, institucion, permitido } = await gestor();
+  const { usuario, institucion, rol: rolDeQuienInvita, permitido } = await gestor();
   if (!permitido) return fallo(SOLO_GESTORES);
 
   const r = parsear(invitacionSchema, formData);
@@ -106,12 +107,26 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
     }
   }
 
+  // Quién invita, para el mail: el dueño figura con el nombre de contacto de la institución; el resto, con su nombre en el equipo.
+  const nombreDeQuienInvita =
+    (rolDeQuienInvita === "dueno" ? institucion.contactoNombre : (await membresiaDeUsuario(institucion.id, usuario.id))?.nombre)?.trim() || null;
+
   let creada: { id: string } | undefined;
   try {
-    [creada] = await db
-      .insert(institucionMiembros)
-      .values({ institucionId: institucion.id, email, rol, estado: "invitado" })
-      .returning({ id: institucionMiembros.id });
+    // La invitación y el mail se anotan juntos: si falla una, no queda la otra.
+    creada = await transaccion(async (tx) => {
+      const [fila] = await tx
+        .insert(institucionMiembros)
+        .values({ institucionId: institucion.id, email, rol, estado: "invitado" })
+        .returning({ id: institucionMiembros.id });
+      await encolarCorreo(tx, {
+        plantilla: "M06",
+        datos: { institucion: institucion.nombre, rol: infoDeRol(rol).label, invitadoPor: nombreDeQuienInvita, email, ruta: "/registro" },
+        para: email,
+        topeClave: `M06:${institucion.id}`,
+      });
+      return fila;
+    });
   } catch (e) {
     if (!esViolacionUnica(e)) throw e;
     const mensaje = "Esa persona ya está en el equipo o ya la invitaste.";

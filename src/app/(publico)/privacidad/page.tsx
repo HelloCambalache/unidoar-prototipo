@@ -29,7 +29,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     items: [
       "Operar el catálogo: mostrar perfiles a las instituciones, publicar búsquedas y gestionar postulaciones, entrevistas y contrataciones.",
       "Verificar la identidad y la formación de docentes, entrenadores y guardavidas (lo hace a mano el equipo de UNIDOAR).",
-      "Avisarte lo que pasa en tu cuenta: notificaciones dentro de la app y los mails de cuenta, como la confirmación del email y la recuperación de la contraseña.",
+      "Avisarte lo que pasa en tu cuenta: notificaciones dentro de la app y mails, como la confirmación del email, la recuperación de la contraseña, el resultado de la verificación de tu perfil, las invitaciones, entrevistas y ofertas de las búsquedas, y las facturas de los planes. Los avisos de búsquedas y postulaciones los podés desactivar desde Mi cuenta o con el enlace que viene al pie de cada mail; los de cuenta, verificación y facturación no se pueden desactivar porque son parte del servicio.",
       "Cobrar y facturar los planes de las instituciones.",
       "Cuidar el servicio: seguridad, prevención de abusos y soporte.",
     ],
@@ -50,7 +50,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     id: "proveedores",
     titulo: "4. Proveedores que nos ayudan a operar",
     parrafos: [
-      "Para funcionar usamos servicios de terceros que tratan datos por cuenta nuestra: Supabase (base de datos, ingreso a la cuenta y archivos), Vercel (alojamiento de la aplicación) y un servicio de envío de correo para los mails de cuenta. Si elegís ingresar con Google, Google interviene en ese ingreso.",
+      "Para funcionar usamos servicios de terceros que tratan datos por cuenta nuestra: Supabase (base de datos, ingreso a la cuenta y archivos), Vercel (alojamiento de la aplicación) y un servicio de envío de correo para los mails de cuenta, de avisos y de facturación. Si elegís ingresar con Google, Google interviene en ese ingreso.",
       "Los datos se guardan en servidores ubicados en São Paulo, Brasil.",
     ],
   },
@@ -66,6 +66,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     titulo: "6. Cuánto tiempo los conservamos",
     parrafos: [
       "Mientras tu cuenta esté activa. Si pedís la baja, el equipo de UNIDOAR se contacta con vos para confirmarla y dar de baja tu perfil. Podemos conservar lo que la ley nos obligue a guardar, por ejemplo los registros de facturación.",
+      "De los mails que te enviamos guardamos un registro (a quién, de qué tipo y su contenido) durante 90 días, para poder reintentar un envío fallido y resolver reclamos.",
     ],
   },
   {

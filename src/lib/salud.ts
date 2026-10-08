@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { urlApp } from "@/db/conexion";
+import { modoCorreo, type ModoCorreo } from "@/lib/correo/config";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 
 /*
@@ -16,6 +17,8 @@ export type Salud = {
   variables: Record<string, boolean>;
   /** Tareas programadas (Vercel Cron): si falta el secreto, el cron recibe 401 y no hace nada. No cuenta para `ok`. */
   tareasProgramadas: { CRON_SECRET: boolean };
+  /** Cómo salen los mails de la app: resend (envío real), consola (solo pruebas) o apagado (no se manda ni se anota nada). No cuenta para `ok`. */
+  correo: ModoCorreo;
   baseDeDatos: {
     conecta: boolean;
     conexion: TipoConexion;
@@ -84,6 +87,7 @@ export async function revisarSalud(): Promise<Salud> {
     DATABASE_URL: presente(process.env.DATABASE_URL),
   };
   const tareasProgramadas = { CRON_SECRET: presente(process.env.CRON_SECRET) };
+  const correo = modoCorreo();
   const conexion = tipoDeConexion(url);
 
   if (!url) {
@@ -91,6 +95,7 @@ export async function revisarSalud(): Promise<Salud> {
       ok: false,
       variables,
       tareasProgramadas,
+      correo,
       baseDeDatos: { conecta: false, conexion, codigo: "SIN_URL", causa: "No hay DATABASE_URL (ni POSTGRES_URL) en este entorno: cargarla en Vercel para Production y redeployar." },
     };
   }
@@ -101,9 +106,9 @@ export async function revisarSalud(): Promise<Salud> {
       new Promise<never>((_, rechazar) => setTimeout(() => rechazar(new Error("timeout")), 8000)),
     ]);
   } catch (err) {
-    return { ok: false, variables, tareasProgramadas, baseDeDatos: { conecta: false, conexion, ...clasificarErrorDeBase(err) } };
+    return { ok: false, variables, tareasProgramadas, correo, baseDeDatos: { conecta: false, conexion, ...clasificarErrorDeBase(err) } };
   }
 
   const ok = Object.values(variables).every(Boolean);
-  return { ok, variables, tareasProgramadas, baseDeDatos: { conecta: true, conexion } };
+  return { ok, variables, tareasProgramadas, correo, baseDeDatos: { conecta: true, conexion } };
 }

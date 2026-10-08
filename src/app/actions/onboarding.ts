@@ -9,6 +9,8 @@ import { getDb, transaccion } from "@/db";
 import { docenteDetalle, docentes, institucionMiembros, instituciones, type DocumentosDocente } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
 import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
+import { encolarParaEquipo } from "@/lib/correo/cola";
+import { avisarAAdmins } from "@/lib/queries/avisos";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import {
@@ -438,6 +440,21 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
       titulo: "Recibimos tu documentación.",
       texto: "Tu perfil figura como sin verificar hasta que la revisemos. Te avisamos por acá apenas esté lista.",
       enlace: "/docente/perfil",
+    });
+    // El equipo se entera de que hay un alta con documentación para revisar.
+    const nombreCompleto = `${docente.nombre} ${docente.apellido}`.trim();
+    await transaccion(async (tx) => {
+      await avisarAAdmins(tx, {
+        titulo: nombreCompleto,
+        texto: "terminó el alta y subió documentación para que la revisen.",
+        enlace: `/backoffice/docentes/${docente.id}`,
+      });
+      await encolarParaEquipo(
+        tx,
+        "M61",
+        { docente: nombreCompleto, detalle: "terminó el alta y subió documentación para que la revisen.", ruta: `/backoffice/docentes/${docente.id}` },
+        { clave: `M61:alta:${docente.id}` },
+      );
     });
   }
 

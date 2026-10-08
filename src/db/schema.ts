@@ -59,6 +59,8 @@ export const usuarios = pgTable("usuarios", {
   /** Cuándo aceptó los términos y condiciones y qué versión (`src/lib/terminos.ts`). Null: sin constancia (cuentas anteriores a este registro). */
   terminosAceptadosEn: timestamp("terminos_aceptados_en", { withTimezone: true }),
   terminosVersion: text("terminos_version"),
+  /** Si recibe por mail los avisos de búsquedas y postulaciones. Los de cuenta, verificación y facturación se mandan siempre. */
+  avisosPorCorreo: boolean("avisos_por_correo").notNull().default(true),
   ...marcasDeTiempo,
 });
 
@@ -482,6 +484,48 @@ export const contactosInstitucion = pgTable(
     uniqueIndex("contactos_institucion_email_uq").on(t.institucionId, t.email),
   ],
 );
+
+/**
+ * Cola de mails de la app (patrón "outbox"). Cada mail se anota acá DENTRO de la misma transacción que guarda el
+ * cambio que lo origina, y se manda después de confirmada (src/lib/correo/cola.ts): si la transacción se deshace, no
+ * sale ningún mail, y si el envío falla se reintenta. Quedan también como registro de lo que se mandó.
+ */
+export const colaCorreos = pgTable(
+  "cola_correos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    /** Email del destinatario (uno por fila). */
+    para: text("para").notNull(),
+    /** Cuenta destinataria, si la tiene: sirve para respetar sus preferencias y los topes por día. */
+    usuarioId: uuid("usuario_id").references(() => usuarios.id, { onDelete: "set null" }),
+    /** "M12", "M24"…: ver docs/inventario-de-mails.md y src/lib/correo/plantillas.ts. */
+    plantilla: text("plantilla").notNull(),
+    /** cuenta | contratacion | facturacion | interno */
+    grupo: text("grupo").notNull(),
+    /** Lo que necesita la plantilla para armar el mail (los enlaces van como ruta, no como URL completa). */
+    datos: jsonb("datos").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    /** Evita repetir el mismo mail: no se anotan dos filas con la misma clave para el mismo destinatario. */
+    clave: text("clave"),
+    /** Agrupa los mails que cuentan para un tope por día ("M21:<usuario>"). */
+    topeClave: text("tope_clave"),
+    /** pendiente | procesando | enviado | omitido | fallido */
+    estado: text("estado").notNull().default("pendiente"),
+    intentos: integer("intentos").notNull().default(0),
+    reclamadoEn: timestamp("reclamado_en", { withTimezone: true }),
+    enviadoEn: timestamp("enviado_en", { withTimezone: true }),
+    /** Por qué se omitió o falló. */
+    motivo: text("motivo"),
+    /** Id del mensaje en Resend (o "consola" cuando se probó sin enviar). */
+    resendId: text("resend_id"),
+  },
+  (t) => [
+    index("cola_correos_estado_idx").on(t.estado, t.creadoEn),
+    uniqueIndex("cola_correos_clave_uq").on(t.clave, t.para),
+    index("cola_correos_tope_idx").on(t.topeClave, t.creadoEn),
+  ],
+);
+export type CorreoEnCola = typeof colaCorreos.$inferSelect;
 
 /* ───────────────────────────── Paquete A1 · Sitio público ───────────────────────────── */
 

@@ -8,6 +8,9 @@ import { instituciones, solicitudesPlan, usuarios } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { encolarParaEquipo } from "@/lib/correo/cola";
+import { correoDePedidoDePlanRecibido } from "@/lib/correo/eventos";
+import { nombreDePlan } from "@/lib/cobros";
 import { planDe, PLANES, type PlanClave } from "@/lib/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/queries/plan";
@@ -62,6 +65,9 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
         enlace: "/backoffice/cobros",
       },
     );
+    await encolarParaEquipo(tx, "M63", { institucion: institucion.nombre, plan: nombreDePlan(destino.data), ruta: "/backoffice/cobros" });
+    // Quien lo pidió recibe la constancia de que lo recibimos.
+    await correoDePedidoDePlanRecibido(tx, { usuarioId: usuario.id, institucion: institucion.nombre, plan: destino.data });
     return ok();
   });
 

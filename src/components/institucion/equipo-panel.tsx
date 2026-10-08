@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 
 const NOTA_SIN_MAIL =
   "Todavía no mandamos mails: al crear la invitación te damos un enlace para que se lo pases. La persona tiene que registrarse como institución con ese mismo email.";
+const NOTA_CON_MAIL =
+  "Le mandamos un mail con la invitación. La persona tiene que registrarse como institución con ese mismo email. Después te damos el enlace por si querés pasárselo vos.";
 
 /** Caja gris con texto chico (descripción del rol, avisos). */
 const CAJA = "rounded-lg border border-borde bg-superficie px-3.5 py-3 text-[12.5px] leading-normal text-apagado";
@@ -56,7 +58,7 @@ function EnlaceInvitacion({ url, email }: { url: string; email: string }) {
   );
 }
 
-function FormularioInvitar({ urlRegistro, onCerrar }: { urlRegistro: string; onCerrar: () => void }) {
+function FormularioInvitar({ urlRegistro, correoActivo, onCerrar }: { urlRegistro: string; correoActivo: boolean; onCerrar: () => void }) {
   const [estado, accion, pendiente] = useActionState(invitarMiembro, null);
   const [email, setEmail] = useState("");
   const [rol, setRol] = useState<(typeof ROLES_INVITABLES)[number]>("administrador");
@@ -67,7 +69,8 @@ function FormularioInvitar({ urlRegistro, onCerrar }: { urlRegistro: string; onC
       <div className="flex flex-col gap-4">
         <p className="m-0 text-sm leading-normal text-tinta-2">
           Listo: invitaste a <strong className="text-tinta">{estado.data.email}</strong> como{" "}
-          <strong className="text-tinta">{infoDeRol(estado.data.rol).label}</strong>. Quedó en la tabla con la invitación pendiente.
+          <strong className="text-tinta">{infoDeRol(estado.data.rol).label}</strong>. Quedó en la tabla con la invitación pendiente.{" "}
+          {correoActivo && "Le mandamos un mail; si no le llega, pasale este enlace:"}
         </p>
         <EnlaceInvitacion url={urlRegistro} email={estado.data.email} />
         <Boton onClick={onCerrar} variante="primario" className="self-start">
@@ -102,7 +105,7 @@ function FormularioInvitar({ urlRegistro, onCerrar }: { urlRegistro: string; onC
         </Select>
       </Campo>
       <div className={CAJA}>{ROLES_EQUIPO_INFO[rol].desc}</div>
-      <p className="m-0 text-[12.5px] leading-normal text-apagado">{NOTA_SIN_MAIL}</p>
+      <p className="m-0 text-[12.5px] leading-normal text-apagado">{correoActivo ? NOTA_CON_MAIL : NOTA_SIN_MAIL}</p>
       {estado && !estado.ok && Object.keys(errores).length === 0 && (
         <p role="alert" className="m-0 text-[13px] text-[#b91c1c]">
           {estado.error}
@@ -263,10 +266,12 @@ export function EquipoPanel({
   miembros,
   puedeGestionar,
   urlRegistro,
+  correoActivo,
 }: {
   miembros: MiembroVista[];
   puedeGestionar: boolean;
   urlRegistro: string;
+  correoActivo: boolean;
 }) {
   const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null);
   const [invitando, setInvitando] = useState(false);
@@ -289,7 +294,7 @@ export function EquipoPanel({
 
       <DialogoModal abierto={invitando} onCerrar={() => setInvitando(false)} titulo="Invitar a alguien" ancho={480}>
         <div className="mt-4">
-          <FormularioInvitar urlRegistro={urlRegistro} onCerrar={() => setInvitando(false)} />
+          <FormularioInvitar urlRegistro={urlRegistro} correoActivo={correoActivo} onCerrar={() => setInvitando(false)} />
         </div>
       </DialogoModal>
 

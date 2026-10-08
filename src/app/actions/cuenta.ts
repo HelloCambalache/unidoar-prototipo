@@ -9,7 +9,9 @@ import { traducirErrorAuth } from "@/lib/acceso";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirDocente, requerirUsuario } from "@/lib/auth";
+import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { fijarAvisosPorCorreo } from "@/lib/queries/correo";
 import { ACCION_BAJA_RETIRADA, ACCION_BAJA_SOLICITADA, bajaDocenteSolicitadaEn, tieneContrasena } from "@/lib/queries/cuenta";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
@@ -124,6 +126,21 @@ export async function cambiarEmail(
   return ok({ nuevo });
 }
 
+/* ───────────────────────────── Avisos por mail ───────────────────────────── */
+
+/**
+ * Enciende o apaga los avisos por mail de búsquedas, postulaciones y entrevistas (los "opcionales", ver
+ * src/lib/correo/plantillas.ts). Los de cuenta, verificación y facturación no dependen de esto. Solo toca la cuenta de la sesión.
+ */
+export async function cambiarAvisosPorCorreo(activos: boolean): Promise<Resultado> {
+  const usuario = await requerirUsuario();
+  if (typeof activos !== "boolean") return fallo("No entendimos el pedido.");
+  if (!(await fijarAvisosPorCorreo(usuario.id, activos))) return fallo("No encontramos tu cuenta.");
+  revalidatePath("/docente/cuenta");
+  revalidatePath("/institucion/cuenta");
+  return ok();
+}
+
 /* ───────────────────────────── Baja del docente ───────────────────────────── */
 
 const bajaSchema = z.object({ confirmacion: z.string().trim().min(1, "Escribí tu email para confirmar") });
@@ -161,6 +178,7 @@ export async function solicitarBajaDocente(_previo: Resultado | null, formData: 
         texto: `pidió la baja de su cuenta. Hay que escribirle a ${usuario.email} para confirmarla.`,
         enlace: `/backoffice/docentes/${docente.id}`,
       });
+      await encolarParaEquipo(tx, "M62", { cuenta: nombre, tipo: "docente", ruta: `/backoffice/docentes/${docente.id}` });
     });
   }
 

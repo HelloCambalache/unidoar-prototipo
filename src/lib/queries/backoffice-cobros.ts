@@ -17,8 +17,9 @@ import {
   type MotivoOmision,
 } from "@/lib/cobros";
 import { registrarAuditoria } from "@/lib/auditoria";
+import { correoDeFacturaNueva } from "@/lib/correo/eventos";
 import type { PlanClave } from "@/lib/planes";
-import type { EjecutorBo } from "@/lib/queries/backoffice-instituciones";
+import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 
 /*
  * Lecturas y reglas de cobros del backoffice. Todavía no hay pasarela de pago: las facturas las carga el
@@ -347,7 +348,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
   const hoy = hoyAR(ahora);
 
   const activas = await ejecutor
-    .select({ id: instituciones.id, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })
+    .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })
     .from(instituciones)
     .where(and(eq(instituciones.suspendida, false), eq(instituciones.esDemo, false)));
   if (activas.length === 0) return { periodo, creadas: [], omitidas: {}, sinFacturaPrevia: 0 };
@@ -401,6 +402,19 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
       },
       ejecutor,
     );
+  }
+
+  // Aviso por mail a quienes administran cada institución (si el envío está apagado, no se anota nada).
+  for (const f of creadas) {
+    const usuarioIds = await destinatariosDeFacturacion(ejecutor, f.institucionId);
+    await correoDeFacturaNueva(ejecutor, {
+      usuarioIds,
+      facturaId: f.id,
+      institucion: activas.find((i) => i.id === f.institucionId)?.nombre ?? "tu institución",
+      periodo: f.periodo,
+      monto: f.monto,
+      fechaCobro: f.fechaCobro,
+    });
   }
 
   const porMotivo: ResultadoGeneracion["omitidas"] = {};

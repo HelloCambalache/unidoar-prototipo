@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { EquipoPanel } from "@/components/institucion/equipo-panel";
 import { requerirInstitucion } from "@/lib/auth";
+import { modoCorreo } from "@/lib/correo/config";
 import { esRolGestor } from "@/lib/equipo";
 import { miembrosDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
 
@@ -25,5 +26,12 @@ export default async function Equipo() {
     origenSitio(),
   ]);
 
-  return <EquipoPanel miembros={miembros} puedeGestionar={esRolGestor(rol)} urlRegistro={`${origen}/registro`} />;
+  return (
+    <EquipoPanel
+      miembros={miembros}
+      puedeGestionar={esRolGestor(rol)}
+      urlRegistro={`${origen}/registro`}
+      correoActivo={modoCorreo() !== "apagado"}
+    />
+  );
 }

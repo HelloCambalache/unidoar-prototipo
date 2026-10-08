@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { AvisoEmailConfirmado } from "@/components/cuenta/aviso-email";
+import { CuentaAvisos } from "@/components/cuenta/cuenta-avisos";
 import { CuentaContrasena } from "@/components/cuenta/cuenta-contrasena";
 import { CuentaEmail } from "@/components/cuenta/cuenta-email";
 import { CuentaBajaDocente } from "@/components/docente/cuenta-baja-docente";
@@ -25,6 +26,7 @@ export default async function MiCuentaDocente({ searchParams }: { searchParams: 
         {avisoEmail === "confirmado" && <AvisoEmailConfirmado email={usuario.email} />}
         <CuentaEmail email={usuario.email} tieneContrasena={cuenta.tieneContrasena} />
         <CuentaContrasena tieneContrasena={cuenta.tieneContrasena} />
+        <CuentaAvisos rol="docente" inicial={usuario.avisosPorCorreo} />
         <CuentaBajaDocente
           email={usuario.email}
           solicitadaEl={cuenta.bajaSolicitadaEn ? fechaCorta(cuenta.bajaSolicitadaEn) : null}

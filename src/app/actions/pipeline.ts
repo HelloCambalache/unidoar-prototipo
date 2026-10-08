@@ -17,6 +17,7 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { diaHoraLegible } from "@/lib/calendario";
+import { correoDeContratacion, correoDeEntrevista, correoDeEntrevistaCancelada, correoDeEtapa } from "@/lib/correo/eventos";
 import { fechaDeInput, parsearFechaHoraAR } from "@/lib/fechas";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
 import { avisar, avisoDeEtapa } from "@/lib/queries/avisos";
@@ -72,6 +73,12 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
         enlace: enlaceDocente(fila.postulacion.id),
       });
     }
+    await correoDeEtapa(tx, destino.data, {
+      usuarioId: fila.docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: fila.busqueda.puesto,
+      postulacionId: fila.postulacion.id,
+    });
     return ok();
   });
 
@@ -106,6 +113,12 @@ export async function descartarPostulacion(postulacionId: string): Promise<Resul
         enlace: enlaceDocente(fila.postulacion.id),
       });
     }
+    await correoDeEtapa(tx, "descartado", {
+      usuarioId: fila.docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: fila.busqueda.puesto,
+      postulacionId: fila.postulacion.id,
+    });
     return ok();
   });
 
@@ -160,6 +173,13 @@ export async function contratarPostulacion(
         titulo: institucion.nombre,
         texto: `te eligió para «${busqueda.puesto}»${inicio}. ¡Felicitaciones!`,
         enlace: enlaceDocente(postulacion.id),
+      });
+      await correoDeContratacion(tx, {
+        usuarioId: docente.usuarioId,
+        institucion: institucion.nombre,
+        puesto: busqueda.puesto,
+        postulacionId: postulacion.id,
+        inicio: datos.data.inicio ? fechaDeInput(datos.data.inicio) : null,
       });
     }
     if (cerrar) {
@@ -230,6 +250,15 @@ export async function agendarEntrevista(
       texto: `agendó una entrevista para «${busqueda.puesto}»: ${diaHoraLegible(instante)}.`,
       enlace: enlaceDocente(postulacion.id),
     });
+    await correoDeEntrevista(tx, {
+      usuarioId: docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: busqueda.puesto,
+      postulacionId: postulacion.id,
+      cuando: instante,
+      cuandoTexto: diaHoraLegible(instante),
+      titulo: datos.data.titulo ?? null,
+    });
     return ok();
   });
 
@@ -257,6 +286,13 @@ export async function quitarEntrevista(postulacionId: string): Promise<Resultado
       titulo: institucion.nombre,
       texto: `canceló la entrevista que había agendado para «${busqueda.puesto}».`,
       enlace: enlaceDocente(postulacion.id),
+    });
+    await correoDeEntrevistaCancelada(tx, {
+      usuarioId: docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: busqueda.puesto,
+      postulacionId: postulacion.id,
+      cuando: postulacion.entrevistaEn,
     });
     return ok();
   });

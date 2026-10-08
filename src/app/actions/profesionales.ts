@@ -7,6 +7,7 @@ import { getDb } from "@/db";
 import { busquedas, docentes, favoritos, postulaciones } from "@/db/schema";
 import { requerirInstitucion } from "@/lib/auth";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
+import { correoDeInvitacion } from "@/lib/correo/eventos";
 import { notificar } from "@/lib/queries/notificaciones";
 import { docenteVisible } from "@/lib/visibilidad";
 
@@ -92,6 +93,7 @@ export async function invitarDocente(docenteId: string, busquedaId: string): Pro
       texto: `te invitó a postularte a ${busqueda.puesto}.`,
       enlace: `/docente/oferta/${busqueda.id}`,
     });
+    await correoDeInvitacion(db, { usuarioId: docente.usuarioId, institucion: institucion.nombre, puesto: busqueda.puesto, busquedaId: busqueda.id });
   } catch (error) {
     console.error("No se pudo avisar la invitación al docente", error);
   }

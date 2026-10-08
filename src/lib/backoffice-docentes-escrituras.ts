@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { docenteDetalle, docentes } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { VERIFICACION_BO } from "@/lib/backoffice-docentes";
+import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { avisar } from "@/lib/queries/avisos";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -24,7 +25,7 @@ const unir = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? "") : `${xs.slice(0, 
 
 type EnCola =
   | { error: ReturnType<typeof fallo>; docente?: undefined }
-  | { error?: undefined; docente: { id: string; usuarioId: string | null; verificacion: "pendiente" | "correccion" } };
+  | { error?: undefined; docente: { id: string; usuarioId: string | null; nombre: string; verificacion: "pendiente" | "correccion" } };
 
 /** El docente bloqueado para escribir, siempre que siga en la cola (alta completa y pendiente o con corrección pedida). */
 async function docenteEnCola(tx: Ejecutor, docenteId: string): Promise<EnCola> {
@@ -32,6 +33,7 @@ async function docenteEnCola(tx: Ejecutor, docenteId: string): Promise<EnCola> {
     .select({
       id: docentes.id,
       usuarioId: docentes.usuarioId,
+      nombre: docentes.nombre,
       verificacion: docentes.verificacion,
       onboardingCompleto: docentes.onboardingCompleto,
     })
@@ -44,7 +46,7 @@ async function docenteEnCola(tx: Ejecutor, docenteId: string): Promise<EnCola> {
   if (d.verificacion !== "pendiente" && d.verificacion !== "correccion") {
     return { error: fallo(`Este perfil ya figura como «${VERIFICACION_BO[d.verificacion].etiqueta}». Actualizá la pantalla.`) };
   }
-  return { docente: { id: d.id, usuarioId: d.usuarioId, verificacion: d.verificacion } };
+  return { docente: { id: d.id, usuarioId: d.usuarioId, nombre: d.nombre, verificacion: d.verificacion } };
 }
 
 /**
@@ -94,6 +96,7 @@ export async function aplicarVerificacion(
     texto: `verificó ${unir(queSeVerifico)}. Tu perfil ya figura como verificado para las instituciones.`,
     enlace: ENLACE_PERFIL,
   });
+  await encolarParaUsuarios(tx, docente.usuarioId ? [docente.usuarioId] : [], "M11", { nombre: docente.nombre });
   return ok({ estadoAnterior: docente.verificacion, titulo: revisado.titulo, antecedentes: revisado.antecedentes, sinDocumento });
 }
 
@@ -120,13 +123,17 @@ export async function aplicarResolucionConMotivo(
       destino === "correccion" ? `te pidió corregir tu documentación: ${motivo}` : `no pudo verificar tu perfil: ${motivo}`,
     enlace: ENLACE_PERFIL,
   });
+  await encolarParaUsuarios(tx, docente.usuarioId ? [docente.usuarioId] : [], destino === "correccion" ? "M12" : "M13", {
+    nombre: docente.nombre,
+    motivo,
+  });
   return ok({ estadoAnterior: docente.verificacion, motivo });
 }
 
 /** Bloquea el acceso (`docentes.suspendido`; el bloqueo en sí lo hace requerirDocente) y avisa con el motivo. */
 export async function aplicarSuspension(tx: Ejecutor, adminId: string, docenteId: string, motivo: string): Promise<Resultado<Detalle>> {
   const [d] = await tx
-    .select({ id: docentes.id, usuarioId: docentes.usuarioId, suspendido: docentes.suspendido })
+    .select({ id: docentes.id, usuarioId: docentes.usuarioId, nombre: docentes.nombre, suspendido: docentes.suspendido })
     .from(docentes)
     .where(eq(docentes.id, docenteId))
     .limit(1)
@@ -137,6 +144,7 @@ export async function aplicarSuspension(tx: Ejecutor, adminId: string, docenteId
 
   await tx.update(docentes).set({ suspendido: true }).where(eq(docentes.id, d.id));
   await avisar(tx, d.usuarioId, { tipo: "sistema", titulo: AVISO_DE, texto: `suspendió tu cuenta. Motivo: ${motivo}`, enlace: "/contacto" });
+  await encolarParaUsuarios(tx, d.usuarioId ? [d.usuarioId] : [], "M15", { nombre: d.nombre, institucion: null, motivo });
   return ok({ motivo });
 }
 

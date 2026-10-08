@@ -16,6 +16,8 @@ import {
   type EstadoFormularioBusqueda,
   type ResumenCoincidencias,
 } from "@/lib/busquedas";
+import { diaHoraLegible } from "@/lib/calendario";
+import { correoDeBusquedaUrgente } from "@/lib/correo/eventos";
 import { MS } from "@/lib/fechas";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
@@ -88,6 +90,17 @@ export async function crearBusqueda(
         enlace: `/docente/oferta/${creada!.id}`,
       },
     );
+    // Solo las búsquedas rápidas se avisan por mail: las comunes quedan en la campanita (y, más adelante, en el resumen semanal).
+    if (valores.rapida) {
+      await correoDeBusquedaUrgente(tx, {
+        usuarioIds: destinatarios.map((d) => d.usuarioId),
+        institucion: institucion.nombre,
+        puesto: valores.puesto,
+        zona,
+        plazo: venceEn ? diaHoraLegible(venceEn) : null,
+        busquedaId: creada!.id,
+      });
+    }
     return destinatarios.length;
   });
 

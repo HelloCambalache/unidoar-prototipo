@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
 import { borrarArchivos } from "@/lib/queries/archivos";
+import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -298,6 +299,11 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         titulo: `${datos.nombre} ${datos.apellido}`.trim(),
         texto: "subió documentación para que la revisen.",
         enlace: `/backoffice/docentes/${docente.id}`,
+      });
+      await encolarParaEquipo(tx, "M61", {
+        docente: `${datos.nombre} ${datos.apellido}`.trim(),
+        detalle: "subió documentación para que la revisen.",
+        ruta: `/backoffice/docentes/${docente.id}`,
       });
     }
     // La grilla vive en docente_detalle; si el docente no tiene fila (perfil cargado a mano), se crea.

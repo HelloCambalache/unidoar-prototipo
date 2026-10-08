@@ -1,10 +1,11 @@
 "use server";
 
 import { and, count, eq, gt, sql } from "drizzle-orm";
-import { getDb } from "@/db";
+import { getDb, transaccion } from "@/db";
 import { mensajesContacto } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
 import { contactoSchema, type EstadoContacto, type ValoresContacto } from "@/lib/contacto";
+import { encolarParaEquipo } from "@/lib/correo/cola";
 
 /** Mensajes por email y hora: corta el spam sin pedir captcha. */
 const MAX_POR_HORA = 5;
@@ -43,7 +44,11 @@ export async function enviarContacto(_previo: EstadoContacto, formData: FormData
     if (n >= MAX_POR_HORA) {
       return { ok: false, error: "Ya recibimos varios mensajes tuyos. Te respondemos a la brevedad.", valores };
     }
-    await db.insert(mensajesContacto).values(r.data);
+    // El mensaje y el mail al equipo se guardan juntos: si uno falla, no queda el otro.
+    await transaccion(async (tx) => {
+      await tx.insert(mensajesContacto).values(r.data);
+      await encolarParaEquipo(tx, "M60", { nombre: r.data.nombre, email: r.data.email, rol: r.data.rol, mensaje: r.data.mensaje });
+    });
   } catch (e) {
     console.error("No se pudo guardar el mensaje de contacto", e);
     return { ok: false, error: "No pudimos enviar tu mensaje. Probá de nuevo en unos minutos.", valores };

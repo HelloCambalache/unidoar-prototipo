@@ -17,6 +17,7 @@ import {
   ACCION_BAJA_SOLICITADA,
   bajaSolicitadaEn,
 } from "@/lib/queries/cuenta";
+import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { fotosDeInstitucion, guardarVitrina } from "@/lib/queries/vitrina";
@@ -179,6 +180,7 @@ export async function solicitarBajaCuenta(_previo: Resultado | null, formData: F
         texto: `pidió la baja de la cuenta. Hay que escribirle a ${usuario.email} para confirmarla.`,
         enlace: `/backoffice/instituciones/${institucion.id}`,
       });
+      await encolarParaEquipo(tx, "M62", { cuenta: institucion.nombre, tipo: "institución", ruta: `/backoffice/instituciones/${institucion.id}` });
     });
   }
 

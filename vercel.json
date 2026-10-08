@@ -4,5 +4,8 @@
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
   "regions": ["gru1"],
-  "crons": [{ "path": "/api/cron/facturas", "schedule": "0 12 * * *" }]
+  "crons": [
+    { "path": "/api/cron/facturas", "schedule": "0 12 * * *" },
+    { "path": "/api/cron/correos", "schedule": "0 13 * * *" }
+  ]
 }

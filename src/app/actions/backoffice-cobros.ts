@@ -23,6 +23,7 @@ import {
   rechazoSchema,
   type FacturaNueva,
 } from "@/lib/cobros";
+import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
 import { pesos, planDe } from "@/lib/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import {
@@ -30,7 +31,7 @@ import {
   facturasPendientesVencidas,
   type ResultadoFacturaDelPeriodo,
 } from "@/lib/queries/backoffice-cobros";
-import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
 
 /*
  * Cobros del backoffice. Todavía no hay pasarela de pago: el equipo registra los pagos y carga las facturas
@@ -111,6 +112,13 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
           : `registró tu pago de ${etiquetaPeriodo(factura.periodo)} (${pesos(factura.monto)}), recibido el ${fechaDeColumna(diaDelPago)}. ¡Gracias!`,
       enlace: "/institucion/plan",
     });
+    const [dueña] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, factura.institucionId)).limit(1);
+    await correoDePagoRegistrado(tx, {
+      usuarioIds: await destinatariosDeFacturacion(tx, factura.institucionId),
+      institucion: dueña?.nombre ?? "tu institución",
+      periodo: factura.periodo,
+      monto: factura.monto,
+    });
     return ok();
   });
 
@@ -177,6 +185,13 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
         texto: `corrigió el registro de tu pago de ${etiquetaPeriodo(factura.periodo)}: figura otra vez como pendiente.`,
         enlace: "/institucion/plan",
       });
+      const [dueña] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, factura.institucionId)).limit(1);
+      await correoDePagoAnulado(tx, {
+        usuarioIds: await destinatariosDeFacturacion(tx, factura.institucionId),
+        institucion: dueña?.nombre ?? "tu institución",
+        periodo: factura.periodo,
+        monto: factura.monto,
+      });
     }
     return ok();
   });
@@ -200,7 +215,7 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   try {
     const resultado = await transaccion(async (tx) => {
       const [inst] = await tx
-        .select({ id: instituciones.id, medioPago: instituciones.medioPago })
+        .select({ id: instituciones.id, nombre: instituciones.nombre, medioPago: instituciones.medioPago })
         .from(instituciones)
         .where(eq(instituciones.id, institucionId))
         .limit(1)
@@ -240,6 +255,14 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
         },
         tx,
       );
+      await correoDeFacturaNueva(tx, {
+        usuarioIds: await destinatariosDeFacturacion(tx, institucionId),
+        facturaId: nueva!.id,
+        institucion: inst.nombre,
+        periodo,
+        monto,
+        fechaCobro,
+      });
       return ok({ id: nueva!.id });
     });
     if (resultado.ok) revalidarCobros(institucionId);
@@ -374,6 +397,14 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
       texto: `aprobó tu cambio al ${planDe(plan).label} (${precioDePlan(plan)}).${textoDeFactura(factura)}`,
       enlace: "/institucion/plan",
     });
+    await correoDeResolucionDePlan(tx, {
+      usuarioIds: await destinatariosDeFacturacion(tx, inst.id),
+      institucion: inst.nombre,
+      plan,
+      aprobado: true,
+      nota: datos.data.nota ?? null,
+      detalle: textoDeFactura(factura).trim() || null,
+    });
     return ok({ factura });
   });
 
@@ -422,6 +453,17 @@ export async function rechazarPedidoDePlan(pedidoId: string, nota: string): Prom
       texto: `no pudo aprobar tu cambio al ${solicitado}. Nota del equipo: ${datos.data.nota}`,
       enlace: "/institucion/plan",
     });
+    if (esClavePlan(pedido.planSolicitado)) {
+      const [dueña] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, pedido.institucionId)).limit(1);
+      await correoDeResolucionDePlan(tx, {
+        usuarioIds: await destinatariosDeFacturacion(tx, pedido.institucionId),
+        institucion: dueña?.nombre ?? "tu institución",
+        plan: pedido.planSolicitado,
+        aprobado: false,
+        nota: datos.data.nota,
+        detalle: null,
+      });
+    }
     return ok();
   });
 

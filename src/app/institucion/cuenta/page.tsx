@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { CuentaBaja } from "@/components/institucion/cuenta-baja";
 import { AvisoEmailConfirmado } from "@/components/cuenta/aviso-email";
+import { CuentaAvisos } from "@/components/cuenta/cuenta-avisos";
 import { CuentaContrasena } from "@/components/cuenta/cuenta-contrasena";
 import { CuentaEmail } from "@/components/cuenta/cuenta-email";
 import { CuentaDatos } from "@/components/institucion/cuenta-datos";
@@ -32,6 +33,7 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
         />
         <CuentaEmail email={cuenta.email} tieneContrasena={cuenta.tieneContrasena} />
         <CuentaContrasena tieneContrasena={cuenta.tieneContrasena} />
+        <CuentaAvisos rol="institucion" inicial={usuario.avisosPorCorreo} />
         <CuentaBaja
           nombreInstitucion={institucion.nombre}
           email={cuenta.email}

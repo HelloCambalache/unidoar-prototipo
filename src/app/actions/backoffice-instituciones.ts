@@ -10,6 +10,7 @@ import { requerirUsuario } from "@/lib/auth";
 import { planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
 import { esUuid } from "@/lib/busquedas";
 import { precioDePlan } from "@/lib/cobros";
+import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { planDe } from "@/lib/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
@@ -165,12 +166,15 @@ export async function suspenderInstitucion(
       },
       tx,
     );
-    await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
+    const destinatarios = await destinatariosDeInstitucion(tx, inst.id);
+    await avisarAVarios(tx, destinatarios, {
       tipo: "sistema",
       titulo: "UNIDOAR",
       texto: `suspendió la cuenta de ${inst.nombre}. Motivo: ${datos.data.motivo.toLowerCase()}. Escribinos desde Contacto para regularizarla.`,
       enlace: "/contacto",
     });
+    // Una cuenta suspendida no ve la campanita: el mail es la única forma de que el equipo se entere.
+    await encolarParaUsuarios(tx, destinatarios, "M15", { nombre: null, institucion: inst.nombre, motivo: datos.data.motivo });
     return ok();
   });
 

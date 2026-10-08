@@ -279,6 +279,30 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
 /* ───────────────────────────── Destinatarios de avisos ───────────────────────────── */
 
 /**
+ * Cuentas que reciben por mail lo de facturación y plan: la propietaria y los miembros activos que administran
+ * (rol dueño o administrador) y ya tienen cuenta. El resto del equipo lo ve en la campanita, no por mail.
+ */
+export async function destinatariosDeFacturacion(ejecutor: EjecutorBo, institucionId: string): Promise<string[]> {
+  const [[propia], gestores] = await Promise.all([
+    ejecutor.select({ id: instituciones.propietarioId }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1),
+    ejecutor
+      .select({ id: institucionMiembros.usuarioId })
+      .from(institucionMiembros)
+      .where(
+        and(
+          eq(institucionMiembros.institucionId, institucionId),
+          eq(institucionMiembros.estado, "activo"),
+          or(eq(institucionMiembros.rol, "dueno"), eq(institucionMiembros.rol, "administrador")),
+        ),
+      ),
+  ]);
+  const ids = new Set<string>();
+  if (propia?.id) ids.add(propia.id);
+  for (const g of gestores) if (g.id) ids.add(g.id);
+  return [...ids];
+}
+
+/**
  * Cuentas a las que avisar por algo que le pasa a la institución: la propietaria y los miembros activos
  * del equipo que ya tienen cuenta. Sin repetidos.
  */
