@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M20, M21, M23, M24, M25, M26, M27, M28 (apagado salvo `CORREO_AVISAR_DESCARTES=si`), M30, M50, M51, M52, M53, M54, M55, M56, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -65,7 +65,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 | M25 | Se canceló la entrevista | La institución la cancela | Docente | En la app | Lanzamiento | |
 | M26 | Recibiste una oferta para {puesto} | La institución la envía | Docente | En la app | Lanzamiento | |
 | M27 | ¡Te eligieron para {puesto}! | La institución lo contrata | Docente | En la app | Lanzamiento | |
-| M28 | Actualizaron tu postulación a {puesto} (no sigue) | La institución lo descarta | Docente | En la app | Decidir | Ver "Decisiones": solo en la app o también por mail |
+| M28 | ~~Actualizaron tu postulación a {puesto} (no sigue)~~ | La institución archiva a un postulante | Docente | **No se avisa, a propósito** | — | Archivar es silencioso: ni mail ni campanita |
 
 **Para la institución**
 
@@ -150,7 +150,7 @@ El nombre visible es siempre "UNIDOAR" (o "UNIDOAR Facturación").
 
 ## Decisiones tomadas (se pueden cambiar)
 
-- **M28, descartar a un postulante:** por defecto **solo aviso en la app**; el mail está hecho y se enciende con `CORREO_AVISAR_DESCARTES=si`.
+- **M28, archivar a un postulante** (antes "descartar"): **no se avisa**, ni por mail ni en la campanita. Se enteran recién si la búsqueda se cierra (aviso de cierre, solo campanita).
 - **M30, postulantes nuevos:** **agrupado**: un mail por búsqueda por día (por hora en las rápidas), con el primer postulante del período. No dice cuántos son.
 - **Remitente de facturación:** **separado** (`facturacion@`), con ese mismo correo como respuesta; se cambia con `CORREO_DE_FACTURACION`.
 - **M06, invitación al equipo:** **se manda por mail** al crear la invitación; el panel sigue mostrando el enlace para copiar por si no llega.

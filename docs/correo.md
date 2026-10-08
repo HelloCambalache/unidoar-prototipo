@@ -45,7 +45,6 @@ Todas son opcionales: **sin `RESEND_API_KEY` el envío está apagado** (no se ma
 | `CORREO_DE_FACTURACION` | Remitente de los mails de facturación y plan | `UNIDOAR Facturación <facturacion@unidoar.com.ar>` |
 | `CORREO_RESPONDER_A_FACTURACION` | Respuestas de facturación | `facturacion@unidoar.com.ar` |
 | `CORREO_EQUIPO` | Destinatarios de los avisos internos (coma o espacio) | los emails de las cuentas admin |
-| `CORREO_AVISAR_DESCARTES` | `si`: se le manda mail al docente al que se descarta (M28) | apagado |
 | `CORREO_SECRETO` | Clave para firmar los enlaces de baja de avisos | la clave de servicio de Supabase |
 | `NEXT_PUBLIC_SITE_URL` | Origen de los enlaces de los mails | el dominio de producción de Vercel |
 
@@ -79,7 +78,6 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M23, M26 | Pasa a Preseleccionados / se le envía una oferta | El docente (una vez por postulación) | contratación |
 | M24, M25 | Se agenda (o reprograma) / se cancela la entrevista | El docente | contratación |
 | M27 | Lo contratan | El docente | contratación |
-| M28 | Lo archivan (etapa interna `descartado`) | El docente — **apagado salvo `CORREO_AVISAR_DESCARTES=si`** | contratación |
 | M30 | Se postula alguien | Quienes tienen acceso a la institución (uno por búsqueda por día; por hora en las rápidas) | contratación |
 | M50 | Se crea una factura (cron o carga manual) | Dueño y administradores | facturación |
 | M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días) | Dueño y administradores | facturación |
@@ -90,6 +88,8 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M61 | Un docente sube documentación para revisar | El equipo | interno |
 | M62 | Una cuenta pide la baja | El equipo | interno |
 | M63 | Una institución pide cambiar de plan | El equipo | interno |
+
+**Archivar a un postulante no avisa de ninguna forma** (ni campanita ni mail; no existe un M28): la persona solo se entera, si la búsqueda se cierra, por el aviso de cierre de abajo. Es una decisión de producto a propósito.
 
 **Cerrar una búsqueda no manda mail:** avisa solo en la campanita (`avisarCierreDeBusqueda`, `src/lib/queries/avisos.ts`) a todos los que estaban en ella con cuenta y sin suspender, menos a quien fue contratado: "cerró la búsqueda «X»: el puesto ya se cubrió. ¡Gracias por postularte! Seguí postulándote a otras búsquedas." (a quien fue invitado y no se postuló, sin el "gracias por postularte"). Pasa al cerrarla con "Cerrar búsqueda" y al contratar con la casilla de cerrar; no se repite si se reabre y se vuelve a cerrar el mismo día. Es una decisión de producto: si algún día se quiere mail, sería un mail nuevo del grupo contratación.
 

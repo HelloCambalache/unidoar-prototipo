@@ -29,7 +29,6 @@ export type DatosDe = {
   M25: { institucion: string; puesto: string; ruta: string };
   M26: { institucion: string; puesto: string; ruta: string };
   M27: { institucion: string; puesto: string; inicio: string | null; ruta: string };
-  M28: { institucion: string; puesto: string; ruta: string };
   M30: { busqueda: string; rapida: boolean; ruta: string };
   M50: { institucion: string; periodo: string; monto: string; vence: string };
   M51: { institucion: string; periodo: string; monto: string; vence: string };
@@ -259,20 +258,6 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
         ["Entrá para ver el detalle de tu postulación."],
       ],
       boton: { texto: "Ver mi postulación", ruta: d.ruta },
-    }),
-  },
-  M28: {
-    grupo: "contratacion",
-    remitente: "app",
-    contenido: (d) => ({
-      asunto: `Actualizaron tu postulación a ${d.puesto}`,
-      previa: `${d.institucion} actualizó tu postulación.`,
-      titulo: "Actualizaron tu postulación",
-      parrafos: [
-        [n(d.institucion), " actualizó tu postulación a ", n(d.puesto), ": por ahora no seguirá en el proceso."],
-        ["Hay otras búsquedas que pueden encajar con tu perfil."],
-      ],
-      boton: { texto: "Buscar trabajo", ruta: d.ruta },
     }),
   },
 

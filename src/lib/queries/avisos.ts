@@ -80,8 +80,7 @@ export function avisoDeEtapa(etapa: EtapaPostulacion, puesto: string): { tipo: s
       return { tipo: "postulacion", texto: `te envió una oferta para «${puesto}».` };
     case "contratado":
       return { tipo: "postulacion", texto: `te eligió para «${puesto}». ¡Felicitaciones!` };
-    case "descartado":
-      return { tipo: "postulacion", texto: `actualizó tu postulación a «${puesto}»: por ahora no seguirá en el proceso.` };
+    // "descartado" (Archivado) no avisa a propósito: ver descartarPostulacion.
     default:
       return null;
   }

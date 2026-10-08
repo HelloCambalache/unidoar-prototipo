@@ -132,27 +132,32 @@ export function MenuEtapas({
                 {ETAPA_MENU[e]}
               </button>
             ))}
-            <Link
-              role="menuitem"
-              href={`/institucion/contratar?postulacion=${postulacionId}`}
-              onClick={() => setPosicion(null)}
-              className={cn(ITEM, "border-t border-borde")}
-            >
-              <span className="w-3.5" />
-              Contratar…
-            </Link>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                cerrar(true);
-                onDescartar();
-              }}
-              className={cn(ITEM, "text-[#b91c1c]")}
-            >
-              <span className="w-3.5" />
-              Archivar
-            </button>
+            {/* Quien ya está archivado solo se mueve de etapa (eso lo recupera): ni se contrata ni se vuelve a archivar. */}
+            {etapa !== "descartado" && (
+              <>
+                <Link
+                  role="menuitem"
+                  href={`/institucion/contratar?postulacion=${postulacionId}`}
+                  onClick={() => setPosicion(null)}
+                  className={cn(ITEM, "border-t border-borde")}
+                >
+                  <span className="w-3.5" />
+                  Contratar…
+                </Link>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    cerrar(true);
+                    onDescartar();
+                  }}
+                  className={cn(ITEM, "text-[#b91c1c]")}
+                >
+                  <span className="w-3.5" />
+                  Archivar
+                </button>
+              </>
+            )}
           </div>,
           document.body,
         )}

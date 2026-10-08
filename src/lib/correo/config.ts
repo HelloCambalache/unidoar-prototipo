@@ -9,7 +9,6 @@
  *   CORREO_DE_FACTURACION           remitente de los mails de facturación. Por defecto "UNIDOAR Facturación <facturacion@…>".
  *   CORREO_RESPONDER_A_FACTURACION  respuestas de facturación. Por defecto facturacion@unidoar.com.ar.
  *   CORREO_EQUIPO                   destinatarios de los avisos internos (separados por coma). Sin esto, los admins.
- *   CORREO_AVISAR_DESCARTES         "si": también se le manda mail al docente al que se descarta (M28). Por defecto no.
  *   CORREO_SECRETO                  clave para firmar los enlaces de baja de avisos. Por defecto, la clave de servicio de Supabase.
  *   NEXT_PUBLIC_SITE_URL            origen de los enlaces de los mails (cuando cambie el dominio, cambiar esto y redeployar).
  */
@@ -51,10 +50,6 @@ export function destinatariosDelEquipo(env: Entorno = process.env): string[] {
   const lista = valor(env, "CORREO_EQUIPO");
   if (!lista) return [];
   return [...new Set(lista.split(/[,;\s]+/).map((e) => e.trim().toLowerCase()).filter((e) => e.includes("@")))];
-}
-
-export function avisarDescartesPorCorreo(env: Entorno = process.env) {
-  return valor(env, "CORREO_AVISAR_DESCARTES")?.toLowerCase() === "si";
 }
 
 /** Origen (sin barra final) de los enlaces de los mails. */

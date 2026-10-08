@@ -18,7 +18,6 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M25: { institucion: "Club Atlético", puesto: "Profesor", ruta: "/docente/postulaciones?abrir=1" },
   M26: { institucion: "Club Atlético", puesto: "Profesor", ruta: "/docente/postulaciones?abrir=1" },
   M27: { institucion: "Club Atlético", puesto: "Profesor", inicio: "01/03/2027", ruta: "/docente/postulaciones?abrir=1" },
-  M28: { institucion: "Club Atlético", puesto: "Profesor", ruta: "/docente/buscar-trabajo" },
   M30: { busqueda: "Profesor de natación", rapida: false, ruta: "/institucion/postulantes?busqueda=1" },
   M50: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
   M51: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
@@ -63,7 +62,7 @@ describe("plantillas de mails", () => {
 
   it("los grupos opcionales son solo los de contratación", () => {
     const opcionales = (Object.keys(PLANTILLAS) as PlantillaId[]).filter((id) => esGrupoOpcional(PLANTILLAS[id].grupo));
-    assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M28", "M30"]);
+    assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30"]);
     for (const id of ["M11", "M12", "M13", "M15", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
     for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56"] as const) {
       assert.equal(PLANTILLAS[id].grupo, "facturacion");

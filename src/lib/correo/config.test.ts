@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { firmaDeBaja, firmaDeBajaValida, rutaDeBaja } from "./baja";
-import { avisarDescartesPorCorreo, destinatariosDelEquipo, modoCorreo, origenDeLosMails, remitenteDe } from "./config";
+import { destinatariosDelEquipo, modoCorreo, origenDeLosMails, remitenteDe } from "./config";
 
 const USUARIO = "3f2b8c1e-5d4a-4c7b-9e0a-1b2c3d4e5f60";
 const OTRO = "3f2b8c1e-5d4a-4c7b-9e0a-1b2c3d4e5f61";
@@ -35,12 +35,6 @@ describe("configuración de los mails", () => {
     assert.equal(origenDeLosMails({ NEXT_PUBLIC_SITE_URL: "https://unidoar.com.ar/" }), "https://unidoar.com.ar");
     assert.equal(origenDeLosMails({ VERCEL_PROJECT_PRODUCTION_URL: "unidoar-prototipo.vercel.app" }), "https://unidoar-prototipo.vercel.app");
     assert.equal(origenDeLosMails({}), "http://localhost:3000");
-  });
-
-  it("los descartes solo se avisan por mail si se pide expresamente", () => {
-    assert.equal(avisarDescartesPorCorreo({}), false);
-    assert.equal(avisarDescartesPorCorreo({ CORREO_AVISAR_DESCARTES: "no" }), false);
-    assert.equal(avisarDescartesPorCorreo({ CORREO_AVISAR_DESCARTES: "Si" }), true);
   });
 });
 

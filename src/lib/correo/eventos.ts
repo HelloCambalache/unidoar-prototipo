@@ -1,5 +1,4 @@
 import "server-only";
-import { avisarDescartesPorCorreo } from "./config";
 import { claveDePostulantes, type Recordatorio } from "./claves";
 import { encolarParaUsuarios } from "./cola";
 import type { EtapaPostulacion } from "@/db/schema";
@@ -42,15 +41,15 @@ export async function correoDeBusquedaUrgente(
   );
 }
 
-/** M23, M26 y M28: cambió de etapa. Una vez por postulación y etapa, aunque la muevan de un lado a otro. El descarte (M28) solo si está encendido. */
+/** M23 y M26: cambió de etapa. Una vez por postulación y etapa, aunque la muevan de un lado a otro. Archivar no manda nada (a propósito). */
 export async function correoDeEtapa(ejecutor: Ejecutor, etapa: EtapaPostulacion, d: Postulacion) {
-  const plantilla = etapa === "preseleccionados" ? "M23" : etapa === "oferta" ? "M26" : etapa === "descartado" && avisarDescartesPorCorreo() ? "M28" : null;
+  const plantilla = etapa === "preseleccionados" ? "M23" : etapa === "oferta" ? "M26" : null;
   if (!plantilla) return;
   await encolarParaUsuarios(
     ejecutor,
     unico(d.usuarioId),
     plantilla,
-    { institucion: d.institucion, puesto: d.puesto, ruta: plantilla === "M28" ? "/docente/buscar-trabajo" : enlaceDePostulacion(d.postulacionId) },
+    { institucion: d.institucion, puesto: d.puesto, ruta: enlaceDePostulacion(d.postulacionId) },
     { clave: () => `${plantilla}:${d.postulacionId}` },
   );
 }

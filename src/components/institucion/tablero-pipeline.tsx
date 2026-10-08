@@ -6,9 +6,9 @@ import { descartarPostulacion, moverPostulacion } from "@/app/actions/pipeline";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CajonPostulante } from "@/components/institucion/cajon-postulante";
 import { TarjetaPostulante } from "@/components/institucion/tarjeta-postulante";
-import { Boton, BotonLink } from "@/components/ui/button";
+import { BotonLink } from "@/components/ui/button";
 import { Select } from "@/components/ui/campos";
-import { Avatar, Insignia } from "@/components/ui/insignia";
+import { Avatar } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { useToast } from "@/components/ui/toast";
 import type { EtapaPostulacion } from "@/db/schema";
@@ -17,7 +17,6 @@ import {
   COLOR_ETAPA,
   ETAPA_MENU,
   etiquetaDias,
-  INSIGNIA_ETAPA,
   type BusquedaPipeline,
   type PostulanteTarjeta,
 } from "@/lib/pipeline";
@@ -32,8 +31,11 @@ const COLUMNA_VACIA: Record<EtapaPostulacion, string> = {
   entrevista: "Arrastrá acá a quienes vayas a entrevistar.",
   oferta: "Arrastrá una tarjeta acá cuando mandes la oferta.",
   contratado: "Todavía nadie. Cuando confirmes una contratación, la persona queda acá.",
-  descartado: "",
+  descartado: "Acá quedan quienes archivés. No se les avisa.",
 };
+
+/** Las columnas del tablero: las etapas del proceso y, al final, los archivados (etapa interna `descartado`). */
+const COLUMNAS: { key: EtapaPostulacion; columna: string }[] = [...ETAPAS, { key: "descartado", columna: "Archivados" }];
 
 const COMPARAR: Record<Orden, (a: PostulanteTarjeta, b: PostulanteTarjeta) => number> = {
   recientes: (a, b) => b.etapaDesde.localeCompare(a.etapaDesde),
@@ -96,12 +98,12 @@ export function TableroPipeline({
   };
 
   const zonas = [...new Set(lista.flatMap((p) => p.zonas))].sort((a, b) => a.localeCompare(b, "es"));
-  const visibles = lista
-    .filter((p) => p.etapa !== "descartado")
+  const filtrados = lista
     .filter((p) => !soloVerificados || p.cv.verificado)
     .filter((p) => !zona || p.zonas.includes(zona))
     .sort(COMPARAR[orden]);
-  const descartados = lista.filter((p) => p.etapa === "descartado");
+  // En la tabla, los archivados van al final.
+  const visibles = [...filtrados.filter((p) => p.etapa !== "descartado"), ...filtrados.filter((p) => p.etapa === "descartado")];
   const seleccionado = lista.find((p) => p.id === abiertoId) ?? null;
 
   if (lista.length === 0) {
@@ -163,15 +165,15 @@ export function TableroPipeline({
       ) : (
         <p className="mt-2 mb-5 text-[13px] leading-normal text-sutil">
           {vista === "kanban"
-            ? "Arrastrá una tarjeta o usá el menú ⋯ para cambiarla de etapa · hacé clic en el nombre para abrir la ficha."
-            : "Cambiá la etapa desde el selector de cada fila · hacé clic en el nombre para abrir la ficha."}
+            ? "Arrastrá una tarjeta o usá el menú ⋯ para cambiarla de etapa · hacé clic en el nombre para abrir la ficha · archivar no le avisa a la persona."
+            : "Cambiá la etapa desde el selector de cada fila · hacé clic en el nombre para abrir la ficha · archivar no le avisa a la persona."}
         </p>
       )}
 
       {vista === "kanban" ? (
         <div className="flex gap-3.5 overflow-x-auto pb-1.5">
-          {ETAPAS.map((col) => {
-            const items = visibles.filter((p) => p.etapa === col.key);
+          {COLUMNAS.map((col) => {
+            const items = filtrados.filter((p) => p.etapa === col.key);
             return (
               <section
                 key={col.key}
@@ -282,34 +284,6 @@ export function TableroPipeline({
             ))}
           </tbody>
         </Tabla>
-      )}
-
-      {descartados.length > 0 && (
-        <details className="mt-5 rounded-ud border border-borde bg-white">
-          <summary className="cursor-pointer px-4 py-3 text-[13px] font-semibold text-apagado">
-            Archivados · {descartados.length}
-          </summary>
-          <ul className="m-0 flex list-none flex-col p-0">
-            {descartados.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-3 border-t border-borde px-4 py-2.5">
-                <button
-                  type="button"
-                  onClick={() => setAbiertoId(p.id)}
-                  className="flex min-w-0 items-center gap-2.5 rounded-md text-left text-[13px] font-medium text-apagado focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
-                >
-                  <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={28} />
-                  <span className="truncate">{p.nombre}</span>
-                  <Insignia tono={INSIGNIA_ETAPA.descartado.tono}>Archivado</Insignia>
-                </button>
-                {!soloLectura && (
-                  <Boton variante="secundario" tamano="sm" onClick={() => mover(p.id, "nuevos")}>
-                    Recuperar
-                  </Boton>
-                )}
-              </li>
-            ))}
-          </ul>
-        </details>
       )}
 
       <CajonPostulante

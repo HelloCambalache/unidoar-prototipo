@@ -86,7 +86,11 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
   return resultado;
 }
 
-/** Archiva a un postulante (etapa interna `descartado`: sale del tablero, queda en "Archivados" y se puede recuperar). */
+/**
+ * Archiva a un postulante (etapa interna `descartado`: sale del tablero, queda en "Archivados" y se puede recuperar).
+ * Es SILENCIOSO a propósito: no se le manda ninguna notificación ni mail a la persona. Se entera, si la búsqueda se cierra,
+ * por el aviso de cierre (`avisarCierreDeBusqueda`); hasta entonces su postulación solo cambia de estado en su pantalla.
+ */
 export async function descartarPostulacion(postulacionId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
   if (!esUuid(postulacionId)) return fallo(NO_ENCONTRADA);
@@ -105,20 +109,6 @@ export async function descartarPostulacion(postulacionId: string): Promise<Resul
       .set({ etapa: "descartado", etapaDesde: new Date() })
       .where(eq(postulaciones.id, fila.postulacion.id));
 
-    const aviso = avisoDeEtapa("descartado", fila.busqueda.puesto);
-    if (aviso) {
-      await avisar(tx, fila.docente.usuarioId, {
-        ...aviso,
-        titulo: institucion.nombre,
-        enlace: enlaceDocente(fila.postulacion.id),
-      });
-    }
-    await correoDeEtapa(tx, "descartado", {
-      usuarioId: fila.docente.usuarioId,
-      institucion: institucion.nombre,
-      puesto: fila.busqueda.puesto,
-      postulacionId: fila.postulacion.id,
-    });
     return ok();
   });
 
