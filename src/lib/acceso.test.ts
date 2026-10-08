@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { ERRORES_DE_INGRESO, esFallaDeEnvioDeMail, googleActivadoEn, registrarFallaDeMail, rutaInternaSegura, traducirErrorAuth } from "@/lib/acceso";
+import {
+  ERRORES_DE_INGRESO,
+  destinoTrasConfirmar,
+  esFallaDeEnvioDeMail,
+  esTipoDeConfirmacion,
+  googleActivadoEn,
+  registrarFallaDeMail,
+  rutaInternaSegura,
+  traducirErrorAuth,
+} from "@/lib/acceso";
 
 describe("destino interno después de ingresar (?next=)", () => {
   it("conserva una ruta interna con su consulta y su ancla", () => {
@@ -46,6 +55,25 @@ describe("destino interno después de ingresar (?next=)", () => {
   it("deja pasar rutas raras pero internas (la barra codificada no sube de nivel)", () => {
     assert.equal(rutaInternaSegura("/%2F/evil.com"), "/%2F/evil.com");
     assert.equal(rutaInternaSegura("/?next=//evil.com"), "/?next=//evil.com");
+  });
+});
+
+describe("enlaces de confirmación del mail (/auth/confirmar)", () => {
+  it("solo se aceptan los tipos de enlace que la app confirma ella misma", () => {
+    assert.equal(esTipoDeConfirmacion("signup"), true);
+    assert.equal(esTipoDeConfirmacion("recovery"), true);
+    for (const raro of ["magiclink", "invite", "email_change", "email", "", "SIGNUP", "signup ", null, undefined]) {
+      assert.equal(esTipoDeConfirmacion(raro), false, String(raro));
+    }
+  });
+
+  it("la recuperación sigue a elegir la contraseña nueva y el registro a /inicio (que decide por rol)", () => {
+    assert.equal(destinoTrasConfirmar("recovery"), "/ingresar/nueva-contrasena");
+    assert.equal(destinoTrasConfirmar("signup"), "/inicio");
+  });
+
+  it("los destinos son rutas internas seguras", () => {
+    for (const t of ["signup", "recovery"] as const) assert.equal(rutaInternaSegura(destinoTrasConfirmar(t)), destinoTrasConfirmar(t));
   });
 });
 

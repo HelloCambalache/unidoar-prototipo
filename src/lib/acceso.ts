@@ -11,6 +11,19 @@ export const PRIMER_PASO_PROTEGIDO: Record<RolAlta, string> = {
   docente: "/onboarding/docente/categoria",
 };
 
+/**
+ * Tipos de enlace de mail de Supabase Auth que la app confirma por su cuenta en /auth/confirmar (con `token_hash`, sin
+ * depender del navegador): la confirmación del registro y la recuperación de contraseña.
+ */
+export const TIPOS_DE_CONFIRMACION = ["signup", "recovery"] as const;
+export type TipoDeConfirmacion = (typeof TIPOS_DE_CONFIRMACION)[number];
+
+export const esTipoDeConfirmacion = (tipo: string | null | undefined): tipo is TipoDeConfirmacion =>
+  (TIPOS_DE_CONFIRMACION as readonly string[]).includes(tipo ?? "");
+
+/** A dónde sigue la persona al confirmar: la recuperación, a elegir la contraseña nueva; el registro, a /inicio (que decide por rol). */
+export const destinoTrasConfirmar = (tipo: TipoDeConfirmacion) => (tipo === "recovery" ? "/ingresar/nueva-contrasena" : "/inicio");
+
 export type EstadoAuth =
   | {
       ok: false;

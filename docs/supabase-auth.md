@@ -49,6 +49,8 @@ Otros proveedores sirven igual (Brevo, Postmark, SendGrid, Amazon SES): cambian 
 | Invite user | `invitacion.html` | `Te invitaron a UNIDOAR` |
 | Reauthentication | `reautenticacion.html` | `Tu código de verificación de UNIDOAR` |
 
+**Confirmar registro y recuperar contraseña llevan un enlace propio** (`{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=signup` o `…&type=recovery`) en vez de `{{ .ConfirmationURL }}`: lo verifica `/auth/confirmar` en el servidor (`verifyOtp`), así el mail se puede abrir **desde cualquier dispositivo** (el celular, por ejemplo) y la sesión queda abierta ahí. Con `{{ .ConfirmationURL }}` el enlace pasa por Supabase y por `/auth/callback` (PKCE), que **solo anda en el mismo navegador donde se pidió** y, abierto en otro, ni siquiera confirma la cuenta. Las otras plantillas (cambio de email, magic link, invitación) siguen con `{{ .ConfirmationURL }}`. **Hay que pegar estas dos plantillas de nuevo en Supabase cuando el código ya esté desplegado** (si se pegan antes, el enlace da 404). Un mail viejo, de antes del cambio, sigue andando por `/auth/callback`.
+
 **Ningún mail puede salir en inglés**, así que se cargan las seis, el asunto incluido (el que trae Supabase por defecto está en inglés). La app dispara hoy solo tres (registro y reenvío de confirmación, recuperación y cambio de email desde Mi cuenta); magic link, invitación y reautenticación no se usan (la invitación al equipo la manda la propia app, ver [correo.md](correo.md)), pero conviene tenerlas en español por si alguna vez se activan. Las plantillas usan `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` (así, al cambiar el dominio en la sección 1, los enlaces y el logo se actualizan solos, sin volver a pegarlas) y, para el saludo, el nombre que la app guarda al registrar a un docente (`{{ .Data.nombre }}`).
 
 ### Avisos de seguridad
@@ -82,9 +84,9 @@ Con un mail real, en el sitio de producción:
 
 1. **Registro docente** (`/registro`): llega el mail en español, con la marca y el botón. Al tocarlo, vuelve al sitio y sigue en el alta.
 2. **Registro institución:** igual, hacia el paso 2 del alta de institución.
-3. **Abrir el mail en otro dispositivo** (por ejemplo, registrarse en la compu y abrir el mail en el celular). El enlace confirma la cuenta, pero la sesión solo se abre en el navegador donde se hizo el registro; en el otro, la app muestra *"El enlace venció o ya se usó. Ingresá con tu email y contraseña…"*. La cuenta queda confirmada y alcanza con ingresar con la contraseña.
+3. **Abrir el mail en otro dispositivo** (por ejemplo, registrarse en la compu y abrir el mail en el celular). Con el enlace `/auth/confirmar` la cuenta queda confirmada y la sesión se abre en el celular; en la compu alcanza con ingresar con la contraseña. (Con el enlace viejo de Supabase **no confirmaba nada** —se comprobó el 2026-10-08 en una invitación al equipo— y la app mostraba *"El enlace venció o ya se usó…"*.)
 4. **Reenviar confirmación** desde la pantalla de ingreso, con una cuenta sin confirmar.
-5. **Recuperar contraseña** (`/ingresar/recuperar`): el enlace hay que abrirlo en el mismo navegador desde el que se pidió.
+5. **Recuperar contraseña** (`/ingresar/recuperar`): el enlace anda desde cualquier dispositivo; la sesión queda en el que lo abre.
 6. Mirar que los mails no caigan en spam; si caen, falta o está mal el SPF/DKIM del dominio (paso 2).
 
 ## Si el mail no sale
@@ -102,4 +104,4 @@ Una forma de probar sin crear cuentas: pedir la recuperación de contraseña de 
 ## Pendiente
 
 - **Login con Google:** hay que crear las credenciales en Google Cloud y activar el proveedor en Supabase (Authentication → Sign In / Providers → Google), con `https://uurahnorzppcyxvkzabd.supabase.co/auth/v1/callback` como URI de redirección autorizada.
-- **Apertura del enlace en otro dispositivo:** si molesta, se puede cambiar el enlace de las plantillas por uno con `token_hash` y que `/auth/callback` lo verifique con `verifyOtp`; así la sesión se abre en el dispositivo donde se abre el mail.
+- **Cambio de email desde Mi cuenta:** su plantilla sigue con el enlace de Supabase (mismo navegador). Pasarla a `token_hash` requiere decidir cómo se confirman los dos mails del cambio seguro (el viejo y el nuevo); sin probar.

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { rutaInternaSegura } from "@/lib/acceso";
+import { baseDelSitio } from "@/lib/auth-enlaces";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
@@ -9,11 +10,8 @@ import { supabaseConfigurado } from "@/lib/supabase/env";
  * ser una ruta interna. Cualquier falla lleva a /ingresar con un aviso.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl;
-  const configurada = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  const reenviado = request.headers.get("x-forwarded-host");
-  const base =
-    configurada ?? (reenviado ? `${request.headers.get("x-forwarded-proto") ?? "https"}://${reenviado}` : origin);
+  const { searchParams } = request.nextUrl;
+  const base = baseDelSitio(request);
 
   const falla = (codigo: "enlace" | "oauth") => NextResponse.redirect(`${base}/ingresar?error=${codigo}`);
 
