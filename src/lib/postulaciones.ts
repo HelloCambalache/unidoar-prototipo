@@ -25,4 +25,15 @@ export function estadoParaDocente(
 }
 
 /** Etapas que una institución puede asignar manualmente desde el pipeline (sin "contratado", que va por Contratar). */
+/**
+ * Aviso (solo en la campanita, nunca por mail) para quienes estaban en una búsqueda que la institución cierra: ya se cubrió,
+ * gracias y a seguir buscando. Quien fue invitado y nunca llegó a postularse no recibe el "gracias por postularte".
+ * Va después del nombre de la institución, como el resto de los avisos ("Colegio X cerró la búsqueda…").
+ */
+export function textoDeCierreDeBusqueda(puesto: string, invitado: boolean) {
+  return invitado
+    ? `cerró la búsqueda «${puesto}», a la que te había invitado: el puesto ya se cubrió. ¡Gracias por tu interés! Seguí postulándote a otras búsquedas.`
+    : `cerró la búsqueda «${puesto}»: el puesto ya se cubrió. ¡Gracias por postularte! Seguí postulándote a otras búsquedas.`;
+}
+
 export const ETAPAS_MOVIBLES: EtapaPostulacion[] = ["nuevos", "preseleccionados", "entrevista", "oferta"];

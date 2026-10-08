@@ -19,7 +19,7 @@ import {
 import { diaHoraLegible } from "@/lib/calendario";
 import { correoDeBusquedaUrgente } from "@/lib/correo/eventos";
 import { MS } from "@/lib/fechas";
-import { avisarAVarios } from "@/lib/queries/avisos";
+import { avisarAVarios, avisarCierreDeBusqueda } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
 import { docentesAvisables, resumenCoincidencias } from "@/lib/queries/coincidencias";
 
@@ -143,20 +143,32 @@ export async function editarBusqueda(
 
 /* ───────────────────────────── Cerrar y reabrir ───────────────────────────── */
 
-/** Cierra una búsqueda propia. Los postulantes no se tocan: el docente la ve como "Búsqueda cerrada". */
+/**
+ * Cierra una búsqueda propia. Los postulantes no se tocan (el docente la ve como "Búsqueda cerrada"), pero se les avisa en la
+ * campanita —no por mail— que el puesto ya se cubrió, con las gracias y la invitación a seguir postulándose.
+ */
 export async function cerrarBusqueda(busquedaId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
   if (!esUuid(busquedaId)) return fallo("No encontramos esa búsqueda.");
 
-  const cerradas = await getDb()
-    .update(busquedas)
-    .set({ estado: "cerrada", cerradaEn: new Date() })
-    .where(and(eq(busquedas.id, busquedaId), eq(busquedas.institucionId, institucion.id)))
-    .returning({ id: busquedas.id });
-  if (cerradas.length === 0) return fallo("No encontramos esa búsqueda.");
+  const resultado = await transaccion(async (tx) => {
+    const [actual] = await tx
+      .select({ id: busquedas.id, puesto: busquedas.puesto, estado: busquedas.estado })
+      .from(busquedas)
+      .where(and(eq(busquedas.id, busquedaId), eq(busquedas.institucionId, institucion.id)))
+      .limit(1)
+      .for("update");
+    if (!actual) return fallo("No encontramos esa búsqueda.");
+    // Cerrar una ya cerrada no vuelve a avisar.
+    if (actual.estado === "cerrada") return ok();
 
-  revalidarBusquedas(busquedaId);
-  return ok();
+    await tx.update(busquedas).set({ estado: "cerrada", cerradaEn: new Date() }).where(eq(busquedas.id, actual.id));
+    await avisarCierreDeBusqueda(tx, { busquedaId: actual.id, puesto: actual.puesto, institucionNombre: institucion.nombre });
+    return ok();
+  });
+
+  if (resultado.ok) revalidarBusquedas(busquedaId);
+  return resultado;
 }
 
 /**

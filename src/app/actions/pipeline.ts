@@ -20,7 +20,7 @@ import { diaHoraLegible } from "@/lib/calendario";
 import { correoDeContratacion, correoDeEntrevista, correoDeEntrevistaCancelada, correoDeEtapa } from "@/lib/correo/eventos";
 import { fechaDeInput, parsearFechaHoraAR } from "@/lib/fechas";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
-import { avisar, avisoDeEtapa } from "@/lib/queries/avisos";
+import { avisar, avisarCierreDeBusqueda, avisoDeEtapa } from "@/lib/queries/avisos";
 import { postulacionPropia } from "@/lib/queries/pipeline";
 
 const NO_ENCONTRADA = "No encontramos esa postulación.";
@@ -187,6 +187,8 @@ export async function contratarPostulacion(
         .update(busquedas)
         .set({ estado: "cerrada", cerradaEn: new Date() })
         .where(and(eq(busquedas.id, busqueda.id), eq(busquedas.institucionId, institucion.id)));
+      // Al cerrar la búsqueda, los demás postulantes se enteran (campanita, sin mail); quien fue contratado ya sabe.
+      await avisarCierreDeBusqueda(tx, { busquedaId: busqueda.id, puesto: busqueda.puesto, institucionNombre: institucion.nombre });
     }
     return { ok: true as const, busquedaId: busqueda.id, cerrada: cerrar || busqueda.estado === "cerrada" };
   });
