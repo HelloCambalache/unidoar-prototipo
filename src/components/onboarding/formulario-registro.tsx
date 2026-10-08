@@ -16,8 +16,19 @@ import type { RolAlta } from "@/lib/onboarding";
  * Paso 1 del alta ("Creá tu acceso" / "Creá tu cuenta"): email + contraseña o Google.
  * El docente además deja su nombre y acepta los términos (la institución los acepta en el paso 2).
  * Google se ofrece solo si está activado en Supabase (`conGoogle`).
+ *
+ * Con `invitacion` (el enlace del mail de una invitación al equipo) el email viene puesto y no se puede cambiar: quien
+ * se registra con ese email queda directo en esa institución (ver `institucionComoMiembro`).
  */
-export function FormularioRegistro({ rol, conGoogle }: { rol: RolAlta; conGoogle: boolean }) {
+export function FormularioRegistro({
+  rol,
+  conGoogle,
+  invitacion,
+}: {
+  rol: RolAlta;
+  conGoogle: boolean;
+  invitacion?: { institucion: string; rol: string; email: string };
+}) {
   const esDocente = rol === "docente";
   const [otroEmail, setOtroEmail] = useState(false);
   const [estado, accion, pendiente] = useActionState(
@@ -43,7 +54,18 @@ export function FormularioRegistro({ rol, conGoogle }: { rol: RolAlta; conGoogle
       <input type="hidden" name="metodo" defaultValue="password" />
       <TituloPaso
         titulo={esDocente ? "Creá tu cuenta" : "Creá tu acceso"}
-        bajada={esDocente ? "Es gratis y tardás dos minutos." : "Con esto vas a ingresar la próxima vez."}
+        bajada={
+          invitacion ? (
+            <>
+              Te invitaron a sumarte al equipo de <b className="font-semibold text-tinta">{invitacion.institucion}</b> como{" "}
+              {invitacion.rol}. Creá tu acceso con este email y entrás directo.
+            </>
+          ) : esDocente ? (
+            "Es gratis y tardás dos minutos."
+          ) : (
+            "Con esto vas a ingresar la próxima vez."
+          )
+        }
       />
       <div className="mb-[22px] flex flex-col gap-3.5">
         {esDocente && (
@@ -66,7 +88,8 @@ export function FormularioRegistro({ rol, conGoogle }: { rol: RolAlta; conGoogle
             autoComplete="email"
             placeholder={esDocente ? "nombre@mail.com" : "nombre@colegio.edu.ar"}
             required
-            defaultValue={valores.email}
+            readOnly={Boolean(invitacion)}
+            defaultValue={invitacion?.email ?? valores.email}
             aria-invalid={Boolean(campos.email)}
           />
         </Campo>
@@ -140,7 +163,7 @@ export function FormularioRegistro({ rol, conGoogle }: { rol: RolAlta; conGoogle
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-3">
-        <EnlaceVolver href="/registro" />
+        {invitacion ? <span /> : <EnlaceVolver href="/registro" />}
         <span className="text-[13px] text-apagado">
           ¿Ya tenés cuenta?{" "}
           <Link href={`/ingresar?next=${encodeURIComponent(PRIMER_PASO_PROTEGIDO[rol])}`} className="font-semibold text-navy-700">

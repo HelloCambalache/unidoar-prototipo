@@ -32,6 +32,12 @@ export function infoDeRol(clave: string): InfoRol {
   return (ROLES_EQUIPO_INFO as Record<string, InfoRol>)[clave] ?? { label: clave, corto: clave, desc: "" };
 }
 
+/**
+ * Ruta del enlace de una invitación al equipo: lleva a la persona directo a esa institución (con su email ya puesto), sin
+ * tener que elegir "Soy institución". El id es el de la invitación (un uuid que no se puede adivinar).
+ */
+export const rutaDeInvitacion = (invitacionId: string) => `/invitacion/${invitacionId}`;
+
 /** Solo el dueño y los administradores invitan, cambian roles y quitan gente. */
 export const esRolGestor = (rol: string | null | undefined) => rol === "dueno" || rol === "administrador";
 

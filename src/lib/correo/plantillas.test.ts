@@ -6,7 +6,7 @@ const ORIGEN = "https://unidoar.com.ar";
 
 /** Un dato de ejemplo por plantilla: si alguna deja de armarse, la prueba de abajo lo avisa. */
 const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
-  M06: { institucion: "Colegio San Martín", rol: "Administrador", invitadoPor: "Ana", email: "nuevo@colegio.edu.ar", ruta: "/registro" },
+  M06: { institucion: "Colegio San Martín", rol: "Administrador", invitadoPor: "Ana", email: "nuevo@colegio.edu.ar", ruta: "/invitacion/3f2a9c1e-5b7d-4e8a-9c01-2d3e4f5a6b7c" },
   M11: { nombre: "Lucía" },
   M12: { nombre: "Lucía", motivo: "El DNI se ve borroso.\nSubilo de nuevo." },
   M13: { nombre: "Lucía", motivo: "No coincide el nombre." },
@@ -118,6 +118,10 @@ describe("plantillas de mails", () => {
     assert.equal(armarMail("M21", { ...EJEMPLOS.M21, plazo: null }, { origen: ORIGEN }).asunto, "Suplencia urgente cerca tuyo: Suplencia de matemática");
     assert.ok(armarMail("M21", EJEMPLOS.M21, { origen: ORIGEN }).asunto.endsWith("(hasta jueves 8 de octubre)"));
     assert.ok(armarMail("M06", EJEMPLOS.M06, { origen: ORIGEN }).texto.includes("Colegio San Martín te invitó a su equipo"));
+    const invitacion = armarMail("M06", EJEMPLOS.M06, { origen: ORIGEN }).texto;
+    // El enlace lleva directo a la invitación (no al registro genérico) y el texto ya no pide elegir el tipo de cuenta.
+    assert.ok(invitacion.includes(`${ORIGEN}/invitacion/3f2a9c1e-5b7d-4e8a-9c01-2d3e4f5a6b7c`));
+    assert.ok(!invitacion.includes("Soy institución"));
     assert.ok(armarMail("M50", EJEMPLOS.M50, { origen: ORIGEN }).texto.includes("no se pueden desactivar"));
   });
 
@@ -133,7 +137,7 @@ describe("plantillas de mails", () => {
     assert.ok(m12.html.includes("white-space:pre-wrap"));
   });
 
-  it("M15 se arma para un docente y para una institución, con y sin motivo", () => {
+  it("M15 se arma para un profesional y para una institución, con y sin motivo", () => {
     const docente = armarMail("M15", { nombre: "Lucía", institucion: null, motivo: "Datos falsos" }, { origen: ORIGEN });
     assert.ok(docente.texto.includes("Hola Lucía: suspendimos tu cuenta en UNIDOAR."));
     assert.ok(docente.texto.includes("> Datos falsos"));

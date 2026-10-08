@@ -11,18 +11,18 @@ import { Tabla } from "@/components/ui/tabla";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_EQUIPO_INFO, ROLES_INVITABLES } from "@/lib/catalogo";
-import { infoDeRol, type MiembroVista } from "@/lib/equipo";
+import { infoDeRol, rutaDeInvitacion, type MiembroVista } from "@/lib/equipo";
 import { cn } from "@/lib/utils";
 
 const NOTA_SIN_MAIL =
-  "Todavía no mandamos mails: al crear la invitación te damos un enlace para que se lo pases. La persona tiene que registrarse como institución con ese mismo email.";
+  "Todavía no mandamos mails: al crear la invitación te damos un enlace para que se lo pases. La persona lo abre, crea su acceso con ese mismo email y queda directo en tu equipo.";
 const NOTA_CON_MAIL =
-  "Le mandamos un mail con la invitación. La persona tiene que registrarse como institución con ese mismo email. Después te damos el enlace por si querés pasárselo vos.";
+  "Le mandamos un mail con la invitación. La persona lo abre, crea su acceso con ese mismo email y queda directo en tu equipo. Después te damos el enlace por si querés pasárselo vos.";
 
 /** Caja gris con texto chico (descripción del rol, avisos). */
 const CAJA = "rounded-lg border border-borde bg-superficie px-3.5 py-3 text-[12.5px] leading-normal text-apagado";
 
-/** Enlace de registro para copiar, con los pasos que tiene que seguir la persona invitada. */
+/** Enlace de la invitación para copiar, con los pasos que tiene que seguir la persona invitada. */
 function EnlaceInvitacion({ url, email }: { url: string; email: string }) {
   const toast = useToast();
   const copiar = async () => {
@@ -39,7 +39,7 @@ function EnlaceInvitacion({ url, email }: { url: string; email: string }) {
         <Input
           readOnly
           value={url}
-          aria-label="Enlace de registro"
+          aria-label="Enlace de la invitación"
           onFocus={(e) => e.currentTarget.select()}
           className="min-w-0 flex-1"
         />
@@ -50,7 +50,7 @@ function EnlaceInvitacion({ url, email }: { url: string; email: string }) {
       <ol className="m-0 flex list-decimal flex-col gap-1.5 pl-[18px] text-[13px] leading-normal text-tinta-2">
         <li>Pasale este enlace a la persona.</li>
         <li>
-          Tiene que elegir «Soy institución» y registrarse con <strong className="text-tinta">este mismo email: {email}</strong>.
+          Crea su acceso con <strong className="text-tinta">este mismo email: {email}</strong> (el enlace ya lo trae puesto).
         </li>
         <li>Cuando entre, queda unida a tu institución y te avisamos acá.</li>
       </ol>
@@ -58,7 +58,7 @@ function EnlaceInvitacion({ url, email }: { url: string; email: string }) {
   );
 }
 
-function FormularioInvitar({ urlRegistro, correoActivo, onCerrar }: { urlRegistro: string; correoActivo: boolean; onCerrar: () => void }) {
+function FormularioInvitar({ origen, correoActivo, onCerrar }: { origen: string; correoActivo: boolean; onCerrar: () => void }) {
   const [estado, accion, pendiente] = useActionState(invitarMiembro, null);
   const [email, setEmail] = useState("");
   const [rol, setRol] = useState<(typeof ROLES_INVITABLES)[number]>("administrador");
@@ -72,7 +72,7 @@ function FormularioInvitar({ urlRegistro, correoActivo, onCerrar }: { urlRegistr
           <strong className="text-tinta">{infoDeRol(estado.data.rol).label}</strong>. Quedó en la tabla con la invitación pendiente.{" "}
           {correoActivo && "Le mandamos un mail; si no le llega, pasale este enlace:"}
         </p>
-        <EnlaceInvitacion url={urlRegistro} email={estado.data.email} />
+        <EnlaceInvitacion url={`${origen}${rutaDeInvitacion(estado.data.id)}`} email={estado.data.email} />
         <Boton onClick={onCerrar} variante="primario" className="self-start">
           Listo
         </Boton>
@@ -159,12 +159,12 @@ function BotonEliminar({ miembro }: { miembro: MiembroVista }) {
 function Ficha({
   miembro,
   puedeGestionar,
-  urlRegistro,
+  origen,
   onCerrar,
 }: {
   miembro: MiembroVista;
   puedeGestionar: boolean;
-  urlRegistro: string;
+  origen: string;
   onCerrar: () => void;
 }) {
   const toast = useToast();
@@ -251,7 +251,7 @@ function Ficha({
       {invitado && (
         <div className="mt-4 border-t border-borde pt-4">
           <div className="mb-2.5 text-[13px] font-semibold text-tinta">Cómo se suma</div>
-          <EnlaceInvitacion url={urlRegistro} email={miembro.email} />
+          <EnlaceInvitacion url={`${origen}${rutaDeInvitacion(miembro.id)}`} email={miembro.email} />
         </div>
       )}
     </Tarjeta>
@@ -265,12 +265,13 @@ function Ficha({
 export function EquipoPanel({
   miembros,
   puedeGestionar,
-  urlRegistro,
+  origen,
   correoActivo,
 }: {
   miembros: MiembroVista[];
   puedeGestionar: boolean;
-  urlRegistro: string;
+  /** Origen del sitio (https://www…): con él se arma el enlace de cada invitación. */
+  origen: string;
   correoActivo: boolean;
 }) {
   const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null);
@@ -294,7 +295,7 @@ export function EquipoPanel({
 
       <DialogoModal abierto={invitando} onCerrar={() => setInvitando(false)} titulo="Invitar a alguien" ancho={480}>
         <div className="mt-4">
-          <FormularioInvitar urlRegistro={urlRegistro} correoActivo={correoActivo} onCerrar={() => setInvitando(false)} />
+          <FormularioInvitar origen={origen} correoActivo={correoActivo} onCerrar={() => setInvitando(false)} />
         </div>
       </DialogoModal>
 
@@ -302,7 +303,7 @@ export function EquipoPanel({
         <Ficha
           miembro={seleccionado}
           puedeGestionar={puedeGestionar}
-          urlRegistro={urlRegistro}
+          origen={origen}
           onCerrar={() => setSeleccionadoId(null)}
         />
       )}

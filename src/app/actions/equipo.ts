@@ -8,14 +8,15 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarCorreo } from "@/lib/correo/cola";
-import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema } from "@/lib/equipo";
+import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema, rutaDeInvitacion } from "@/lib/equipo";
 import { membresiaDeUsuario, miembroDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
 
 /*
  * Equipo de la institución. Invitar, cambiar el rol y quitar gente es cosa del dueño y de los administradores;
  * cada acción lo verifica acá (no alcanza con esconder los botones). Invitar crea la membresía con estado "invitado"
- * y le manda un mail con el enlace al registro (si el envío está encendido; si no, el panel muestra el enlace para
- * copiar). La persona se une al registrarse con ese mismo email (ver `institucionComoMiembro` en src/lib/queries/equipo.ts).
+
+ * y le manda un mail con el enlace de la invitación, `/invitacion/<id>` (si el envío está encendido; si no, el panel muestra
+ * el enlace para copiar). La persona se une al registrarse con ese mismo email (ver `institucionComoMiembro` en src/lib/queries/equipo.ts).
  */
 
 const SOLO_GESTORES = "Solo el dueño y los administradores pueden manejar el equipo.";
@@ -121,7 +122,7 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
         .returning({ id: institucionMiembros.id });
       await encolarCorreo(tx, {
         plantilla: "M06",
-        datos: { institucion: institucion.nombre, rol: infoDeRol(rol).label, invitadoPor: nombreDeQuienInvita, email, ruta: "/registro" },
+        datos: { institucion: institucion.nombre, rol: infoDeRol(rol).label, invitadoPor: nombreDeQuienInvita, email, ruta: rutaDeInvitacion(fila!.id) },
         para: email,
         topeClave: `M06:${institucion.id}`,
       });

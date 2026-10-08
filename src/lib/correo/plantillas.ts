@@ -89,7 +89,7 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       titulo: `Te invitaron a sumarte a ${d.institucion}`,
       parrafos: [
         [d.invitadoPor ? n(d.invitadoPor) : "Una persona del equipo", " te invitó a ser parte del equipo de ", n(d.institucion), " en UNIDOAR, con el rol de ", n(d.rol), "."],
-        ["Para aceptar, entrá al enlace, elegí «Soy institución» y registrate con este mismo email: ", n(d.email), "."],
+        ["Para aceptar, entrá al enlace y creá tu acceso con este mismo email: ", n(d.email), ". Quedás directo en el equipo."],
       ],
       boton: { texto: "Aceptar la invitación", ruta: d.ruta },
       nota: ["Si no esperabas esta invitación, ignorá este mail: no se suma nadie hasta que alguien cree la cuenta."],
@@ -158,7 +158,7 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
         ...(d.motivo ? [["El motivo:"]] : []),
         [
           d.institucion
-            ? "Mientras esté suspendida el equipo no puede usar la plataforma ni la institución aparece en las búsquedas de los docentes."
+            ? "Mientras esté suspendida el equipo no puede usar la plataforma ni la institución aparece en las búsquedas de los profesionales."
             : "Mientras esté suspendida no podés usar la plataforma ni aparecés en las búsquedas de las instituciones.",
           " Escribinos para ver cómo regularizarla.",
         ],
@@ -267,10 +267,10 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
     remitente: "app",
     contenido: (d) => ({
       asunto: `Tenés postulantes nuevos en ${d.busqueda}`,
-      previa: `Hay docentes que se postularon a ${d.busqueda}.`,
+      previa: `Hay profesionales que se postularon a ${d.busqueda}.`,
       titulo: "Tenés postulantes nuevos",
       parrafos: [
-        ["Se postularon docentes a tu búsqueda ", n(d.busqueda), ". Revisalos y movelos por las etapas del tablero."],
+        ["Se postularon profesionales a tu búsqueda ", n(d.busqueda), ". Revisalos y movelos por las etapas del tablero."],
         [d.rapida ? "Es una búsqueda rápida: cuanto antes los veas, mejor." : "Te mandamos como máximo un aviso por día por cada búsqueda."],
       ],
       boton: { texto: "Ver postulantes", ruta: d.ruta },
@@ -527,7 +527,7 @@ ${nota}
       </td></tr>
       <tr><td style="padding:16px 32px 26px;border-top:1px solid #F0EFEA;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#9AA09B;">
         ${escaparHtml(motivo)}${baja}<br>
-        UNIDOAR · Docentes, entrenadores y guardavidas verificados · <a href="${escaparHtml(origen)}" style="color:#9AA09B;">${escaparHtml(origen.replace(/^https?:\/\//, ""))}</a>
+        UNIDOAR · Educadores, entrenadores y guardavidas verificados · <a href="${escaparHtml(origen)}" style="color:#9AA09B;">${escaparHtml(origen.replace(/^https?:\/\//, ""))}</a>
       </td></tr>
     </table>
   </td></tr>

@@ -158,7 +158,23 @@ export function VitrinaFormulario({
     <form onSubmit={guardar} noValidate>
       <EncabezadoPagina
         titulo="Perfil público"
-        bajada="Así te ven los docentes cuando entran a tu vitrina. Tocá cualquier campo para editarlo."
+        bajada="Así te ven los profesionales cuando entran a tu vitrina. Tocá cualquier campo para editarlo."
+        acciones={
+          <a
+            href={`/instituciones/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(botonClases({ variante: "secundario", tamano: "lg" }), "gap-[7px] text-sm text-tinta hover:text-tinta")}
+          >
+            <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M14 4h6v6" />
+              <path d="M20 4l-9 9" />
+              <path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" />
+            </svg>
+            Ver perfil público
+            <span className="sr-only"> (se abre en una pestaña nueva)</span>
+          </a>
+        }
       />
 
       {/* Portada, logo e identidad */}
@@ -353,14 +369,14 @@ export function VitrinaFormulario({
               <input
                 type="number"
                 inputMode="numeric"
-                aria-label="Docentes en planta"
+                aria-label="Profesionales en planta"
                 aria-invalid={Boolean(errores.docentesPlanta)}
                 value={d.docentesPlanta}
                 onChange={(e) => set("docentesPlanta", e.target.value)}
                 placeholder="—"
                 className={cn(EN_LINEA, SIN_FLECHAS, "w-[90px] text-xl leading-none font-semibold")}
               />
-              <div className="mt-1 pl-1.5 text-xs leading-[1.3] text-apagado">docentes en planta</div>
+              <div className="mt-1 pl-1.5 text-xs leading-[1.3] text-apagado">profesionales en planta</div>
               <MensajeError>{errores.docentesPlanta}</MensajeError>
             </div>
           </div>
@@ -374,7 +390,7 @@ export function VitrinaFormulario({
               value={d.descripcion}
               onChange={(e) => set("descripcion", e.target.value)}
               maxLength={2000}
-              placeholder="Contá quiénes son, cómo trabajan y qué buscan en un docente."
+              placeholder="Contá quiénes son, cómo trabajan y qué buscan en un profesional."
               className="min-h-[100px] text-sm leading-[1.6]"
             />
             <MensajeError>{errores.descripcion}</MensajeError>
@@ -434,7 +450,7 @@ export function VitrinaFormulario({
               </Link>
             </div>
             <p className="m-0 mb-4 text-[13px] leading-normal text-apagado">
-              Cursos cortos o certificaciones que ofrecés. Los docentes los ven cuando entran a tu vitrina.
+              Cursos cortos o certificaciones que ofrecés. Los profesionales los ven cuando entran a tu vitrina.
             </p>
             {cursos.length === 0 ? (
               <div className="rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-6 text-center">
@@ -543,20 +559,6 @@ export function VitrinaFormulario({
             "Los cambios se publican en tu vitrina pública."
           )}
         </span>
-        <a
-          href={`/instituciones/${slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(botonClases({ variante: "secundario", tamano: "lg" }), "gap-[7px] text-sm text-tinta hover:text-tinta")}
-        >
-          <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <path d="M14 4h6v6" />
-            <path d="M20 4l-9 9" />
-            <path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" />
-          </svg>
-          Ver perfil público
-          <span className="sr-only"> (se abre en una pestaña nueva)</span>
-        </a>
         <Boton type="submit" variante="cta" tamano="lg" disabled={pendiente} aria-busy={pendiente} className="min-w-[200px] max-[860px]:min-w-0">
           {pendiente ? "Guardando…" : "Guardar cambios"}
         </Boton>

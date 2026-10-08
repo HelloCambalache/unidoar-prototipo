@@ -8,7 +8,7 @@ import { miembrosDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
 
 export const metadata: Metadata = { title: "Equipo" };
 
-/** Origen del sitio para armar el enlace de registro que se le pasa a quien se invita. */
+/** Origen del sitio para armar el enlace de invitación que se le pasa a quien se invita. */
 async function origenSitio() {
   const configurada = process.env.NEXT_PUBLIC_SITE_URL;
   if (configurada) return configurada.replace(/\/$/, "");
@@ -30,7 +30,7 @@ export default async function Equipo() {
     <EquipoPanel
       miembros={miembros}
       puedeGestionar={esRolGestor(rol)}
-      urlRegistro={`${origen}/registro`}
+      origen={origen}
       correoActivo={modoCorreo() !== "apagado"}
     />
   );

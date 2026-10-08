@@ -106,6 +106,32 @@ export async function miembroDeInstitucion(institucionId: string, miembroId: str
   return fila ?? null;
 }
 
+/**
+ * La invitación pendiente que abre el enlace del mail: para mostrar a qué institución y con qué rol se invitó, y con
+ * qué email. Null si el id no existe, ya se usó (la persona se unió) o no es una invitación (el dueño).
+ */
+export async function invitacionPendiente(invitacionId: string) {
+  const [fila] = await getDb()
+    .select({
+      id: institucionMiembros.id,
+      email: institucionMiembros.email,
+      rol: institucionMiembros.rol,
+      institucion: { nombre: instituciones.nombre, suspendida: instituciones.suspendida },
+    })
+    .from(institucionMiembros)
+    .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
+    .where(
+      and(
+        eq(institucionMiembros.id, invitacionId),
+        eq(institucionMiembros.estado, "invitado"),
+        isNull(institucionMiembros.usuarioId),
+        ne(institucionMiembros.rol, "dueno"),
+      ),
+    )
+    .limit(1);
+  return fila && !fila.institucion.suspendida ? fila : null;
+}
+
 /** Datos de la membresía de una cuenta (para "Mi cuenta"). */
 export async function membresiaDeUsuario(institucionId: string, usuarioId: string) {
   const [fila] = await getDb()
