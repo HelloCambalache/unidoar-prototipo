@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const NOTA = {
   ambar: "bg-[#FDE9D8] text-[#9A4A12]",
   rosa: "bg-[#F6E6E0] text-[#8F3D28]",
+  verde: "bg-[#E4F3EA] text-[#256B45]",
 } as const;
 
 /** Tarjeta del tablero Kanban: se arrastra entre columnas o se mueve desde el menú ⋯. */

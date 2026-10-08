@@ -172,7 +172,7 @@ export async function estadisticasInstitucion(institucionId: string): Promise<Es
     db
       .select({
         nuevos: sql<number>`count(*) filter (where ${postulaciones.etapa} = 'nuevos')`.mapWith(Number),
-        enProceso: sql<number>`count(*) filter (where ${postulaciones.etapa} in ('nuevos', 'preseleccionados', 'entrevista', 'oferta'))`.mapWith(Number),
+        enProceso: sql<number>`count(*) filter (where ${postulaciones.etapa} in ('nuevos', 'preseleccionados', 'entrevista', 'oferta', 'examen_preocupacional'))`.mapWith(Number),
         entrevistas: sql<number>`count(*) filter (where ${postulaciones.etapa} = 'entrevista')`.mapWith(Number),
         ofertas: sql<number>`count(*) filter (where ${postulaciones.etapa} = 'oferta')`.mapWith(Number),
         agendadas: sql<number>`count(*) filter (where ${postulaciones.etapa} = 'entrevista' and ${postulaciones.entrevistaEn} >= now())`.mapWith(Number),

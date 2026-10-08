@@ -34,7 +34,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
   if (!detalle) notFound();
 
   const { busqueda, institucion, postulacion } = detalle;
-  const estado = postulacion ? estadoParaDocente(postulacion.etapa, busqueda.estado) : null;
+  const estado = postulacion ? estadoParaDocente(postulacion.etapa, busqueda.estado, postulacion.examenRealizado) : null;
   const cierre = motivoCierre(detalle);
   const km = kmLegible(detalle.km);
   const horario = horarioDeBusqueda(busqueda);

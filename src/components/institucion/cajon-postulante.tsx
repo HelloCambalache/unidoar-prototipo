@@ -3,8 +3,11 @@
 import { useOptimistic, useState, useTransition } from "react";
 import {
   agendarEntrevista,
+  agregarArchivoExamen,
   agregarNotaInstitucion,
   borrarNotaInstitucion,
+  marcarExamenPreocupacional,
+  quitarArchivoExamen,
   quitarEntrevista,
   toggleFavoritoDocente,
 } from "@/app/actions/pipeline";
@@ -14,8 +17,10 @@ import { Avatar, Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { Cajon } from "@/components/ui/cajon";
+import { SubirArchivo } from "@/components/ui/subir-archivo";
 import type { EtapaPostulacion } from "@/db/schema";
 import { ETAPA_LABEL } from "@/lib/catalogo";
+import { CARPETA_EXAMEN, MAX_ARCHIVOS_EXAMEN, puedeAdjuntarAlExamen } from "@/lib/examen-preocupacional";
 import { enlaceWhatsapp, ETAPA_MENU, INSIGNIA_ETAPA, type PostulanteTarjeta } from "@/lib/pipeline";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
 import { cn } from "@/lib/utils";
@@ -65,12 +70,21 @@ function Ficha({
   const [nota, setNota] = useState("");
   const [fecha, setFecha] = useState("");
   const [titulo, setTitulo] = useState("");
+  // Con una entrevista ya agendada, el formulario solo se abre al tocar "Editar" y arranca con lo que tiene cargado.
+  const [editando, setEditando] = useState(false);
   const [esFavorito, setFavorito] = useOptimistic(p.esFavorito);
+  const [examenHecho, setExamenHecho] = useOptimistic(p.examenPreocupacional !== null);
 
   const { cv } = p;
   const whatsapp = enlaceWhatsapp(cv.telefono);
   const insignia = INSIGNIA_ETAPA[p.etapa];
   const puedeAgendar = !soloLectura && p.etapa !== "descartado" && p.etapa !== "contratado";
+  // El checklist "Para ingresar a trabajar" se edita en la etapa Examen preocupacional; después queda como registro.
+  const puedeMarcarExamen = !soloLectura && p.etapa === "examen_preocupacional";
+  const puedeAdjuntar = !soloLectura && puedeAdjuntarAlExamen(p.etapa);
+  const mostrarChecklist = p.etapa === "examen_preocupacional" || p.examenPreocupacional !== null || p.examenArchivos.length > 0;
+  // Cada archivo subido reinicia el botón de subida (si no, seguiría mostrando el "✓" del anterior).
+  const [subidas, setSubidas] = useState(0);
 
   /** Corre una acción del servidor en una transición y avisa con un toast, sin dejar que un corte de red rompa la pantalla. */
   const correr = (tarea: () => Promise<{ ok: boolean; error?: string }>, exito?: string, alExito?: () => void) =>
@@ -99,9 +113,43 @@ function Ficha({
       }
     });
 
+  const alternarExamen = () =>
+    empezar(async () => {
+      const realizado = !examenHecho;
+      setExamenHecho(realizado);
+      try {
+        const r = await marcarExamenPreocupacional(p.id, realizado);
+        if (!r.ok) toast(r.error, "error");
+        else toast(realizado ? "Anotaste que hizo el examen preocupacional." : "Quitaste el examen preocupacional.");
+      } catch {
+        toast("No pudimos guardar el cambio. Probá de nuevo.", "error");
+      }
+    });
+
+  const adjuntarExamen = (path: string, nombre?: string) => {
+    if (!path) return;
+    correr(
+      () => agregarArchivoExamen(p.id, path, nombre),
+      "Archivo guardado.",
+      () => setSubidas((n) => n + 1),
+    );
+  };
+  const quitarExamen = (indice: number) => correr(() => quitarArchivoExamen(p.id, indice), "Archivo quitado.");
+
   const guardarNota = () => {
     const texto = nota.trim();
     if (texto) correr(() => agregarNotaInstitucion(p.id, texto), undefined, () => setNota(""));
+  };
+
+  const abrirEdicion = () => {
+    setFecha(p.entrevista?.fechaLocal ?? "");
+    setTitulo(p.entrevista?.titulo ?? "");
+    setEditando(true);
+  };
+  const cerrarEdicion = () => {
+    setFecha("");
+    setTitulo("");
+    setEditando(false);
   };
 
   const agendar = () => {
@@ -109,13 +157,15 @@ function Ficha({
       toast("Elegí fecha y hora de la entrevista.", "error");
       return;
     }
+    const reprograma = p.entrevista !== null && fecha !== p.entrevista.fechaLocal;
     correr(
       () => agendarEntrevista(p.id, { fecha, titulo: titulo.trim() || undefined }),
-      "Entrevista agendada. Le avisamos al docente.",
-      () => {
-        setFecha("");
-        setTitulo("");
-      },
+      p.entrevista === null
+        ? "Entrevista agendada. Le avisamos al profesional."
+        : reprograma
+          ? "Entrevista reprogramada. Le avisamos al profesional."
+          : "Entrevista actualizada.",
+      cerrarEdicion,
     );
   };
 
@@ -243,15 +293,20 @@ function Ficha({
               <div className="font-semibold">{p.entrevista.titulo ?? "Entrevista"}</div>
               <div className="mt-0.5">{p.entrevista.texto}</div>
             </div>
-            {puedeAgendar && (
-              <button type="button" onClick={quitar} disabled={pendiente} className="flex-none text-[12.5px] font-semibold underline underline-offset-2 disabled:opacity-50">
-                Quitar
-              </button>
+            {puedeAgendar && !editando && (
+              <div className="flex flex-none gap-3">
+                <button type="button" onClick={abrirEdicion} disabled={pendiente} className="text-[12.5px] font-semibold underline underline-offset-2 disabled:opacity-50">
+                  Editar
+                </button>
+                <button type="button" onClick={quitar} disabled={pendiente} className="text-[12.5px] font-semibold underline underline-offset-2 disabled:opacity-50">
+                  Quitar
+                </button>
+              </div>
             )}
           </div>
         )}
         {!p.entrevista && !puedeAgendar && <p className="m-0 text-[13px] text-sutil">No hay una entrevista agendada.</p>}
-        {puedeAgendar && (
+        {puedeAgendar && (!p.entrevista || editando) && (
           <div className="flex flex-col gap-2.5">
             <Campo etiqueta="Fecha y hora (hora de Argentina)">
               <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
@@ -259,12 +314,104 @@ function Ficha({
             <Campo etiqueta="Título (opcional)">
               <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={120} placeholder="Ej. Entrevista en el colegio" />
             </Campo>
-            <Boton variante="primario" tamano="sm" onClick={agendar} disabled={pendiente} className="self-start">
-              {p.entrevista ? "Reprogramar entrevista" : "Agendar entrevista"}
-            </Boton>
+            <div className="flex flex-wrap gap-2.5">
+              <Boton variante="primario" tamano="sm" onClick={agendar} disabled={pendiente}>
+                {p.entrevista ? "Guardar cambios" : "Agendar entrevista"}
+              </Boton>
+              {editando && (
+                <Boton variante="secundario" tamano="sm" onClick={cerrarEdicion} disabled={pendiente}>
+                  Cancelar
+                </Boton>
+              )}
+            </div>
           </div>
         )}
       </section>
+
+      {/* Checklist para ingresar a trabajar */}
+      {mostrarChecklist && (
+        <section>
+          <EtiquetaSeccion>Para ingresar a trabajar</EtiquetaSeccion>
+          <label
+            className={cn(
+              "flex items-start gap-2.5 rounded-lg border border-borde px-3.5 py-3 text-[13.5px] leading-snug",
+              puedeMarcarExamen ? "cursor-pointer" : "cursor-default",
+              examenHecho && "bg-[#E4F3EA]",
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={examenHecho}
+              onChange={alternarExamen}
+              disabled={!puedeMarcarExamen || pendiente}
+              className="mt-0.5 size-4 flex-none accent-navy-700"
+            />
+            <span>
+              <span className="block font-semibold">Hizo el examen preocupacional</span>
+              <span className="mt-0.5 block text-[12.5px] text-apagado">
+                {examenHecho
+                  ? p.examenPreocupacional
+                    ? `Anotado el ${p.examenPreocupacional.cuando}`
+                    : "Anotado"
+                  : "Tildalo cuando tengas el estudio."}
+              </span>
+            </span>
+          </label>
+
+          {(p.examenArchivos.length > 0 || puedeAdjuntar) && (
+            <div className="mt-2.5 flex flex-col gap-2">
+              <div className="text-[12.5px] font-semibold text-apagado">Archivos del estudio</div>
+              {p.examenArchivos.length === 0 && <p className="m-0 text-[12.5px] text-sutil">Todavía no guardaste ninguno.</p>}
+              {p.examenArchivos.length > 0 && (
+                <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                  {p.examenArchivos.map((a, i) => (
+                    <li key={`${i}-${a.nombre}`} className="flex items-center gap-2.5 rounded-lg border border-borde px-3 py-2 text-[13px]">
+                      <span className="min-w-0 flex-1 truncate font-medium" title={a.nombre}>
+                        {a.nombre}
+                      </span>
+                      <a
+                        href={`/api/examen-preocupacional/${p.id}/${i}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Ver ${a.nombre}`}
+                        className="flex-none text-[12.5px] font-semibold text-navy-700 underline underline-offset-2"
+                      >
+                        Ver
+                      </a>
+                      {puedeAdjuntar && (
+                        <button
+                          type="button"
+                          onClick={() => quitarExamen(i)}
+                          disabled={pendiente}
+                          aria-label={`Quitar ${a.nombre}`}
+                          className="flex-none text-[12.5px] font-semibold text-[#b91c1c] underline underline-offset-2 disabled:opacity-50"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {puedeAdjuntar && p.examenArchivos.length < MAX_ARCHIVOS_EXAMEN && (
+                <SubirArchivo
+                  key={subidas}
+                  bucket="privado"
+                  carpeta={CARPETA_EXAMEN}
+                  nombre="archivoExamen"
+                  etiqueta="archivo del examen preocupacional"
+                  variante="boton"
+                  textoBoton="Adjuntar archivo"
+                  onCambio={adjuntarExamen}
+                />
+              )}
+              <p className="m-0 text-[11.5px] leading-snug text-sutil">
+                PDF o foto, hasta {MAX_ARCHIVOS_EXAMEN} archivos. Es información de salud: queda en un espacio privado y solo la ve tu institución.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* CV */}
       {cv.resumen && (
@@ -335,7 +482,9 @@ function Ficha({
               <li key={n.id} className="rounded-lg bg-superficie px-3.5 py-3">
                 <p className="m-0 text-[13px] leading-normal whitespace-pre-wrap text-tinta">{n.texto}</p>
                 <div className="mt-1.5 flex items-center justify-between text-[11.5px] text-sutil">
-                  <span>{n.cuando}</span>
+                  <span>
+                    {n.autor ?? "Ex integrante del equipo"} · {n.cuando}
+                  </span>
                   <button
                     type="button"
                     onClick={() => borrarNota(n.id)}
@@ -350,7 +499,7 @@ function Ficha({
             ))}
           </ul>
         )}
-        <Campo etiqueta="Nueva nota" ayuda="Solo la ve tu equipo, el docente no.">
+        <Campo etiqueta="Nueva nota" ayuda="Solo la ve tu equipo, el profesional no.">
           <Textarea
             value={nota}
             onChange={(e) => setNota(e.target.value)}

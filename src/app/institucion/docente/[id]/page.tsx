@@ -44,6 +44,7 @@ const TONO_ETAPA = {
   preseleccionados: "azul",
   entrevista: "ambar",
   oferta: "naranja",
+  examen_preocupacional: "ambar",
   contratado: "verde",
   descartado: "neutro",
 } as const;
@@ -173,7 +174,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
               <div className="flex flex-wrap gap-x-[26px] gap-y-3 text-[13px] leading-none">
                 <Tilde ok={perfil.verificado}>Identidad (DNI)</Tilde>
                 <Tilde ok={d.tituloVerificado}>
-                  {d.tituloVerificado ? "Título docente" : "Título · lo valida la institución al contratar"}
+                  {d.tituloVerificado ? "Título profesional" : "Título · lo valida la institución al contratar"}
                 </Tilde>
                 <Tilde ok={d.antecedentesVerificados}>
                   {d.antecedentesVerificados ? "Certificado de buena conducta" : "Certificado de buena conducta · pendiente"}

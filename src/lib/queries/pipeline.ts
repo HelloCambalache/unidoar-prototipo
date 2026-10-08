@@ -5,6 +5,7 @@ import {
   busquedas,
   docentes,
   favoritos,
+  institucionMiembros,
   postulacionNotas,
   postulaciones,
   usuarios,
@@ -12,9 +13,10 @@ import {
 } from "@/db/schema";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
 import { diaHoraLegible } from "@/lib/calendario";
-import { chipEntrevista, diasEntre, haceTiempo } from "@/lib/fechas";
+import { archivosDeExamen } from "@/lib/examen-preocupacional";
+import { aFechaHoraAR, chipEntrevista, diasEntre, fechaCorta, haceTiempo } from "@/lib/fechas";
 import { distanciaKm, kmLegible } from "@/lib/geo";
-import type { BusquedaPipeline, NotaVista, OpcionBusqueda, PostulanteTarjeta } from "@/lib/pipeline";
+import { autorDeNota, type BusquedaPipeline, type NotaVista, type OpcionBusqueda, type PostulanteTarjeta } from "@/lib/pipeline";
 import { iniciales } from "@/lib/utils";
 import { busquedaPropia } from "@/lib/queries/busquedas";
 
@@ -98,10 +100,36 @@ export async function pipelineDeBusqueda(
       : [],
   ]);
 
+  // Quién escribió cada nota: su nombre en el equipo de esta institución, y su email como último recurso.
+  const autorIds = [...new Set(notas.flatMap((n) => (n.usuarioId ? [n.usuarioId] : [])))];
+  const [miembros, cuentas] = autorIds.length
+    ? await Promise.all([
+        db
+          .select({ usuarioId: institucionMiembros.usuarioId, nombre: institucionMiembros.nombre })
+          .from(institucionMiembros)
+          .where(and(eq(institucionMiembros.institucionId, institucion.id), inArray(institucionMiembros.usuarioId, autorIds))),
+        db.select({ id: usuarios.id, email: usuarios.email }).from(usuarios).where(inArray(usuarios.id, autorIds)),
+      ])
+    : [[], []];
+  const nombreEnElEquipo = new Map(miembros.flatMap((m) => (m.usuarioId && m.nombre ? [[m.usuarioId, m.nombre] as const] : [])));
+  const emailDe = new Map(cuentas.map((c) => [c.id, c.email] as const));
+
   const notasPor = new Map<string, NotaVista[]>();
   for (const n of notas) {
     const lista = notasPor.get(n.postulacionId) ?? [];
-    lista.push({ id: n.id, texto: n.texto, cuando: haceTiempo(n.creadoEn, ahora) });
+    lista.push({
+      id: n.id,
+      texto: n.texto,
+      cuando: haceTiempo(n.creadoEn, ahora),
+      autor: autorDeNota({
+        usuarioId: n.usuarioId,
+        yo: usuarioId,
+        nombreEnElEquipo: n.usuarioId ? nombreEnElEquipo.get(n.usuarioId) : null,
+        esPropietario: n.usuarioId === institucion.propietarioId,
+        contactoNombre: institucion.contactoNombre,
+        email: n.usuarioId ? emailDe.get(n.usuarioId) : null,
+      }),
+    });
     notasPor.set(n.postulacionId, lista);
   }
   const favoritosSet = new Set(guardados.map((g) => g.refId));
@@ -130,8 +158,11 @@ export async function pipelineDeBusqueda(
             texto: diaHoraLegible(p.entrevistaEn),
             corta: chipEntrevista(p.entrevistaEn, ahora),
             titulo: p.entrevistaTitulo,
+            fechaLocal: aFechaHoraAR(p.entrevistaEn),
           }
         : null,
+      examenPreocupacional: p.examenPreocupacionalEn ? { cuando: fechaCorta(p.examenPreocupacionalEn) } : null,
+      examenArchivos: archivosDeExamen(p.examenPreocupacionalArchivos).map((a) => ({ nombre: a.nombre })),
       esFavorito: favoritosSet.has(d.id),
       suspendido: d.suspendido,
       notas: notasPor.get(p.id) ?? [],

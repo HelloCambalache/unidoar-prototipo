@@ -17,7 +17,7 @@ export type TipoArchivo = "imagen" | "pdf" | "imagen-o-pdf";
  */
 export const CARPETAS = {
   publico: { logos: "imagen", portadas: "imagen", fotos: "imagen", cursos: "imagen", novedades: "imagen", instalaciones: "imagen" },
-  privado: { cv: "pdf", documentos: "imagen-o-pdf" },
+  privado: { cv: "pdf", documentos: "imagen-o-pdf", examenes: "imagen-o-pdf" },
 } as const satisfies Record<BucketAlmacenamiento, Record<string, TipoArchivo>>;
 
 export type CarpetaDe<B extends BucketAlmacenamiento> = keyof (typeof CARPETAS)[B] & string;

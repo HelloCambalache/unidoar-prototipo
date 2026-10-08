@@ -53,6 +53,7 @@ export async function postulacionesDelDocente(
     .select({
       id: postulaciones.id,
       etapa: postulaciones.etapa,
+      examenPreocupacionalEn: postulaciones.examenPreocupacionalEn,
       creadoEn: postulaciones.creadoEn,
       puesto: busquedas.puesto,
       busquedaEstado: busquedas.estado,
@@ -74,7 +75,7 @@ export async function postulacionesDelDocente(
     institucion: f.institucion,
     nivel: f.nivel,
     zona: f.zonaBusqueda ?? f.zonaInstitucion,
-    estado: estadoParaDocente(f.etapa, f.busquedaEstado),
+    estado: estadoParaDocente(f.etapa, f.busquedaEstado, !!f.examenPreocupacionalEn),
     cuando: haceCuanto(f.creadoEn, ahora),
   }));
 
@@ -127,6 +128,8 @@ export type DetallePostulacion = {
    */
   contacto: "pendiente" | "activo" | "cerrado";
   agenda: { titulo: string; cuando: string; googleHref: string } | null;
+  /** Solo en la etapa "Examen preocupacional": si la institución ya anotó que lo hizo. */
+  examenPreocupacional: "pendiente" | "realizado" | null;
   /** Solo las notas del propio docente: las de la institución son privadas del otro lado. */
   notas: { id: string; texto: string; fecha: string }[];
 };
@@ -150,7 +153,7 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     .where(and(eq(postulacionNotas.postulacionId, p.id), eq(postulacionNotas.autor, "docente")))
     .orderBy(desc(postulacionNotas.creadoEn));
 
-  const estado = estadoParaDocente(p.etapa, b.estado);
+  const estado = estadoParaDocente(p.etapa, b.estado, !!p.examenPreocupacionalEn);
   const tituloAgenda = p.entrevistaTitulo?.trim() || "Entrevista";
 
   return {
@@ -180,6 +183,7 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
           }),
         }
       : null,
+    examenPreocupacional: p.etapa === "examen_preocupacional" ? (p.examenPreocupacionalEn ? "realizado" : "pendiente") : null,
     notas: notas.map((n) => ({ id: n.id, texto: n.texto, fecha: fechaHoraCorta(n.creadoEn) })),
   };
 }

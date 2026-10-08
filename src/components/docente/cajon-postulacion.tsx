@@ -94,6 +94,14 @@ export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePost
       </Insignia>
       <div className="mb-5 text-xs leading-[1.4] text-sutil">{detalle.envio}</div>
 
+      {detalle.examenPreocupacional && detalle.estado.activa && (
+        <p className="m-0 mb-5 rounded-lg bg-[#FDE9D8] px-3.5 py-3 text-[13px] leading-normal text-[#9A4A12]">
+          {detalle.examenPreocupacional === "realizado"
+            ? `${detalle.institucion.nombre} ya anotó que hiciste el examen preocupacional. Falta que te confirmen el ingreso.`
+            : `Para ingresar a trabajar necesitás hacerte el examen preocupacional. Coordiná con ${detalle.institucion.nombre} cómo y dónde.`}
+        </p>
+      )}
+
       <section className="mb-5 rounded-lg border border-borde p-3.5">
         <div className={cn(ETIQUETA, "mb-2.5")}>Detalle del puesto</div>
         <div className="mb-2.5 flex flex-col gap-1.5 text-[13px] leading-[1.4] text-tinta-2">

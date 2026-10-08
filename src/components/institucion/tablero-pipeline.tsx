@@ -30,6 +30,7 @@ const COLUMNA_VACIA: Record<EtapaPostulacion, string> = {
   preseleccionados: "Arrastrá acá a quienes quieras tener a mano.",
   entrevista: "Arrastrá acá a quienes vayas a entrevistar.",
   oferta: "Arrastrá una tarjeta acá cuando mandes la oferta.",
+  examen_preocupacional: "Arrastrá acá a quienes tengan que hacerse el examen preocupacional antes de ingresar.",
   contratado: "Todavía nadie. Cuando confirmes una contratación, la persona queda acá.",
   descartado: "Acá quedan quienes archivés. No se les avisa.",
 };

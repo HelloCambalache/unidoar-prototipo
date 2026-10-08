@@ -35,6 +35,7 @@ export const etapaPostulacion = pgEnum("etapa_postulacion", [
   "preseleccionados",
   "entrevista",
   "oferta",
+  "examen_preocupacional",
   "contratado",
   "descartado",
 ]);
@@ -233,6 +234,10 @@ export const postulaciones = pgTable(
     mensaje: text("mensaje"),
     entrevistaEn: timestamp("entrevista_en", { withTimezone: true }),
     entrevistaTitulo: text("entrevista_titulo"),
+    /** Cuándo la institución anotó que el docente hizo el examen preocupacional (etapa `examen_preocupacional`); null = pendiente. */
+    examenPreocupacionalEn: timestamp("examen_preocupacional_en", { withTimezone: true }),
+    /** Archivos del estudio (paths del bucket privado + nombre original): ver src/lib/examen-preocupacional.ts. */
+    examenPreocupacionalArchivos: jsonb("examen_preocupacional_archivos").$type<{ path: string; nombre: string }[]>().notNull().default(sql`'[]'::jsonb`),
     /** Cuándo entró a la etapa actual (para "3 días acá"). */
     etapaDesde: timestamp("etapa_desde", { withTimezone: true }).notNull().defaultNow(),
     ...marcasDeTiempo,

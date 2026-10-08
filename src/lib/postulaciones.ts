@@ -9,10 +9,13 @@ type TonoInsignia = "neutro" | "azul" | "verde" | "rosa" | "naranja" | "ambar";
  * Una postulación archivada por la institución (etapa interna `descartado`) NO se muestra como tal: archivar es
  * silencioso a propósito, así que el docente la sigue viendo como "Postulación enviada" hasta que la búsqueda se
  * cierra (ahí, como todas, pasa a "Búsqueda cerrada").
+ *
+ * En "Examen preocupacional" el docente ve si ya está anotado como realizado (`examenRealizado`).
  */
 export function estadoParaDocente(
   etapa: EtapaPostulacion,
   busquedaEstado: "activa" | "pausada" | "cerrada",
+  examenRealizado = false,
 ): { texto: string; tono: TonoInsignia; activa: boolean } {
   switch (etapa) {
     case "contratado":
@@ -20,6 +23,11 @@ export function estadoParaDocente(
     default:
       if (busquedaEstado === "cerrada") return { texto: "Búsqueda cerrada", tono: "neutro", activa: false };
       if (etapa === "entrevista") return { texto: "Entrevista agendada", tono: "azul", activa: true };
+      if (etapa === "examen_preocupacional") {
+        return examenRealizado
+          ? { texto: "Examen preocupacional realizado", tono: "verde", activa: true }
+          : { texto: "Examen preocupacional pendiente", tono: "ambar", activa: true };
+      }
       if (etapa === "oferta") return { texto: "Oferta recibida", tono: "rosa", activa: true };
       if (etapa === "preseleccionados") return { texto: "Preseleccionada", tono: "azul", activa: true };
       return { texto: "Postulación enviada", tono: "neutro", activa: true };
@@ -38,4 +46,11 @@ export function textoDeCierreDeBusqueda(puesto: string, invitado: boolean) {
     : `cerró la búsqueda «${puesto}»: el puesto ya se cubrió. ¡Gracias por postularte! Seguí postulándote a otras búsquedas.`;
 }
 
-export const ETAPAS_MOVIBLES: EtapaPostulacion[] = ["nuevos", "preseleccionados", "entrevista", "oferta"];
+export const ETAPAS_MOVIBLES: EtapaPostulacion[] = ["nuevos", "preseleccionados", "entrevista", "oferta", "examen_preocupacional"];
+
+/**
+ * La institución puso a la persona en "Examen preocupacional" y todavía no anotó que lo hizo: al contratarla se pide
+ * confirmar. Quien nunca pasó por esa etapa (la institución no lo usa) no tiene ningún aviso.
+ */
+export const faltaExamenPreocupacional = (p: { etapa: EtapaPostulacion; examenPreocupacionalEn: Date | string | null }) =>
+  p.etapa === "examen_preocupacional" && !p.examenPreocupacionalEn;

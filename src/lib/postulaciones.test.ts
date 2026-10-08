@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { estadoParaDocente, textoDeCierreDeBusqueda } from "./postulaciones";
+import { estadoParaDocente, ETAPAS_MOVIBLES, faltaExamenPreocupacional, textoDeCierreDeBusqueda } from "./postulaciones";
 
-describe("estado de una postulación para el docente", () => {
+describe("estado de una postulación para el profesional", () => {
   it("una postulación archivada se ve como enviada y activa mientras la búsqueda sigue abierta (no se le avisa)", () => {
     for (const busqueda of ["activa", "pausada"] as const) {
       assert.deepEqual(estadoParaDocente("descartado", busqueda), estadoParaDocente("nuevos", busqueda));
@@ -22,6 +22,32 @@ describe("estado de una postulación para el docente", () => {
     assert.equal(estadoParaDocente("entrevista", "activa").texto, "Entrevista agendada");
     assert.equal(estadoParaDocente("oferta", "activa").texto, "Oferta recibida");
     assert.equal(estadoParaDocente("nuevos", "activa").texto, "Postulación enviada");
+  });
+});
+
+describe("examen preocupacional", () => {
+  it("el profesional ve si el examen está pendiente o ya realizado, y es una etapa activa", () => {
+    assert.deepEqual(estadoParaDocente("examen_preocupacional", "activa"), { texto: "Examen preocupacional pendiente", tono: "ambar", activa: true });
+    assert.deepEqual(estadoParaDocente("examen_preocupacional", "activa", true), { texto: "Examen preocupacional realizado", tono: "verde", activa: true });
+  });
+
+  it("si la búsqueda se cierra, pasa a \"Búsqueda cerrada\" como las demás", () => {
+    assert.equal(estadoParaDocente("examen_preocupacional", "cerrada", true).texto, "Búsqueda cerrada");
+  });
+
+  it("se puede mover a esa etapa desde el tablero, justo después de Oferta", () => {
+    const i = ETAPAS_MOVIBLES.indexOf("examen_preocupacional");
+    assert.ok(i > 0);
+    assert.equal(ETAPAS_MOVIBLES[i - 1], "oferta");
+  });
+
+  it("Contratar pide confirmar solo si está en esa etapa y todavía no anotaron el examen", () => {
+    assert.equal(faltaExamenPreocupacional({ etapa: "examen_preocupacional", examenPreocupacionalEn: null }), true);
+    assert.equal(faltaExamenPreocupacional({ etapa: "examen_preocupacional", examenPreocupacionalEn: new Date() }), false);
+    // Quien nunca pasó por la etapa (la institución no la usa) no recibe ningún aviso.
+    for (const etapa of ["nuevos", "preseleccionados", "entrevista", "oferta", "contratado", "descartado"] as const) {
+      assert.equal(faltaExamenPreocupacional({ etapa, examenPreocupacionalEn: null }), false, etapa);
+    }
   });
 });
 

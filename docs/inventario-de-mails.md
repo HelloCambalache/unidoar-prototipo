@@ -65,6 +65,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 | M25 | Se canceló la entrevista | La institución la cancela | Docente | En la app | Lanzamiento | |
 | M26 | Recibiste una oferta para {puesto} | La institución la envía | Docente | En la app | Lanzamiento | |
 | M27 | ¡Te eligieron para {puesto}! | La institución lo contrata | Docente | En la app | Lanzamiento | |
+| — | Te pidieron el examen preocupacional | La institución pasa a la persona a la etapa "Examen preocupacional" | Docente | **Solo campanita, sin mail** (a propósito) | — | Etapa nueva después de Oferta; no tiene plantilla |
 | M28 | ~~Actualizaron tu postulación a {puesto} (no sigue)~~ | La institución archiva a un postulante | Docente | **No se avisa, a propósito** | — | Archivar es silencioso: ni mail ni campanita |
 
 **Para la institución**

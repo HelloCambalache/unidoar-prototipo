@@ -52,7 +52,8 @@ type Props = Destino & {
   titulo?: string;
   /** Si es false se muestra deshabilitado. Por defecto: hay URL de Supabase configurada. */
   disponible?: boolean;
-  onCambio?: (valor: string) => void;
+  /** Con el valor nuevo (URL pública o path) y, al subir, el nombre original del archivo. */
+  onCambio?: (valor: string, nombreOriginal?: string) => void;
   className?: string;
 };
 
@@ -210,9 +211,9 @@ export function SubirArchivo(props: Props) {
     [vistaLocal],
   );
 
-  const cambiar = (nuevo: string) => {
+  const cambiar = (nuevo: string, nombreOriginal?: string) => {
     setValor(nuevo);
-    onCambio?.(nuevo);
+    onCambio?.(nuevo, nombreOriginal);
   };
 
   const procesar = async (original: File | undefined) => {
@@ -264,7 +265,7 @@ export function SubirArchivo(props: Props) {
     else setVistaLocal(null);
     setVista(null);
     setArchivoNombre(original.name);
-    cambiar(bucket === "publico" ? (resultado.url ?? "") : resultado.path);
+    cambiar(bucket === "publico" ? (resultado.url ?? "") : resultado.path, original.name);
   };
 
   const alElegir = (e: React.ChangeEvent<HTMLInputElement>) => {

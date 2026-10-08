@@ -52,6 +52,12 @@ export function parsearFechaHoraAR(valor: string): Date | null {
   return m ? instanteArgentina(m[1]!, m[2]!) : null;
 }
 
+/** Lo contrario de `parsearFechaHoraAR`: un instante → "2026-10-15T10:30" (hora argentina), el valor de un datetime-local. */
+export function aFechaHoraAR(fecha: Date): string {
+  const p = partes(fecha, { year: "numeric", month: "2-digit", day: "2-digit" });
+  return `${p.year}-${p.month}-${p.day}T${horaMinuto(fecha)}`;
+}
+
 /** "hace 2 días", "hace 3 semanas". */
 export function haceTiempo(fecha: Date, ahora = new Date()) {
   const dias = Math.floor((ahora.getTime() - fecha.getTime()) / DIA);

@@ -5,6 +5,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/insignia";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { faltaExamenPreocupacional } from "@/lib/postulaciones";
 import { postulacionPropia } from "@/lib/queries/pipeline";
 import { iniciales } from "@/lib/utils";
 
@@ -62,6 +63,7 @@ export default async function Contratar({ searchParams }: { searchParams: Promis
               puesto={busqueda.puesto}
               inicioPorDefecto={busqueda.fechaInicio ?? ""}
               puedeCerrar={busqueda.estado !== "cerrada"}
+              faltaExamen={faltaExamenPreocupacional(postulacion)}
             />
           )}
         </section>

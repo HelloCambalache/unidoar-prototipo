@@ -140,6 +140,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
         id: postulaciones.id,
         busquedaId: postulaciones.busquedaId,
         etapa: postulaciones.etapa,
+        examenPreocupacionalEn: postulaciones.examenPreocupacionalEn,
         creadoEn: postulaciones.creadoEn,
         puesto: busquedas.puesto,
         estadoBusqueda: busquedas.estado,
@@ -270,7 +271,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       }),
     );
 
-  const conEstado = mias.map((p) => ({ p, estado: estadoParaDocente(p.etapa, p.estadoBusqueda) }));
+  const conEstado = mias.map((p) => ({ p, estado: estadoParaDocente(p.etapa, p.estadoBusqueda, !!p.examenPreocupacionalEn) }));
   const activas = conEstado.filter(({ estado }) => estado.activa);
 
   return {

@@ -87,7 +87,7 @@ export async function listarOportunidades(
       : [],
     docente
       ? db
-          .select({ busquedaId: postulaciones.busquedaId, etapa: postulaciones.etapa })
+          .select({ busquedaId: postulaciones.busquedaId, etapa: postulaciones.etapa, examenPreocupacionalEn: postulaciones.examenPreocupacionalEn })
           .from(postulaciones)
           .where(eq(postulaciones.docenteId, docente.id))
       : [],
@@ -96,6 +96,7 @@ export async function listarOportunidades(
   const soloFavoritas = !!usuarioId && !!filtros.favoritos;
   if (soloFavoritas && idsFavoritas.size === 0) return { ofertas: [], radio, conUbicacion };
   const etapaPorBusqueda = new Map<string, EtapaPostulacion>(propias.map((p) => [p.busquedaId, p.etapa]));
+  const conExamenRealizado = new Set(propias.filter((p) => p.examenPreocupacionalEn).map((p) => p.busquedaId));
 
   const condiciones = [
     eq(busquedas.estado, "activa"),
@@ -144,7 +145,7 @@ export async function listarOportunidades(
     // Sin distancia calculable no se descarta: mejor mostrarla que esconder una oferta posible.
     if (limitaRadio && km !== null && km > radio) continue;
     const etapa = etapaPorBusqueda.get(b.id);
-    const estado = etapa ? estadoParaDocente(etapa, b.estado) : null;
+    const estado = etapa ? estadoParaDocente(etapa, b.estado, conExamenRealizado.has(b.id)) : null;
     ofertas.push({
       id: b.id,
       puesto: b.puesto,
@@ -193,7 +194,7 @@ export type DetalleOferta = {
   };
   km: number | null;
   /** Fila del docente en esta búsqueda, si se postuló o lo invitaron. */
-  postulacion: { id: string; etapa: EtapaPostulacion; origen: "postulacion" | "invitacion" } | null;
+  postulacion: { id: string; etapa: EtapaPostulacion; origen: "postulacion" | "invitacion"; examenRealizado: boolean } | null;
   /** Otras búsquedas abiertas de la misma institución (hasta 5). */
   otras: { id: string; puesto: string; tipo: string; rapida: boolean }[];
   totalActivas: number;
@@ -216,7 +217,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
 
   const [[propia], otras, [conteo]] = await Promise.all([
     db
-      .select({ id: postulaciones.id, etapa: postulaciones.etapa, origen: postulaciones.origen })
+      .select({ id: postulaciones.id, etapa: postulaciones.etapa, origen: postulaciones.origen, examenPreocupacionalEn: postulaciones.examenPreocupacionalEn })
       .from(postulaciones)
       .where(and(eq(postulaciones.busquedaId, busqueda.id), eq(postulaciones.docenteId, docente.id)))
       .limit(1),
@@ -259,7 +260,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
       lng: institucion.lng,
     },
     km,
-    postulacion: propia ?? null,
+    postulacion: propia ? { id: propia.id, etapa: propia.etapa, origen: propia.origen, examenRealizado: !!propia.examenPreocupacionalEn } : null,
     otras,
     totalActivas: conteo?.total ?? 0,
     abierta: busquedaAbierta(busqueda),

@@ -2,7 +2,28 @@ import type { CategoriaDocente, EtapaPostulacion } from "@/db/schema";
 
 /* Tipos y helpers del pipeline de postulantes. Sin acceso a base: los usa también el cliente. */
 
-export type NotaVista = { id: string; texto: string; cuando: string };
+/** `autor`: quién la escribió ("Vos", el nombre en el equipo…); null si esa cuenta ya no existe. */
+export type NotaVista = { id: string; texto: string; cuando: string; autor: string | null };
+
+/**
+ * Quién escribió una nota interna, para mostrarlo en la ficha: "Vos" si es quien mira; si no, su nombre en el equipo; si
+ * es el dueño y no tiene fila propia en el equipo, el nombre de contacto de la institución; y si no hay nada de eso, lo que
+ * se pueda sacar de su email. Null cuando la cuenta ya no existe (la nota queda sin autor).
+ */
+export function autorDeNota(a: {
+  usuarioId: string | null;
+  yo: string;
+  nombreEnElEquipo?: string | null;
+  esPropietario?: boolean;
+  contactoNombre?: string | null;
+  email?: string | null;
+}): string | null {
+  if (!a.usuarioId) return null;
+  if (a.usuarioId === a.yo) return "Vos";
+  const nombre = a.nombreEnElEquipo?.trim() || (a.esPropietario ? a.contactoNombre?.trim() : "");
+  if (nombre) return nombre;
+  return a.email?.split("@")[0]?.trim() || null;
+}
 
 export type PostulanteTarjeta = {
   id: string;
@@ -22,7 +43,12 @@ export type PostulanteTarjeta = {
   desde: string;
   /** ISO, para ordenar por antigüedad en la etapa. */
   etapaDesde: string;
-  entrevista: { texto: string; corta: string; titulo: string | null } | null;
+  /** `fechaLocal` es el valor de un datetime-local en hora argentina ("2026-10-15T10:30"), para editar la entrevista. */
+  entrevista: { texto: string; corta: string; titulo: string | null; fechaLocal: string } | null;
+  /** Checklist de la etapa "Examen preocupacional": null = todavía no se anotó que lo hizo; `cuando` es la fecha (dd/mm/aaaa). */
+  examenPreocupacional: { cuando: string } | null;
+  /** Archivos del estudio que guardó la institución (solo el nombre: se abren con /api/examen-preocupacional/<postulación>/<n>). */
+  examenArchivos: { nombre: string }[];
   esFavorito: boolean;
   /** El equipo suspendió el perfil: el cajón avisa y no muestra su teléfono ni su email. */
   suspendido: boolean;
@@ -64,6 +90,7 @@ export const ETAPA_MENU: Record<EtapaPostulacion, string> = {
   preseleccionados: "Preseleccionados",
   entrevista: "Entrevista",
   oferta: "Oferta enviada",
+  examen_preocupacional: "Examen preocupacional",
   contratado: "Contratado",
   descartado: "Archivado",
 };
@@ -74,6 +101,7 @@ export const COLOR_ETAPA: Record<EtapaPostulacion, string> = {
   preseleccionados: "bg-[#4A9B6E]",
   entrevista: "bg-naranja",
   oferta: "bg-[#D72289]",
+  examen_preocupacional: "bg-ambar",
   contratado: "bg-sutil",
   descartado: "bg-borde-fuerte",
 };
@@ -84,6 +112,7 @@ export const INSIGNIA_ETAPA: Record<EtapaPostulacion, { tono: "neutro" | "azul" 
   preseleccionados: { tono: "verde" },
   entrevista: { tono: "naranja" },
   oferta: { tono: "rosa" },
+  examen_preocupacional: { tono: "ambar" },
   contratado: { tono: "azul" },
   descartado: { tono: "neutro" },
 };
@@ -96,9 +125,14 @@ export function etiquetaDias(etapa: EtapaPostulacion, dias: number) {
 }
 
 /** Nota corta de la tarjeta según la etapa ("Entrevista jueves 10:30", "Esperando respuesta"). */
-export function notaDeTarjeta(p: Pick<PostulanteTarjeta, "etapa" | "entrevista">) {
+export function notaDeTarjeta(p: Pick<PostulanteTarjeta, "etapa" | "entrevista" | "examenPreocupacional">) {
   if (p.etapa === "entrevista" && p.entrevista) return { texto: `Entrevista ${p.entrevista.corta}`, tono: "ambar" as const };
   if (p.etapa === "oferta") return { texto: "Esperando respuesta", tono: "rosa" as const };
+  if (p.etapa === "examen_preocupacional") {
+    return p.examenPreocupacional
+      ? { texto: "Examen realizado ✓", tono: "verde" as const }
+      : { texto: "Falta el examen", tono: "ambar" as const };
+  }
   return null;
 }
 

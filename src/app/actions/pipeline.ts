@@ -19,9 +19,18 @@ import { esUuid } from "@/lib/busquedas";
 import { diaHoraLegible } from "@/lib/calendario";
 import { correoDeContratacion, correoDeEntrevista, correoDeEntrevistaCancelada, correoDeEtapa } from "@/lib/correo/eventos";
 import { fechaDeInput, parsearFechaHoraAR } from "@/lib/fechas";
-import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
+import { ETAPAS_MOVIBLES, faltaExamenPreocupacional } from "@/lib/postulaciones";
+import {
+  CARPETA_EXAMEN,
+  archivosDeExamen,
+  nombreVisibleDeArchivo,
+  puedeAdjuntarAlExamen,
+  sumarArchivoDeExamen,
+} from "@/lib/examen-preocupacional";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { avisar, avisarCierreDeBusqueda, avisoDeEtapa } from "@/lib/queries/avisos";
 import { postulacionPropia } from "@/lib/queries/pipeline";
+import { esPathPrivadoPropio } from "@/lib/subidas";
 
 const NO_ENCONTRADA = "No encontramos esa postulación.";
 const BUSQUEDA_CERRADA = "La búsqueda está cerrada. Reabrila para mover postulantes.";
@@ -116,6 +125,95 @@ export async function descartarPostulacion(postulacionId: string): Promise<Resul
   return resultado;
 }
 
+/**
+ * Checklist de la etapa "Examen preocupacional": la institución anota (o desanota) que la persona hizo el estudio para
+ * ingresar a trabajar. Solo se guarda que lo hizo y cuándo, nunca el resultado. No avisa: el docente ve el estado en su
+ * postulación. Solo se puede mientras la persona esté en esa etapa.
+ */
+export async function marcarExamenPreocupacional(postulacionId: string, realizado: boolean): Promise<Resultado> {
+  const { institucion } = await requerirInstitucion();
+  if (!esUuid(postulacionId)) return fallo(NO_ENCONTRADA);
+
+  const resultado = await transaccion(async (tx) => {
+    const fila = await postulacionPropia(institucion.id, postulacionId, tx);
+    if (!fila) return fallo(NO_ENCONTRADA);
+    const { postulacion, busqueda } = fila;
+    if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
+    if (postulacion.etapa !== "examen_preocupacional") return fallo("Primero pasá a la persona a «Examen preocupacional».");
+    if (realizado === !!postulacion.examenPreocupacionalEn) return ok();
+
+    await tx
+      .update(postulaciones)
+      .set({ examenPreocupacionalEn: realizado ? new Date() : null })
+      .where(eq(postulaciones.id, postulacion.id));
+    return ok();
+  });
+
+  if (resultado.ok) revalidarPipeline();
+  return resultado;
+}
+
+const SOLO_EN_EL_EXAMEN = "Los archivos del examen se guardan mientras la persona está en «Examen preocupacional» o ya contratada.";
+
+/**
+ * Guarda un archivo del examen preocupacional (el estudio en PDF o foto) en la postulación. El archivo ya lo subió el
+ * navegador al bucket privado (`/api/subir`, carpeta `examenes`): acá solo se acepta si es de esta misma cuenta. Es un dato
+ * sensible: nunca se muestra por URL pública, se abre con `/api/examen-preocupacional/…`.
+ */
+export async function agregarArchivoExamen(postulacionId: string, path: string, nombre?: string): Promise<Resultado> {
+  const { usuario, institucion } = await requerirInstitucion();
+  if (!esUuid(postulacionId)) return fallo(NO_ENCONTRADA);
+  if (!esPathPrivadoPropio(path, usuario.id, CARPETA_EXAMEN)) return fallo("No pudimos validar el archivo. Subilo de nuevo.");
+
+  const resultado = await transaccion(async (tx) => {
+    const fila = await postulacionPropia(institucion.id, postulacionId, tx);
+    if (!fila) return fallo(NO_ENCONTRADA);
+    const { postulacion } = fila;
+    if (!puedeAdjuntarAlExamen(postulacion.etapa)) return fallo(SOLO_EN_EL_EXAMEN);
+
+    const suma = sumarArchivoDeExamen(archivosDeExamen(postulacion.examenPreocupacionalArchivos), {
+      path,
+      nombre: nombreVisibleDeArchivo(nombre, path),
+    });
+    if (!suma.ok) return fallo(suma.error);
+    await tx.update(postulaciones).set({ examenPreocupacionalArchivos: suma.lista }).where(eq(postulaciones.id, postulacion.id));
+    return ok();
+  });
+
+  if (resultado.ok) revalidarPipeline();
+  return resultado;
+}
+
+/** Quita el archivo número `indice` del examen (como lo ve la ficha) y lo borra de Storage si ninguna otra fila lo usa. */
+export async function quitarArchivoExamen(postulacionId: string, indice: number): Promise<Resultado> {
+  const { institucion } = await requerirInstitucion();
+  if (!esUuid(postulacionId) || !Number.isInteger(indice)) return fallo(NO_ENCONTRADA);
+
+  let quitado: string | null = null;
+  const resultado = await transaccion(async (tx) => {
+    const fila = await postulacionPropia(institucion.id, postulacionId, tx);
+    if (!fila) return fallo(NO_ENCONTRADA);
+    const { postulacion } = fila;
+    if (!puedeAdjuntarAlExamen(postulacion.etapa)) return fallo(SOLO_EN_EL_EXAMEN);
+
+    const actuales = archivosDeExamen(postulacion.examenPreocupacionalArchivos);
+    const archivo = actuales[indice];
+    if (!archivo) return ok();
+    await tx
+      .update(postulaciones)
+      .set({ examenPreocupacionalArchivos: actuales.filter((_, i) => i !== indice) })
+      .where(eq(postulaciones.id, postulacion.id));
+    quitado = archivo.path;
+    return ok();
+  });
+
+  if (resultado.ok) {
+    await borrarArchivos([quitado]);
+    revalidarPipeline();
+  }
+  return resultado;
+}
+
 /* ───────────────────────────── Contratar ───────────────────────────── */
 
 const contratarSchema = z.object({
@@ -125,6 +223,8 @@ const contratarSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   cerrar: z.literal("on").optional(),
+  /** Confirma contratar a alguien que está en "Examen preocupacional" sin haber anotado que lo hizo. */
+  sinExamen: z.literal("on").optional(),
 });
 
 export type EstadoContratar = { ok: false; error: string; campos?: Record<string, string> } | null;
@@ -150,6 +250,11 @@ export async function contratarPostulacion(
     const { postulacion, busqueda, docente } = fila;
     if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala antes de contratar.");
     if (busqueda.estado === "cerrada" && postulacion.etapa !== "contratado") return fallo(BUSQUEDA_CERRADA);
+    if (faltaExamenPreocupacional(postulacion) && datos.data.sinExamen !== "on") {
+      return fallo("Todavía no anotaste que hizo el examen preocupacional.", {
+        sinExamen: "Tildá la casilla para contratarla igual, sin el examen.",
+      });
+    }
 
     const cerrar = datos.data.cerrar === "on" && busqueda.estado !== "cerrada";
     if (postulacion.etapa !== "contratado") {
@@ -201,8 +306,10 @@ const entrevistaSchema = z.object({
 });
 
 /**
- * Agenda (o reprograma) la entrevista. `fecha` es la hora argentina de un datetime-local
+ * Agenda, reprograma o edita la entrevista. `fecha` es la hora argentina de un datetime-local
  * ("2026-10-15T10:30"). Si el postulante estaba en Nuevos o Preseleccionados pasa a Entrevista.
+ * Una fecha nueva (o la primera) tiene que ser a futuro y le avisa al docente; si la fecha queda igual y solo cambia el
+ * título, se guarda sin avisar (y se puede corregir el título de una entrevista que ya pasó).
  */
 export async function agendarEntrevista(
   postulacionId: string,
@@ -214,9 +321,6 @@ export async function agendarEntrevista(
   if (!datos.ok) return fallo(datos.campos?.fecha ?? datos.campos?.titulo ?? datos.error, datos.campos);
   const instante = parsearFechaHoraAR(datos.data.fecha);
   if (!instante) return fallo("La fecha no es válida.", { fecha: "La fecha no es válida" });
-  if (instante.getTime() <= Date.now()) {
-    return fallo("La entrevista tiene que ser a futuro.", { fecha: "Elegí una fecha futura" });
-  }
 
   const resultado = await transaccion(async (tx) => {
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
@@ -225,6 +329,19 @@ export async function agendarEntrevista(
     if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
     if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala para agendar.");
     if (postulacion.etapa === "contratado") return fallo("Esta persona ya está contratada.");
+
+    const anterior = postulacion.entrevistaEn;
+    const mismaFecha = anterior?.getTime() === instante.getTime();
+    if (!mismaFecha && instante.getTime() <= Date.now()) {
+      return fallo("La entrevista tiene que ser a futuro.", { fecha: "Elegí una fecha futura" });
+    }
+    if (mismaFecha) {
+      // Solo cambió el título (o nada): no hay nada nuevo que avisarle al docente.
+      if ((postulacion.entrevistaTitulo ?? null) !== (datos.data.titulo ?? null)) {
+        await tx.update(postulaciones).set({ entrevistaTitulo: datos.data.titulo ?? null }).where(eq(postulaciones.id, postulacion.id));
+      }
+      return ok();
+    }
 
     const entraAEntrevista = postulacion.etapa === "nuevos" || postulacion.etapa === "preseleccionados";
     await tx
@@ -239,7 +356,9 @@ export async function agendarEntrevista(
     await avisar(tx, docente.usuarioId, {
       tipo: "entrevista",
       titulo: institucion.nombre,
-      texto: `agendó una entrevista para «${busqueda.puesto}»: ${diaHoraLegible(instante)}.`,
+      texto: anterior
+        ? `reprogramó la entrevista para «${busqueda.puesto}»: ahora es ${diaHoraLegible(instante)}.`
+        : `agendó una entrevista para «${busqueda.puesto}»: ${diaHoraLegible(instante)}.`,
       enlace: enlaceDocente(postulacion.id),
     });
     await correoDeEntrevista(tx, {

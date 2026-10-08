@@ -16,6 +16,7 @@ const TONO_ETAPA = {
   preseleccionados: "azul",
   entrevista: "ambar",
   oferta: "naranja",
+  examen_preocupacional: "ambar",
   contratado: "verde",
   descartado: "neutro",
 } as const;
@@ -250,7 +251,7 @@ export function DocScoring({ ficha }: { ficha: FichaDocenteBo }) {
     <Tarjeta como="section" className="p-[22px]">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <EtiquetaSeccion className="mb-0">Cómo se compone el scoring</EtiquetaSeccion>
-        <span className="text-xs leading-none text-sutil">Interno: nunca lo ven docentes ni instituciones</span>
+        <span className="text-xs leading-none text-sutil">Interno: nunca lo ven profesionales ni instituciones</span>
       </div>
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {ficha.scoring.partes.map((p) => (
