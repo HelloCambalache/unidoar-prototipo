@@ -179,18 +179,30 @@ export function nombreDeCalle(texto: string): string {
   return palabras.join(" ");
 }
 
+/** Provincias donde la app tiene zonas (normalizadas): sin pistas de lugar, un resultado de ahí es más probable que uno de otro extremo del país. */
+export function provinciasDeZonas(zonas: { provincia?: string | null }[] = []): ReadonlySet<string> {
+  return new Set(zonas.flatMap((z) => (z.provincia ? [normalizarTexto(z.provincia)] : [])));
+}
+
 /**
- * Marca cuáles coinciden con las pistas y los pone primero; después los que tienen la calle escrita (no una parecida,
- * como "Remedios Escalada de San Martín" para "San Martín") y los que resolvieron la altura. Es estable.
+ * Marca cuáles coinciden con las pistas y los pone primero; después los de una provincia donde la app tiene zonas, los que
+ * tienen la calle escrita (no una parecida, como "Remedios Escalada de San Martín" para "San Martín") y los que
+ * resolvieron la altura. Es estable.
  */
-export function ordenarPorPistas(lista: Ubicacion[], pistas: string[], opciones: { alias?: AliasDeZonas; calle?: string } = {}): Ubicacion[] {
+export function ordenarPorPistas(
+  lista: Ubicacion[],
+  pistas: string[],
+  opciones: { alias?: AliasDeZonas; calle?: string; provincias?: ReadonlySet<string> } = {},
+): Ubicacion[] {
   const escrita = opciones.calle ? nombreDeCalle(opciones.calle) : "";
   const mismaCalle = (u: Ubicacion) => escrita !== "" && nombreDeCalle(u.calle ?? "") === escrita;
+  const conocida = (u: Ubicacion) => opciones.provincias?.has(normalizarTexto(u.provincia)) ?? false;
   return lista
     .map((u, i) => ({ u: { ...u, coincide: coincidenPistas(u, pistas, opciones.alias) }, i }))
     .sort(
       (a, b) =>
         Number(b.u.coincide) - Number(a.u.coincide) ||
+        Number(conocida(b.u)) - Number(conocida(a.u)) ||
         Number(mismaCalle(b.u)) - Number(mismaCalle(a.u)) ||
         Number(b.u.exacta) - Number(a.u.exacta) ||
         a.i - b.i,

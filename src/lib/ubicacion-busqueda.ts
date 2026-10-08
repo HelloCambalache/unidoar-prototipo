@@ -6,6 +6,7 @@ import {
   desdeOsm,
   esCaba,
   ordenarPorPistas,
+  provinciasDeZonas,
   separarDireccion,
   verificarUbicacion,
   type Ubicacion,
@@ -35,7 +36,7 @@ export type PedidoDeUbicacion = {
   /** Permite consultar OpenStreetMap si Georef no encuentra nada. */
   osm: boolean;
   /** Las zonas que conoce la app: una pista como "Olivos" vale por el partido al que pertenece (Georef no ubica barrios). */
-  zonas?: { nombre: string; partido: string | null }[];
+  zonas?: { nombre: string; partido: string | null; provincia?: string | null }[];
 };
 
 export type DependenciasDeBusqueda = {
@@ -101,7 +102,7 @@ export async function buscarUbicacionesEn(pedido: PedidoDeUbicacion, deps: Depen
 
   const { calle, pistas } = separarDireccion(texto);
   const pistasExigidas = [...pistas, ...(partido ? [partido] : [])];
-  const opciones = { alias, calle };
+  const opciones = { alias, calle, provincias: provinciasDeZonas(pedido.zonas) };
 
   // 1) Georef. Cada pista de lugar se prueba como partido (o como el partido de una zona conocida: "Olivos" → Vicente López)
   //    y se corta en cuanto algún resultado coincide con lo escrito. Si Georef no conoce un nombre devuelve 400: se sigue

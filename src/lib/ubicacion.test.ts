@@ -321,6 +321,14 @@ describe("búsqueda de una dirección", () => {
     assert.equal(r[0]!.lat, -34.5264);
   });
 
+  it("sin pistas, primero las provincias donde la app tiene zonas y después el resto del país", async () => {
+    const { impl } = fetchFalso({ georef: [[MAIPU_CORRIENTES, MAIPU_SANTA_FE, MAIPU_BA]] });
+    const zonas = [{ nombre: "Olivos", partido: "Vicente López", provincia: "Buenos Aires" }];
+    const r = await buscarUbicacionesEn({ texto: "Av. Maipú 1234", osm: false, zonas }, { fetchImpl: impl });
+    assert.deepEqual(r.map((u) => u.provincia), ["Buenos Aires", "Corrientes", "Santa Fe"]);
+    assert.ok(r.every((u) => !u.coincide));
+  });
+
   it("entre varios resultados que coinciden, primero el de la calle escrita y no una parecida", async () => {
     const parecida = georef("REMEDIOS ESCALADA DE SAN MARTIN", 1500, "Buenos Aires", "Vicente López", "Vicente López", -34.5265, -58.48);
     const igual = georef("SAN MARTIN", 1500, "Buenos Aires", "Vicente López", "Vicente López", -34.52, -58.47);
