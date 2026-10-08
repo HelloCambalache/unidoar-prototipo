@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { rutaDeInvitacion } from "./equipo";
+import { puedeSumarseAlEquipo, rutaDeInvitacion } from "./equipo";
+
+describe("sumarse al equipo", () => {
+  it("exige haber aceptado los términos", () => {
+    assert.equal(puedeSumarseAlEquipo({ terminosAceptadosEn: new Date() }), true);
+    assert.equal(puedeSumarseAlEquipo({ terminosAceptadosEn: null }), false);
+  });
+});
 
 describe("enlace de una invitación al equipo", () => {
   it("lleva directo a la invitación (no al registro genérico)", () => {

@@ -38,6 +38,12 @@ export function infoDeRol(clave: string): InfoRol {
  */
 export const rutaDeInvitacion = (invitacionId: string) => `/invitacion/${invitacionId}`;
 
+/**
+ * Una invitación solo se activa si la persona ya aceptó los términos y condiciones: quien llega invitado se salta el paso
+ * donde las instituciones los aceptan, así que se le piden antes de sumarla al equipo.
+ */
+export const puedeSumarseAlEquipo = (usuario: { terminosAceptadosEn: Date | null }) => usuario.terminosAceptadosEn !== null;
+
 /** Solo el dueño y los administradores invitan, cambian roles y quitan gente. */
 export const esRolGestor = (rol: string | null | undefined) => rol === "dueno" || rol === "administrador";
 

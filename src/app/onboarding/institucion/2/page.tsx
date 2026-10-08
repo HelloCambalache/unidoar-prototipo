@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FormularioInstitucion } from "@/components/onboarding/formulario-institucion";
+import { UnirseAlEquipo } from "@/components/onboarding/unirse-al-equipo";
 import { MarcoOnboarding } from "@/components/onboarding/marco-onboarding";
 import { institucionPropia, usuarioParaAlta } from "@/lib/alta";
+import { infoDeRol } from "@/lib/equipo";
 import { RUTA_INICIO } from "@/lib/catalogo";
 import { ID_FORMULARIO_ONBOARDING, PASOS_INSTITUCION } from "@/lib/onboarding";
-import { institucionComoMiembro } from "@/lib/queries/equipo";
+import { institucionComoMiembro, invitacionDeEmail } from "@/lib/queries/equipo";
 import { opcionesDeUbicacion } from "@/lib/queries/onboarding";
 import { datosDeSesion } from "@/lib/sesion";
 
@@ -18,9 +20,18 @@ export const metadata: Metadata = { title: "Tu institución" };
 export default async function PasoInstitucion2() {
   const usuario = await usuarioParaAlta("institucion");
   const institucion = await institucionPropia(usuario.id);
-  // Quien llega invitado al equipo de otra institución (o ya es miembro) no crea una propia: entra directo.
-  if (!institucion && (await institucionComoMiembro(usuario, (await datosDeSesion())?.nombre))) {
-    redirect(RUTA_INICIO.institucion);
+  if (!institucion) {
+    // Quien llega invitado al equipo de otra institución (o ya es miembro) no crea una propia: entra directo...
+    if (await institucionComoMiembro(usuario, (await datosDeSesion())?.nombre)) redirect(RUTA_INICIO.institucion);
+    // ...salvo que todavía no haya aceptado los términos: se los pedimos antes de sumarlo.
+    const invitacion = await invitacionDeEmail(usuario.email);
+    if (invitacion) {
+      return (
+        <MarcoOnboarding rol="institucion" paso={PASOS_INSTITUCION["2"]}>
+          <UnirseAlEquipo institucion={invitacion.institucion} rol={infoDeRol(invitacion.rol).label} />
+        </MarcoOnboarding>
+      );
+    }
   }
   const { partidos, provincias } = await opcionesDeUbicacion();
 

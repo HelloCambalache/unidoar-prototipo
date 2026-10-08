@@ -14,7 +14,8 @@ import type { RolAlta } from "@/lib/onboarding";
 
 /**
  * Paso 1 del alta ("Creá tu acceso" / "Creá tu cuenta"): email + contraseña o Google.
- * El docente además deja su nombre y acepta los términos (la institución los acepta en el paso 2).
+ * El docente además deja su nombre y acepta los términos (la institución los acepta en el paso 2; quien llega por una invitación
+ * al equipo los acepta acá, porque no pasa por ese paso).
  * Google se ofrece solo si está activado en Supabase (`conGoogle`).
  *
  * Con `invitacion` (el enlace del mail de una invitación al equipo) el email viene puesto y no se puede cambiar: quien
@@ -52,6 +53,7 @@ export function FormularioRegistro({
   return (
     <form action={accion}>
       <input type="hidden" name="metodo" defaultValue="password" />
+      {invitacion && <input type="hidden" name="conTerminos" value="on" />}
       <TituloPaso
         titulo={esDocente ? "Creá tu cuenta" : "Creá tu acceso"}
         bajada={
@@ -126,7 +128,7 @@ export function FormularioRegistro({
           </>
         )}
 
-        {esDocente && (
+        {(esDocente || invitacion) && (
           <div>
             <Casilla name="aceptaTerminos" required className="mt-1.5">
               Acepto los{" "}

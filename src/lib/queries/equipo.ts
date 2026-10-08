@@ -8,7 +8,7 @@ import {
   type Institucion,
   type Usuario,
 } from "@/db/schema";
-import { infoDeRol, nombreDeEmail, mesYAnio, type MiembroVista } from "@/lib/equipo";
+import { infoDeRol, nombreDeEmail, mesYAnio, puedeSumarseAlEquipo, type MiembroVista } from "@/lib/equipo";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
@@ -132,6 +132,28 @@ export async function invitacionPendiente(invitacionId: string) {
   return fila && !fila.institucion.suspendida ? fila : null;
 }
 
+/**
+ * La invitación pendiente que tiene un email (la más antigua): a qué institución y con qué rol lo invitaron. Sirve para pedirle
+ * que acepte los términos antes de sumarse al equipo. Null si no hay ninguna.
+ */
+export async function invitacionDeEmail(email: string) {
+  const [fila] = await getDb()
+    .select({ rol: institucionMiembros.rol, institucion: { nombre: instituciones.nombre, suspendida: instituciones.suspendida } })
+    .from(institucionMiembros)
+    .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
+    .where(
+      and(
+        eq(sql`lower(${institucionMiembros.email})`, email.trim().toLowerCase()),
+        eq(institucionMiembros.estado, "invitado"),
+        isNull(institucionMiembros.usuarioId),
+        ne(institucionMiembros.rol, "dueno"),
+      ),
+    )
+    .orderBy(asc(institucionMiembros.creadoEn))
+    .limit(1);
+  return fila && !fila.institucion.suspendida ? { institucion: fila.institucion.nombre, rol: fila.rol } : null;
+}
+
 /** Datos de la membresía de una cuenta (para "Mi cuenta"). */
 export async function membresiaDeUsuario(institucionId: string, usuarioId: string) {
   const [fila] = await getDb()
@@ -145,13 +167,14 @@ export async function membresiaDeUsuario(institucionId: string, usuarioId: strin
 /**
  * Institución a la que la cuenta pertenece como miembro (no como dueña). Si ya es miembro activo, devuelve esa;
  * si no, busca una invitación pendiente hecha a su mismo email y la activa: la membresía pasa a "activo" con su
- * cuenta y se avisa al resto del equipo. Devuelve null si no tiene ninguna.
+ * cuenta y se avisa al resto del equipo. Devuelve null si no tiene ninguna, o si todavía no aceptó los términos (en ese
+ * caso el paso 2 del alta se los pide antes: ver `invitacionDeEmail`).
  *
  * No está cacheada a propósito: el paso 2 del alta la llama en el mismo request que crea la fila `usuarios`.
  * Las invitaciones se guardan con el email en minúsculas y se comparan sin distinguir mayúsculas.
  */
 export async function institucionComoMiembro(
-  usuario: Pick<Usuario, "id" | "email" | "rol">,
+  usuario: Pick<Usuario, "id" | "email" | "rol" | "terminosAceptadosEn">,
   nombre?: string | null,
 ): Promise<Institucion | null> {
   if (usuario.rol !== "institucion") return null;
@@ -169,6 +192,7 @@ export async function institucionComoMiembro(
 
   const yaMiembro = await activa();
   if (yaMiembro) return yaMiembro;
+  if (!puedeSumarseAlEquipo(usuario)) return null;
 
   const email = usuario.email.trim().toLowerCase();
   const [pendiente] = await db

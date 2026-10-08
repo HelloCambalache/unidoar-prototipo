@@ -61,10 +61,11 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     aceptaTerminos: texto(formData.get("aceptaTerminos")),
   });
   const campos = r.success ? {} : errores(r.error);
-  if (rolValido.data === "docente") {
-    if (r.success && r.data.nombre.length < 2) campos.nombre = "Completá tu nombre";
-    if (r.success && r.data.aceptaTerminos !== "on") campos.aceptaTerminos = "Tenés que aceptar los términos y condiciones";
-  }
+  // El docente los acepta acá; la institución, en el paso 2 del alta, salvo quien se registra desde el enlace de una invitación
+  // al equipo (no pasa por ese paso): el formulario de la invitación manda `conTerminos`.
+  const exigeTerminos = rolValido.data === "docente" || texto(formData.get("conTerminos")) === "on";
+  if (rolValido.data === "docente" && r.success && r.data.nombre.length < 2) campos.nombre = "Completá tu nombre";
+  if (exigeTerminos && r.success && r.data.aceptaTerminos !== "on") campos.aceptaTerminos = "Tenés que aceptar los términos y condiciones";
   if (!r.success || Object.keys(campos).length > 0) {
     return { ok: false, error: "Revisá los campos marcados.", campos, valores };
   }
@@ -79,8 +80,7 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
       data: {
         rol: rolValido.data,
         ...(r.data.nombre ? { nombre: r.data.nombre } : {}),
-        // El docente acepta los términos en este formulario (la institución, en el paso 2 del alta).
-        ...(rolValido.data === "docente" ? { terminos: codificarAceptacion() } : {}),
+        ...(exigeTerminos ? { terminos: codificarAceptacion() } : {}),
       },
     },
   });

@@ -11,6 +11,7 @@ import { parsear } from "@/lib/acciones";
 import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { institucionComoMiembro } from "@/lib/queries/equipo";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import {
@@ -180,6 +181,23 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
 
   revalidatePath("/institucion", "layout");
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/institucion/3");
+}
+
+/**
+ * Quien llega invitado al equipo de una institución acepta los términos antes de sumarse (no pasa por el paso donde las
+ * instituciones los aceptan). Deja la constancia y, recién ahí, activa la invitación y entra al inicio de la institución.
+ */
+export async function unirseAlEquipo(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const usuario = await usuarioParaAlta("institucion");
+  if (formData.get("aceptaTerminos") !== "on") {
+    return conError(formData, "Revisá los campos marcados.", { aceptaTerminos: "Tenés que aceptar los términos y condiciones" });
+  }
+  await registrarAceptacionDeTerminos(usuario.id);
+  const unida = await institucionComoMiembro({ ...usuario, terminosAceptadosEn: new Date() }, (await datosDeSesion())?.nombre);
+  if (!unida) return conError(formData, "Esa invitación ya no está disponible. Pedile a quien te invitó que te mande otra.");
+
+  revalidatePath("/institucion", "layout");
+  redirect(RUTA_INICIO.institucion);
 }
 
 /** Paso 3 de la institución: descripción, logo y portada (todo opcional). Al terminar entra al dashboard. */
