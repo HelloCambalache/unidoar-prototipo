@@ -85,7 +85,7 @@ export function PiePublico() {
           <Link href="/terminos" className="hover:text-white focus-visible:text-white">
             Términos
           </Link>
-          <Link href="/terminos#privacidad" className="hover:text-white focus-visible:text-white">
+          <Link href="/privacidad" className="hover:text-white focus-visible:text-white">
             Privacidad
           </Link>
         </div>

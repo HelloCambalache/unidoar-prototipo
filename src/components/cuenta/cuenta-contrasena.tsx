@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { cambiarContrasenaCuenta } from "@/app/actions/institucion";
+import { cambiarContrasenaCuenta } from "@/app/actions/cuenta";
 import { Boton } from "@/components/ui/button";
-import { Campo, Input } from "@/components/ui/campos";
+import { Campo } from "@/components/ui/campos";
+import { InputContrasena } from "@/components/ui/input-contrasena";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import type { Resultado } from "@/lib/acciones";
@@ -41,8 +42,8 @@ export function CuentaContrasena({ tieneContrasena }: { tieneContrasena: boolean
       <form action={accion} className="flex max-w-[420px] flex-col gap-3.5">
         {tieneContrasena && (
           <Campo etiqueta="Contraseña actual" error={errores.actual}>
-            <Input
-              type="password"
+            <InputContrasena
+              aria-label="Contraseña actual"
               name="actual"
               value={actual}
               onChange={(e) => setActual(e.target.value)}
@@ -53,8 +54,8 @@ export function CuentaContrasena({ tieneContrasena }: { tieneContrasena: boolean
           </Campo>
         )}
         <Campo etiqueta="Contraseña nueva" error={errores.nueva}>
-          <Input
-            type="password"
+          <InputContrasena
+            aria-label="Contraseña nueva"
             name="nueva"
             value={nueva}
             onChange={(e) => setNueva(e.target.value)}
@@ -66,8 +67,8 @@ export function CuentaContrasena({ tieneContrasena }: { tieneContrasena: boolean
           />
         </Campo>
         <Campo etiqueta="Repetí la contraseña nueva" error={errores.confirmacion}>
-          <Input
-            type="password"
+          <InputContrasena
+            aria-label="Repetí la contraseña nueva"
             name="confirmacion"
             value={confirmacion}
             onChange={(e) => setConfirmacion(e.target.value)}

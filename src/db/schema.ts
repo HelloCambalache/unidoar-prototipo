@@ -56,6 +56,9 @@ export const usuarios = pgTable("usuarios", {
   id: uuid("id").primaryKey().references(() => authUsers.id, { onDelete: "cascade" }),
   email: text("email").notNull().unique(),
   rol: rolUsuario("rol").notNull(),
+  /** Cuándo aceptó los términos y condiciones y qué versión (`src/lib/terminos.ts`). Null: sin constancia (cuentas anteriores a este registro). */
+  terminosAceptadosEn: timestamp("terminos_aceptados_en", { withTimezone: true }),
+  terminosVersion: text("terminos_version"),
   ...marcasDeTiempo,
 });
 

@@ -5,13 +5,25 @@ import { useActionState } from "react";
 import { ingresar, ingresarConGoogle } from "@/app/actions/auth";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input } from "@/components/ui/campos";
+import { InputContrasena } from "@/components/ui/input-contrasena";
 import { BotonGoogle } from "@/components/onboarding/boton-google";
 import { ReenviarConfirmacion } from "@/components/onboarding/confirmar-mail";
 import { AlertaError, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
 import type { EstadoAuth } from "@/lib/acceso";
 
-/** /ingresar: email + contraseña o Google. `siguiente` ya viene validado como ruta interna. */
-export function FormularioIngreso({ siguiente, errorInicial }: { siguiente: string; errorInicial?: string }) {
+/**
+ * /ingresar: email + contraseña, y Google si está activado en Supabase (`conGoogle`). `siguiente` ya viene validado
+ * como ruta interna.
+ */
+export function FormularioIngreso({
+  siguiente,
+  errorInicial,
+  conGoogle,
+}: {
+  siguiente: string;
+  errorInicial?: string;
+  conGoogle: boolean;
+}) {
   const [estado, accion, pendiente] = useActionState(
     async (previo: EstadoAuth, formData: FormData): Promise<EstadoAuth> => {
       if (formData.get("metodo") === "google") return ingresarConGoogle(null, formData);
@@ -43,9 +55,9 @@ export function FormularioIngreso({ siguiente, errorInicial }: { siguiente: stri
           />
         </Campo>
         <Campo etiqueta="Contraseña" error={campos.password}>
-          <Input
-            type="password"
+          <InputContrasena
             name="password"
+            aria-label="Contraseña"
             autoComplete="current-password"
             required
             aria-invalid={Boolean(campos.password)}
@@ -61,8 +73,12 @@ export function FormularioIngreso({ siguiente, errorInicial }: { siguiente: stri
         <Boton type="submit" bloque disabled={pendiente} className="min-h-12 text-base">
           {pendiente ? "Un segundo…" : "Ingresar"}
         </Boton>
-        <SeparadorConTexto>o ingresá con Google</SeparadorConTexto>
-        <BotonGoogle deshabilitado={pendiente} />
+        {conGoogle && (
+          <>
+            <SeparadorConTexto>o ingresá con Google</SeparadorConTexto>
+            <BotonGoogle deshabilitado={pendiente} />
+          </>
+        )}
       </div>
 
       <p className="mt-[22px] mb-0 text-[13px] leading-snug text-apagado">

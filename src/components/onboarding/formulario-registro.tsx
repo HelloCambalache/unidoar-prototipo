@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { ingresarConGoogle, registrarse } from "@/app/actions/auth";
 import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Input } from "@/components/ui/campos";
+import { InputContrasena } from "@/components/ui/input-contrasena";
 import { BotonGoogle } from "@/components/onboarding/boton-google";
 import { ConfirmarMail } from "@/components/onboarding/confirmar-mail";
 import { AlertaError, EnlaceVolver, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
@@ -14,8 +15,9 @@ import type { RolAlta } from "@/lib/onboarding";
 /**
  * Paso 1 del alta ("Creá tu acceso" / "Creá tu cuenta"): email + contraseña o Google.
  * El docente además deja su nombre y acepta los términos (la institución los acepta en el paso 2).
+ * Google se ofrece solo si está activado en Supabase (`conGoogle`).
  */
-export function FormularioRegistro({ rol }: { rol: RolAlta }) {
+export function FormularioRegistro({ rol, conGoogle }: { rol: RolAlta; conGoogle: boolean }) {
   const esDocente = rol === "docente";
   const [otroEmail, setOtroEmail] = useState(false);
   const [estado, accion, pendiente] = useActionState(
@@ -69,9 +71,9 @@ export function FormularioRegistro({ rol }: { rol: RolAlta }) {
           />
         </Campo>
         <Campo etiqueta="Contraseña" error={campos.password}>
-          <Input
-            type="password"
+          <InputContrasena
             name="password"
+            aria-label="Contraseña"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
             required
@@ -80,11 +82,26 @@ export function FormularioRegistro({ rol }: { rol: RolAlta }) {
             aria-invalid={Boolean(campos.password)}
           />
         </Campo>
+        <Campo etiqueta="Repetí la contraseña" error={campos.confirmacion}>
+          <InputContrasena
+            name="confirmacion"
+            aria-label="Repetí la contraseña"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            maxLength={72}
+            aria-invalid={Boolean(campos.confirmacion)}
+          />
+        </Campo>
       </div>
 
       <div className="flex flex-col gap-3.5">
-        <SeparadorConTexto>o registrate con Google</SeparadorConTexto>
-        <BotonGoogle deshabilitado={pendiente} />
+        {conGoogle && (
+          <>
+            <SeparadorConTexto>o registrate con Google</SeparadorConTexto>
+            <BotonGoogle deshabilitado={pendiente} />
+          </>
+        )}
 
         {esDocente && (
           <div>
@@ -103,6 +120,13 @@ export function FormularioRegistro({ rol }: { rol: RolAlta }) {
           </div>
         )}
 
+        <p className="m-0 text-xs leading-normal text-sutil">
+          Así cuidamos tus datos:{" "}
+          <Link href="/privacidad" target="_blank" className="font-semibold text-naranja">
+            política de privacidad
+          </Link>
+          .
+        </p>
         <AlertaError>{errorGeneral}</AlertaError>
         <Boton
           type="submit"

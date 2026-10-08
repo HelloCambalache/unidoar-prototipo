@@ -5,6 +5,7 @@ import { MarcoOnboarding } from "@/components/onboarding/marco-onboarding";
 import { PRIMER_PASO_PROTEGIDO } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
 import { PASOS_DOCENTE } from "@/lib/onboarding";
+import { googleHabilitado } from "@/lib/supabase/proveedores";
 
 export const metadata: Metadata = { title: "Creá tu cuenta · Docente" };
 
@@ -14,7 +15,7 @@ export default async function PasoDocente1() {
 
   return (
     <MarcoOnboarding rol="docente" paso={PASOS_DOCENTE["1"]}>
-      <FormularioRegistro rol="docente" />
+      <FormularioRegistro rol="docente" conGoogle={await googleHabilitado()} />
     </MarcoOnboarding>
   );
 }

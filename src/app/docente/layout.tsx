@@ -13,6 +13,8 @@ const NAV: NavItem[] = [
   { href: "/docente/perfil", label: "Mi perfil", icono: "perfil" },
 ];
 
+const NAV_PIE: NavItem[] = [{ href: "/docente/cuenta", label: "Mi cuenta", icono: "cuenta" }];
+
 export default async function DocenteLayout({ children }: { children: React.ReactNode }) {
   const { usuario, docente } = await requerirDocente();
   const notificaciones = await notificacionesDe(usuario.id);
@@ -26,6 +28,7 @@ export default async function DocenteLayout({ children }: { children: React.Reac
       iniciales={iniciales(nombre)}
       insignia={{ texto: `Perfil ${porcentaje}%`, href: "/docente/perfil", titulo: "Ir a mi perfil" }}
       nav={NAV}
+      navPie={NAV_PIE}
       notificaciones={notificaciones}
       verTodasHref="/docente/notificaciones"
     >

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { cambiarContrasena, recuperarContrasena } from "@/app/actions/auth";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input } from "@/components/ui/campos";
+import { InputContrasena } from "@/components/ui/input-contrasena";
 import { AlertaAviso, AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 
 /** /ingresar/recuperar: pide el email y manda el enlace para elegir una contraseña nueva. */
@@ -58,9 +59,9 @@ export function FormularioNuevaContrasena() {
       <TituloPaso titulo="Elegí tu contraseña nueva" bajada="Mínimo 8 caracteres. Después ingresás directo a tu cuenta." />
       <div className="flex flex-col gap-3.5">
         <Campo etiqueta="Contraseña nueva" error={campos.password}>
-          <Input
-            type="password"
+          <InputContrasena
             name="password"
+            aria-label="Contraseña nueva"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
             required
@@ -70,9 +71,9 @@ export function FormularioNuevaContrasena() {
           />
         </Campo>
         <Campo etiqueta="Repetí la contraseña" error={campos.confirmacion}>
-          <Input
-            type="password"
+          <InputContrasena
             name="confirmacion"
+            aria-label="Repetí la contraseña"
             autoComplete="new-password"
             required
             minLength={8}

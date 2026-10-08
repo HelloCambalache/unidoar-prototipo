@@ -1,13 +1,15 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sesionActual } from "@/lib/auth";
 import { PRIMER_PASO_PROTEGIDO, rutaInternaSegura, traducirErrorAuth, type EstadoAuth } from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
+import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { COOKIE_TERMINOS, VIDA_COOKIE_TERMINOS_SEGUNDOS, codificarAceptacion } from "@/lib/terminos";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
 /*
@@ -22,19 +24,6 @@ const emailCampo = z.string().trim().toLowerCase().pipe(z.email("Revisá el emai
 const passwordCampo = z.string().min(8, "Usá al menos 8 caracteres").max(72, "Usá hasta 72 caracteres");
 
 const texto = (v: FormDataEntryValue | null) => (typeof v === "string" ? v : "");
-
-/** De dónde sale el origen que va en los enlaces de los mails: la URL configurada o el host de la request. */
-async function origenSitio() {
-  const configurada = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configurada) return configurada.replace(/\/$/, "");
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const protocolo = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${protocolo}://${host}`;
-}
-
-const urlDeCallback = (origen: string, siguiente: string) =>
-  `${origen}/auth/callback?next=${encodeURIComponent(siguiente)}`;
 
 function errores(error: z.ZodError) {
   const campos: Record<string, string> = {};
@@ -55,15 +44,19 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   if (!supabaseConfigurado()) return { ok: false, error: SIN_CONFIGURAR };
 
   const valores = { email: texto(formData.get("email")).trim(), nombre: texto(formData.get("nombre")).trim() };
-  const esquema = z.object({
-    email: emailCampo,
-    password: passwordCampo,
-    nombre: z.string().trim().max(120),
-    aceptaTerminos: z.string().optional(),
-  });
+  const esquema = z
+    .object({
+      email: emailCampo,
+      password: passwordCampo,
+      confirmacion: z.string(),
+      nombre: z.string().trim().max(120),
+      aceptaTerminos: z.string().optional(),
+    })
+    .refine((v) => v.password === v.confirmacion, { path: ["confirmacion"], message: "Las contraseñas no coinciden" });
   const r = esquema.safeParse({
     email: texto(formData.get("email")),
     password: texto(formData.get("password")),
+    confirmacion: texto(formData.get("confirmacion")),
     nombre: texto(formData.get("nombre")),
     aceptaTerminos: texto(formData.get("aceptaTerminos")),
   });
@@ -83,7 +76,12 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     password: r.data.password,
     options: {
       emailRedirectTo: urlDeCallback(await origenSitio(), siguiente),
-      data: { rol: rolValido.data, ...(r.data.nombre ? { nombre: r.data.nombre } : {}) },
+      data: {
+        rol: rolValido.data,
+        ...(r.data.nombre ? { nombre: r.data.nombre } : {}),
+        // El docente acepta los términos en este formulario (la institución, en el paso 2 del alta).
+        ...(rolValido.data === "docente" ? { terminos: codificarAceptacion() } : {}),
+      },
     },
   });
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
@@ -159,6 +157,16 @@ export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData)
     : rutaInternaSegura(texto(formData.get("next")), "/inicio");
 
   const supabase = await crearClienteServidor();
+  if (rolValido.data === "docente") {
+    // Con Google no se pueden mandar datos propios: la constancia de la casilla viaja en una cookie de corta vida.
+    (await cookies()).set(COOKIE_TERMINOS, codificarAceptacion(), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: VIDA_COOKIE_TERMINOS_SEGUNDOS,
+    });
+  }
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo: urlDeCallback(await origenSitio(), siguiente) },

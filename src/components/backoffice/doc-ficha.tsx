@@ -41,11 +41,19 @@ export function DocCabecera({ ficha }: { ficha: FichaDocenteBo }) {
             <h1 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em]">{nombre}</h1>
             <DocInsigniaVerificacion estado={d.verificacion} />
             {d.suspendido && <DocInsigniaSuspendida />}
+            {ficha.bajaSolicitadaEn && <Insignia tono="ambar">Baja solicitada</Insignia>}
           </div>
           <div className="text-sm leading-snug text-apagado">{resumen}</div>
           <div className="mt-1 text-xs leading-snug text-sutil">{info.label}</div>
         </div>
       </div>
+      {ficha.bajaSolicitadaEn && (
+        <div role="status" className="mt-4 rounded-lg border border-[#EBD9A8] bg-[#FBF2D8] px-3.5 py-2.5 text-[13px] leading-normal text-[#7A5A0B]">
+          <b className="font-semibold">Pidió la baja de la cuenta</b> el {fechaCorta(ficha.bajaSolicitadaEn)}. Hay que escribirle a{" "}
+          {ficha.emailCuenta ?? d.email ?? "su email"} para confirmarla y dar de baja el perfil. Hasta entonces la cuenta sigue
+          funcionando igual.
+        </div>
+      )}
       {conNota && (
         <div
           className={cn(
@@ -319,6 +327,10 @@ export function DocCuenta({ ficha }: { ficha: FichaDocenteBo }) {
     { etiqueta: "Última actividad", valor: ficha.ultimaActividad ? haceTiempo(ficha.ultimaActividad) : "Sin actividad" },
     { etiqueta: "Perfil completo", valor: `${ficha.perfil.porcentaje}%` },
     { etiqueta: "Cuenta de acceso", valor: d.usuarioId ? "Sí" : "No (perfil sin cuenta)" },
+    {
+      etiqueta: "Términos aceptados",
+      valor: ficha.terminos ? `v${ficha.terminos.version} · ${fechaCorta(ficha.terminos.en)}` : d.usuarioId ? "Sin constancia" : "—",
+    },
     { etiqueta: "Estado", valor: d.suspendido ? <span className="text-rosa">Suspendida</span> : "Activa" },
   ];
   return (

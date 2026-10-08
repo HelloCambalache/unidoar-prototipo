@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { TERMINOS_ACTUALIZADOS } from "@/lib/terminos";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -44,12 +46,21 @@ export default function Terminos() {
       <h1 className="mb-2 text-[30px] leading-[1.2] font-semibold tracking-[-0.02em] text-tinta">
         Términos y condiciones
       </h1>
-      <p className="mb-8 text-sm leading-normal text-sutil">Última actualización: septiembre de 2026</p>
+      <p className="mb-8 text-sm leading-normal text-sutil">Última actualización: {TERMINOS_ACTUALIZADOS}</p>
       <div className="flex flex-col gap-[26px] text-[15px] leading-[1.7] text-tinta-2">
         {SECCIONES.map((s) => (
           <section key={s.id} id={s.id} className="scroll-mt-6">
             <h2 className="mb-2 text-lg leading-[1.3] font-semibold text-tinta">{s.titulo}</h2>
             <p>{s.texto}</p>
+            {s.id === "privacidad" && (
+              <p className="mt-2">
+                El detalle completo está en nuestra{" "}
+                <Link href="/privacidad" className="font-semibold text-naranja">
+                  política de privacidad
+                </Link>
+                .
+              </p>
+            )}
           </section>
         ))}
       </div>

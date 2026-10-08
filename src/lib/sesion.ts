@@ -3,6 +3,7 @@ import { cache } from "react";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
+import { decodificarAceptacion, type AceptacionDeTerminos } from "@/lib/terminos";
 
 export type DatosDeSesion = {
   id: string;
@@ -12,6 +13,8 @@ export type DatosDeSesion = {
   fotoUrl: string | null;
   /** Rol elegido al registrarse: solo una pista; la fuente de verdad es `usuarios.rol`. */
   rolPista: RolAlta | null;
+  /** Constancia de aceptación de los términos que dejó el registro con email del docente (en `user_metadata`). */
+  terminos: AceptacionDeTerminos | null;
 };
 
 const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -35,5 +38,6 @@ export const datosDeSesion = cache(async (): Promise<DatosDeSesion | null> => {
     nombre: texto(meta.nombre) ?? texto(meta.full_name) ?? texto(meta.name),
     fotoUrl: texto(meta.avatar_url) ?? texto(meta.picture),
     rolPista: (ROLES_ALTA as readonly string[]).includes(rol ?? "") ? (rol as RolAlta) : null,
+    terminos: decodificarAceptacion(meta.terminos),
   };
 });

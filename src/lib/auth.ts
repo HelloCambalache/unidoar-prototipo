@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -15,8 +16,10 @@ import {
 } from "@/db/schema";
 import { RUTA_INICIO } from "@/lib/catalogo";
 import { rutaPasoPendienteDocente } from "@/lib/onboarding";
+import { sincronizarEmailDeCuenta } from "@/lib/queries/email-cuenta";
 import { institucionComoMiembro } from "@/lib/queries/equipo";
 import { datosDeSesion } from "@/lib/sesion";
+import { COOKIE_TERMINOS, EDAD_MAXIMA_COOKIE_MS, decodificarAceptacion } from "@/lib/terminos";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
@@ -39,7 +42,12 @@ export const usuarioActual = cache(async (): Promise<Usuario | null> => {
   const sesion = await sesionActual();
   if (!sesion) return null;
   const [fila] = await getDb().select().from(usuarios).where(eq(usuarios.id, sesion.id)).limit(1);
-  return fila ?? null;
+  if (!fila) return null;
+  // Si la persona cambió su email y lo confirmó, la sesión ya trae el nuevo: la fila local se pone al día.
+  if (sesion.email && sesion.email.toLowerCase() !== fila.email.toLowerCase()) {
+    return (await sincronizarEmailDeCuenta(fila, sesion.email)) ?? fila;
+  }
+  return fila;
 });
 
 /**
@@ -64,9 +72,20 @@ export async function asegurarUsuario(rol: Exclude<RolUsuario, "admin">): Promis
 
   if (!sesion.email) throw new Error("La cuenta no tiene un email verificado.");
 
+  // Si la persona aceptó los términos al registrarse, queda la constancia: viaja en los datos de la sesión (registro con
+  // email) o en una cookie de corta vida (registro con Google, que no puede llevar datos propios).
+  const aceptacion =
+    (await datosDeSesion())?.terminos ??
+    decodificarAceptacion((await cookies()).get(COOKIE_TERMINOS)?.value, { edadMaximaMs: EDAD_MAXIMA_COOKIE_MS });
+
   const [creado] = await getDb()
     .insert(usuarios)
-    .values({ id: sesion.id, email: sesion.email, rol })
+    .values({
+      id: sesion.id,
+      email: sesion.email,
+      rol,
+      ...(aceptacion ? { terminosAceptadosEn: aceptacion.en, terminosVersion: aceptacion.version } : {}),
+    })
     .onConflictDoNothing()
     .returning();
   if (creado) return creado;

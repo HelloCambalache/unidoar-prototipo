@@ -9,6 +9,7 @@ import { getDb, transaccion } from "@/db";
 import { docenteDetalle, docentes, institucionMiembros, instituciones, type DocumentosDocente } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
 import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
+import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import {
   CATEGORIA_ALTA,
@@ -104,6 +105,8 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   const r = parsear(institucionDatosSchema, formData);
   if (!r.ok) return conError(formData, r.error, r.campos);
   const d = r.data;
+  // La institución acepta los términos en este paso (el formulario no se valida sin la casilla).
+  await registrarAceptacionDeTerminos(usuario.id);
 
   const ubicacion = await ubicarInstitucion({ direccion: d.direccion, partido: d.partido });
   const db = getDb();

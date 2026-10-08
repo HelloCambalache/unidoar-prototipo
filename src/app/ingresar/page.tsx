@@ -4,6 +4,7 @@ import { FormularioIngreso } from "@/components/onboarding/formulario-ingreso";
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
 import { ERRORES_DE_INGRESO, rutaInternaSegura } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
+import { googleHabilitado } from "@/lib/supabase/proveedores";
 
 export const metadata: Metadata = { title: "Ingresá" };
 
@@ -19,7 +20,11 @@ export default async function PaginaIngresar({
 
   return (
     <MarcoAcceso>
-      <FormularioIngreso siguiente={siguiente} errorInicial={error ? ERRORES_DE_INGRESO[error] : undefined} />
+      <FormularioIngreso
+        siguiente={siguiente}
+        errorInicial={error ? ERRORES_DE_INGRESO[error] : undefined}
+        conGoogle={await googleHabilitado()}
+      />
     </MarcoAcceso>
   );
 }

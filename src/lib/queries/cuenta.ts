@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "@/db";
-import { auditoria, type Institucion, type Usuario } from "@/db/schema";
+import { auditoria, type Docente, type Institucion, type Usuario } from "@/db/schema";
 import { partirNombre } from "@/lib/onboarding";
 import { membresiaDeUsuario, rolEnInstitucion } from "@/lib/queries/equipo";
 import { crearClienteServidor } from "@/lib/supabase/server";
@@ -21,21 +21,33 @@ export async function tieneContrasena(): Promise<boolean> {
   return proveedores.includes("email");
 }
 
-/** Cuándo pidió la baja la institución, si el pedido sigue en pie (el último movimiento no fue retirarlo). */
-export async function bajaSolicitadaEn(institucionId: string): Promise<Date | null> {
+/** Cuándo se pidió la baja de una cuenta, si el pedido sigue en pie (el último movimiento no fue retirarlo). */
+async function ultimoPedidoDeBaja(entidad: "institucion" | "docente", id: string): Promise<Date | null> {
   const [ultimo] = await getDb()
     .select({ accion: auditoria.accion, creadoEn: auditoria.creadoEn })
     .from(auditoria)
     .where(
       and(
-        eq(auditoria.entidad, "institucion"),
-        eq(auditoria.entidadId, institucionId),
+        eq(auditoria.entidad, entidad),
+        eq(auditoria.entidadId, id),
         inArray(auditoria.accion, [ACCION_BAJA_SOLICITADA, ACCION_BAJA_RETIRADA]),
       ),
     )
     .orderBy(desc(auditoria.creadoEn))
     .limit(1);
   return ultimo?.accion === ACCION_BAJA_SOLICITADA ? ultimo.creadoEn : null;
+}
+
+/** Cuándo pidió la baja la institución, si el pedido sigue en pie. */
+export const bajaSolicitadaEn = (institucionId: string) => ultimoPedidoDeBaja("institucion", institucionId);
+
+/** Cuándo pidió la baja el docente, si el pedido sigue en pie. */
+export const bajaDocenteSolicitadaEn = (docenteId: string) => ultimoPedidoDeBaja("docente", docenteId);
+
+/** Lo que necesita "Mi cuenta" del docente: si tiene contraseña propia y si hay un pedido de baja en pie. */
+export async function datosDeCuentaDocente(docente: Docente) {
+  const [baja, conContrasena] = await Promise.all([bajaDocenteSolicitadaEn(docente.id), tieneContrasena()]);
+  return { bajaSolicitadaEn: baja, tieneContrasena: conContrasena };
 }
 
 /**

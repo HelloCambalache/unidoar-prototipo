@@ -38,7 +38,9 @@ export function rutaInternaSegura(destino: string | null | undefined, porDefecto
   try {
     const url = new URL(destino, "http://interno.invalid");
     if (url.origin !== "http://interno.invalid") return porDefecto;
-    return url.pathname + url.search + url.hash;
+    const resultado = url.pathname + url.search + url.hash;
+    // Normalizar puede dejar al principio un "//" que antes no estaba ("/..//sitio.com" → "//sitio.com"): sería otro dominio.
+    return resultado.startsWith("//") ? porDefecto : resultado;
   } catch {
     return porDefecto;
   }
@@ -84,6 +86,17 @@ export function traducirErrorAuth(error: { message?: string; code?: string } | n
   const mensaje = error?.message ?? "";
   const porTexto = MENSAJES_POR_TEXTO.find(([patron]) => patron.test(mensaje));
   return porTexto?.[1] ?? "No pudimos completar la operación. Probá de nuevo en un rato.";
+}
+
+/**
+ * ¿Google figura como activado en la respuesta pública de Supabase (`/auth/v1/settings`)? Cualquier otra forma
+ * de respuesta cuenta como "no": es mejor ocultar el botón que mostrar uno que falla.
+ */
+export function googleActivadoEn(settings: unknown): boolean {
+  if (typeof settings !== "object" || settings === null) return false;
+  const externos = (settings as { external?: unknown }).external;
+  if (typeof externos !== "object" || externos === null) return false;
+  return (externos as { google?: unknown }).google === true;
 }
 
 /** Mensajes de ?error= que deja /auth/callback en /ingresar. */

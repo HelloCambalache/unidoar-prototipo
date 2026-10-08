@@ -16,19 +16,16 @@ import {
   ACCION_BAJA_RETIRADA,
   ACCION_BAJA_SOLICITADA,
   bajaSolicitadaEn,
-  tieneContrasena,
 } from "@/lib/queries/cuenta";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { fotosDeInstitucion, guardarVitrina } from "@/lib/queries/vitrina";
-import { crearClienteServidor } from "@/lib/supabase/server";
-import { traducirErrorAuth } from "@/lib/acceso";
 import { esUrlPublicaPropia } from "@/lib/subidas";
 import { camposDeError, vitrinaSchema, type VitrinaFotoVista, type VitrinaNovedadVista } from "@/lib/vitrina";
 
 /*
- * Acciones de la institución sobre su propia cuenta: vitrina (perfil público), datos y contraseña de quien
- * administra, y pedido de baja. Todas parten de `requerirInstitucion()`: nunca se acepta el id de una institución
+ * Acciones de la institución sobre su propia cuenta: vitrina (perfil público), datos de quien administra y
+ * pedido de baja (la contraseña y el email son de cualquier rol: src/app/actions/cuenta.ts). Todas parten de `requerirInstitucion()`: nunca se acepta el id de una institución
  * que venga del cliente.
  */
 
@@ -139,45 +136,6 @@ export async function actualizarCuenta(_previo: Resultado | null, formData: Form
 
   // El avatar del encabezado sale de estos datos.
   revalidatePath("/institucion", "layout");
-  return ok();
-}
-
-const contrasenaSchema = z
-  .object({
-    actual: z.string().max(200).optional(),
-    nueva: z.string().min(8, "Usá al menos 8 caracteres").max(72, "Usá hasta 72 caracteres"),
-    confirmacion: z.string(),
-  })
-  .refine((v) => v.nueva === v.confirmacion, { path: ["confirmacion"], message: "Las contraseñas no coinciden" });
-
-/**
- * Cambia la contraseña con la sesión abierta. Si la cuenta ya tiene contraseña se pide la actual y se verifica
- * contra Supabase Auth; una cuenta creada solo con Google puede crear una sin pedirla.
- */
-export async function cambiarContrasenaCuenta(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
-  const { usuario } = await requerirInstitucion();
-
-  const r = parsear(contrasenaSchema, formData);
-  if (!r.ok) return fallo(r.error, r.campos);
-  const { actual, nueva } = r.data;
-
-  const supabase = await crearClienteServidor();
-  if (await tieneContrasena()) {
-    if (!actual) return fallo("Revisá los campos marcados.", { actual: "Escribí tu contraseña actual" });
-    const { error } = await supabase.auth.signInWithPassword({ email: usuario.email, password: actual });
-    if (error) {
-      const limite = error.code === "over_request_rate_limit" || error.code === "over_email_send_rate_limit";
-      return fallo(limite ? traducirErrorAuth(error) : "Revisá los campos marcados.", {
-        actual: limite ? traducirErrorAuth(error) : "La contraseña actual no es correcta.",
-      });
-    }
-    if (actual === nueva) {
-      return fallo("Revisá los campos marcados.", { nueva: "La nueva contraseña tiene que ser distinta de la actual." });
-    }
-  }
-
-  const { error } = await supabase.auth.updateUser({ password: nueva });
-  if (error) return fallo(traducirErrorAuth(error), { nueva: traducirErrorAuth(error) });
   return ok();
 }
 

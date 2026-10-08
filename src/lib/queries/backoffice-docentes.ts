@@ -15,6 +15,7 @@ import {
   type EtapaPostulacion,
 } from "@/db/schema";
 import { urlFirmada } from "@/lib/almacenamiento";
+import { bajaDocenteSolicitadaEn } from "@/lib/queries/cuenta";
 import {
   POR_PAGINA_BO,
   type DocumentoBo,
@@ -253,6 +254,10 @@ export type FichaDocenteBo = {
   docente: Docente;
   /** Email de la cuenta de acceso (puede diferir del de contacto del perfil); null si el perfil no tiene cuenta. */
   emailCuenta: string | null;
+  /** Cuándo aceptó los términos y cuál era la versión; null si no hay constancia (cuentas anteriores al registro). */
+  terminos: { version: string; en: Date } | null;
+  /** Cuándo pidió la baja de la cuenta, si el pedido sigue en pie. */
+  bajaSolicitadaEn: Date | null;
   identidad: { dni: string | null; cuil: string | null; fechaNacimiento: string | null; situacionEstudio: string | null };
   postulaciones: number;
   contrataciones: number;
@@ -267,7 +272,13 @@ export type FichaDocenteBo = {
 export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo | null> {
   const db = getDb();
   const [fila] = await db
-    .select({ docente: docentes, emailCuenta: usuarios.email, detalle: docenteDetalle })
+    .select({
+      docente: docentes,
+      emailCuenta: usuarios.email,
+      terminosEn: usuarios.terminosAceptadosEn,
+      terminosVersion: usuarios.terminosVersion,
+      detalle: docenteDetalle,
+    })
     .from(docentes)
     .leftJoin(usuarios, eq(usuarios.id, docentes.usuarioId))
     .leftJoin(docenteDetalle, eq(docenteDetalle.docenteId, docentes.id))
@@ -319,6 +330,8 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
   return {
     docente,
     emailCuenta: fila.emailCuenta,
+    terminos: fila.terminosEn && fila.terminosVersion ? { version: fila.terminosVersion, en: fila.terminosEn } : null,
+    bajaSolicitadaEn: await bajaDocenteSolicitadaEn(docente.id),
     identidad: {
       dni: detalle?.dni ?? null,
       cuil: detalle?.cuil ?? null,
