@@ -45,8 +45,11 @@ Otros proveedores sirven igual (Brevo, Postmark, SendGrid, Amazon SES): cambian 
 | Confirm signup | `confirmar-registro.html` | `Confirmá tu cuenta en UNIDOAR` |
 | Reset password | `recuperar-contrasena.html` | `Elegí una contraseña nueva en UNIDOAR` |
 | Change email address | `cambio-email.html` | `Confirmá tu email nuevo en UNIDOAR` |
+| Magic link (o "Magic link or OTP") | `enlace-magico.html` | `Tu enlace para ingresar a UNIDOAR` |
+| Invite user | `invitacion.html` | `Te invitaron a UNIDOAR` |
+| Reauthentication | `reautenticacion.html` | `Tu código de verificación de UNIDOAR` |
 
-La app dispara estas tres (registro y reenvío de confirmación, recuperación y cambio de email desde Mi cuenta). Las plantillas de magic link, invitación y reautenticación de Supabase no se usan: la invitación al equipo la manda la propia app (ver [correo.md](correo.md)). Las plantillas usan `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` (así, al cambiar el dominio en la sección 1, los enlaces y el logo se actualizan solos, sin volver a pegarlas) y, para el saludo, el nombre que la app guarda al registrar a un docente (`{{ .Data.nombre }}`).
+**Ningún mail puede salir en inglés**, así que se cargan las seis, el asunto incluido (el que trae Supabase por defecto está en inglés). La app dispara hoy solo tres (registro y reenvío de confirmación, recuperación y cambio de email desde Mi cuenta); magic link, invitación y reautenticación no se usan (la invitación al equipo la manda la propia app, ver [correo.md](correo.md)), pero conviene tenerlas en español por si alguna vez se activan. Las plantillas usan `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` (así, al cambiar el dominio en la sección 1, los enlaces y el logo se actualizan solos, sin volver a pegarlas) y, para el saludo, el nombre que la app guarda al registrar a un docente (`{{ .Data.nombre }}`).
 
 ### Avisos de seguridad
 
@@ -57,7 +60,17 @@ Supabase también puede avisar a la persona cuando le cambian algo sensible de l
 | Password changed | `aviso-contrasena-cambiada.html` | `Cambió la contraseña de tu cuenta de UNIDOAR` |
 | Email address changed | `aviso-email-cambiado.html` | `El email de tu cuenta de UNIDOAR cambió` |
 
-Las otras cinco (teléfono, métodos de ingreso y verificación en dos pasos) no aplican a UNIDOAR. Al pegar `aviso-email-cambiado.html`, mirá en la vista previa de Supabase que el email viejo y el nuevo no queden al revés (usa `{{ .OldEmail }}` y `{{ .Email }}`).
+Las otras cinco (teléfono, métodos de ingreso y verificación en dos pasos) no aplican a UNIDOAR hoy y Supabase las trae apagadas, así que no se mandan. Si algún día se encienden, o para no tener nada en inglés en el panel, también están traducidas:
+
+| Notificación de Supabase | Archivo | Asunto |
+|---|---|---|
+| Phone number changed | `aviso-telefono-cambiado.html` | `Cambió el teléfono de tu cuenta de UNIDOAR` |
+| Sign-in method linked (o "Identity linked") | `aviso-metodo-ingreso-agregado.html` | `Se agregó un método de ingreso a tu cuenta de UNIDOAR` |
+| Sign-in method removed (o "Identity unlinked") | `aviso-metodo-ingreso-quitado.html` | `Se quitó un método de ingreso de tu cuenta de UNIDOAR` |
+| Verification method added (o "MFA factor enrolled") | `aviso-verificacion-agregada.html` | `Se agregó un método de verificación a tu cuenta de UNIDOAR` |
+| Verification method removed (o "MFA factor unenrolled") | `aviso-verificacion-quitada.html` | `Se quitó un método de verificación de tu cuenta de UNIDOAR` |
+
+Al pegar `aviso-email-cambiado.html`, mirá en la vista previa de Supabase que el email viejo y el nuevo no queden al revés (usa `{{ .OldEmail }}` y `{{ .Email }}`).
 
 ## 4. Que la confirmación esté activa
 
