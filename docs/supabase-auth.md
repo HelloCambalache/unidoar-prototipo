@@ -43,8 +43,20 @@ Otros proveedores sirven igual (Brevo, Postmark, SendGrid, Amazon SES): cambian 
 |---|---|---|
 | Confirm signup | `confirmar-registro.html` | `Confirmá tu cuenta en UNIDOAR` |
 | Reset password | `recuperar-contrasena.html` | `Elegí una contraseña nueva en UNIDOAR` |
+| Change email address | `cambio-email.html` | `Confirmá tu email nuevo en UNIDOAR` |
 
-La app solo dispara esas dos (el registro, el reenvío de confirmación y la recuperación). Las plantillas de magic link, invitación y cambio de email no se usan: las invitaciones al equipo son un enlace a `/registro` que se copia a mano. Las plantillas usan `{{ .ConfirmationURL }}` y, para el saludo, el nombre que la app guarda al registrar a un docente (`{{ .Data.nombre }}`).
+La app dispara estas tres (registro y reenvío de confirmación, recuperación y cambio de email desde Mi cuenta). Las plantillas de magic link, invitación y reautenticación de Supabase no se usan: la invitación al equipo la manda la propia app (ver [correo.md](correo.md)). Las plantillas usan `{{ .ConfirmationURL }}`, `{{ .SiteURL }}` (así, al cambiar el dominio en la sección 1, los enlaces y el logo se actualizan solos, sin volver a pegarlas) y, para el saludo, el nombre que la app guarda al registrar a un docente (`{{ .Data.nombre }}`).
+
+### Avisos de seguridad
+
+Supabase también puede avisar a la persona cuando le cambian algo sensible de la cuenta. Son opcionales y se encienden aparte, en **Authentication → Emails** (el apartado de notificaciones de seguridad; si en tu versión del panel no aparece, se activan con la Management API: `mailer_notifications_password_changed_enabled` y `mailer_notifications_email_changed_enabled`). Recomendamos activar estas dos:
+
+| Notificación de Supabase | Archivo | Asunto |
+|---|---|---|
+| Password changed | `aviso-contrasena-cambiada.html` | `Cambió la contraseña de tu cuenta de UNIDOAR` |
+| Email address changed | `aviso-email-cambiado.html` | `El email de tu cuenta de UNIDOAR cambió` |
+
+Las otras cinco (teléfono, métodos de ingreso y verificación en dos pasos) no aplican a UNIDOAR. Al pegar `aviso-email-cambiado.html`, mirá en la vista previa de Supabase que el email viejo y el nuevo no queden al revés (usa `{{ .OldEmail }}` y `{{ .Email }}`).
 
 ## 4. Que la confirmación esté activa
 
