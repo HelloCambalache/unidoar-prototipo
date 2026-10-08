@@ -188,7 +188,8 @@ export function VitrinaFormulario({
         </div>
 
         <div className="px-6 pb-[22px] max-[560px]:px-4">
-          <div className="-mt-8 flex gap-[18px] max-[560px]:flex-wrap max-[560px]:gap-3">
+          {/* relative z-[2]: la portada es `relative` y se pintaría encima del logo, que sube sobre ella con el margen negativo. */}
+          <div className="relative z-[2] -mt-8 flex gap-[18px] max-[560px]:flex-wrap max-[560px]:gap-3">
             <div className="flex flex-none flex-col items-start gap-2">
               <LogoInstitucion
                 nombre={d.nombre || "Institución"}
