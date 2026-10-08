@@ -85,7 +85,7 @@ const PATHS = {
       <path d="M21 12H9" />
     </>
   ),
-  campana: <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />,
+  campana: <><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 01-3.4 0" /></>,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   ubicacion: (
     <>

@@ -259,7 +259,8 @@ function CampanaNotificaciones({
         )}
       </button>
       {abierta && (
-        <div className="absolute top-[34px] right-0 z-[60] w-[360px] max-w-[88vw] overflow-hidden rounded-xl border border-borde bg-white shadow-[0_16px_40px_rgba(31,36,33,.22)]">
+        // En el celular el panel se apoya en la pantalla (no en la campanita, que no queda pegada al borde y lo cortaba).
+        <div className="fixed inset-x-3 top-[60px] z-[60] overflow-hidden rounded-xl border border-borde bg-white shadow-[0_16px_40px_rgba(31,36,33,.22)] min-[481px]:absolute min-[481px]:inset-x-auto min-[481px]:top-[34px] min-[481px]:right-0 min-[481px]:w-[360px]">
           <div className="flex items-center justify-between px-[18px] pt-4 pb-2.5">
             <span className="text-[17px] leading-tight font-semibold tracking-[-0.01em] text-tinta">Notificaciones</span>
             {noLeidas.length > 0 && (
@@ -292,7 +293,7 @@ function CampanaNotificaciones({
               </button>
             ))}
           </div>
-          <div className="max-h-[340px] overflow-auto">
+          <div className="max-h-[min(340px,calc(100dvh-230px))] overflow-auto">
             {lista.map((n) => {
               const e = estiloNotificacion(n.tipo, n.titulo);
               return (
