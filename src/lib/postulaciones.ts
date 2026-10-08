@@ -5,6 +5,10 @@ type TonoInsignia = "neutro" | "azul" | "verde" | "rosa" | "naranja" | "ambar";
 /**
  * Cómo ve el docente el estado de una postulación, a partir de la etapa que le
  * puso la institución (que es la fuente de verdad) y del estado de la búsqueda.
+ *
+ * Una postulación archivada por la institución (etapa interna `descartado`) NO se muestra como tal: archivar es
+ * silencioso a propósito, así que el docente la sigue viendo como "Postulación enviada" hasta que la búsqueda se
+ * cierra (ahí, como todas, pasa a "Búsqueda cerrada").
  */
 export function estadoParaDocente(
   etapa: EtapaPostulacion,
@@ -13,8 +17,6 @@ export function estadoParaDocente(
   switch (etapa) {
     case "contratado":
       return { texto: "Contratada", tono: "verde", activa: false };
-    case "descartado":
-      return { texto: "No siguió", tono: "neutro", activa: false };
     default:
       if (busquedaEstado === "cerrada") return { texto: "Búsqueda cerrada", tono: "neutro", activa: false };
       if (etapa === "entrevista") return { texto: "Entrevista agendada", tono: "azul", activa: true };

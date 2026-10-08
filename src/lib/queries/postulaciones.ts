@@ -119,7 +119,7 @@ export type DetallePostulacion = {
   horario: string | null;
   tipo: string;
   descripcion: string | null;
-  /** Se puede retirar mientras siga en carrera (no contratada, descartada ni con la búsqueda cerrada). */
+  /** Se puede retirar mientras siga en carrera (no contratada ni con la búsqueda cerrada). */
   puedeRetirar: boolean;
   /**
    * pendiente: la institución todavía no movió la postulación (no hubo contacto);
@@ -166,7 +166,8 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     tipo: b.tipo,
     descripcion: b.descripcion,
     puedeRetirar: estado.activa,
-    contacto: p.etapa === "descartado" ? "cerrado" : p.etapa === "nuevos" ? "pendiente" : "activo",
+    // Archivada (etapa interna "descartado") se ve como pendiente: no se le avisa. Cerrada la búsqueda, ya es un "no siguió".
+    contacto: p.etapa === "descartado" ? (b.estado === "cerrada" ? "cerrado" : "pendiente") : p.etapa === "nuevos" ? "pendiente" : "activo",
     agenda: p.entrevistaEn
       ? {
           titulo: tituloAgenda,

@@ -89,7 +89,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M62 | Una cuenta pide la baja | El equipo | interno |
 | M63 | Una institución pide cambiar de plan | El equipo | interno |
 
-**Archivar a un postulante no avisa de ninguna forma** (ni campanita ni mail; no existe un M28): la persona solo se entera, si la búsqueda se cierra, por el aviso de cierre de abajo. Es una decisión de producto a propósito.
+**Archivar a un postulante no avisa de ninguna forma** (ni campanita ni mail; no existe un M28): la persona solo se entera, si la búsqueda se cierra, por el aviso de cierre de abajo. Hasta entonces ve su postulación como "Postulación enviada". Es una decisión de producto a propósito.
 
 **Cerrar una búsqueda no manda mail:** avisa solo en la campanita (`avisarCierreDeBusqueda`, `src/lib/queries/avisos.ts`) a todos los que estaban en ella con cuenta y sin suspender, menos a quien fue contratado: "cerró la búsqueda «X»: el puesto ya se cubrió. ¡Gracias por postularte! Seguí postulándote a otras búsquedas." (a quien fue invitado y no se postuló, sin el "gracias por postularte"). Pasa al cerrarla con "Cerrar búsqueda" y al contratar con la casilla de cerrar; no se repite si se reabre y se vuelve a cerrar el mismo día. Es una decisión de producto: si algún día se quiere mail, sería un mail nuevo del grupo contratación.
 

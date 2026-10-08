@@ -1,6 +1,29 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { textoDeCierreDeBusqueda } from "./postulaciones";
+import { estadoParaDocente, textoDeCierreDeBusqueda } from "./postulaciones";
+
+describe("estado de una postulación para el docente", () => {
+  it("una postulación archivada se ve como enviada y activa mientras la búsqueda sigue abierta (no se le avisa)", () => {
+    for (const busqueda of ["activa", "pausada"] as const) {
+      assert.deepEqual(estadoParaDocente("descartado", busqueda), estadoParaDocente("nuevos", busqueda));
+      assert.equal(estadoParaDocente("descartado", busqueda).texto, "Postulación enviada");
+      assert.equal(estadoParaDocente("descartado", busqueda).activa, true);
+    }
+  });
+
+  it("cuando la búsqueda se cierra, la archivada pasa a 'Búsqueda cerrada' como todas", () => {
+    assert.deepEqual(estadoParaDocente("descartado", "cerrada"), { texto: "Búsqueda cerrada", tono: "neutro", activa: false });
+    assert.deepEqual(estadoParaDocente("nuevos", "cerrada"), estadoParaDocente("descartado", "cerrada"));
+  });
+
+  it("el resto de los estados no cambia", () => {
+    assert.equal(estadoParaDocente("contratado", "cerrada").texto, "Contratada");
+    assert.equal(estadoParaDocente("preseleccionados", "activa").texto, "Preseleccionada");
+    assert.equal(estadoParaDocente("entrevista", "activa").texto, "Entrevista agendada");
+    assert.equal(estadoParaDocente("oferta", "activa").texto, "Oferta recibida");
+    assert.equal(estadoParaDocente("nuevos", "activa").texto, "Postulación enviada");
+  });
+});
 
 describe("aviso de cierre de búsqueda", () => {
   it("al postulante le dice que se cubrió, le agradece y lo invita a seguir", () => {
