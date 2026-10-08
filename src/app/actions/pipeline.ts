@@ -44,7 +44,7 @@ const enlaceDocente = (postulacionId: string) => `/docente/postulaciones?abrir=$
 
 /**
  * Mueve una postulación de etapa (drag & drop o menú) y avisa al docente. "Contratado" no entra
- * por acá: se confirma desde /institucion/contratar. También sirve para recuperar a un descartado.
+ * por acá: se confirma desde /institucion/contratar. También sirve para recuperar a un archivado (etapa interna `descartado`).
  */
 export async function moverPostulacion(postulacionId: string, etapa: EtapaPostulacion): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
@@ -86,7 +86,7 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
   return resultado;
 }
 
-/** Descarta a un postulante (sale del tablero, queda en "Descartados" y se puede recuperar). */
+/** Archiva a un postulante (etapa interna `descartado`: sale del tablero, queda en "Archivados" y se puede recuperar). */
 export async function descartarPostulacion(postulacionId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
   if (!esUuid(postulacionId)) return fallo(NO_ENCONTRADA);
@@ -97,7 +97,7 @@ export async function descartarPostulacion(postulacionId: string): Promise<Resul
     if (fila.busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
     if (fila.postulacion.etapa === "descartado") return ok();
     if (fila.postulacion.etapa === "contratado") {
-      return fallo("Esta persona ya está contratada. Movela de etapa antes de descartarla.");
+      return fallo("Esta persona ya está contratada. Movela de etapa antes de archivarla.");
     }
 
     await tx
@@ -158,7 +158,7 @@ export async function contratarPostulacion(
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda, docente } = fila;
-    if (postulacion.etapa === "descartado") return fallo("Esta postulación está descartada. Recuperala antes de contratar.");
+    if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala antes de contratar.");
     if (busqueda.estado === "cerrada" && postulacion.etapa !== "contratado") return fallo(BUSQUEDA_CERRADA);
 
     const cerrar = datos.data.cerrar === "on" && busqueda.estado !== "cerrada";
@@ -233,7 +233,7 @@ export async function agendarEntrevista(
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda, docente } = fila;
     if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
-    if (postulacion.etapa === "descartado") return fallo("Esta postulación está descartada. Recuperala para agendar.");
+    if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala para agendar.");
     if (postulacion.etapa === "contratado") return fallo("Esta persona ya está contratada.");
 
     const entraAEntrevista = postulacion.etapa === "nuevos" || postulacion.etapa === "preseleccionados";

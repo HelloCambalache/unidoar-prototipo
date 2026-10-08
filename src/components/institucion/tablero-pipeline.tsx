@@ -87,7 +87,7 @@ export function TableroPipeline({
       try {
         const r = etapa === "descartado" ? await descartarPostulacion(id) : await moverPostulacion(id, etapa);
         if (!r.ok) toast(r.error, "error");
-        else toast(etapa === "descartado" ? `${p.nombre} salió del proceso.` : `${p.nombre} pasó a ${ETAPA_MENU[etapa]}.`);
+        else toast(etapa === "descartado" ? `Archivaste la postulación de ${p.nombre}.` : `${p.nombre} pasó a ${ETAPA_MENU[etapa]}.`);
       } catch {
         // Al terminar la transición la tarjeta vuelve sola a su columna.
         toast("No pudimos mover la postulación. Probá de nuevo.", "error");
@@ -287,7 +287,7 @@ export function TableroPipeline({
       {descartados.length > 0 && (
         <details className="mt-5 rounded-ud border border-borde bg-white">
           <summary className="cursor-pointer px-4 py-3 text-[13px] font-semibold text-apagado">
-            Descartados · {descartados.length}
+            Archivados · {descartados.length}
           </summary>
           <ul className="m-0 flex list-none flex-col p-0">
             {descartados.map((p) => (
@@ -299,7 +299,7 @@ export function TableroPipeline({
                 >
                   <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={28} />
                   <span className="truncate">{p.nombre}</span>
-                  <Insignia tono={INSIGNIA_ETAPA.descartado.tono}>Descartado</Insignia>
+                  <Insignia tono={INSIGNIA_ETAPA.descartado.tono}>Archivado</Insignia>
                 </button>
                 {!soloLectura && (
                   <Boton variante="secundario" tamano="sm" onClick={() => mover(p.id, "nuevos")}>

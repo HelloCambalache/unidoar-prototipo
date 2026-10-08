@@ -206,7 +206,7 @@ function Ficha({
           )}
           {!soloLectura && p.etapa !== "descartado" && p.etapa !== "contratado" && (
             <Boton variante="fantasma" tamano="sm" className="text-[#b91c1c] hover:text-[#b91c1c]" onClick={() => onMover(p.id, "descartado")}>
-              Descartar
+              Archivar
             </Boton>
           )}
         </div>

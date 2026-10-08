@@ -80,7 +80,7 @@ export default async function PostulacionesPage({
               hayFiltros
                 ? "Probá con otro texto o sacá algún filtro."
                 : filtros.tab === "activas"
-                  ? "Las que terminaron (contratación, descarte o búsqueda cerrada) están en la pestaña Cerradas."
+                  ? "Las que terminaron (contratación, postulación que no siguió o búsqueda cerrada) están en la pestaña Cerradas."
                   : "Acá aparecen las postulaciones que terminaron."
             }
           />

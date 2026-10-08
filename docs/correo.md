@@ -79,7 +79,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M23, M26 | Pasa a Preseleccionados / se le envía una oferta | El docente (una vez por postulación) | contratación |
 | M24, M25 | Se agenda (o reprograma) / se cancela la entrevista | El docente | contratación |
 | M27 | Lo contratan | El docente | contratación |
-| M28 | Lo descartan | El docente — **apagado salvo `CORREO_AVISAR_DESCARTES=si`** | contratación |
+| M28 | Lo archivan (etapa interna `descartado`) | El docente — **apagado salvo `CORREO_AVISAR_DESCARTES=si`** | contratación |
 | M30 | Se postula alguien | Quienes tienen acceso a la institución (uno por búsqueda por día; por hora en las rápidas) | contratación |
 | M50 | Se crea una factura (cron o carga manual) | Dueño y administradores | facturación |
 | M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días) | Dueño y administradores | facturación |

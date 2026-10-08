@@ -28,7 +28,7 @@ export default async function Contratar({ searchParams }: { searchParams: Promis
     postulacion.etapa === "contratado"
       ? "Esta persona ya figura como contratada para esta búsqueda."
       : postulacion.etapa === "descartado"
-        ? "Esta postulación está descartada. Recuperala desde el pipeline antes de contratar."
+        ? "Esta postulación está archivada. Recuperala desde el pipeline antes de contratar."
         : busqueda.estado === "cerrada"
           ? "La búsqueda está cerrada. Reabrila desde Publicaciones para poder contratar."
           : null;

@@ -122,7 +122,7 @@ export const ETAPA_LABEL: Record<EtapaPostulacion, string> = {
   entrevista: "Entrevista",
   oferta: "Oferta enviada",
   contratado: "Contratado",
-  descartado: "Descartado",
+  descartado: "Archivado",
 };
 
 export const RUTA_INICIO: Record<RolUsuario, string> = {

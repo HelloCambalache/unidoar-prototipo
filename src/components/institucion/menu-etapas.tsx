@@ -151,7 +151,7 @@ export function MenuEtapas({
               className={cn(ITEM, "text-[#b91c1c]")}
             >
               <span className="w-3.5" />
-              Descartar
+              Archivar
             </button>
           </div>,
           document.body,
