@@ -69,7 +69,12 @@ const MENSAJES_POR_CODIGO: Record<string, string> = {
   user_banned: "Esta cuenta está suspendida. Escribinos desde la página de contacto.",
 };
 
+/** Supabase no pudo entregar el mail al SMTP (clave, remitente o dominio mal configurados, o el proveedor caído). Llega como un 500 "unexpected_failure". */
+const MENSAJE_FALLA_DE_MAIL = "No pudimos mandarte el mail en este momento. Probá de nuevo en unos minutos; si sigue pasando, escribinos desde la página de Contacto.";
+const FALLA_DE_MAIL = /error sending .*email/i;
+
 const MENSAJES_POR_TEXTO: [RegExp, string][] = [
+  [FALLA_DE_MAIL, MENSAJE_FALLA_DE_MAIL],
   [/invalid login credentials/i, MENSAJES_POR_CODIGO.invalid_credentials!],
   [/email not confirmed/i, MENSAJES_POR_CODIGO.email_not_confirmed!],
   [/already (been )?registered|already exists/i, MENSAJES_POR_CODIGO.user_already_exists!],
@@ -78,6 +83,25 @@ const MENSAJES_POR_TEXTO: [RegExp, string][] = [
   [/same password|different from the old/i, MENSAJES_POR_CODIGO.same_password!],
   [/session missing|session not found/i, MENSAJES_POR_CODIGO.session_not_found!],
 ];
+
+/** ¿El error es que Supabase no pudo mandar el mail ("Error sending confirmation email", "…recovery email", etc.)? */
+export function esFallaDeEnvioDeMail(error: { message?: string; code?: string } | null | undefined) {
+  return FALLA_DE_MAIL.test(error?.message ?? "");
+}
+
+/**
+ * Deja en el log del servidor una falla de envío de mail de Supabase, con la pista de dónde mirar. La persona ve un
+ * mensaje claro (o ninguno, en la recuperación de contraseña, que no revela si el email existe); sin esto el motivo
+ * real se perdería y el detalle del SMTP solo está en los logs de Auth de Supabase.
+ */
+export function registrarFallaDeMail(error: { message?: string; code?: string } | null | undefined, paso: string) {
+  if (!esFallaDeEnvioDeMail(error)) return;
+  console.error("Supabase Auth no pudo mandar un mail: revisar el SMTP (Authentication → Emails) y los logs de Auth", {
+    paso,
+    codigo: error?.code,
+    mensaje: error?.message,
+  });
+}
 
 /** Convierte un error de Supabase Auth en un mensaje claro en español. */
 export function traducirErrorAuth(error: { message?: string; code?: string } | null | undefined) {

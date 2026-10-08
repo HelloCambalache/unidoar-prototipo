@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, transaccion } from "@/db";
 import { usuarios } from "@/db/schema";
-import { traducirErrorAuth } from "@/lib/acceso";
+import { registrarFallaDeMail, traducirErrorAuth } from "@/lib/acceso";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirDocente, requerirUsuario } from "@/lib/auth";
@@ -118,6 +118,7 @@ export async function cambiarEmail(
     { email: nuevo },
     { emailRedirectTo: urlDeCallback(await origenSitio(), `${area}?email=confirmado`) },
   );
+  registrarFallaDeMail(error, "cambio-de-email");
   if (error) {
     const yaExiste = error.code === "email_exists" || error.code === "user_already_exists";
     const mensaje = yaExiste ? "Ese email ya tiene una cuenta en UNIDOAR." : traducirErrorAuth(error);

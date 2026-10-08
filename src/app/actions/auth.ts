@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sesionActual } from "@/lib/auth";
-import { PRIMER_PASO_PROTEGIDO, rutaInternaSegura, traducirErrorAuth, type EstadoAuth } from "@/lib/acceso";
+import { PRIMER_PASO_PROTEGIDO, registrarFallaDeMail, rutaInternaSegura, traducirErrorAuth, type EstadoAuth } from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
@@ -84,6 +84,7 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
       },
     },
   });
+  registrarFallaDeMail(error, "registro");
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
 
   // Con confirmación de mail activa, Supabase no avisa que el email ya existe: devuelve un usuario sin identidades.
@@ -113,6 +114,7 @@ export async function reenviarConfirmacion(
     email: e.data,
     options: { emailRedirectTo: urlDeCallback(await origenSitio(), siguiente) },
   });
+  registrarFallaDeMail(error, "reenviar-confirmacion");
   return error ? { ok: false, error: traducirErrorAuth(error) } : { ok: true };
 }
 
@@ -203,6 +205,8 @@ export async function recuperarContrasena(_previo: EstadoAuth, formData: FormDat
   const { error } = await supabase.auth.resetPasswordForEmail(e.data, {
     redirectTo: urlDeCallback(await origenSitio(), "/ingresar/nueva-contrasena"),
   });
+  // Si el mail no sale, la persona ve el mismo aviso neutro (no se revela si el email existe) y el motivo queda en el log.
+  registrarFallaDeMail(error, "recuperar-contrasena");
   if (error && (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit")) {
     return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
   }
