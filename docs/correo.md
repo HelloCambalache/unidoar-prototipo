@@ -63,7 +63,7 @@ Todas son opcionales: **sin `RESEND_API_KEY` el envío está apagado** (no se ma
 
 Con `CORREO_MODO=consola` el despacho imprime `[correo:consola] { para, asunto… }` en el log del servidor y marca la fila `enviado` (con `resend_id = "consola"`). Para probar en el servidor de desarrollo sin tocar `.env.local`, creá un `.env.development.local` con esa línea y borralo al terminar.
 
-Ojo: **la base local es la de producción**. Las filas de prueba de `cola_correos` (y lo que se haya creado para generarlas) se borran a mano al terminar. El despacho de producción con el envío apagado no las toca, pero con Resend encendido sí podría tomarlas.
+Ojo: **la base local es la de producción y su envío está encendido**. Las filas de prueba de `cola_correos` (y lo que se haya creado para generarlas) se borran a mano al terminar, y mientras existan, un despacho de producción (cualquier acción o el cron) las puede mandar de verdad. Probar solo con direcciones propias.
 
 Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/*.test.ts` (armado y escape, rutas, firma de baja, modos, claves y recordatorios, respuesta de Resend).
 

@@ -1,13 +1,14 @@
 # Supabase Auth en producción: URLs, correo y plantillas
 
-Lo que hay que configurar en el panel de Supabase (proyecto `uurahnorzppcyxvkzabd`) para que el registro, la confirmación de mail y la recuperación de contraseña anden en `https://unidoar-prototipo.vercel.app`. Nada de esto está en el código: se hace una vez desde el panel. Los nombres de los menús cambian seguido; si no encontrás uno, buscá por el nombre de la sección.
+Lo que hay que configurar en el panel de Supabase (proyecto `uurahnorzppcyxvkzabd`) para que el registro, la confirmación de mail y la recuperación de contraseña anden en `https://www.unidoar.com.ar` (el sitio también responde en `unidoar-prototipo.vercel.app`). Nada de esto está en el código: se hace una vez desde el panel. Los nombres de los menús cambian seguido; si no encontrás uno, buscá por el nombre de la sección.
 
 ## 1. URLs permitidas
 
 **Authentication → URL Configuration**
 
-- **Site URL:** `https://unidoar-prototipo.vercel.app`
+- **Site URL:** `https://www.unidoar.com.ar` (con `www`: el dominio sin `www` redirige, y las plantillas de mail arman el logo y los enlaces con esta dirección)
 - **Redirect URLs** (una por línea):
+  - `https://www.unidoar.com.ar/**`
   - `https://unidoar-prototipo.vercel.app/**`
   - `http://localhost:3000/**` (para seguir probando en local)
 
@@ -15,21 +16,21 @@ Sin esto, el enlace del mail lleva a la Site URL por defecto (`localhost`) o Sup
 
 ## 2. Correo propio (SMTP)
 
-El correo de prueba que trae Supabase es solo para desarrollo: según su documentación manda muy pocos mails por hora y solo a direcciones del equipo del proyecto. **Con él, una persona real no recibe el mail de confirmación**, y no puede terminar de registrarse. Hace falta un servicio de correo propio. Ejemplo con Resend (tiene plan gratuito; revisá sus límites vigentes):
+El correo de prueba que trae Supabase es solo para desarrollo: según su documentación manda muy pocos mails por hora y solo a direcciones del equipo del proyecto. **Con él, una persona real no recibe el mail de confirmación**, y no puede terminar de registrarse. Hace falta un servicio de correo propio. Se usa Resend, la misma cuenta que usa la app para el resto de los mails (tiene plan gratuito; revisá sus límites vigentes, porque las confirmaciones de registro y los mails de la app comparten el cupo):
 
-1. Crear la cuenta en resend.com con el mail del estudio.
-2. **Domains → Add Domain:** `cambalache.studio`. Resend muestra unos registros DNS (SPF, DKIM y alguno más). Hay que cargarlos donde se administra el DNS del dominio y esperar a que figure como **Verified**.
-3. **API Keys → Create API Key** con permiso de envío. Copiarla: se muestra una sola vez.
+1. La cuenta de Resend y el dominio `unidoar.com.ar` ya están creados y verificados (registros DKIM, de retorno y DMARC cargados en el DNS de Vercel; ver [correo.md](correo.md)).
+2. **API Keys → Create API Key** con permiso de **Sending access**, **una clave aparte para Supabase** (por ejemplo "supabase-auth"): así se puede revocar una sin afectar a la otra. Copiarla: se muestra una sola vez.
+3. En Resend, en el dominio, dejá **desactivado** el seguimiento de aperturas y clics (la política de privacidad dice que no hay seguimiento).
 4. En Supabase, **Authentication → Emails → SMTP Settings** (en versiones anteriores: Project Settings → Authentication → SMTP) y activar **Enable custom SMTP**:
 
    | Campo | Valor |
    |---|---|
-   | Sender email | `hello@cambalache.studio` (así, si alguien responde, le llega al estudio) |
+   | Sender email | `no-responder@unidoar.com.ar` |
    | Sender name | `UNIDOAR` |
    | Host | `smtp.resend.com` |
    | Port | `465` |
    | Username | `resend` |
-   | Password | la API key del paso 3 |
+   | Password | la API key del paso 2 |
 
 5. **Authentication → Rate Limits:** con SMTP propio se puede subir el límite de mails por hora (por defecto 30), si hace falta.
 
@@ -72,6 +73,18 @@ Con un mail real, en el sitio de producción:
 4. **Reenviar confirmación** desde la pantalla de ingreso, con una cuenta sin confirmar.
 5. **Recuperar contraseña** (`/ingresar/recuperar`): el enlace hay que abrirlo en el mismo navegador desde el que se pidió.
 6. Mirar que los mails no caigan en spam; si caen, falta o está mal el SPF/DKIM del dominio (paso 2).
+
+## Si el mail no sale
+
+La app muestra *"No pudimos mandarte el mail en este momento…"* (y deja en el log de Vercel "Supabase Auth no pudo mandar un mail") cuando Supabase no logra entregar el mail a su servidor SMTP. Para ver el motivo exacto: **Logs → Auth** en el panel de Supabase (no el log del API Gateway ni el SQL Editor), buscá el pedido que falló (`/signup`, `/recover`…) y leé el campo `error`:
+
+| Error en el log | Qué es |
+|---|---|
+| `535 "Authentication credentials invalid"` | Usuario o contraseña del SMTP mal. Con Resend el usuario es `resend` y la contraseña es la **API key completa** (`re_…`), sin espacios. Supabase no muestra la clave guardada: para corregirla hay que escribir una nueva en el campo. Fue lo que pasó el 2026-10-08 |
+| `550` / "domain is not verified" / remitente no permitido | El **Sender email** no es de un dominio verificado en Resend (acá, `unidoar.com.ar`) |
+| Tiempo de espera / conexión rechazada | Host o puerto mal (`smtp.resend.com`, `465` o `587`) |
+
+Una forma de probar sin crear cuentas: pedir la recuperación de contraseña de una cuenta que ya existe (el 500 "Error sending recovery email" aparece solo si el SMTP falla; con un email que no existe Supabase responde 200 sin intentar enviar). Un registro que falla por esto no deja usuarios a medias: Supabase deshace el alta.
 
 ## Pendiente
 
