@@ -57,7 +57,7 @@ export default async function Planes() {
         </p>
       </section>
 
-      <section className="mx-auto w-full max-w-[1200px] flex-1 px-12 pb-16 max-[560px]:px-5">
+      <section className="mx-auto w-full max-w-[1400px] flex-1 px-12 pb-16 max-[560px]:px-5">
         <div className="flex flex-wrap items-stretch gap-6">
           <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
             <span

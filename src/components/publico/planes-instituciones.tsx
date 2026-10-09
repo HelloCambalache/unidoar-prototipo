@@ -78,7 +78,7 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
                 onClick={() => setClave(c)}
                 aria-pressed={elegido}
                 className={cn(
-                  "cursor-pointer rounded-full px-3.5 py-2 text-[13.5px] leading-none font-semibold transition-colors",
+                  "cursor-pointer rounded-full px-3 py-2 text-[13px] leading-none font-semibold whitespace-nowrap transition-colors",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste",
                   elegido ? "bg-white text-navy-700" : "border border-white/25 text-white/75 hover:bg-white/10",
                 )}
