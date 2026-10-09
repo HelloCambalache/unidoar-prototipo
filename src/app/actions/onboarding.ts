@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
+import { planPorTipo } from "@/lib/planes";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { eq, like } from "drizzle-orm";
@@ -163,7 +164,8 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       transaccion(async (tx) => {
         const [creada] = await tx
           .insert(instituciones)
-          .values({ ...datos, slug, propietarioId: usuario.id, lat: ubicacion.lat, lng: ubicacion.lng, esDemo: false })
+          // El plan sale del tipo de institución, no de lo que elija: ver planPorTipo en src/lib/planes.ts.
+          .values({ ...datos, slug, plan: planPorTipo(d.tipo), propietarioId: usuario.id, lat: ubicacion.lat, lng: ubicacion.lng, esDemo: false })
           .returning({ id: instituciones.id });
         await tx
           .insert(institucionMiembros)

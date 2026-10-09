@@ -1,3 +1,4 @@
+import type { PlanClave } from "@/lib/planes";
 import type { CategoriaDocente, EtapaPostulacion } from "./schema";
 
 /*
@@ -84,7 +85,7 @@ type InstSeed = {
   vision?: string;
   valores?: string[];
   horarioAdministracion?: string;
-  plan?: "fundador" | "estandar" | "anual";
+  plan?: PlanClave;
   medioPago?: string;
   diaCobro?: number;
   condicionFiscal?: string;
@@ -101,7 +102,7 @@ export const INSTITUCIONES: InstSeed[] = [
     mision: "Formar personas íntegras, bilingües y comprometidas con su comunidad.",
     vision: "Ser referentes en educación bilingüe de calidad en la zona norte del GBA.",
     valores: ["Respeto", "Compromiso", "Excelencia"], horarioAdministracion: "8 a 16 hs",
-    plan: "fundador", medioPago: "Débito automático", diaCobro: 10, condicionFiscal: "Resp. inscripto", cuit: "30-71234567-8",
+    plan: "colegio", medioPago: "Débito automático", diaCobro: 10, condicionFiscal: "Resp. inscripto", cuit: "30-71234567-8",
   },
   {
     slug: "ribera", nombre: "Club Atlético Ribera", tipo: "Club o gimnasio", fundada: 1952,
@@ -109,7 +110,7 @@ export const INSTITUCIONES: InstSeed[] = [
     descripcion: "Club social y deportivo con escuela de natación activa todo el año y colonia de verano.",
     logoUrl: "/assets/inst-logo-ribera.png", alumnos: 1200, niveles: "Todas las edades", turnos: "Mañana, tarde y fin de semana",
     docentesPlanta: 22, verificada: true,
-    plan: "estandar", medioPago: "Transferencia", diaCobro: 5, condicionFiscal: "Resp. inscripto", cuit: "30-52123456-1",
+    plan: "deportiva", medioPago: "Transferencia", diaCobro: 5, condicionFiscal: "Resp. inscripto", cuit: "30-52123456-1",
   },
   {
     slug: "vicentelopez", nombre: "Instituto Vicente López", tipo: "Colegio privado", fundada: 1991,
@@ -117,7 +118,7 @@ export const INSTITUCIONES: InstSeed[] = [
     descripcion: "Instituto de Nivel Secundario y Terciario con orientación en ciencias sociales.",
     logoUrl: "/assets/inst-logo-vicentelopez.png", alumnos: 410, niveles: "Secundario · Terciario", turnos: "Mañana y tarde",
     docentesPlanta: 35, verificada: true,
-    plan: "estandar", medioPago: "Tarjeta", diaCobro: 12, condicionFiscal: "Resp. inscripto", cuit: "30-69876543-2",
+    plan: "colegio", medioPago: "Tarjeta", diaCobro: 12, condicionFiscal: "Resp. inscripto", cuit: "30-69876543-2",
   },
   {
     slug: "fullbody", nombre: "Full Body Olivos", tipo: "Club o gimnasio", fundada: 2014,
@@ -125,7 +126,7 @@ export const INSTITUCIONES: InstSeed[] = [
     descripcion: "Gimnasio de barrio con clases grupales y entrenamiento funcional.",
     logoUrl: "/assets/inst-logo-fullbody.png", alumnos: 380, niveles: "Adultos", turnos: "Mañana, tarde y noche",
     docentesPlanta: 9, verificada: false,
-    plan: "fundador", medioPago: "Tarjeta", diaCobro: 8, condicionFiscal: "Monotributo", cuit: "20-33445566-7",
+    plan: "deportiva", medioPago: "Tarjeta", diaCobro: 8, condicionFiscal: "Monotributo", cuit: "20-33445566-7",
   },
   {
     slug: "aromos", nombre: "Jardín Los Aromos", tipo: "Jardín de infantes", fundada: 2003,
@@ -133,7 +134,7 @@ export const INSTITUCIONES: InstSeed[] = [
     descripcion: "Jardín maternal y de infantes con salas de 1 a 5 años, jornada simple y extendida.",
     logoUrl: "/assets/inst-logo-aromos.png", alumnos: 120, niveles: "Maternal · Inicial", turnos: "Jornada simple y extendida",
     docentesPlanta: 14, verificada: true,
-    plan: "anual", medioPago: "Transferencia", diaCobro: 1, condicionFiscal: "Resp. inscripto", cuit: "30-70111222-3",
+    plan: "colegio", medioPago: "Transferencia", diaCobro: 1, condicionFiscal: "Resp. inscripto", cuit: "30-70111222-3",
   },
   // Solo para la tira "Confían en UNIDOAR" de la landing.
   { slug: "lincoln", nombre: "Colegio Lincoln", tipo: "Colegio privado", zona: "Vicente López", logoUrl: "/assets/logo-lincoln.png", verificada: true },

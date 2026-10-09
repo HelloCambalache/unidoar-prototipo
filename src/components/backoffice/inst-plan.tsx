@@ -5,7 +5,7 @@ import { cambiarPlanInstitucion } from "@/app/actions/backoffice-instituciones";
 import { Boton } from "@/components/ui/button";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import { CLAVES_PLAN, precioDePlan } from "@/lib/cobros";
+import { clavesParaElegir, precioDePlan } from "@/lib/cobros";
 import { PLANES, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +79,7 @@ export function InstPlan({
         <div className="mt-[18px] border-t border-borde pt-[18px]">
           <fieldset className="m-0 mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-2.5 border-0 p-0">
             <legend className="sr-only">Plan de la institución</legend>
-            {CLAVES_PLAN.map((clave) => (
+            {clavesParaElegir(plan).map((clave) => (
               <label
                 key={clave}
                 className={cn(
