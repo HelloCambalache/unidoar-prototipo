@@ -1,5 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { focoDeFoto } from "@/lib/fotos";
+
+const FOTO_ACCESO = "/assets/aula-secundaria.jpg";
 
 /**
  * Pantalla partida de /registro, /ingresar y sus variantes: foto con overlay azul a la izquierda,
@@ -22,12 +25,13 @@ export function MarcoAcceso({
     <div className="flex min-h-screen max-[860px]:flex-col">
       <div className="relative flex min-w-0 flex-1 flex-col justify-end max-[860px]:h-[230px] max-[860px]:flex-none">
         <Image
-          src="/assets/aula-secundaria.jpg"
+          src={FOTO_ACCESO}
           alt=""
           fill
           priority
           sizes="(max-width: 860px) 100vw, 50vw"
-          className="object-cover max-[860px]:object-[center_22%]"
+          style={{ objectPosition: focoDeFoto(FOTO_ACCESO) }}
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,33,79,.15),rgba(22,33,79,.8))] max-[860px]:bg-[linear-gradient(180deg,rgba(22,33,79,.5),rgba(22,33,79,.88))]" />
         <div className="relative z-[1] p-12 text-white max-[860px]:px-6 max-[860px]:py-8">

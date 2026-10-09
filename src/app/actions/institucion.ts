@@ -1,15 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { quitados } from "@/lib/archivos";
-import { borrarArchivos } from "@/lib/queries/archivos";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { transaccion } from "@/db";
 import { institucionMiembros, instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
-import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { esRolGestor } from "@/lib/equipo";
 import { registrarAuditoria } from "@/lib/auditoria";
 import {
@@ -20,11 +17,8 @@ import {
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
-import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
-import { fotosDeInstitucion, guardarVitrina, type UbicacionParaGuardar } from "@/lib/queries/vitrina";
-import { esUrlPublicaPropia } from "@/lib/subidas";
-import { claveDeDireccion, zonaDeUbicacion } from "@/lib/ubicacion";
-import { camposDeError, vitrinaSchema, type VitrinaFotoVista, type VitrinaNovedadVista } from "@/lib/vitrina";
+import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
+import type { VitrinaGuardada } from "@/lib/vitrina";
 
 /*
  * Acciones de la institución sobre su propia cuenta: vitrina (perfil público), datos de quien administra y
@@ -34,86 +28,20 @@ import { camposDeError, vitrinaSchema, type VitrinaFotoVista, type VitrinaNoveda
 
 /* ───────────────────────────── Vitrina ───────────────────────────── */
 
-export type VitrinaGuardada = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[] };
-
-/**
- * Ubica la dirección de la vitrina cuando cambió (o cuando la institución todavía no tenía coordenadas). Con la dirección
- * nueva se actualizan también el partido y la provincia; si no se la encuentra, todo queda como estaba.
- */
-async function ubicacionDeLaVitrina(
-  institucion: { direccion: string | null; partido: string | null; provincia: string | null; lat: number | null; lng: number | null },
-  d: { direccion: string; ubicacion?: string },
-): Promise<UbicacionParaGuardar | null> {
-  const cambio = claveDeDireccion(d.direccion) !== claveDeDireccion(institucion.direccion ?? "");
-  if (!cambio && institucion.lat != null && institucion.lng != null) return null;
-  const u = await ubicarPorDireccion({
-    direccion: d.direccion,
-    // Con la dirección nueva el partido de antes no sirve de pista; sin cambios, sí.
-    partido: cambio ? null : institucion.partido,
-    provincia: cambio ? null : institucion.provincia,
-    token: d.ubicacion,
-    osm: true,
-  });
-  if (!u) return null;
-  return { lat: u.lat, lng: u.lng, zona: zonaDeUbicacion(u), ...(cambio ? { partido: u.partido, provincia: u.provincia } : {}) };
-}
+export type { VitrinaGuardada } from "@/lib/vitrina";
 
 /**
  * "Guardar cambios" de Mi perfil: datos de la institución, valores, galería de instalaciones y novedades en una
- * sola transacción. Recibe el estado completo del formulario: las fotos y novedades que ya no vienen se borran,
- * las que traen `id` se actualizan (solo si son de esta institución) y las demás se crean. Devuelve las listas ya
- * con sus ids para que el formulario no duplique nada en el próximo guardado.
+ * sola transacción (las reglas están en `guardarVitrinaDeInstitucion`, que comparte con el backoffice). Devuelve las listas
+ * ya con sus ids para que el formulario no duplique nada en el próximo guardado.
  */
 export async function actualizarVitrina(entrada: unknown): Promise<Resultado<VitrinaGuardada>> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!esRolGestor(await rolEnInstitucion(institucion, usuario.id))) {
     return fallo("Solo el dueño y los administradores pueden editar el perfil público.");
   }
-
-  const r = vitrinaSchema.safeParse(entrada);
-  if (!r.success) return fallo("Revisá los campos marcados.", camposDeError(r.error));
-  const d = r.data;
-
-  const campos: Record<string, string> = {};
-  // El tipo y el rol de contacto son vocabularios cerrados; se tolera el valor que ya tenía guardado (cuentas viejas).
-  if (d.tipo !== institucion.tipo && !(TIPOS_INSTITUCION as readonly string[]).includes(d.tipo)) {
-    campos.tipo = "Elegí un tipo de la lista.";
-  }
-  if (d.contactoRol !== institucion.contactoRol && !(ROLES_CONTACTO as readonly string[]).includes(d.contactoRol)) {
-    campos.contactoRol = "Elegí un rol de la lista.";
-  }
-  // Imágenes: la que ya estaba guardada o una que subió esta misma cuenta.
-  if (d.logoUrl && d.logoUrl !== institucion.logoUrl && !esUrlPublicaPropia(d.logoUrl, usuario.id)) {
-    campos.logoUrl = "Ese archivo no es válido. Subí el logo de nuevo.";
-  }
-  if (d.portadaUrl && d.portadaUrl !== institucion.portadaUrl && !esUrlPublicaPropia(d.portadaUrl, usuario.id)) {
-    campos.portadaUrl = "Ese archivo no es válido. Subí la portada de nuevo.";
-  }
-
-  const porId = new Map((await fotosDeInstitucion(institucion.id)).map((f) => [f.id, f]));
-  d.fotos.forEach((f, i) => {
-    const actual = f.id ? porId.get(f.id) : undefined;
-    if (actual?.url !== f.url && !esUrlPublicaPropia(f.url, usuario.id)) campos[`fotos.${i}.url`] = "Subí la foto de nuevo.";
-  });
-  if (Object.keys(campos).length > 0) return fallo("Revisá los campos marcados.", campos);
-
-  const guardado = await guardarVitrina(institucion.id, d, await ubicacionDeLaVitrina(institucion, d));
-
-  // Lo que se reemplazó o se quitó (logo, portada, fotos de la galería) deja de ocupar lugar en Storage.
-  await borrarArchivos(
-    quitados(
-      [institucion.logoUrl, institucion.portadaUrl, ...[...porId.values()].map((f) => f.url)],
-      [d.logoUrl, d.portadaUrl, ...guardado.fotos.map((f) => f.url)],
-    ),
-  );
-
-  // El nombre y el logo se ven en el menú de toda el área, y la vitrina en las dos páginas de perfil.
-  revalidatePath("/institucion", "layout");
-  revalidatePath(`/instituciones/${institucion.slug}`);
-  revalidatePath(`/docente/instituciones/${institucion.slug}`);
-  revalidatePath("/docente/instituciones");
-  revalidatePath("/instituciones");
-  return ok(guardado);
+  const r = await guardarVitrinaDeInstitucion(institucion, usuario.id, entrada);
+  return r.ok ? ok(r.data.guardado) : r;
 }
 
 /* ───────────────────────────── Mi cuenta ───────────────────────────── */

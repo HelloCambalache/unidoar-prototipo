@@ -15,13 +15,17 @@ import {
   esClavePlan,
   etiquetaPeriodo,
   facturaNuevaSchema,
+  fechaCobroDelPeriodo,
   fechaDeColumna,
   hoyAR,
   montoDePlan,
+  pagoEfectivoSchema,
   pagoSchema,
   precioDePlan,
   rechazoSchema,
+  situacionDelMes,
   type FacturaNueva,
+  type PagoEfectivo,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
 import { pesos, planDe } from "@/lib/planes";
@@ -124,6 +128,113 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
 
   if (resultado.ok) revalidarCobros(institucionId);
   return resultado;
+}
+
+/**
+ * Registra un pago en efectivo en un solo paso. Si el mes ya tiene una factura impaga, el pago se registra sobre ella (con su
+ * monto); si no la tiene, se crea la factura ya paga con el monto del plan elegido (nunca uno que mande el cliente). Un mes
+ * que ya figura como pago se rechaza. Queda en la auditoría como `factura.pagar` (con la nota, si hay), así "Anular pago" funciona igual,
+ * y puede avisarle a la institución como cualquier otro pago registrado.
+ */
+export async function registrarPagoEnEfectivo(institucionId: string, entrada: PagoEfectivo): Promise<Resultado<{ id: string }>> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(institucionId)) return fallo(INSTITUCION_NO_ENCONTRADA);
+  const datos = parsear(pagoEfectivoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
+  if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
+  const { periodo, plan, fecha, nota, avisar } = datos.data;
+
+  const hoy = hoyAR();
+  const errorFecha = errorDeFechaDePago(fecha, hoy);
+  if (errorFecha) return fallo(errorFecha, { fecha: errorFecha });
+  // Un pago de otro día se guarda al mediodía UTC de ese día (la misma fecha en Argentina); el de hoy, con su hora real.
+  const pagadaEn = fecha === hoy ? new Date() : new Date(`${fecha}T12:00:00Z`);
+  const MEDIO = "Efectivo";
+
+  try {
+    const resultado = await transaccion(async (tx) => {
+      const [inst] = await tx
+        .select({ id: instituciones.id, nombre: instituciones.nombre, diaCobro: instituciones.diaCobro })
+        .from(instituciones)
+        .where(eq(instituciones.id, institucionId))
+        .limit(1)
+        .for("update");
+      if (!inst) return fallo(INSTITUCION_NO_ENCONTRADA);
+
+      const [existente] = await tx
+        .select()
+        .from(facturas)
+        .where(and(eq(facturas.institucionId, institucionId), eq(facturas.periodo, periodo)))
+        .limit(1)
+        .for("update");
+      if (situacionDelMes(existente) === "pagada") {
+        return fallo(`${etiquetaPeriodo(periodo)} ya figura como pago.`, { periodo: "Ese mes ya está pago" });
+      }
+
+      let facturaId: string;
+      let monto: number;
+      if (existente) {
+        facturaId = existente.id;
+        monto = existente.monto;
+        await tx.update(facturas).set({ estado: "pagada", pagadaEn, medio: MEDIO }).where(eq(facturas.id, existente.id));
+      } else {
+        monto = montoDePlan(plan);
+        const [nueva] = await tx
+          .insert(facturas)
+          .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
+          .returning({ id: facturas.id });
+        facturaId = nueva!.id;
+      }
+
+      await registrarAuditoria(
+        {
+          usuarioId: admin.id,
+          accion: "factura.pagar",
+          entidad: "factura",
+          entidadId: facturaId,
+          detalle: {
+            institucionId,
+            periodo,
+            monto,
+            medio: MEDIO,
+            fechaPago: fecha,
+            ...(nota ? { nota } : {}),
+            // Para poder dejar la factura como estaba si después se anula el pago (una factura creada con el pago no tenía medio ni estado).
+            medioAnterior: existente?.medio ?? null,
+            estadoAnterior: existente?.estado ?? null,
+            facturaCreadaConElPago: !existente,
+            avisoALaInstitucion: avisar,
+          },
+        },
+        tx,
+      );
+      if (avisar) {
+        await avisarAVarios(tx, await destinatariosDeInstitucion(tx, institucionId), {
+          tipo: "sistema",
+          titulo: "UNIDOAR",
+          texto:
+            fecha === hoy
+              ? `registró tu pago de ${etiquetaPeriodo(periodo)} (${pesos(monto)}). ¡Gracias!`
+              : `registró tu pago de ${etiquetaPeriodo(periodo)} (${pesos(monto)}), recibido el ${fechaDeColumna(fecha)}. ¡Gracias!`,
+          enlace: "/institucion/plan",
+        });
+        await correoDePagoRegistrado(tx, {
+          usuarioIds: await destinatariosDeFacturacion(tx, institucionId),
+          institucion: inst.nombre,
+          periodo,
+          monto,
+        });
+      }
+      return ok({ id: facturaId });
+    });
+    if (resultado.ok) revalidarCobros(institucionId);
+    return resultado;
+  } catch (e) {
+    // El índice único (institución, período) es la red de seguridad si dos personas cargan el mismo mes a la vez.
+    const codigo = (e as { code?: string; cause?: { code?: string } }).code ?? (e as { cause?: { code?: string } }).cause?.code;
+    if (codigo === "23505") return fallo(`Ya hay una factura de ${etiquetaPeriodo(periodo)} para esta institución.`, { periodo: "Ese mes ya tiene factura" });
+    console.error("No se pudo registrar el pago en efectivo", e);
+    return fallo("No pudimos registrar el pago. Probá de nuevo.");
+  }
 }
 
 /**

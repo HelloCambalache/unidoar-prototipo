@@ -10,6 +10,7 @@ import {
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import type { Docente } from "@/db/schema";
 import { hoyArgentina } from "@/lib/fechas-curso";
+import { focoDeFoto } from "@/lib/fotos";
 import type { Tablero } from "@/lib/queries/docente";
 
 type Paso = {
@@ -128,8 +129,8 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
         </div>
         <div
           aria-hidden
-          style={{ backgroundImage: "url(/assets/hero-docente.jpg)" }}
-          className="relative w-[34%] flex-none bg-cover bg-center bg-no-repeat max-[900px]:order-first max-[900px]:h-[180px] max-[900px]:w-full"
+          style={{ backgroundImage: "url(/assets/hero-docente.jpg)", backgroundPosition: focoDeFoto("/assets/hero-docente.jpg") }}
+          className="relative w-[34%] flex-none bg-cover bg-no-repeat max-[900px]:order-first max-[900px]:h-[180px] max-[900px]:w-full"
         >
           <span
             style={{ backgroundImage: "linear-gradient(90deg,#16214F,transparent)" }}
@@ -188,8 +189,8 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
                 <div className="mb-[18px] flex-auto text-[13.5px] leading-[1.55]">{p.texto}</div>
                 <span
                   aria-hidden
-                  style={{ backgroundImage: `url(${p.foto})` }}
-                  className="h-[104px] rounded-[14px] bg-cover bg-center bg-no-repeat"
+                  style={{ backgroundImage: `url(${p.foto})`, backgroundPosition: focoDeFoto(p.foto) }}
+                  className="h-[104px] rounded-[14px] bg-cover bg-no-repeat"
                 />
               </Link>
             ))}
@@ -226,8 +227,8 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
         </div>
         <Link
           href="/docente/busquedas-rapidas"
-          style={{ backgroundImage: "url(/assets/urgente-pizarron.jpg)" }}
-          className="relative flex min-h-[200px] max-w-[440px] min-w-[280px] flex-[1_1_380px] items-end self-stretch overflow-hidden rounded-[14px] bg-cover bg-center bg-no-repeat max-[860px]:aspect-video max-[860px]:min-h-0 max-[860px]:w-full max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:flex-none"
+          style={{ backgroundImage: "url(/assets/urgente-pizarron.jpg)", backgroundPosition: focoDeFoto("/assets/urgente-pizarron.jpg") }}
+          className="relative flex min-h-[200px] max-w-[440px] min-w-[280px] flex-[1_1_380px] items-end self-stretch overflow-hidden rounded-[14px] bg-cover bg-no-repeat max-[860px]:aspect-video max-[860px]:min-h-0 max-[860px]:w-full max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:flex-none"
         >
           <span
             aria-hidden

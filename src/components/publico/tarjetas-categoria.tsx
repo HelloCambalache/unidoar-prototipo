@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
+import { focoDeFoto } from "@/lib/fotos";
 import { num, plural } from "@/lib/publico";
 import type { ConteoCategoria } from "@/lib/queries/publico";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
@@ -22,7 +23,7 @@ export function TarjetasCategoria({ conteos }: { conteos: Record<CategoriaDocent
             >
               <span
                 aria-hidden
-                style={{ backgroundImage: `url("${pub.fotoTarjeta}")`, backgroundPosition: pub.posicionTarjeta }}
+                style={{ backgroundImage: `url("${pub.fotoTarjeta}")`, backgroundPosition: focoDeFoto(pub.fotoTarjeta) }}
                 className="absolute inset-0 bg-cover bg-no-repeat"
               />
               <span

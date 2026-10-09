@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
+import { focoDeFoto } from "@/lib/fotos";
 import { MAX_FOTOS } from "@/lib/vitrina";
 
 export type FotoEditable = {
@@ -75,7 +76,12 @@ export function VitrinaGaleria({
             <li key={f.clave} className="flex min-w-0 flex-col gap-1.5">
               <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-borde bg-[#F0EFEA]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- fotos subidas por la institución, de tamaños libres */}
-                <img src={f.url} alt={f.etiqueta || `Foto ${i + 1} de las instalaciones`} className="size-full object-cover" />
+                <img
+                  src={f.url}
+                  alt={f.etiqueta || `Foto ${i + 1} de las instalaciones`}
+                  style={{ objectPosition: focoDeFoto(f.url) }}
+                  className="size-full object-cover"
+                />
                 {i === 0 && (
                   <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-2 py-[3px] text-[11px] leading-none font-semibold text-white">
                     Destacada

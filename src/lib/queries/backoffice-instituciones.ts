@@ -323,3 +323,9 @@ export async function destinatariosDeInstitucion(ejecutor: EjecutorBo, instituci
   for (const m of miembros) if (m.id) ids.add(m.id);
   return [...ids];
 }
+
+/** La fila completa de una institución, para precargar el formulario de edición del backoffice (sin las consultas de la ficha). */
+export async function institucionParaEditar(id: string) {
+  const [fila] = await getDb().select().from(instituciones).where(eq(instituciones.id, id)).limit(1);
+  return fila ?? null;
+}

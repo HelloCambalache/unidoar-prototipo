@@ -3,6 +3,7 @@ import { BannerPasos } from "@/components/institucion/banner-pasos";
 import { GrillaCercanos } from "@/components/institucion/docentes-sugeridos";
 import { BotonLink } from "@/components/ui/button";
 import type { Institucion } from "@/db/schema";
+import { focoDeFoto } from "@/lib/fotos";
 import { planDe } from "@/lib/planes";
 import { pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import type { DocenteRecomendado } from "@/lib/queries/coincidencias";
@@ -114,7 +115,9 @@ export function DashboardPrimeraVez({
             </BotonLink>
           </div>
         </div>
-        <div className="relative w-[34%] flex-none bg-[url(/assets/hero-aula.jpg)] bg-cover bg-center max-[900px]:order-first max-[900px]:h-[180px] max-[900px]:w-full">
+        <div
+          style={{ backgroundPosition: focoDeFoto("/assets/hero-aula.jpg") }}
+          className="relative w-[34%] flex-none bg-[url(/assets/hero-aula.jpg)] bg-cover max-[900px]:order-first max-[900px]:h-[180px] max-[900px]:w-full">
           <span
             aria-hidden
             className="pointer-events-none absolute inset-y-0 left-0 w-[120px] bg-linear-to-r from-navy-700 to-transparent max-[900px]:hidden"
@@ -159,7 +162,7 @@ export function DashboardPrimeraVez({
               <span className="mb-2 font-display text-[21px] leading-tight font-bold tracking-[-0.02em]">{p.titulo}</span>
               <span className="mb-[18px] flex-1 text-[13.5px] leading-[1.55]">{p.texto}</span>
               {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa a ancho completo */}
-              <img src={p.imagen} alt="" className="h-[104px] w-full rounded-[14px] object-cover" />
+              <img src={p.imagen} alt="" style={{ objectPosition: focoDeFoto(p.imagen) }} className="h-[104px] w-full rounded-[14px] object-cover" />
             </Link>
           </li>
         ))}

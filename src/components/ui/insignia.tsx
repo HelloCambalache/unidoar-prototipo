@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { focoDeFoto } from "@/lib/fotos";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
 import type { CategoriaDocente } from "@/db/schema";
 
@@ -81,7 +82,12 @@ export function Avatar({
   if (fotoUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- fotos de perfil pequeñas, sin dimensiones conocidas
-      <img src={fotoUrl} alt="" style={estilo} className={cn("flex-none rounded-full object-cover", className)} />
+      <img
+        src={fotoUrl}
+        alt=""
+        style={{ ...estilo, objectPosition: focoDeFoto(fotoUrl) }}
+        className={cn("flex-none rounded-full object-cover", className)}
+      />
     );
   }
   return (

@@ -5,7 +5,8 @@ import { quitados } from "@/lib/archivos";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
-import { and, eq, isNull } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, transaccion } from "@/db";
 import {
@@ -23,12 +24,15 @@ import { requerirDocente } from "@/lib/auth";
 import { normalizar } from "@/lib/coincidencia";
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { disponibilidadDesdeGrilla } from "@/lib/onboarding";
-import { perfilDocenteSchema } from "@/lib/perfil-docente";
+import { cambiaElNombre, identidadFija, perfilDocenteSchema } from "@/lib/perfil-docente";
 import { notificar } from "@/lib/queries/notificaciones";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
 
 const idSchema = z.guid();
+
+/** 18 bytes al azar en base64url: 24 caracteres (144 bits) que no se pueden adivinar. */
+const nuevoTokenDePerfil = () => randomBytes(18).toString("base64url");
 
 function nombreCompleto(d: { nombre: string; apellido: string }) {
   return `${d.nombre} ${d.apellido}`.trim();
@@ -198,6 +202,15 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
   if (!r.ok) return fallo(r.error, r.campos);
   const datos = r.data;
 
+  // Con la identidad verificada el nombre no se cambia desde acá (el formulario ni lo ofrece): se conserva el guardado.
+  const nombreFijo = identidadFija(docente);
+  if (nombreFijo && cambiaElNombre(docente, datos)) {
+    return fallo("Tu identidad ya está verificada: el nombre y el apellido los corrige el equipo. Escribinos desde Contacto.", {
+      nombre: "Ya está verificado",
+      apellido: "Ya está verificado",
+    });
+  }
+
   // Foto y CV: se acepta lo que ya estaba guardado o un archivo que subió esta misma cuenta.
   if (datos.fotoUrl && datos.fotoUrl !== docente.fotoUrl && !esUrlPublicaPropia(datos.fotoUrl, usuario.id)) {
     return fallo("No pudimos validar la foto. Subila de nuevo.", { fotoUrl: "Archivo inválido" });
@@ -271,8 +284,8 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     await tx
       .update(docentes)
       .set({
-        nombre: datos.nombre,
-        apellido: datos.apellido,
+        nombre: nombreFijo ? docente.nombre : datos.nombre,
+        apellido: nombreFijo ? docente.apellido : datos.apellido,
         subtitulo: datos.subtitulo || null,
         resumen: datos.resumen || null,
         telefono: datos.telefono || null,
@@ -336,4 +349,24 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
   // El layout muestra "Perfil 80%": se refresca junto con las pantallas que dependen del perfil.
   revalidatePath("/docente", "layout");
   return ok();
+}
+
+/**
+ * "Compartir mi perfil": prende o apaga la página pública del perfil (/profesional/<token>). Prender crea un enlace nuevo
+ * (largo y imposible de adivinar) o conserva el que ya tenía; apagar borra el token, así el enlace deja de funcionar para
+ * siempre (si se vuelve a prender, es otro). Devuelve el token vigente o null.
+ */
+export async function compartirPerfil(activar: boolean): Promise<Resultado<{ token: string | null }>> {
+  const { docente } = await requerirDocente();
+  if (typeof activar !== "boolean") return fallo("No pudimos cambiar el enlace. Probá de nuevo.");
+
+  const [fila] = await getDb()
+    .update(docentes)
+    // `coalesce`: si dos pedidos llegan a la vez, queda el primero y los dos devuelven el mismo enlace.
+    .set({ compartirToken: activar ? sql`coalesce(${docentes.compartirToken}, ${nuevoTokenDePerfil()})` : null })
+    .where(eq(docentes.id, docente.id))
+    .returning({ token: docentes.compartirToken });
+
+  revalidatePath("/docente/perfil");
+  return ok({ token: fila?.token ?? null });
 }

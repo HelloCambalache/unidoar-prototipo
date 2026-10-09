@@ -40,10 +40,38 @@ export const MOTIVOS_SUSPENSION = [
   "Otro",
 ] as const;
 
+/**
+ * Datos de la cuenta que el equipo puede corregir y que la institución no edita sola (teléfono de contacto, CUIT y CUE: se cargan
+ * en el alta). Vacío los deja sin dato; el teléfono, si se pone, tiene que ser usable.
+ */
+const textoOVacio = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Máximo ${max} caracteres`)
+    .transform((v) => (v ? v : null));
+export const datosDeCuentaSchema = z.object({
+  telefono: z
+    .string()
+    .trim()
+    .max(40, "Máximo 40 caracteres")
+    .refine((v) => v === "" || v.length >= 6, "Poné un teléfono completo (mínimo 6 caracteres)")
+    .transform((v) => (v ? v : null)),
+  cuit: textoOVacio(20),
+  cue: textoOVacio(20),
+});
+export type DatosDeCuenta = z.infer<typeof datosDeCuentaSchema>;
+
 export const ROL_MIEMBRO: Record<string, string> = {
   dueno: "Dueño/a",
   administrador: "Administrador/a",
   colaborador: "Colaborador/a",
+};
+
+/** " · nombre, dirección": lo que tocó el equipo (solo los nombres de los campos, nunca los valores). */
+const listaDeCampos = (campos: unknown) => {
+  const nombres = Array.isArray(campos) ? campos.filter((c): c is string => typeof c === "string") : [];
+  return nombres.length > 0 ? ` · ${nombres.join(", ")}` : "";
 };
 
 /** Una línea legible para el registro de actividad de la ficha ("Cambió el plan de Fundador a Estándar"). */
@@ -55,6 +83,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return "Verificó la institución";
     case "institucion.quitar_verificacion":
       return "Quitó la verificación";
+    case "institucion.editar_perfil":
+      return `Editó el perfil público${listaDeCampos(d.campos)}`;
+    case "institucion.editar_datos":
+      return `Editó los datos de la cuenta${listaDeCampos(d.campos)}`;
     case "institucion.cambiar_plan":
       return `Cambió el plan${texto("de") ? ` de ${nombreDePlan(texto("de")!)}` : ""}${texto("a") ? ` a ${nombreDePlan(texto("a")!)}` : ""}`;
     case "institucion.suspender":
@@ -72,7 +104,7 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
     case "factura.crear":
       return `Cargó la factura de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}`;
     case "factura.pagar":
-      return `Registró el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}`;
+      return `Registró el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":

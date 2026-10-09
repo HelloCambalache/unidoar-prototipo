@@ -254,6 +254,29 @@ export const pagoSchema = z.object({
   ),
 });
 
+/**
+ * Pago en efectivo en un solo paso (sin tener que cargar antes la factura). El mes puede ya tener una factura impaga, y entonces
+ * se registra sobre ella (con su monto), o no tenerla, y entonces se crea ya paga con el monto del plan elegido. El monto
+ * nunca viene del cliente. La nota es optativa (por ejemplo el número de recibo).
+ */
+export const pagoEfectivoSchema = z.object({
+  periodo: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Elegí el mes que se paga"),
+  plan: z.enum(CLAVES_PLAN, { error: "Elegí un plan" }),
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí la fecha del pago")
+    .refine(esFechaReal, "La fecha no existe"),
+  nota: vacioAUndefined(z.string().trim().max(120, "Máximo 120 caracteres").optional()),
+  /** Si se le avisa a la institución (campanita y mail) que se registró su pago. */
+  avisar: z.boolean(),
+});
+export type PagoEfectivo = z.input<typeof pagoEfectivoSchema>;
+
+/** Qué hay de un mes en la facturación de una institución: ya pago, con la factura impaga, o sin factura. */
+export type SituacionDelMes = "pagada" | "impaga" | "sinFactura";
+export const situacionDelMes = (factura: { estado: string } | null | undefined): SituacionDelMes =>
+  !factura ? "sinFactura" : factura.estado === "pagada" ? "pagada" : "impaga";
+
 export const anulacionSchema = z.object({
   motivo: z.string().trim().min(3, "Contá el motivo: queda en el registro del equipo").max(300, "Máximo 300 caracteres"),
   /** Si se le avisa a la institución que el pago registrado se corrigió. */

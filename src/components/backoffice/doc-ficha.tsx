@@ -134,6 +134,8 @@ export function DocPostulaciones({ ficha }: { ficha: FichaDocenteBo }) {
 type EstadoDoc = { texto: string; clase: string };
 const ESTADO = {
   validado: { texto: "Validado", clase: "text-verde" },
+  // El DNI verificado se borra: queda el número y la constancia, no las fotos.
+  validadoSinFotos: { texto: "Validado · fotos borradas", clase: "text-verde" },
   revision: { texto: "Pendiente de revisión", clase: "text-[#7A5900]" },
   incompleto: { texto: "Incompleto", clase: "text-[#7A5900]" },
   sin: { texto: "Sin cargar", clase: "text-sutil" },
@@ -174,7 +176,15 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
 
   const identidadValidada = d.verificacion === "verificado";
   const dni: EstadoDoc =
-    frente?.subido && dorso?.subido ? (identidadValidada ? ESTADO.validado : ESTADO.revision) : frente?.subido || dorso?.subido ? ESTADO.incompleto : ESTADO.sin;
+    frente?.subido && dorso?.subido
+      ? identidadValidada
+        ? ESTADO.validado
+        : ESTADO.revision
+      : frente?.subido || dorso?.subido
+        ? ESTADO.incompleto
+        : identidadValidada
+          ? ESTADO.validadoSinFotos
+          : ESTADO.sin;
   const cuil: EstadoDoc = identidad.cuil ? (identidadValidada ? ESTADO.validado : ESTADO.revision) : ESTADO.sin;
   const titulo: EstadoDoc = credencial?.noAplica
     ? ESTADO.noAplica

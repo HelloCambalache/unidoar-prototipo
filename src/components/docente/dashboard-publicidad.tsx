@@ -1,4 +1,5 @@
 import { Insignia } from "@/components/ui/insignia";
+import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
 
 /*
@@ -27,8 +28,8 @@ export function PublicidadAncha({ fondo = "azul", className }: { fondo?: "azul" 
       </div>
       <div
         aria-hidden
-        style={{ backgroundImage: "url(/assets/hero-docente.jpg)" }}
-        className="relative w-[30%] flex-none bg-cover bg-center bg-no-repeat max-[860px]:order-first max-[860px]:h-32 max-[860px]:w-full"
+        style={{ backgroundImage: "url(/assets/hero-docente.jpg)", backgroundPosition: focoDeFoto("/assets/hero-docente.jpg") }}
+        className="relative w-[30%] flex-none bg-cover bg-no-repeat max-[860px]:order-first max-[860px]:h-32 max-[860px]:w-full"
       >
         <span
           style={{ backgroundImage: `linear-gradient(90deg,${color},transparent)` }}
@@ -104,8 +105,8 @@ export function PublicidadesPareja({ className }: { className?: string }) {
           </div>
           <div
             aria-hidden
-            style={{ backgroundImage: `url(${a.foto})` }}
-            className="relative w-[38%] flex-none bg-cover bg-center bg-no-repeat max-[980px]:order-first max-[980px]:h-[132px] max-[980px]:w-full"
+            style={{ backgroundImage: `url(${a.foto})`, backgroundPosition: focoDeFoto(a.foto) }}
+            className="relative w-[38%] flex-none bg-cover bg-no-repeat max-[980px]:order-first max-[980px]:h-[132px] max-[980px]:w-full"
           >
             <span
               style={{ backgroundImage: `linear-gradient(90deg,${a.fondo},transparent)` }}

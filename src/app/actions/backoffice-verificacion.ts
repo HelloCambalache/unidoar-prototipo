@@ -9,6 +9,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { aplicarResolucionConMotivo, aplicarVerificacion } from "@/lib/backoffice-docentes-escrituras";
 import { esUuid } from "@/lib/busquedas";
+import { borrarArchivos } from "@/lib/queries/archivos";
 
 /*
  * Cola de verificación de identidad y antecedentes. Las tres acciones arrancan por requerirUsuario("admin"),
@@ -54,16 +55,22 @@ export async function verificarDocente(
   const datos = parsear(verificarSchema, entrada);
   if (!datos.ok) return fallo(datos.campos?.identidad ?? datos.error, datos.campos);
 
+  let archivosDni: string[] = [];
   const resultado = await transaccion(async (tx): Promise<Resultado> => {
     const r = await aplicarVerificacion(tx, docenteId, { titulo: datos.data.titulo, antecedentes: datos.data.antecedentes });
     if (!r.ok) return r;
+    archivosDni = r.data.archivosDni;
     await registrarAuditoria(
-      { usuarioId: admin.id, accion: "docente.verificar", entidad: "docente", entidadId: docenteId, detalle: r.data },
+      { usuarioId: admin.id, accion: "docente.verificar", entidad: "docente", entidadId: docenteId, detalle: r.data.detalle },
       tx,
     );
     return ok();
   });
-  if (resultado.ok) revalidarVerificacion(docenteId);
+  if (resultado.ok) {
+    // Las fotos del DNI ya no están en la base: se borran de Storage recién ahora, con la verificación confirmada.
+    await borrarArchivos(archivosDni);
+    revalidarVerificacion(docenteId);
+  }
   return resultado;
 }
 

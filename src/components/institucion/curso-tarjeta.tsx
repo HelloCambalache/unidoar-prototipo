@@ -3,6 +3,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { CursoFoto } from "@/components/docente/curso-foto";
 import { etiquetaInscriptos } from "@/lib/cursos";
 import { etiquetaFechas } from "@/lib/fechas-curso";
+import { focoDeFoto } from "@/lib/fotos";
 import type { CursoDeInstitucion } from "@/lib/queries/cursos-institucion";
 
 /** Una fila del listado "Mis cursos": foto, datos del curso y, al costado, cuántos se anotaron y las acciones. */
@@ -14,6 +15,7 @@ export function CursoTarjeta({ c }: { c: CursoDeInstitucion }) {
         <img
           src={c.fotoUrl}
           alt=""
+          style={{ objectPosition: focoDeFoto(c.fotoUrl) }}
           className="block min-h-[130px] w-[220px] flex-none self-stretch rounded-lg object-cover max-[860px]:h-[150px] max-[860px]:w-full max-[860px]:self-auto"
         />
       ) : (

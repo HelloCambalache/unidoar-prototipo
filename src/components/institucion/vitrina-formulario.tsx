@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
+import { actualizarVitrinaComoAdmin } from "@/app/actions/backoffice-instituciones";
 import { actualizarVitrina } from "@/app/actions/institucion";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { VitrinaGaleria, type FotoEditable } from "@/components/institucion/vitrina-galeria";
@@ -16,30 +17,11 @@ import { SubirArchivo } from "@/components/ui/subir-archivo";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
-import type { BusquedaAbierta, CursoVitrina, VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
+import { focoDeFoto } from "@/lib/fotos";
+import type { BusquedaAbierta, CursoVitrina, DatosFormularioVitrina, VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
 import { cn } from "@/lib/utils";
 
-/** Valores iniciales de los campos editables (los números como texto, que es como los maneja un input). */
-export type DatosFormularioVitrina = {
-  portadaUrl: string;
-  logoUrl: string;
-  nombre: string;
-  tipo: string;
-  zona: string;
-  fundada: string;
-  alumnos: string;
-  niveles: string;
-  turnos: string;
-  docentesPlanta: string;
-  descripcion: string;
-  contactoNombre: string;
-  contactoRol: string;
-  mision: string;
-  vision: string;
-  valores: string[];
-  direccion: string;
-  horarioAdministracion: string;
-};
+export type { DatosFormularioVitrina } from "@/lib/vitrina";
 
 /** Campo "de lectura que se edita": sin borde hasta que se pasa el mouse o se enfoca (como el prototipo). */
 const EN_LINEA =
@@ -65,6 +47,10 @@ function MensajeError({ children }: { children?: string }) {
  * Pantalla "Perfil público" (la vitrina): todo se edita en el lugar y un solo "Guardar cambios" lo publica.
  * Los campos viven en el estado del formulario; la acción recibe el conjunto completo (datos, valores, galería y
  * novedades), lo valida y lo guarda en una transacción. Cursos y búsquedas abiertas son de solo lectura.
+ *
+ * Con `institucionIdAdmin` lo usa el equipo de UNIDOAR desde el backoffice para editar el perfil de otra institución: guarda
+ * por `actualizarVitrinaComoAdmin` y los textos y enlaces dejan de hablarle a la institución (no hay un área de institución
+ * a la que mandar).
  */
 export function VitrinaFormulario({
   slug,
@@ -75,6 +61,7 @@ export function VitrinaFormulario({
   cursos,
   busquedasAbiertas,
   almacenamientoDisponible,
+  institucionIdAdmin,
 }: {
   slug: string;
   verificada: boolean;
@@ -84,7 +71,10 @@ export function VitrinaFormulario({
   cursos: CursoVitrina[];
   busquedasAbiertas: BusquedaAbierta[];
   almacenamientoDisponible: boolean;
+  /** Solo desde el backoffice: el id de la institución que se edita. */
+  institucionIdAdmin?: string;
 }) {
+  const admin = Boolean(institucionIdAdmin);
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState(inicial);
@@ -117,7 +107,7 @@ export function VitrinaFormulario({
     setErrores({});
     empezar(async () => {
       try {
-        const r = await actualizarVitrina({
+        const carga = {
           ...d,
           ubicacion: firmaUbicacion,
           fotos: fotosEd.map((f) => ({ ...(f.id ? { id: f.id } : {}), url: f.url, etiqueta: f.etiqueta })),
@@ -127,12 +117,13 @@ export function VitrinaFormulario({
             texto: n.texto,
             fecha: n.fecha,
           })),
-        });
+        };
+        const r = institucionIdAdmin ? await actualizarVitrinaComoAdmin(institucionIdAdmin, carga) : await actualizarVitrina(carga);
         if (r.ok) {
           // Las listas vuelven con sus ids: así el próximo guardado actualiza en vez de duplicar.
           setFotosEd(aEditable.fotos(r.data.fotos));
           setNovedadesEd(aEditable.novedades(r.data.novedades));
-          toast("Cambios guardados: ya se ven en tu vitrina pública.");
+          toast(admin ? "Cambios guardados: ya se ven en la vitrina pública de la institución." : "Cambios guardados: ya se ven en tu vitrina pública.");
         } else {
           setErrores(r.campos ?? {});
           toast(r.error, "error");
@@ -158,7 +149,11 @@ export function VitrinaFormulario({
     <form onSubmit={guardar} noValidate>
       <EncabezadoPagina
         titulo="Perfil público"
-        bajada="Así te ven los profesionales cuando entran a tu vitrina. Tocá cualquier campo para editarlo."
+        bajada={
+          admin
+            ? "Así ven los profesionales a esta institución. Estás editando como equipo de UNIDOAR: los cambios se publican en su vitrina y quedan registrados."
+            : "Así te ven los profesionales cuando entran a tu vitrina. Tocá cualquier campo para editarlo."
+        }
         acciones={
           <a
             href={`/instituciones/${slug}`}
@@ -179,10 +174,16 @@ export function VitrinaFormulario({
 
       {/* Portada, logo e identidad */}
       <Tarjeta className="mb-4 overflow-hidden p-0">
-        <div className="relative h-[180px] w-full bg-[linear-gradient(135deg,#16214F,#2A3A7A)]">
+        {/* Misma proporción que en la vitrina pública: lo que se ve acá es lo que van a ver los profesionales. */}
+        <div className="relative aspect-[16/7] w-full bg-[linear-gradient(135deg,#16214F,#2A3A7A)]">
           {d.portadaUrl && (
             // eslint-disable-next-line @next/next/no-img-element -- portada subida por la institución, tamaño libre
-            <img src={d.portadaUrl} alt="Foto de portada" className="block size-full object-cover" />
+            <img
+              src={d.portadaUrl}
+              alt="Foto de portada"
+              style={{ objectPosition: focoDeFoto(d.portadaUrl) }}
+              className="block size-full object-cover"
+            />
           )}
           <div className="absolute top-3 right-3 flex items-start gap-2">
             {d.portadaUrl && (
@@ -444,20 +445,26 @@ export function VitrinaFormulario({
           {/* Cursos: solo lectura, se administran en su propia pantalla */}
           <Tarjeta como="section" className="mb-4 p-[22px]">
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
-              <h2 className={cn(TITULO_CARD, "m-0")}>Cursos que dicta tu institución</h2>
-              <Link href="/institucion/cursos" className="text-[13px] leading-none font-medium text-navy-700 hover:underline">
-                Administrar cursos
-              </Link>
+              <h2 className={cn(TITULO_CARD, "m-0")}>{admin ? "Cursos que dicta la institución" : "Cursos que dicta tu institución"}</h2>
+              {!admin && (
+                <Link href="/institucion/cursos" className="text-[13px] leading-none font-medium text-navy-700 hover:underline">
+                  Administrar cursos
+                </Link>
+              )}
             </div>
             <p className="m-0 mb-4 text-[13px] leading-normal text-apagado">
-              Cursos cortos o certificaciones que ofrecés. Los profesionales los ven cuando entran a tu vitrina.
+              {admin
+                ? "Los cursos los administra la propia institución. Los profesionales los ven cuando entran a su vitrina."
+                : "Cursos cortos o certificaciones que ofrecés. Los profesionales los ven cuando entran a tu vitrina."}
             </p>
             {cursos.length === 0 ? (
               <div className="rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-6 text-center">
-                <p className="m-0 mb-3 text-[13.5px] leading-normal text-apagado">Todavía no cargaste cursos.</p>
-                <BotonLink href="/institucion/cursos/nuevo" variante="secundario" tamano="sm">
-                  Crear un curso
-                </BotonLink>
+                <p className="m-0 mb-3 text-[13.5px] leading-normal text-apagado">{admin ? "Todavía no cargó cursos." : "Todavía no cargaste cursos."}</p>
+                {!admin && (
+                  <BotonLink href="/institucion/cursos/nuevo" variante="secundario" tamano="sm">
+                    Crear un curso
+                  </BotonLink>
+                )}
               </div>
             ) : (
               <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
@@ -468,6 +475,7 @@ export function VitrinaFormulario({
                       <img
                         src={c.fotoUrl}
                         alt=""
+                        style={{ objectPosition: focoDeFoto(c.fotoUrl) }}
                         className="h-[90px] w-[120px] flex-none rounded-lg object-cover max-[860px]:h-[180px] max-[860px]:w-full"
                       />
                     ) : null}
@@ -501,22 +509,37 @@ export function VitrinaFormulario({
             </div>
             {busquedasAbiertas.length === 0 ? (
               <p className="m-0 text-[13px] leading-normal text-apagado">
-                No tenés búsquedas abiertas.{" "}
-                <Link href="/institucion/publicar" className="font-semibold text-navy-700 hover:underline">
-                  Publicá una
-                </Link>
-                .
+                {admin ? (
+                  "No tiene búsquedas abiertas."
+                ) : (
+                  <>
+                    No tenés búsquedas abiertas.{" "}
+                    <Link href="/institucion/publicar" className="font-semibold text-navy-700 hover:underline">
+                      Publicá una
+                    </Link>
+                    .
+                  </>
+                )}
               </p>
             ) : (
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {busquedasAbiertas.map((b) => (
                   <li key={b.id} className="border-b border-borde pb-2.5 last:border-b-0 last:pb-0">
-                    <Link href={`/institucion/postulantes?busqueda=${b.id}`} className="block text-tinta hover:text-navy-700">
-                      <div className="text-[13px] leading-[1.3] font-semibold">{b.puesto}</div>
-                      <div className="mt-0.5 text-xs leading-[1.3] text-apagado">
-                        {b.postulantes === 1 ? "1 postulante" : `${b.postulantes} postulantes`}
+                    {admin ? (
+                      <div className="text-tinta">
+                        <div className="text-[13px] leading-[1.3] font-semibold">{b.puesto}</div>
+                        <div className="mt-0.5 text-xs leading-[1.3] text-apagado">
+                          {b.postulantes === 1 ? "1 postulante" : `${b.postulantes} postulantes`}
+                        </div>
                       </div>
-                    </Link>
+                    ) : (
+                      <Link href={`/institucion/postulantes?busqueda=${b.id}`} className="block text-tinta hover:text-navy-700">
+                        <div className="text-[13px] leading-[1.3] font-semibold">{b.puesto}</div>
+                        <div className="mt-0.5 text-xs leading-[1.3] text-apagado">
+                          {b.postulantes === 1 ? "1 postulante" : `${b.postulantes} postulantes`}
+                        </div>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -556,7 +579,7 @@ export function VitrinaFormulario({
               Revisá los campos marcados antes de guardar.
             </span>
           ) : (
-            "Los cambios se publican en tu vitrina pública."
+            admin ? "Los cambios se publican en la vitrina pública de la institución." : "Los cambios se publican en tu vitrina pública."
           )}
         </span>
         <Boton type="submit" variante="cta" tamano="lg" disabled={pendiente} aria-busy={pendiente} className="min-w-[200px] max-[860px]:min-w-0">

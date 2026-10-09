@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { DocumentosDocente } from "@/db/schema";
 import { grillaSchema } from "@/lib/onboarding";
 
 /*
@@ -46,3 +47,25 @@ export const perfilDocenteSchema = z.object({
 });
 
 export type DatosPerfil = z.infer<typeof perfilDocenteSchema>;
+
+/**
+ * Con la identidad verificada (DNI) el nombre y el apellido quedan fijos: son los del documento y solo los corrige el equipo
+ * (la persona lo pide desde Contacto). Antes de la verificación se pueden corregir libremente.
+ */
+export const identidadFija = (docente: { verificacion: string }) => docente.verificacion === "verificado";
+
+/**
+ * Al verificar la identidad se borran las fotos del DNI (frente y dorso): ya cumplieron su función y son datos sensibles.
+ * Separa lo que se borra (los paths del bucket privado) de la documentación que queda (título, certificado).
+ * El número de DNI no es un archivo y se conserva como constancia de lo que se verificó.
+ */
+export function sinArchivosDeDni(documentos: DocumentosDocente) {
+  const { dniFrente, dniDorso, ...restantes } = documentos;
+  return { restantes, archivos: [dniFrente, dniDorso].filter((a): a is string => Boolean(a)) };
+}
+
+type NombreCompleto = { nombre: string; apellido: string };
+
+/** ¿Cambió el nombre o el apellido respecto de lo guardado? Los espacios de más no cuentan. */
+export const cambiaElNombre = (guardado: NombreCompleto, nuevo: NombreCompleto) =>
+  guardado.nombre.trim() !== nuevo.nombre.trim() || guardado.apellido.trim() !== nuevo.apellido.trim();

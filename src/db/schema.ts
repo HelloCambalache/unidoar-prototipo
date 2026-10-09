@@ -174,6 +174,12 @@ export const docentes = pgTable(
     verificacionRevisadaEn: timestamp("verificacion_revisada_en", { withTimezone: true }),
     /** Backoffice: una cuenta suspendida no puede entrar a su área (ver requerirDocente). */
     suspendido: boolean("suspendido").notNull().default(false),
+    /**
+     * "Compartir mi perfil": con valor, el perfil tiene página pública en /profesional/<token> (sin contacto ni documentos);
+     * null = apagado (lo decide la persona en Mi perfil). Apagarlo borra el token y prenderlo de nuevo crea uno nuevo.
+     * Agregada a mano en la base (alter table … add column), como el examen preocupacional.
+     */
+    compartirToken: text("compartir_token").unique(),
     onboardingCompleto: boolean("onboarding_completo").notNull().default(false),
     esDemo: boolean("es_demo").notNull().default(false),
     ...marcasDeTiempo,

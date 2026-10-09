@@ -31,6 +31,7 @@ import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
+import { identidadFija } from "@/lib/perfil-docente";
 import { ubicacionDeInstitucion } from "@/lib/ubicacion";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
 import { slugify } from "@/lib/utils";
@@ -313,8 +314,9 @@ export async function guardarDatosDocente(_previo: EstadoFormulario, formData: F
     .update(docentes)
     .set({
       // nombre y apellido no pueden quedar vacíos: en un borrador sin ellos se conservan los anteriores.
-      nombre: d.nombre ?? docente.nombre,
-      apellido: d.apellido ?? docente.apellido,
+      // Con la identidad verificada tampoco se cambian desde el alta.
+      nombre: identidadFija(docente) ? docente.nombre : (d.nombre ?? docente.nombre),
+      apellido: identidadFija(docente) ? docente.apellido : (d.apellido ?? docente.apellido),
       telefono: orNull(d.telefono),
       zonas,
       lat: ubicacion.lat,

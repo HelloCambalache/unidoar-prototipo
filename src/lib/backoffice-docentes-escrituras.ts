@@ -4,6 +4,7 @@ import { docenteDetalle, docentes } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { VERIFICACION_BO } from "@/lib/backoffice-docentes";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
+import { sinArchivosDeDni } from "@/lib/perfil-docente";
 import { avisar } from "@/lib/queries/avisos";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -52,12 +53,16 @@ async function docenteEnCola(tx: Ejecutor, docenteId: string): Promise<EnCola> {
 /**
  * `verificacion = 'verificado'` y, según lo que se revisó, título y antecedentes. Si el DNI no está cargado en la
  * plataforma igual se verifica (quien revisa pudo comprobarlo por otro medio), pero la auditoría anota qué faltaba.
+ *
+ * Verificar la identidad borra las fotos del DNI: acá se quitan de la base (en la misma transacción) y se devuelven en
+ * `archivosDni` para que la acción las borre de Storage cuando la transacción ya se confirmó (`borrarArchivos`). El número
+ * de DNI se conserva.
  */
 export async function aplicarVerificacion(
   tx: Ejecutor,
   docenteId: string,
   revisado: { titulo: boolean; antecedentes: boolean },
-): Promise<Resultado<Detalle>> {
+): Promise<Resultado<{ detalle: Detalle; archivosDni: string[] }>> {
   const cola = await docenteEnCola(tx, docenteId);
   if (cola.error) return cola.error;
   const { docente } = cola;
@@ -85,6 +90,11 @@ export async function aplicarVerificacion(
     })
     .where(eq(docentes.id, docente.id));
 
+  const { restantes, archivos: archivosDni } = sinArchivosDeDni(docs);
+  if (archivosDni.length > 0) {
+    await tx.update(docenteDetalle).set({ documentos: restantes }).where(eq(docenteDetalle.docenteId, docente.id));
+  }
+
   const queSeVerifico = [
     "tu identidad",
     ...(revisado.titulo ? ["tu título o credencial"] : []),
@@ -97,7 +107,16 @@ export async function aplicarVerificacion(
     enlace: ENLACE_PERFIL,
   });
   await encolarParaUsuarios(tx, docente.usuarioId ? [docente.usuarioId] : [], "M11", { nombre: docente.nombre });
-  return ok({ estadoAnterior: docente.verificacion, titulo: revisado.titulo, antecedentes: revisado.antecedentes, sinDocumento });
+  return ok({
+    detalle: {
+      estadoAnterior: docente.verificacion,
+      titulo: revisado.titulo,
+      antecedentes: revisado.antecedentes,
+      sinDocumento,
+      dniBorrado: archivosDni.length > 0,
+    },
+    archivosDni,
+  });
 }
 
 /** Pasa a «Corrección pedida» o «Rechazado» con el motivo, que se le muestra al docente. */

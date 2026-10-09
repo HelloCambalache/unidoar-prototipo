@@ -22,11 +22,9 @@ export type CategoriaPublica = {
   verificados: [string, string];
   fotoHero: string;
   fotoTarjeta: string;
-  posicionTarjeta: string;
   descripcionTarjeta: string;
   fotoUrgente: string;
   /** `background-position` de la foto de la banda de urgentes. */
-  posicionUrgente: string;
   urgente: { titulo: string; bajada: string; tarjetaTitulo: string; tarjetaTexto: string };
   /** Colores de lo que va encima del color de acento (el celeste y el ámbar piden texto oscuro). */
   sobreAcento: { texto: string; botonFondo: string; botonTexto: string };
@@ -46,10 +44,8 @@ export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
     verificados: ["profesor verificado", "profesores verificados"],
     fotoHero: "/assets/bgProfesores.png",
     fotoTarjeta: "/assets/cat-profesores.jpg",
-    posicionTarjeta: "20% center",
     descripcionTarjeta: "Inicial, primario, secundario y terciario",
     fotoUrgente: "/assets/profe-ciencias.jpg",
-    posicionUrgente: "center 22%",
     urgente: {
       titulo: "Se te va un profesor a mitad de semestre. Publicá la búsqueda hoy",
       bajada: "Marcá la búsqueda como rápida y priorizamos profesores disponibles ya, con identidad verificada.",
@@ -71,10 +67,8 @@ export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
     verificados: ["entrenador verificado", "entrenadores verificados"],
     fotoHero: "/assets/bgEntrenadores-fixed.jpg",
     fotoTarjeta: "/assets/cat-entrenadores-gym.jpg",
-    posicionTarjeta: "center",
     descripcionTarjeta: "Gimnasios y clubes",
     fotoUrgente: "/assets/cat-entrenadores.jpg",
-    posicionUrgente: "center",
     urgente: {
       titulo: "Se te va un entrenador el sábado. Publicá la búsqueda hoy",
       bajada: "Marcá la búsqueda como rápida y priorizamos entrenadores disponibles ya, con identidad verificada.",
@@ -96,10 +90,8 @@ export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
     verificados: ["guardavidas verificado", "guardavidas verificados"],
     fotoHero: "/assets/bgGuardavidas-fixed.jpg",
     fotoTarjeta: "/assets/cat-guardavidas-pileta.jpg",
-    posicionTarjeta: "center",
     descripcionTarjeta: "Piletas y natatorios",
     fotoUrgente: "/assets/hero-guardavidas.jpg",
-    posicionUrgente: "center",
     urgente: {
       titulo: "Falta un guardavidas para el fin de semana. Publicá la búsqueda hoy",
       bajada: "Marcá la búsqueda como rápida y priorizamos guardavidas habilitados y disponibles ya.",

@@ -1,5 +1,6 @@
 import { Imagen } from "@/components/publico/imagen";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
 import { fechaNovedad, fechaNovedadLarga, type VitrinaFotoVista, type VitrinaNovedadVista } from "@/lib/vitrina";
 
@@ -78,7 +79,12 @@ export function VitrinaInstalaciones({ fotos, nombre, className }: { fotos: Vitr
               mosaico ? (i === 0 ? "col-span-2 row-span-2 max-[560px]:col-span-2" : "") : "aspect-[4/3]",
             )}
           >
-            <Imagen src={f.url} alt={f.etiqueta || `Instalaciones de ${nombre}`} className="size-full object-cover" />
+            <Imagen
+              src={f.url}
+              alt={f.etiqueta || `Instalaciones de ${nombre}`}
+              style={{ objectPosition: focoDeFoto(f.url) }}
+              className="size-full object-cover"
+            />
             {f.etiqueta && (
               <span className="absolute bottom-1.5 left-1.5 max-w-[calc(100%-12px)] truncate rounded-full bg-black/60 px-2 py-[3px] text-[11px] leading-none font-semibold text-white">
                 {f.etiqueta}

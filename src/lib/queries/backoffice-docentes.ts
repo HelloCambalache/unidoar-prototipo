@@ -231,10 +231,14 @@ async function documentosDeDocente(e: EntradaDocumentos): Promise<DocumentoBo[]>
 }
 
 /** Qué le falta para poder verificarlo: solo lo que bloquea (lo optativo no entra). */
-function faltantesDe(documentos: DocumentoBo[], dni: string | null | undefined) {
+function faltantesDe(documentos: DocumentoBo[], dni: string | null | undefined, identidadVerificada = false) {
   const f: string[] = [];
   if (!dni) f.push("Número de DNI");
-  for (const d of documentos) if (!d.subido && !d.opcional && !d.noAplica) f.push(d.etiqueta);
+  for (const d of documentos) {
+    // Con la identidad verificada las fotos del DNI se borraron a propósito: no faltan.
+    if (identidadVerificada && (d.clave === "dniFrente" || d.clave === "dniDorso")) continue;
+    if (!d.subido && !d.opcional && !d.noAplica) f.push(d.etiqueta);
+  }
   return f;
 }
 
@@ -353,7 +357,7 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
     }),
     perfil: pendientesDePerfil(docente),
     documentos,
-    faltantes: faltantesDe(documentos, detalle?.dni),
+    faltantes: faltantesDe(documentos, detalle?.dni, docente.verificacion === "verificado"),
   };
 }
 

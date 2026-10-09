@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui/insignia";
+import { focoDeFoto } from "@/lib/fotos";
 import { cn, iniciales } from "@/lib/utils";
 import { Imagen } from "./imagen";
 
@@ -68,7 +69,7 @@ export function CarruselTestimonios({
           <div key={actual.id} className="pub-testimonio">
             <div className="mx-auto mt-1.5 mb-3.5 w-fit rounded-full shadow-[0_4px_12px_rgba(31,36,33,.14)]">
               {actual.fotoUrl ? (
-                <Imagen src={actual.fotoUrl} alt="" className="block size-[60px] rounded-full object-cover" />
+                <Imagen src={actual.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(actual.fotoUrl) }} className="block size-[60px] rounded-full object-cover" />
               ) : (
                 <Avatar iniciales={iniciales(actual.autor)} tamano={60} />
               )}

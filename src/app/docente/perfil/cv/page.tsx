@@ -4,6 +4,7 @@ import { CATEGORIA_INFO } from "@/lib/catalogo";
 import { docenteActual, requerirDocente } from "@/lib/auth";
 import { etiquetaFechas } from "@/lib/fechas-curso";
 import { resumenDisponibilidad } from "@/lib/onboarding";
+import { focoDeFoto } from "@/lib/fotos";
 import { historialCursos } from "@/lib/queries/cursos";
 import { grillaDelDocente } from "@/lib/queries/docente";
 import { iniciales } from "@/lib/utils";
@@ -67,7 +68,7 @@ export default async function CvImprimiblePage({ searchParams }: Props) {
         <header className="flex items-center gap-[18px]">
           {docente.fotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- foto de perfil para la hoja de impresión
-            <img src={docente.fotoUrl} alt="" className="size-20 flex-none rounded-full object-cover" />
+            <img src={docente.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(docente.fotoUrl) }} className="size-20 flex-none rounded-full object-cover" />
           ) : (
             <span
               aria-hidden

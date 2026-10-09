@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { guardarCategoriaDocente } from "@/app/actions/onboarding";
 import type { CategoriaDocente } from "@/db/schema";
 import { Boton } from "@/components/ui/button";
-import { AlertaError, SeccionPaso, TituloPaso } from "@/components/onboarding/elementos";
+import { AlertaError, SeccionPaso } from "@/components/onboarding/elementos";
 import { SelectorAsignaturas } from "@/components/onboarding/selector-asignaturas";
 import { CATEGORIAS } from "@/lib/catalogo";
 import {
@@ -46,13 +46,9 @@ export function PasoCategoria({
   return (
     <form id={ID_FORMULARIO_ONBOARDING} action={accion}>
       <input type="hidden" name="destino" defaultValue="continuar" />
-      <TituloPaso
-        grande
-        titulo="¿Qué sos?"
-        bajada="De esto dependen las búsquedas en las que aparecés y la documentación que te vamos a pedir."
-        className="mb-5"
-      />
-      <div role="radiogroup" aria-label="¿Qué sos?" className="mb-6 grid grid-cols-3 gap-2.5 max-[760px]:grid-cols-1">
+      {/* Sin título ni bajada a la vista; el encabezado queda solo para lectores de pantalla. */}
+      <h1 className="sr-only">Elegí tu categoría</h1>
+      <div role="radiogroup" aria-label="Categoría" className="mb-6 grid grid-cols-3 gap-2.5 max-[760px]:grid-cols-1">
         {CATEGORIAS.map((c) => {
           const seleccionada = categoria === c;
           return (

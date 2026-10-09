@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { AvisoVerificacion } from "@/components/docente/aviso-verificacion";
+import { PerfilCompartir } from "@/components/docente/perfil-compartir";
 import { PerfilFormulario } from "@/components/docente/perfil-formulario";
 import {
   PerfilCompletitud,
@@ -15,8 +16,9 @@ import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirDocente } from "@/lib/auth";
 import { CATEGORIA_ALTA } from "@/lib/onboarding";
 import { pendientesDePerfil } from "@/lib/perfil";
-import type { DatosPerfil } from "@/lib/perfil-docente";
+import { identidadFija, type DatosPerfil } from "@/lib/perfil-docente";
 import { historialCursos } from "@/lib/queries/cursos";
+import { origenSitio } from "@/lib/sitio";
 import { datosParaPerfil } from "@/lib/queries/docente";
 
 export const metadata: Metadata = { title: "Mi perfil" };
@@ -133,6 +135,7 @@ export default async function PerfilDocentePage() {
       <AvisoVerificacion verificacion={docente.verificacion} nota={docente.verificacionNota} />
       <PerfilFormulario
         inicial={inicial}
+        identidadFija={identidadFija(docente)}
         insignia={INSIGNIA[docente.verificacion]}
         emailCuenta={usuario.email}
         sugerencias={{ zonas: datos.zonas, asignaturas: datos.asignaturas }}
@@ -142,6 +145,7 @@ export default async function PerfilDocentePage() {
         verificacion={<PerfilVerificacion requisitos={requisitos} />}
         cursosHechos={<PerfilCursosHechos cursos={historial} />}
         lateral={<PerfilCompletitud perfil={perfil} />}
+        compartir={<PerfilCompartir tokenInicial={docente.compartirToken} origen={await origenSitio()} />}
       />
     </>
   );

@@ -6,8 +6,10 @@ import {
   estadoEfectivo,
   etiquetaPeriodo,
   fechaCobroDelPeriodo,
+  pagoEfectivoSchema,
   pagoSchema,
   planificarFacturas,
+  situacionDelMes,
   sumarMeses,
   textoRecordatorio,
   type FacturaReciente,
@@ -71,6 +73,47 @@ describe("registrar un pago", () => {
     assert.equal(errorDeFechaDePago("2026-09-01", "2026-10-07"), null);
     assert.match(errorDeFechaDePago("2026-10-08", "2026-10-07") ?? "", /futura/);
     assert.match(errorDeFechaDePago("2025-01-01", "2026-10-07") ?? "", /más de un año/);
+  });
+});
+
+describe("pago en efectivo en un solo paso", () => {
+  const base = { periodo: "2026-10", plan: "estandar", fecha: "2026-10-03", avisar: true };
+
+  it("acepta un pago completo y recorta la nota", () => {
+    const r = pagoEfectivoSchema.parse({ ...base, nota: "  Recibo 0001  " });
+    assert.equal(r.nota, "Recibo 0001");
+    assert.equal(r.avisar, true);
+  });
+
+  it("la nota es optativa: vacía queda sin nota", () => {
+    assert.equal(pagoEfectivoSchema.parse({ ...base, nota: "   " }).nota, undefined);
+    assert.equal(pagoEfectivoSchema.parse(base).nota, undefined);
+  });
+
+  it("rechaza un mes, un plan o una fecha inválidos", () => {
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, periodo: "2026-13" }).success, false);
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, periodo: "octubre" }).success, false);
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, plan: "gratis" }).success, false);
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, fecha: "" }).success, false);
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, fecha: "2026-02-30" }).success, false);
+  });
+
+  it("exige saber si se avisa y limita la nota", () => {
+    assert.equal(pagoEfectivoSchema.safeParse({ periodo: base.periodo, plan: base.plan, fecha: base.fecha }).success, false);
+    assert.equal(pagoEfectivoSchema.safeParse({ ...base, nota: "x".repeat(121) }).success, false);
+  });
+
+  it("el monto no viaja en el pedido: lo que se mande de más se ignora", () => {
+    const r = pagoEfectivoSchema.parse({ ...base, monto: 1 });
+    assert.equal("monto" in r, false);
+  });
+
+  it("distingue un mes pago, impago y sin factura", () => {
+    assert.equal(situacionDelMes(undefined), "sinFactura");
+    assert.equal(situacionDelMes(null), "sinFactura");
+    assert.equal(situacionDelMes({ estado: "pagada" }), "pagada");
+    assert.equal(situacionDelMes({ estado: "pendiente" }), "impaga");
+    assert.equal(situacionDelMes({ estado: "vencida" }), "impaga");
   });
 });
 

@@ -9,6 +9,7 @@ import { InstitucionLogo } from "@/components/docente/instituciones-logo";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
+import { focoDeFoto } from "@/lib/fotos";
 import { perfilInstitucion } from "@/lib/queries/instituciones";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -55,9 +56,14 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           <section className="mb-4 overflow-hidden rounded-lg border border-borde bg-white">
             {i.portadaUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- portadas subidas por las instituciones, de tamaños libres
-              <img src={i.portadaUrl} alt={`Foto de ${i.nombre}`} className="block h-[190px] w-full object-cover" />
+              <img
+                src={i.portadaUrl}
+                alt={`Foto de ${i.nombre}`}
+                style={{ objectPosition: focoDeFoto(i.portadaUrl) }}
+                className="block aspect-[16/7] w-full object-cover"
+              />
             ) : (
-              <div aria-hidden className="flex h-[190px] w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]">
+              <div aria-hidden className="flex aspect-[16/7] w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <rect x="3" y="4" width="18" height="16" rx="2" />
                   <circle cx="8.5" cy="9.5" r="1.6" />

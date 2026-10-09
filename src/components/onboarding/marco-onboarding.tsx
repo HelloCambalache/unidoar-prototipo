@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BarraProgreso } from "@/components/onboarding/barra-progreso";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
+import { focoDeFoto } from "@/lib/fotos";
 import { PORTADA_ONBOARDING, type PasoMarco, type RolAlta } from "@/lib/onboarding";
 
 /**
@@ -27,7 +28,15 @@ export function MarcoOnboarding({
   return (
     <div className="flex min-h-screen max-[900px]:flex-col">
       <div className="relative flex min-w-0 flex-1 flex-col justify-end max-[900px]:h-[190px] max-[900px]:flex-none">
-        <Image src={paso.fondo} alt="" fill priority sizes="(max-width: 900px) 100vw, 50vw" className="object-cover" />
+        <Image
+          src={paso.fondo}
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 900px) 100vw, 50vw"
+          style={{ objectPosition: focoDeFoto(paso.fondo) }}
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,33,79,.15),rgba(22,33,79,.8))]" />
         <div className="relative z-[1] p-12 text-white max-[640px]:p-6">
           <div className="mb-2.5 font-display text-[26px] leading-[1.25] font-bold tracking-[-0.02em] max-[900px]:text-xl">

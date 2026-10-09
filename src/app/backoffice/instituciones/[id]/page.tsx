@@ -9,6 +9,7 @@ import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
 import { InstPlan } from "@/components/backoffice/inst-plan";
 import { VolverBo } from "@/components/backoffice/inst-volver";
 import { LogoInstitucion } from "@/components/docente/logo-institucion";
+import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
@@ -89,6 +90,9 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
                 Ver vitrina pública →
               </Link>
             </div>
+            <BotonLink href={`/backoffice/instituciones/${i.id}/editar`} variante="secundario" tamano="sm">
+              Editar perfil
+            </BotonLink>
           </Tarjeta>
 
           {i.suspendida && (

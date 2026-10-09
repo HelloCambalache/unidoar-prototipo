@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BotonLink } from "@/components/ui/button";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
+import { focoDeFoto } from "@/lib/fotos";
 import { plural, RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import type { ConteoCategoria } from "@/lib/queries/publico";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
@@ -77,8 +78,8 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
               <span
                 key={f.src}
                 aria-hidden
-                style={{ backgroundImage: `url(${f.src})`, animationDelay: f.demora }}
-                className="pub-hero-fade absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${f.src})`, backgroundPosition: focoDeFoto(f.src), animationDelay: f.demora }}
+                className="pub-hero-fade absolute inset-0 bg-cover"
               />
             ))}
             <span aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,0)_40%,rgba(4,11,53,.78)_100%)]" />
@@ -121,8 +122,8 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
               <Link key={c} href={CATEGORIAS_PUBLICAS[c].ruta} className={`${TILE} block`}>
                 <span
                   aria-hidden
-                  style={{ backgroundImage: `url(${FOTO_MOSAICO[c]})` }}
-                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${FOTO_MOSAICO[c]})`, backgroundPosition: focoDeFoto(FOTO_MOSAICO[c]) }}
+                  className="absolute inset-0 bg-cover"
                 />
                 <span aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,.05)_45%,rgba(4,11,53,.82)_100%)]" />
                 <span className="absolute right-[18px] bottom-4 left-[18px] text-white">

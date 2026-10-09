@@ -6,6 +6,7 @@ import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
 import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
+import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
 import { VolverBo } from "@/components/backoffice/inst-volver";
@@ -202,6 +203,12 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 {`Registrar pago de ${etiquetaPeriodo(proximo.periodo)}`}
               </CobroPago>
             )}
+            <CobroPagoEfectivo
+              institucionId={i.id}
+              plan={plan}
+              periodoSugerido={impagas[0]?.periodo ?? sugerido}
+              facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
+            />
             <CobroNuevaFactura
               institucionId={i.id}
               plan={plan}

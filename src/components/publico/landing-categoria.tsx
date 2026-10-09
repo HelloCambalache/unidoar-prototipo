@@ -4,6 +4,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
+import { focoDeFoto } from "@/lib/fotos";
 import {
   num,
   PAGINA_TESTIMONIOS,
@@ -76,8 +77,8 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
       <section className="relative min-h-[540px] overflow-hidden px-10 pt-[60px] pb-[90px] max-[900px]:min-h-0 max-[900px]:px-5 max-[900px]:pt-11 max-[900px]:pb-14">
         <div
           aria-hidden
-          style={{ backgroundImage: `url("${pub.fotoHero}")` }}
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url("${pub.fotoHero}")`, backgroundPosition: focoDeFoto(pub.fotoHero) }}
+          className="absolute inset-0 bg-cover bg-no-repeat"
         />
         <div
           aria-hidden
@@ -217,7 +218,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
             >
               <span
                 aria-hidden
-                style={{ backgroundImage: `url(${pub.fotoUrgente})`, backgroundPosition: pub.posicionUrgente }}
+                style={{ backgroundImage: `url(${pub.fotoUrgente})`, backgroundPosition: focoDeFoto(pub.fotoUrgente) }}
                 className="absolute inset-0 bg-cover opacity-[.22]"
               />
               <div className="relative">
@@ -282,7 +283,7 @@ function PerfilTarjeta({ perfil: p }: { perfil: PerfilDestacado }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-borde bg-white p-3.5">
       {p.fotoUrl ? (
-        <Imagen src={p.fotoUrl} alt="" className="size-[42px] flex-none rounded-full object-cover" />
+        <Imagen src={p.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(p.fotoUrl) }} className="size-[42px] flex-none rounded-full object-cover" />
       ) : (
         <Avatar iniciales={iniciales(p.nombre)} tamano={42} />
       )}

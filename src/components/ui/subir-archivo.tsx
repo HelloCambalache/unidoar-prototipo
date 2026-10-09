@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Boton } from "@/components/ui/button";
 import { Icono } from "@/components/icons";
+import { focoDeFoto } from "@/lib/fotos";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import { supabaseUrl } from "@/lib/supabase/env";
 import {
@@ -427,7 +428,7 @@ export function SubirArchivo(props: Props) {
       >
         {imagenVisible ? (
           // eslint-disable-next-line @next/next/no-img-element -- vista previa de un blob local o de una URL de Storage, sin dimensiones conocidas
-          <img src={imagenVisible} alt="" className="size-full object-cover" />
+          <img src={imagenVisible} alt="" style={{ objectPosition: focoDeFoto(imagenVisible) }} className="size-full object-cover" />
         ) : (
           <span className="flex flex-col items-center gap-1 text-[11px] leading-none font-medium">
             <Icono nombre="mas" tamano={variante === "circulo" ? 16 : 20} />

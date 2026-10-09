@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Institucion } from "@/db/schema";
 
 /*
  * Vitrina (perfil público) de una institución: esquema de lo que guarda "Mi perfil" y utilidades que
@@ -43,6 +44,55 @@ export type CursoVitrina = {
 };
 
 export type BusquedaAbierta = { id: string; puesto: string; postulantes: number };
+
+/** Valores iniciales de los campos editables del formulario (los números como texto, que es como los maneja un input). */
+export type DatosFormularioVitrina = {
+  portadaUrl: string;
+  logoUrl: string;
+  nombre: string;
+  tipo: string;
+  zona: string;
+  fundada: string;
+  alumnos: string;
+  niveles: string;
+  turnos: string;
+  docentesPlanta: string;
+  descripcion: string;
+  contactoNombre: string;
+  contactoRol: string;
+  mision: string;
+  vision: string;
+  valores: string[];
+  direccion: string;
+  horarioAdministracion: string;
+};
+
+/** Lo que guarda hoy la institución, como arranca el formulario del perfil público. */
+export function datosInicialesDeVitrina(i: Institucion): DatosFormularioVitrina {
+  return {
+    portadaUrl: i.portadaUrl ?? "",
+    logoUrl: i.logoUrl ?? "",
+    nombre: i.nombre,
+    tipo: i.tipo,
+    zona: i.zona ?? "",
+    fundada: i.fundada?.toString() ?? "",
+    alumnos: i.alumnos?.toString() ?? "",
+    niveles: i.niveles ?? "",
+    turnos: i.turnos ?? "",
+    docentesPlanta: i.docentesPlanta?.toString() ?? "",
+    descripcion: i.descripcion ?? "",
+    contactoNombre: i.contactoNombre ?? "",
+    contactoRol: i.contactoRol ?? "",
+    mision: i.mision ?? "",
+    vision: i.vision ?? "",
+    valores: i.valores,
+    direccion: i.direccion ?? "",
+    horarioAdministracion: i.horarioAdministracion ?? "",
+  };
+}
+
+/** Lo que devuelve "Guardar cambios" del perfil público: las listas ya con sus ids. */
+export type VitrinaGuardada = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[] };
 
 /* ───────── Esquema de "Guardar cambios" ───────── */
 
@@ -132,4 +182,63 @@ export function sinRepetidos(lista: string[]) {
     vistos.add(clave);
     return true;
   });
+}
+
+/* ───────── Qué cambió al guardar ───────── */
+
+/** Lo que muestra "Actividad del equipo" cuando un admin edita el perfil: qué partes tocó, sin los valores. */
+export type VitrinaAntes = {
+  nombre: string;
+  tipo: string;
+  zona: string | null;
+  fundada: number | null;
+  alumnos: number | null;
+  niveles: string | null;
+  turnos: string | null;
+  docentesPlanta: number | null;
+  descripcion: string | null;
+  contactoNombre: string | null;
+  contactoRol: string | null;
+  mision: string | null;
+  vision: string | null;
+  valores: string[];
+  direccion: string | null;
+  horarioAdministracion: string | null;
+  logoUrl: string | null;
+  portadaUrl: string | null;
+  fotos: { url: string; etiqueta: string }[];
+  novedades: { titulo: string; texto: string; fecha: string }[];
+};
+
+const CAMPOS_DE_VITRINA: [keyof VitrinaAntes & keyof DatosVitrina, string][] = [
+  ["nombre", "nombre"],
+  ["tipo", "tipo"],
+  ["zona", "zona"],
+  ["fundada", "año de fundación"],
+  ["alumnos", "alumnos"],
+  ["niveles", "niveles"],
+  ["turnos", "turnos"],
+  ["docentesPlanta", "profesionales en planta"],
+  ["descripcion", "descripción"],
+  ["contactoNombre", "nombre de contacto"],
+  ["contactoRol", "rol de contacto"],
+  ["mision", "misión"],
+  ["vision", "visión"],
+  ["direccion", "dirección"],
+  ["horarioAdministracion", "horario de administración"],
+  ["logoUrl", "logo"],
+  ["portadaUrl", "portada"],
+];
+
+const comoTexto = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
+
+/** Nombres (en castellano) de lo que cambió entre lo guardado y lo que se manda: campos, valores, galería y novedades. */
+export function cambiosDeVitrina(antes: VitrinaAntes, d: DatosVitrina): string[] {
+  const cambios = CAMPOS_DE_VITRINA.filter(([k]) => comoTexto(antes[k]) !== comoTexto(d[k])).map(([, etiqueta]) => etiqueta);
+  if (sinRepetidos(antes.valores).join("\n") !== sinRepetidos(d.valores).join("\n")) cambios.push("valores");
+  const fotos = (l: { url: string; etiqueta: string }[]) => l.map((f) => `${f.url}|${comoTexto(f.etiqueta)}`).join("\n");
+  if (fotos(antes.fotos) !== fotos(d.fotos)) cambios.push("galería de fotos");
+  const novedades = (l: { titulo: string; texto: string; fecha: string }[]) => l.map((n) => `${n.titulo}|${n.texto}|${n.fecha}`).join("\n");
+  if (novedades(antes.novedades) !== novedades(d.novedades)) cambios.push("novedades");
+  return cambios;
 }

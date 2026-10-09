@@ -9,6 +9,7 @@ import { accionPostular, sesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { focoDeFoto } from "@/lib/fotos";
 import { num, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { institucionPublica } from "@/lib/queries/publico";
 
@@ -61,9 +62,14 @@ export default async function PerfilInstitucion({ params }: Props) {
           <div className="min-w-0 flex-[2_1_340px]">
             <Tarjeta className="mb-4 overflow-hidden p-0">
               {inst.portadaUrl ? (
-                <Imagen src={inst.portadaUrl} alt={`Foto de ${inst.nombre}`} className="block h-[190px] w-full object-cover" />
+                <Imagen
+                  src={inst.portadaUrl}
+                  alt={`Foto de ${inst.nombre}`}
+                  style={{ objectPosition: focoDeFoto(inst.portadaUrl) }}
+                  className="block aspect-[16/7] w-full object-cover"
+                />
               ) : (
-                <div aria-hidden className="h-[190px] w-full bg-[linear-gradient(135deg,#16214F,#2A3A7A)]" />
+                <div aria-hidden className="aspect-[16/7] w-full bg-[linear-gradient(135deg,#16214F,#2A3A7A)]" />
               )}
               <div className="relative px-6 pt-5 pb-5 max-[560px]:px-4">
                 <div className="relative z-[2] -mt-10 mb-3.5">

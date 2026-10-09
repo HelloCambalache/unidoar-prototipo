@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { actualizarPerfilDocente } from "@/app/actions/docente";
 import { Boton, BotonLink } from "@/components/ui/button";
@@ -31,6 +32,8 @@ const ACCION_TEXTO =
 
 type Props = {
   inicial: DatosPerfil;
+  /** Identidad (DNI) verificada: el nombre y el apellido se muestran fijos, sin poder editarlos. */
+  identidadFija: boolean;
   insignia: { texto: string; tono: TonoInsignia };
   emailCuenta: string;
   sugerencias: { zonas: string[]; asignaturas: string[] };
@@ -45,6 +48,8 @@ type Props = {
   cursosHechos: ReactNode;
   /** Porcentaje de perfil completo (servidor). */
   lateral: ReactNode;
+  /** Tarjeta "Compartir mi perfil" (cliente, independiente del formulario). */
+  compartir: ReactNode;
 };
 
 const DETALLE_CONDUCTA: Record<EstadoDocumento, string> = {
@@ -108,6 +113,7 @@ function FilaDocumento({
  */
 export function PerfilFormulario({
   inicial,
+  identidadFija,
   insignia,
   emailCuenta,
   sugerencias,
@@ -117,6 +123,7 @@ export function PerfilFormulario({
   verificacion,
   cursosHechos,
   lateral,
+  compartir,
 }: Props) {
   const toast = useToast();
   const [d, setD] = useState<DatosPerfil>(inicial);
@@ -167,33 +174,49 @@ export function PerfilFormulario({
                 className="w-[104px] flex-none"
               />
               <div className="min-w-0 flex-1">
-                <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <div className="flex min-w-[220px] flex-1 flex-wrap gap-x-1 gap-y-0">
-                    <input
-                      aria-label="Nombre"
-                      aria-invalid={!!error("nombre")}
-                      placeholder="Nombre"
-                      value={d.nombre}
-                      onChange={(e) => set("nombre", e.target.value)}
-                      className={cn(EN_LINEA, "min-w-[120px] flex-1 text-xl leading-[1.2] font-semibold")}
-                    />
-                    <input
-                      aria-label="Apellido"
-                      aria-invalid={!!error("apellido")}
-                      placeholder="Apellido"
-                      value={d.apellido}
-                      onChange={(e) => set("apellido", e.target.value)}
-                      className={cn(EN_LINEA, "min-w-[120px] flex-1 text-xl leading-[1.2] font-semibold")}
-                    />
-                  </div>
-                  <Insignia tono={insignia.tono} className="flex-none">
-                    {insignia.texto}
-                  </Insignia>
-                </div>
-                {error("nombre") && (
-                  <p role="alert" className="m-0 mb-1 px-1.5 text-xs text-[#b91c1c]">
-                    {error("nombre")}
-                  </p>
+                {identidadFija ? (
+                  <>
+                    {/* Con el DNI verificado el nombre es el del documento: se muestra fijo y solo lo corrige el equipo. */}
+                    <div className="mb-1 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                      <h2 className="m-0 text-xl leading-[1.2] font-semibold [overflow-wrap:anywhere]">{`${inicial.nombre} ${inicial.apellido}`.trim()}</h2>
+                      <Insignia tono={insignia.tono} className="flex-none">
+                        {insignia.texto}
+                      </Insignia>
+                    </div>
+                    <p className="m-0 mb-2 text-xs leading-normal text-apagado">
+                      Tu nombre ya está verificado con tu DNI, por eso no se puede cambiar. Si hay un error,{" "}
+                      <Link href="/contacto" className="font-medium">
+                        escribinos desde Contacto
+                      </Link>
+                      .
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-2 grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+                      <Campo etiqueta="Nombre" error={error("nombre")}>
+                        <Input
+                          autoComplete="given-name"
+                          maxLength={60}
+                          aria-invalid={!!error("nombre")}
+                          value={d.nombre}
+                          onChange={(e) => set("nombre", e.target.value)}
+                        />
+                      </Campo>
+                      <Campo etiqueta="Apellido" error={error("apellido")}>
+                        <Input
+                          autoComplete="family-name"
+                          maxLength={80}
+                          aria-invalid={!!error("apellido")}
+                          value={d.apellido}
+                          onChange={(e) => set("apellido", e.target.value)}
+                        />
+                      </Campo>
+                    </div>
+                    <Insignia tono={insignia.tono} className="mb-2 flex-none">
+                      {insignia.texto}
+                    </Insignia>
+                  </>
                 )}
                 <input
                   aria-label="Subtítulo de tu perfil"
@@ -496,6 +519,7 @@ export function PerfilFormulario({
 
         <aside className="flex w-[280px] flex-none flex-col gap-4 max-[1000px]:w-full">
           {lateral}
+          {compartir}
           <details open className="group rounded-lg border border-borde bg-white">
             <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3.5 text-[15px] leading-none font-semibold focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
               CV

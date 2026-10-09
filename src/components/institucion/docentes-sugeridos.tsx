@@ -1,6 +1,7 @@
 import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia, Verificado } from "@/components/ui/insignia";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { focoDeFoto } from "@/lib/fotos";
 import type { DocenteRecomendado } from "@/lib/queries/coincidencias";
 
 /** El perfil del docente es donde vive "Invitar": desde el dashboard solo se llega hasta ahí. */
@@ -65,7 +66,7 @@ export function GrillaCercanos({ docentes }: { docentes: DocenteRecomendado[] })
           <li key={d.id} className="flex flex-col overflow-hidden rounded-[14px] border border-borde bg-white transition-[transform,box-shadow] duration-150 hover:-translate-y-[3px] hover:shadow-[0_14px_32px_rgba(31,36,33,.12)]">
             {d.fotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- fotos de perfil de tamaño desconocido
-              <img src={d.fotoUrl} alt="" className="h-[104px] w-full object-cover" />
+              <img src={d.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(d.fotoUrl) }} className="h-[104px] w-full object-cover" />
             ) : (
               <span
                 aria-hidden

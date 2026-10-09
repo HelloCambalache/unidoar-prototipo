@@ -1,3 +1,4 @@
+import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
 
 /** Foto del curso a todo el ancho; sin foto, el recuadro gris con el ícono de imagen del prototipo. */
@@ -19,7 +20,7 @@ export function CursoFoto({
       <img
         src={url}
         alt=""
-        style={estilo}
+        style={{ ...estilo, objectPosition: focoDeFoto(url) }}
         className={cn("block w-full object-cover", redondeada && "rounded-[10px]", className)}
       />
     );

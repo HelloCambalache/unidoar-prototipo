@@ -2,18 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { transaccion } from "@/db";
+import { getDb, transaccion } from "@/db";
 import { instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
-import { planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
+import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
+import { TIPOS_CON_CUE } from "@/lib/catalogo";
 import { esUuid } from "@/lib/busquedas";
 import { precioDePlan } from "@/lib/cobros";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { planDe } from "@/lib/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
+import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
+import type { VitrinaGuardada } from "@/lib/vitrina";
 
 /*
  * Acciones del equipo sobre una institución. Todas arrancan por `requerirUsuario("admin")`, no confían en
@@ -26,6 +29,7 @@ const NO_ENCONTRADA = "No encontramos esa institución.";
 function revalidarInstitucion(id: string, slug?: string) {
   revalidatePath("/backoffice/instituciones");
   revalidatePath(`/backoffice/instituciones/${id}`);
+  revalidatePath(`/backoffice/instituciones/${id}/editar`);
   revalidatePath("/backoffice/cobros");
   revalidatePath(`/backoffice/cobros/${id}`);
   revalidatePath("/institucion/dashboard");
@@ -90,6 +94,87 @@ export async function verificarInstitucion(institucionId: string, verificada: bo
   });
 
   if (resultado.ok) revalidarInstitucion(institucionId, slug);
+  return resultado;
+}
+
+/* ───────────────────────────── Editar el perfil ───────────────────────────── */
+
+/**
+ * Edita el perfil público (la vitrina) de una institución desde el backoffice: el mismo formulario y las mismas validaciones
+ * que usa la institución (`guardarVitrinaDeInstitucion`), pero por el id que se pasa y solo para admin. Las imágenes nuevas tienen
+ * que ser de las que subió el propio admin. Queda en la actividad de la cuenta con los nombres de lo que se tocó (sin los
+ * valores) y no se le avisa a la institución.
+ */
+export async function actualizarVitrinaComoAdmin(institucionId: string, entrada: unknown): Promise<Resultado<VitrinaGuardada>> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
+  const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+  if (!inst) return fallo(NO_ENCONTRADA);
+
+  const r = await guardarVitrinaDeInstitucion(inst, admin.id, entrada);
+  if (!r.ok) return r;
+  if (r.data.cambios.length > 0) {
+    await registrarAuditoria({
+      usuarioId: admin.id,
+      accion: "institucion.editar_perfil",
+      entidad: "institucion",
+      entidadId: inst.id,
+      detalle: { institucionId: inst.id, nombre: inst.nombre, campos: r.data.cambios },
+    });
+  }
+  revalidarInstitucion(inst.id, inst.slug);
+  return ok(r.data.guardado);
+}
+
+/**
+ * Corrige los datos de la cuenta que la institución no edita sola: teléfono, CUIT y CUE (el CUE solo existe en los tipos que son
+ * establecimientos educativos). Deja auditoría con los nombres de lo que cambió, nunca los valores.
+ */
+export async function actualizarDatosDeInstitucion(institucionId: string, entrada: unknown): Promise<Resultado> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
+  const datos = parsear(datosDeCuentaSchema, typeof entrada === "object" && entrada !== null ? (entrada as Record<string, unknown>) : {});
+  if (!datos.ok) return fallo(datos.error, datos.campos);
+
+  const resultado = await transaccion(async (tx) => {
+    const [inst] = await tx
+      .select({
+        id: instituciones.id,
+        nombre: instituciones.nombre,
+        tipo: instituciones.tipo,
+        telefono: instituciones.telefono,
+        cuit: instituciones.cuit,
+        cue: instituciones.cue,
+      })
+      .from(instituciones)
+      .where(eq(instituciones.id, institucionId))
+      .limit(1)
+      .for("update");
+    if (!inst) return fallo(NO_ENCONTRADA);
+
+    const nuevo = { telefono: datos.data.telefono, cuit: datos.data.cuit, cue: TIPOS_CON_CUE.includes(inst.tipo) ? datos.data.cue : null };
+    const campos = [
+      ...(nuevo.telefono !== (inst.telefono ?? null) ? ["teléfono"] : []),
+      ...(nuevo.cuit !== (inst.cuit ?? null) ? ["CUIT"] : []),
+      ...(nuevo.cue !== (inst.cue ?? null) ? ["CUE"] : []),
+    ];
+    if (campos.length === 0) return ok();
+
+    await tx.update(instituciones).set(nuevo).where(eq(instituciones.id, inst.id));
+    await registrarAuditoria(
+      {
+        usuarioId: admin.id,
+        accion: "institucion.editar_datos",
+        entidad: "institucion",
+        entidadId: inst.id,
+        detalle: { institucionId: inst.id, nombre: inst.nombre, campos },
+      },
+      tx,
+    );
+    return ok();
+  });
+
+  if (resultado.ok) revalidarInstitucion(institucionId);
   return resultado;
 }
 
