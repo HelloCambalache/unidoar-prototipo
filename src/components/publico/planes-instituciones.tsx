@@ -14,12 +14,13 @@ import {
   type PlanClave,
 } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { cn } from "@/lib/utils";
 
-/** Cómo se llama cada arancel en el desplegable: la institución se reconoce en uno. */
+/** Cómo se llama cada arancel en los botones: corto, para que entren en una línea. */
 const ETIQUETA: Record<string, string> = {
-  colegio: "Colegio, jardín o terciario",
-  deportiva: "Club, gimnasio o academia",
-  multisede: `Red de más de ${SEDES_MULTISEDE} sedes`,
+  colegio: "Colegios",
+  deportiva: "Clubes y gimnasios",
+  multisede: `Más de ${SEDES_MULTISEDE} sedes`,
 };
 
 /** Los tipos que entran en cada arancel, para que quien elige sepa si es el suyo. */
@@ -48,20 +49,31 @@ export function PlanesInstituciones({ beneficios }: { beneficios: readonly strin
         Instituciones
       </h2>
 
-      <label className="relative mt-4 block">
-        <span className="mb-1.5 block text-[13px] leading-none text-white/60">¿Qué tipo de institución sos?</span>
-        <select
-          value={clave}
-          onChange={(e) => setClave(e.target.value as PlanClave)}
-          className="w-full cursor-pointer appearance-none rounded-lg border border-white/25 bg-white/10 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22><path d=%22M6 9l6 6 6-6%22/></svg>')] bg-[length:18px] bg-[position:right_12px_center] bg-no-repeat py-2.5 pr-10 pl-3.5 text-[15px] leading-tight font-medium text-white focus:border-celeste focus:outline-none"
-        >
-          {PLANES_VIGENTES.map((c) => (
-            <option key={c} value={c} className="bg-navy-700 text-white">
-              {ETIQUETA[c] ?? PLANES[c].label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="relative mt-4">
+        <span id="tipo-institucion" className="mb-2 block text-[13px] leading-none text-white/60">
+          ¿Qué tipo de institución sos?
+        </span>
+        <div role="group" aria-labelledby="tipo-institucion" className="flex flex-wrap gap-2">
+          {PLANES_VIGENTES.map((c) => {
+            const elegido = c === clave;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setClave(c)}
+                aria-pressed={elegido}
+                className={cn(
+                  "cursor-pointer rounded-full px-3.5 py-2 text-[13.5px] leading-none font-semibold transition-colors",
+                  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-celeste",
+                  elegido ? "bg-white text-navy-700" : "border border-white/25 text-white/75 hover:bg-white/10",
+                )}
+              >
+                {ETIQUETA[c] ?? PLANES[c].label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="relative mt-5 mb-1">
         <span className="text-[38px] leading-none font-bold tracking-[-0.02em]">{pesos(plan.precio)}</span>

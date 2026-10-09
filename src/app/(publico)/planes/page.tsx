@@ -56,7 +56,7 @@ export default async function Planes() {
             <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-300 uppercase">
               Profesionales
             </h2>
-            <div className="mt-[95px] mb-1 text-[38px] leading-none font-bold tracking-[-0.02em] text-tinta">
+            <div className="mt-4 mb-1 text-[38px] min-[700px]:mt-[88px] leading-none font-bold tracking-[-0.02em] text-tinta">
               100% gratis
             </div>
             <p className="mb-5 text-sm leading-normal text-apagado">
