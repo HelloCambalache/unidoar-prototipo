@@ -231,11 +231,11 @@ export function TiposInstitucion({ tiposEnUso }: { tiposEnUso: number }) {
               <span className="text-xs leading-none font-semibold tracking-[.09em] text-ambar uppercase">Para quién es</span>
             </div>
             <h2 className="mb-3 font-display text-[33px] leading-[1.15] font-bold tracking-[-0.025em] text-balance text-white max-[900px]:text-[30px]">
-              Contratás profesionales para tu institución.
+              Si contratás docentes, entrenadores, instructores, guardavidas. Sumate a nuestra red.
             </h2>
             <p className="text-base leading-[1.6] text-white/75">
-              ¿Contratás docentes, entrenadores o guardavidas? Sumate a nuestra red UNIDOAR. Las instituciones del
-              ámbito formal y no formal comparten el mismo desafío: conseguir profesionales validados y confiables.
+              Colegios, institutos de idiomas, clubes, gimnasios, natatorios y escuelas deportivas comparten el mismo
+              desafío: conseguir profesionales validados y confiables.
             </p>
           </div>
           {tiposEnUso > 0 && (
@@ -252,8 +252,8 @@ export function TiposInstitucion({ tiposEnUso }: { tiposEnUso: number }) {
           )}
         </div>
         <p className="mb-[26px] rounded-xl border-l-[3px] border-ambar bg-white/[.07] px-[22px] py-[18px] text-base leading-[1.55] font-semibold text-white">
-          Potenciá tu staff con UNIDOAR: centralizá y agilizá tu gestión de contratación con perfiles verificados,
-          listos para cubrir tus vacantes con total seguridad.
+          Potenciá tu staff con UNIDOAR: agilizá tu gestión y encontrá perfiles listos para cubrir tus vacantes sin
+          perder tiempo.
         </p>
 
         <div className="pub-marquee-borde pub-marquee-pausa -mx-2 overflow-hidden p-2">

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { focoDeFoto } from "@/lib/fotos";
 import type { BusquedaPublica } from "@/lib/queries/publico";
-import { num, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { num } from "@/lib/publico";
+import { RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-busqueda";
 import { ListaUrgentes } from "./lista-urgentes";
 import type { SesionPublica } from "./sesion";
 
@@ -62,7 +63,7 @@ export function UrgentesHome({
               </p>
             </div>
             <Link
-              href={RUTA_REGISTRO_INSTITUCION}
+              href={RUTA_PUBLICAR_URGENTE}
               className="relative inline-flex h-10 min-h-10 items-center self-start rounded-full bg-white px-[22px] text-sm leading-none font-semibold text-naranja transition-colors hover:bg-superficie hover:text-naranja focus-visible:ring-[3px] focus-visible:ring-white/60 focus-visible:outline-none"
             >
               Publicar una suplencia

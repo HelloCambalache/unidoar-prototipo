@@ -43,13 +43,18 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o profesional." };
   if (!supabaseConfigurado()) return { ok: false, error: SIN_CONFIGURAR };
 
-  const valores = { email: texto(formData.get("email")).trim(), nombre: texto(formData.get("nombre")).trim() };
+  const valores = {
+    email: texto(formData.get("email")).trim(),
+    nombre: texto(formData.get("nombre")).trim(),
+    apellido: texto(formData.get("apellido")).trim(),
+  };
   const esquema = z
     .object({
       email: emailCampo,
       password: passwordCampo,
       confirmacion: z.string(),
-      nombre: z.string().trim().max(120),
+      nombre: z.string().trim().max(80),
+      apellido: z.string().trim().max(80),
       aceptaTerminos: z.string().optional(),
     })
     .refine((v) => v.password === v.confirmacion, { path: ["confirmacion"], message: "Las contraseñas no coinciden" });
@@ -58,14 +63,18 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     password: texto(formData.get("password")),
     confirmacion: texto(formData.get("confirmacion")),
     nombre: texto(formData.get("nombre")),
+    apellido: texto(formData.get("apellido")),
     aceptaTerminos: texto(formData.get("aceptaTerminos")),
   });
   const campos = r.success ? {} : errores(r.error);
-  // El docente los acepta acá; la institución, en el paso 2 del alta, salvo quien se registra desde el enlace de una invitación
-  // al equipo (no pasa por ese paso): el formulario de la invitación manda `conTerminos`.
-  const exigeTerminos = rolValido.data === "docente" || texto(formData.get("conTerminos")) === "on";
-  if (rolValido.data === "docente" && r.success && r.data.nombre.length < 2) campos.nombre = "Completá tu nombre";
-  if (exigeTerminos && r.success && r.data.aceptaTerminos !== "on") campos.aceptaTerminos = "Tenés que aceptar los términos y condiciones";
+  if (rolValido.data === "docente" && r.success) {
+    // El nombre y el apellido se piden por separado: el apellido no se adivina, y queda fijo cuando se verifica el DNI.
+    if (r.data.nombre.length < 2) campos.nombre = "Completá tu nombre";
+    if (r.data.apellido.length < 2) campos.apellido = "Completá tu apellido";
+  }
+  // Todos aceptan los términos acá, al crear la cuenta (el profesional, la institución y quien llega por una invitación al
+  // equipo): así no existe una cuenta sin su constancia.
+  if (r.success && r.data.aceptaTerminos !== "on") campos.aceptaTerminos = "Tenés que aceptar los términos y condiciones";
   if (!r.success || Object.keys(campos).length > 0) {
     return { ok: false, error: "Revisá los campos marcados.", campos, valores };
   }
@@ -80,7 +89,8 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
       data: {
         rol: rolValido.data,
         ...(r.data.nombre ? { nombre: r.data.nombre } : {}),
-        ...(exigeTerminos ? { terminos: codificarAceptacion() } : {}),
+        ...(rolValido.data === "docente" && r.data.apellido ? { apellido: r.data.apellido } : {}),
+        terminos: codificarAceptacion(),
       },
     },
   });
@@ -146,7 +156,8 @@ export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData)
   const rolValido = z.enum(ROLES_ALTA).nullable().safeParse(rol);
   if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o profesional." };
 
-  if (rolValido.data === "docente" && texto(formData.get("aceptaTerminos")) !== "on") {
+  // Desde el alta (con rol) hay que aceptar los términos, sea profesional o institución; desde /ingresar (sin rol) no: ya tienen cuenta.
+  if (rolValido.data && texto(formData.get("aceptaTerminos")) !== "on") {
     return {
       ok: false,
       error: "Revisá los campos marcados.",
@@ -159,7 +170,7 @@ export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData)
     : rutaInternaSegura(texto(formData.get("next")), "/inicio");
 
   const supabase = await crearClienteServidor();
-  if (rolValido.data === "docente") {
+  if (rolValido.data) {
     // Con Google no se pueden mandar datos propios: la constancia de la casilla viaja en una cookie de corta vida.
     (await cookies()).set(COOKIE_TERMINOS, codificarAceptacion(), {
       httpOnly: true,

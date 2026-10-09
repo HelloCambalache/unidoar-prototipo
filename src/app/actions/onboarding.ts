@@ -31,7 +31,6 @@ import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
-import { identidadFija } from "@/lib/perfil-docente";
 import { ubicacionDeInstitucion } from "@/lib/ubicacion";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
 import { slugify } from "@/lib/utils";
@@ -116,8 +115,14 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   const r = parsear(institucionDatosSchema, formData);
   if (!r.ok) return conError(formData, r.error, r.campos);
   const d = r.data;
-  // La institución acepta los términos en este paso (el formulario no se valida sin la casilla).
-  await registrarAceptacionDeTerminos(usuario.id);
+  // Los términos se aceptan al crear la cuenta (paso 1) y ahí queda la constancia. Una cuenta que no la tiene (se creó antes de
+  // ese cambio) los acepta en este paso, y el servidor lo exige: no alcanza con que el formulario lo pida.
+  if (!usuario.terminosAceptadosEn) {
+    if (formData.get("aceptaTerminos") !== "on") {
+      return conError(formData, "Revisá los campos marcados.", { aceptaTerminos: "Tenés que aceptar los términos y condiciones" });
+    }
+    await registrarAceptacionDeTerminos(usuario.id);
+  }
 
   // Coordenadas: las de la dirección (Georef / OpenStreetMap) si se pudo ubicar; si no, las del catálogo de zonas.
   const delCatalogo = await ubicarInstitucion({ direccion: d.direccion, partido: d.partido });
@@ -261,7 +266,12 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     await db.update(docentes).set({ categoria, asignaturas }).where(eq(docentes.id, docente.id));
   } else {
     const sesion = await datosDeSesion();
-    const { nombre, apellido } = partirNombre(sesion?.nombre ?? "", usuario.email.split("@")[0] ?? "Profesional");
+    const respaldo = usuario.email.split("@")[0] ?? "Profesional";
+    // Con el registro por email el nombre y el apellido vienen separados (los escribió la persona); con Google, o en cuentas
+    // anteriores, viene el nombre completo y se parte.
+    const { nombre, apellido } = sesion?.apellido
+      ? { nombre: sesion.nombre ?? respaldo, apellido: sesion.apellido }
+      : partirNombre(sesion?.nombre ?? "", respaldo);
     await db
       .insert(docentes)
       .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, fotoUrl: sesion?.fotoUrl ?? null, categoria, asignaturas })
@@ -285,8 +295,6 @@ export async function guardarDatosDocente(_previo: EstadoFormulario, formData: F
   const destino = destinoDe(formData);
 
   const r = parsear(datosDocenteSchema, {
-    nombre: formData.get("nombre") ?? "",
-    apellido: formData.get("apellido") ?? "",
     fechaNacimiento: formData.get("fechaNacimiento") ?? "",
     dni: formData.get("dni") ?? "",
     telefono: formData.get("telefono") ?? "",
@@ -313,10 +321,7 @@ export async function guardarDatosDocente(_previo: EstadoFormulario, formData: F
   await db
     .update(docentes)
     .set({
-      // nombre y apellido no pueden quedar vacíos: en un borrador sin ellos se conservan los anteriores.
-      // Con la identidad verificada tampoco se cambian desde el alta.
-      nombre: identidadFija(docente) ? docente.nombre : (d.nombre ?? docente.nombre),
-      apellido: identidadFija(docente) ? docente.apellido : (d.apellido ?? docente.apellido),
+      // El nombre y el apellido se piden al crear la cuenta y se corrigen en Mi perfil: este paso no los toca.
       telefono: orNull(d.telefono),
       zonas,
       lat: ubicacion.lat,

@@ -14,8 +14,8 @@ import type { RolAlta } from "@/lib/onboarding";
 
 /**
  * Paso 1 del alta ("Creá tu acceso" / "Creá tu cuenta"): email + contraseña o Google.
- * El docente además deja su nombre y acepta los términos (la institución los acepta en el paso 2; quien llega por una invitación
- * al equipo los acepta acá, porque no pasa por ese paso).
+ * El profesional además deja su nombre y su apellido, por separado. Todos aceptan los términos acá, antes de crear la cuenta
+ * (la constancia viaja en los datos de la sesión, o en una cookie con Google, hasta que existe la fila `usuarios`).
  * Google se ofrece solo si está activado en Supabase (`conGoogle`).
  *
  * Con `invitacion` (el enlace del mail de una invitación al equipo) el email viene puesto y no se puede cambiar: quien
@@ -53,7 +53,6 @@ export function FormularioRegistro({
   return (
     <form action={accion}>
       <input type="hidden" name="metodo" defaultValue="password" />
-      {invitacion && <input type="hidden" name="conTerminos" value="on" />}
       <TituloPaso
         titulo={esDocente ? "Creá tu cuenta" : "Creá tu acceso"}
         bajada={
@@ -63,7 +62,7 @@ export function FormularioRegistro({
               {invitacion.rol}. Creá tu acceso con este email y entrás directo.
             </>
           ) : esDocente ? (
-            "Es gratis y tardás dos minutos."
+            "Es gratis y tardás 2 minutos."
           ) : (
             "Con esto vas a ingresar la próxima vez."
           )
@@ -71,17 +70,33 @@ export function FormularioRegistro({
       />
       <div className="mb-[22px] flex flex-col gap-3.5">
         {esDocente && (
-          <Campo etiqueta="Nombre completo" error={campos.nombre}>
-            <Input
-              name="nombre"
-              autoComplete="name"
-              placeholder="Ej. Luciana Prieto"
-              required
-              minLength={2}
-              defaultValue={valores.nombre}
-              aria-invalid={Boolean(campos.nombre)}
-            />
-          </Campo>
+          // Por separado: el apellido no se adivina, y el nombre queda fijo cuando se verifica el DNI. Como figuran en el DNI.
+          <div className="flex gap-3.5 max-[560px]:flex-col">
+            <Campo etiqueta="Nombre" className="flex-1" error={campos.nombre} ayuda="Como figura en tu DNI.">
+              <Input
+                name="nombre"
+                autoComplete="given-name"
+                placeholder="Ej. María Luciana"
+                required
+                minLength={2}
+                maxLength={80}
+                defaultValue={valores.nombre}
+                aria-invalid={Boolean(campos.nombre)}
+              />
+            </Campo>
+            <Campo etiqueta="Apellido" className="flex-1" error={campos.apellido} ayuda="Completo, también como en tu DNI.">
+              <Input
+                name="apellido"
+                autoComplete="family-name"
+                placeholder="Ej. Prieto Gómez"
+                required
+                minLength={2}
+                maxLength={80}
+                defaultValue={valores.apellido}
+                aria-invalid={Boolean(campos.apellido)}
+              />
+            </Campo>
+          </div>
         )}
         <Campo etiqueta="Email" error={campos.email}>
           <Input
@@ -128,22 +143,21 @@ export function FormularioRegistro({
           </>
         )}
 
-        {(esDocente || invitacion) && (
-          <div>
-            <Casilla name="aceptaTerminos" required className="mt-1.5">
-              Acepto los{" "}
-              <Link href="/terminos" target="_blank" className="font-semibold text-naranja">
-                términos y condiciones
-              </Link>{" "}
-              de UNIDOAR.
-            </Casilla>
-            {campos.aceptaTerminos && (
-              <p role="alert" className="mt-1 text-xs text-[#b91c1c]">
-                {campos.aceptaTerminos}
-              </p>
-            )}
-          </div>
-        )}
+        {/* Para todos: sin aceptar los términos no se crea la cuenta (tampoco con Google, que usa este mismo formulario). */}
+        <div>
+          <Casilla name="aceptaTerminos" required className="mt-1.5">
+            Acepto los{" "}
+            <Link href="/terminos" target="_blank" className={esDocente ? "font-semibold text-naranja" : "font-semibold text-navy-700"}>
+              términos y condiciones
+            </Link>{" "}
+            de UNIDOAR.
+          </Casilla>
+          {campos.aceptaTerminos && (
+            <p role="alert" className="mt-1 text-xs text-[#b91c1c]">
+              {campos.aceptaTerminos}
+            </p>
+          )}
+        </div>
 
         <p className="m-0 text-xs leading-normal text-sutil">
           Así cuidamos tus datos:{" "}
@@ -165,7 +179,8 @@ export function FormularioRegistro({
       </div>
 
       <div className="mt-3.5 flex items-center justify-between gap-3">
-        {invitacion ? <span /> : <EnlaceVolver href="/registro" />}
+        {/* Vuelve al inicio, no al selector de cuenta: quien entró como institución no tiene que ver "Soy profesional" (ni al revés). */}
+        {invitacion ? <span /> : <EnlaceVolver href="/">‹ Volver al inicio</EnlaceVolver>}
         <span className="text-[13px] text-apagado">
           ¿Ya tenés cuenta?{" "}
           <Link href={`/ingresar?next=${encodeURIComponent(PRIMER_PASO_PROTEGIDO[rol])}`} className="font-semibold text-navy-700">

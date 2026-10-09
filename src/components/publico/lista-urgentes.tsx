@@ -1,7 +1,7 @@
 import { BotonLink } from "@/components/ui/button";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import type { BusquedaPublica } from "@/lib/queries/publico";
-import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-busqueda";
 import { accionPostular, type SesionPublica } from "./sesion";
 import { TarjetaBusqueda } from "./tarjeta-busqueda";
 
@@ -14,7 +14,7 @@ export function ListaUrgentes({ busquedas, sesion }: { busquedas: BusquedaPublic
         texto="Cuando una institución publique una suplencia rápida, aparece acá con su plazo."
         accion={
           sesion.rol ? undefined : (
-            <BotonLink href={RUTA_REGISTRO_INSTITUCION} variante="cta" tamano="sm">
+            <BotonLink href={RUTA_PUBLICAR_URGENTE} variante="cta" tamano="sm">
               Publicar una suplencia
             </BotonLink>
           )

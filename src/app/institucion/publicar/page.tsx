@@ -17,8 +17,10 @@ function opcion<const T extends readonly string[]>(lista: T, valor: string | nul
 
 export default async function PublicarBusqueda({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { institucion } = await requerirInstitucion();
-  const { editar } = await searchParams;
+  const { editar, urgente } = await searchParams;
   const editarId = Array.isArray(editar) ? editar[0] : editar;
+  // Desde el botón "Búsqueda urgente" de Buscar profesionales: la búsqueda nueva arranca como "Suplencia rápida".
+  const esUrgente = (Array.isArray(urgente) ? urgente[0] : urgente) === "1";
 
   const [catalogo, existente] = await Promise.all([
     asignaturasPorCategoria(),
@@ -48,7 +50,7 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         categoria: "educador",
         disciplina: "",
         nivel: "",
-        tipo: "Titular",
+        tipo: esUrgente ? "Suplencia rápida" : "Titular",
         cargaHoraria: "",
         turno: "",
         fechaInicio: "",

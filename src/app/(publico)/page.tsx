@@ -68,12 +68,15 @@ export default async function Landing() {
           <div className="mb-3 flex items-center gap-[9px]">
             <span aria-hidden className="size-2 rounded-full bg-naranja" />
             <span className="text-xs leading-none font-semibold tracking-[.09em] text-naranja-ink uppercase">
-              Para profesionales
+              Buscás empleo
             </span>
           </div>
-          <h2 className="mb-2 text-[26px] leading-tight font-semibold tracking-[-0.02em] text-tinta">Buscás empleo</h2>
+          <h2 className="mb-2 text-[26px] leading-tight font-semibold tracking-[-0.02em] text-tinta">
+            Completá tu perfil 100% gratis.
+          </h2>
           <p className="mb-7 max-w-[72ch] text-[15px] leading-normal text-apagado">
-            Elegí la categoría que buscás, completá tu perfil 100% gratis para acceder a búsquedas calificadas.
+            Registrate en las disciplinas que te interesan y completá tu perfil profesional para acceder a búsquedas
+            calificadas.
           </p>
           <TarjetasCategoria conteos={resumen.categorias} />
         </div>

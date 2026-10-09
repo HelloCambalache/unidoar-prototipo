@@ -20,8 +20,6 @@ export default async function PasoDocente3() {
     <MarcoOnboarding rol="docente" paso={PASOS_DOCENTE["3"]} formId={ID_FORMULARIO_ONBOARDING}>
       <PasoDatosDocente
         inicial={{
-          nombre: docente.nombre,
-          apellido: docente.apellido,
           fechaNacimiento: detalle?.fechaNacimiento ?? undefined,
           dni: detalle?.dni ?? undefined,
           telefono: docente.telefono ?? undefined,

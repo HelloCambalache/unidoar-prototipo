@@ -17,11 +17,14 @@ import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboard
 export function FormularioInstitucion({
   inicial,
   yaCreada,
+  pedirTerminos,
   partidos,
   provincias,
 }: {
   inicial: DatosForm;
   yaCreada: boolean;
+  /** La cuenta no tiene la constancia de los términos (se creó antes de que se aceptaran en el paso 1): se piden acá. */
+  pedirTerminos: boolean;
   partidos: string[];
   provincias: string[];
 }) {
@@ -123,20 +126,23 @@ export function FormularioInstitucion({
           ))}
         </datalist>
 
-        <div>
-          <Casilla name="aceptaTerminos" required defaultChecked={yaCreada} className="mt-1.5">
-            Acepto los{" "}
-            <Link href="/terminos" target="_blank" className="font-semibold text-navy-700">
-              términos y condiciones
-            </Link>{" "}
-            de UNIDOAR.
-          </Casilla>
-          {campos.aceptaTerminos && (
-            <p role="alert" className="mt-1 text-xs text-[#b91c1c]">
-              {campos.aceptaTerminos}
-            </p>
-          )}
-        </div>
+        {/* Solo si la cuenta no los aceptó al crearse (cuentas anteriores): las nuevas ya los aceptaron en el paso 1. */}
+        {pedirTerminos && (
+          <div>
+            <Casilla name="aceptaTerminos" required defaultChecked={yaCreada} className="mt-1.5">
+              Acepto los{" "}
+              <Link href="/terminos" target="_blank" className="font-semibold text-navy-700">
+                términos y condiciones
+              </Link>{" "}
+              de UNIDOAR.
+            </Casilla>
+            {campos.aceptaTerminos && (
+              <p role="alert" className="mt-1 text-xs text-[#b91c1c]">
+                {campos.aceptaTerminos}
+              </p>
+            )}
+          </div>
+        )}
 
         <AlertaError>{estado && !estado.ok && Object.keys(campos).length === 0 ? estado.error : undefined}</AlertaError>
         <Boton type="submit" bloque disabled={pendiente} className="mt-2 min-h-12 text-base">

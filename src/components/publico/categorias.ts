@@ -18,13 +18,14 @@ export type CategoriaPublica = {
   /** Texto del botón principal del hero. */
   cta: string;
   bandaTitulo: string;
+  /** Si hay, la banda azul los muestra como lista debajo del título; si no, el párrafo de siempre. */
+  bandaPuntos?: string[];
   /** Singular / plural de "<sustantivo> verificado(s)" en los contadores. */
   verificados: [string, string];
   fotoHero: string;
   fotoTarjeta: string;
   descripcionTarjeta: string;
   fotoUrgente: string;
-  /** `background-position` de la foto de la banda de urgentes. */
   urgente: { titulo: string; bajada: string; tarjetaTitulo: string; tarjetaTexto: string };
   /** Colores de lo que va encima del color de acento (el celeste y el ámbar piden texto oscuro). */
   sobreAcento: { texto: string; botonFondo: string; botonTexto: string };
@@ -57,13 +58,19 @@ export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
   entrenador: {
     ruta: "/entrenadores",
     nombre: "Entrenadores / Instructores",
-    eyebrow: "Categoría · Entrenadores / Instructores",
-    titular: "Se te va un profe de sala el sábado. No tenés hasta el lunes.",
+    eyebrow: "Gimnasios, clubes y escuelas deportivas",
+    titular: "¿Se te bajó un profe de última hora? Que la sala o la cancha no queden vacías. Cubrilo ya.",
     bajada:
       "UNIDOAR conecta a tu gimnasio o club con entrenadores y profes de disciplina verificados de tu zona, disponibles por turno o por temporada.",
     chips: ["Personal trainer", "Funcional", "Musculación", "Natación", "Yoga y pilates", "Deportes de equipo"],
-    cta: "Ver entrenadores de mi zona",
-    bandaTitulo: "Con UNIDOAR, conseguís entrenadores y profes de sala disponibles por turno o temporada",
+    cta: "Soy institución · Busco entrenadores / instructores",
+    bandaTitulo:
+      "Con UNIDOAR conectás tu gimnasio, club o escuela deportiva con entrenadores y profesores validados de tu zona, listos para cubrir turnos eventuales o sumarse a tu staff.",
+    bandaPuntos: [
+      "Entrenadores y profes de sala disponibles por turno o temporada.",
+      "Catálogo propio de tu zona con perfiles verificados.",
+      "Suscripción mensual para todas las búsquedas del año.",
+    ],
     verificados: ["entrenador verificado", "entrenadores verificados"],
     fotoHero: "/assets/bgEntrenadores-fixed.jpg",
     fotoTarjeta: "/assets/cat-entrenadores-gym.jpg",
@@ -83,9 +90,9 @@ export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
     eyebrow: "Categoría · Guardavidas",
     titular: "Abre la pileta el sábado y falta un guardavidas habilitado.",
     bajada:
-      "UNIDOAR verifica la habilitación y la identidad de cada guardavidas y profesor de natación antes de mostrártelo. Perfiles listos para temporada corta.",
-    chips: ["Pileta", "Natatorio", "Río", "Mar", "Profesor de natación"],
-    cta: "Ver guardavidas de mi zona",
+      "UNIDOAR verifica identidad, título y habilitación oficial de cada guardavidas antes de mostrártelo. Perfiles listos y confiables para sumarse a tu staff cuando más lo necesitás.",
+    chips: ["Pileta / Natatorio", "Club / Country", "Profesor de Natación / Guardavidas"],
+    cta: "Soy institución · Busco guardavidas",
     bandaTitulo: "Con UNIDOAR, conseguís guardavidas habilitados y profes de natación para temporada",
     verificados: ["guardavidas verificado", "guardavidas verificados"],
     fotoHero: "/assets/bgGuardavidas-fixed.jpg",

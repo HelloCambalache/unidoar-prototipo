@@ -272,9 +272,8 @@ const cuil = z
   .pipe(z.string().regex(/^\d{11}$/, "El CUIL tiene 11 números"));
 
 /** Datos personales del paso "Tu perfil": cada campo es opcional, pero si viene tiene que tener buen formato. */
+// El nombre y el apellido ya se piden al crear la cuenta (paso 1): acá no se vuelven a pedir ni se tocan.
 export const datosDocenteSchema = z.object({
-  nombre: opcional(texto(2, 80, "Completá tu nombre")),
-  apellido: opcional(texto(2, 80, "Completá tu apellido")),
   fechaNacimiento: opcional(fechaNacimiento),
   dni: opcional(dni),
   telefono: opcional(telefono),
@@ -287,8 +286,6 @@ export const datosDocenteSchema = z.object({
 
 /** Campos con asterisco: se exigen al tocar Continuar (no al guardar un borrador). */
 export const OBLIGATORIOS_DATOS_DOCENTE = {
-  nombre: "Completá tu nombre",
-  apellido: "Completá tu apellido",
   dni: "Lo necesitamos para verificarte",
   telefono: "Dejanos un teléfono o WhatsApp",
 } as const;

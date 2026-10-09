@@ -51,7 +51,13 @@ export default async function PasoInstitucion2() {
 
   return (
     <MarcoOnboarding rol="institucion" paso={PASOS_INSTITUCION["2"]} formId={ID_FORMULARIO_ONBOARDING}>
-      <FormularioInstitucion inicial={inicial} yaCreada={Boolean(institucion)} partidos={partidos} provincias={provincias} />
+      <FormularioInstitucion
+        inicial={inicial}
+        yaCreada={Boolean(institucion)}
+        pedirTerminos={!usuario.terminosAceptadosEn}
+        partidos={partidos}
+        provincias={provincias}
+      />
     </MarcoOnboarding>
   );
 }

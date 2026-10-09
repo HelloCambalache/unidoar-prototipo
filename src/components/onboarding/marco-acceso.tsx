@@ -9,8 +9,8 @@ const FOTO_ACCESO = "/assets/aula-secundaria.jpg";
  * panel claro con grilla suave a la derecha. En ≤ 860 px la foto pasa arriba (230 px).
  */
 export function MarcoAcceso({
-  titulo = "Profesionales verificados, sin vueltas",
-  bajada = "Identidad y título confirmados antes de que los veas.",
+  titulo = "Profesionales verificados y sin vueltas.",
+  bajada = "Identidad y títulos confirmados antes de que los veas.",
   volverHref = "/",
   volverTexto = "‹ Volver al inicio",
   children,

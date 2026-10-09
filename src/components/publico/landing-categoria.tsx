@@ -5,12 +5,8 @@ import { Avatar, Insignia } from "@/components/ui/insignia";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
 import { focoDeFoto } from "@/lib/fotos";
-import {
-  num,
-  PAGINA_TESTIMONIOS,
-  RUTA_REGISTRO_DOCENTE,
-  RUTA_REGISTRO_INSTITUCION,
-} from "@/lib/publico";
+import { num, PAGINA_TESTIMONIOS, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
+import { RUTA_PUBLICAR_BUSQUEDA, RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-busqueda";
 import {
   busquedasUrgentes,
   cuposFundadorRestantes,
@@ -107,7 +103,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
           </ul>
           <div className="flex flex-wrap gap-3 max-[900px]:[&>a]:min-w-[210px] max-[900px]:[&>a]:flex-1">
             <BotonLink
-              href={RUTA_REGISTRO_INSTITUCION}
+              href={RUTA_PUBLICAR_BUSQUEDA}
               variante="cta"
               tamano="lg"
               style={estiloBotonAcento(categoria)}
@@ -162,9 +158,20 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
           <h2 className="mb-2 text-[26px] leading-tight font-semibold tracking-[-0.02em] text-white max-[560px]:text-[22px]">
             {pub.bandaTitulo}
           </h2>
-          <p className="text-[15px] leading-[1.6] text-white/85">
-            Catálogo propio de tu zona con perfiles verificados. Suscripción mensual: todas las búsquedas del año.
-          </p>
+          {pub.bandaPuntos ? (
+            <ul className="mt-4 mb-0 flex list-none flex-col gap-2 p-0 text-[15px] leading-[1.6] text-white/85">
+              {pub.bandaPuntos.map((punto) => (
+                <li key={punto} className="flex items-start gap-2.5">
+                  <Icono nombre="tilde" tamano={16} trazo={2.6} className="mt-1 flex-none text-celeste" />
+                  {punto}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[15px] leading-[1.6] text-white/85">
+              Catálogo propio de tu zona con perfiles verificados. Suscripción mensual: todas las búsquedas del año.
+            </p>
+          )}
         </div>
       </section>
 
@@ -231,7 +238,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
                 <p className="mt-2 max-w-[32ch] text-[14.5px] leading-[1.55] opacity-90">{pub.urgente.tarjetaTexto}</p>
               </div>
               <Link
-                href={RUTA_REGISTRO_INSTITUCION}
+                href={RUTA_PUBLICAR_URGENTE}
                 style={{ background: pub.sobreAcento.botonFondo, color: pub.sobreAcento.botonTexto }}
                 className="relative inline-flex h-10 min-h-10 items-center self-start rounded-full px-[22px] text-sm leading-none font-semibold transition-[filter] hover:brightness-95 focus-visible:ring-[3px] focus-visible:ring-white/60 focus-visible:outline-none"
               >

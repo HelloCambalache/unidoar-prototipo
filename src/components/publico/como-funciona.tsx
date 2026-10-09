@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icono } from "@/components/icons";
-import { RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
+import { RUTA_PUBLICAR_BUSQUEDA } from "@/lib/publicar-busqueda";
 
 type Columna = {
   etiqueta: string;
@@ -32,7 +33,7 @@ const COLUMNAS: Columna[] = [
         texto: "Gestioná todo desde un tablero claro: quién respondió a la búsqueda y a quién le ofreciste el puesto.",
       },
     ],
-    cta: { href: RUTA_REGISTRO_INSTITUCION, texto: "Publicar una búsqueda" },
+    cta: { href: RUTA_PUBLICAR_BUSQUEDA, texto: "Publicar una búsqueda" },
   },
   {
     etiqueta: "Si sos profesional",

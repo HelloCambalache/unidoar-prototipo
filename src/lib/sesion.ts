@@ -8,8 +8,10 @@ import { decodificarAceptacion, type AceptacionDeTerminos } from "@/lib/terminos
 export type DatosDeSesion = {
   id: string;
   email: string | null;
-  /** Nombre que dejó al registrarse (formulario) o que informa Google. */
+  /** Nombre que dejó al registrarse (formulario) o que informa Google (con Google viene el nombre completo en este campo). */
   nombre: string | null;
+  /** Apellido que dejó el profesional al registrarse con email; null con Google o en cuentas anteriores (ahí se parte `nombre`). */
+  apellido: string | null;
   fotoUrl: string | null;
   /** Rol elegido al registrarse: solo una pista; la fuente de verdad es `usuarios.rol`. */
   rolPista: RolAlta | null;
@@ -36,6 +38,7 @@ export const datosDeSesion = cache(async (): Promise<DatosDeSesion | null> => {
     id: claims.sub,
     email: texto(claims.email),
     nombre: texto(meta.nombre) ?? texto(meta.full_name) ?? texto(meta.name),
+    apellido: texto(meta.apellido),
     fotoUrl: texto(meta.avatar_url) ?? texto(meta.picture),
     rolPista: (ROLES_ALTA as readonly string[]).includes(rol ?? "") ? (rol as RolAlta) : null,
     terminos: decodificarAceptacion(meta.terminos),

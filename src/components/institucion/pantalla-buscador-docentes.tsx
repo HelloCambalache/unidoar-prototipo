@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { BotonBusquedaUrgente } from "@/components/institucion/boton-busqueda-urgente";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
 import { interpretarBusqueda } from "@/lib/busqueda-ia";
@@ -170,6 +171,8 @@ export async function PantallaBuscadorDocentes({
           paginas={resultado.paginas}
           hrefDe={(n) => hrefBuscador(ruta, filtros, { pagina: n })}
         />
+
+        <BotonBusquedaUrgente />
       </div>
     </div>
   );

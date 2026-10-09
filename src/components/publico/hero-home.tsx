@@ -3,7 +3,8 @@ import { BotonLink } from "@/components/ui/button";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
 import { focoDeFoto } from "@/lib/fotos";
-import { plural, RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
+import { RUTA_PUBLICAR_BUSQUEDA } from "@/lib/publicar-busqueda";
 import type { ConteoCategoria } from "@/lib/queries/publico";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
 
@@ -38,19 +39,19 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
 
       <div className="relative mx-auto max-w-[1160px] text-center">
         <h1 className="mx-auto mt-[18px] mb-4 max-w-[22ch] font-display text-[52px] leading-[1.1] font-bold tracking-[-0.035em] text-balance text-navy-700 max-[900px]:text-[42px] max-[560px]:text-[32px]">
-          Donde el talento de la educación, el deporte y el arte hacen match con instituciones privadas.
+          Donde el talento de la educación, el deporte y el arte hacen match con las instituciones.
         </h1>
         <p className="mx-auto max-w-[740px] text-[17px] leading-[1.6] text-apagado">
-          En UNIDOAR, nuestra tecnología conecta de manera directa e inteligente a profesionales calificados con
-          colegios, gimnasios, clubes y academias de idiomas y arte. Una app simple y accesible para resolver
-          coberturas, búsquedas y postulaciones de trabajo en forma inmediata.
+          En UNIDOAR, nuestra tecnología conecta de manera directa e inteligente a profesionales con colegios, clubes,
+          institutos de idiomas y academias. Una app simple y accesible para resolver búsquedas, postulaciones y
+          coberturas de trabajo en forma inmediata.
         </p>
 
         <div className="mt-[30px] mb-[46px] flex flex-wrap justify-center gap-3">
           <div className="flex items-center gap-3 rounded-full border border-borde bg-white py-[7px] pr-[7px] pl-5 max-[560px]:w-full max-[560px]:justify-between">
             <span className="text-sm leading-none font-medium whitespace-nowrap text-apagado">Soy institución</span>
             <BotonLink
-              href={RUTA_REGISTRO_INSTITUCION}
+              href={RUTA_PUBLICAR_BUSQUEDA}
               variante="cta"
               className="h-10 min-h-10 rounded-full px-5 text-sm"
             >
