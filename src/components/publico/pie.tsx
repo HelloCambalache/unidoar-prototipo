@@ -1,11 +1,16 @@
 import Link from "next/link";
+import { FirmaCambalache } from "@/components/ui/firma-cambalache";
 import { CATEGORIAS } from "@/lib/catalogo";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
 
 const ENLACE =
   "rounded text-[13px] leading-none text-white/65 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste";
 
-const TITULO = "mb-4 text-xs leading-none font-semibold tracking-[.08em] text-white/40 uppercase";
+/** Los links tienen su propio color (azul de marca): sin uno explícito se ven oscuros sobre el fondo oscuro del pie. */
+const ENLACE_LEGAL =
+  "rounded text-white/60 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste";
+
+const TITULO ="mb-4 text-xs leading-none font-semibold tracking-[.08em] text-white/40 uppercase";
 
 /** Pie del sitio público (port de Footer.dc.html). */
 export function PiePublico() {
@@ -82,26 +87,16 @@ export function PiePublico() {
       <div className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 border-t border-white/12 pt-[18px] text-xs leading-none text-white/45">
         <span>© {new Date().getFullYear()} UNIDOAR. Todos los derechos reservados.</span>
         <div className="flex gap-5">
-          <Link href="/terminos" className="hover:text-white focus-visible:text-white">
+          <Link href="/terminos" className={ENLACE_LEGAL}>
             Términos
           </Link>
-          <Link href="/privacidad" className="hover:text-white focus-visible:text-white">
+          <Link href="/privacidad" className={ENLACE_LEGAL}>
             Privacidad
           </Link>
         </div>
       </div>
-      <div className="mx-auto mt-[22px] max-w-[1200px] border-t border-white/8 pt-[18px] text-center">
-        <a
-          href="https://cambalache.studio"
-          target="_blank"
-          rel="noopener"
-          className="inline-flex items-center gap-2 text-[12.5px] leading-none text-white/45 transition-colors hover:text-white/85"
-        >
-          Construido por Cambalache Studio
-          <span aria-hidden className="text-[13px] text-naranja">
-            ❤
-          </span>
-        </a>
+      <div className="mx-auto max-w-[1200px]">
+        <FirmaCambalache oscura />
       </div>
     </footer>
   );
