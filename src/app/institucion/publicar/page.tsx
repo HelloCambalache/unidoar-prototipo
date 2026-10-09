@@ -7,6 +7,8 @@ import { esUuid, tipoDeFormulario } from "@/lib/busquedas";
 import { NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { plazoLegible } from "@/lib/fechas";
 import { asignaturasPorCategoria, busquedaPropia } from "@/lib/queries/busquedas";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import { sedePrincipal } from "@/lib/sedes";
 
 export const metadata: Metadata = { title: "Publicar una búsqueda" };
 
@@ -22,14 +24,19 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
   // Desde el botón "Búsqueda urgente" de Buscar profesionales: la búsqueda nueva arranca como "Suplencia rápida".
   const esUrgente = (Array.isArray(urgente) ? urgente[0] : urgente) === "1";
 
-  const [catalogo, existente] = await Promise.all([
+  const [catalogo, existente, sedesGuardadas] = await Promise.all([
     asignaturasPorCategoria(),
     editarId ? (esUuid(editarId) ? busquedaPropia(institucion.id, editarId) : null) : null,
+    sedesDeInstitucion(institucion.id),
   ]);
   // ?editar= con un id que no existe o que es de otra institución.
   if (editarId && !existente) notFound();
 
-  const zonaDeLaInstitucion = institucion.zona ?? "";
+  // La sede de la búsqueda (o, en una nueva o sin sede, la principal): de ahí sale la zona que arranca en el formulario.
+  const sedeActual = sedesGuardadas.find((s) => s.id === existente?.sedeId) ?? sedePrincipal(sedesGuardadas);
+  const zonaDeLaSede = sedeActual?.zona ?? institucion.zona ?? "";
+  const sedeId = sedeActual?.id ?? "";
+  const sedes = sedesGuardadas.map((s) => ({ id: s.id, nombre: s.nombre, zona: s.zona ?? "" }));
   const inicial: ValoresFormulario = existente
     ? {
         puesto: existente.puesto,
@@ -40,7 +47,8 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         cargaHoraria: existente.cargaHoraria ?? "",
         turno: opcion(TURNOS, existente.turno),
         fechaInicio: existente.fechaInicio ?? "",
-        zona: existente.zona ?? zonaDeLaInstitucion,
+        sedeId,
+        zona: existente.zona ?? zonaDeLaSede,
         descripcion: existente.descripcion ?? "",
         requisitos: existente.requisitos.join("\n"),
         beneficios: existente.beneficios.join("\n"),
@@ -54,7 +62,8 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         cargaHoraria: "",
         turno: "",
         fechaInicio: "",
-        zona: zonaDeLaInstitucion,
+        sedeId,
+        zona: zonaDeLaSede,
         descripcion: "",
         requisitos: "",
         beneficios: "",
@@ -77,6 +86,7 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         busquedaId={existente?.id}
         inicial={inicial}
         catalogo={catalogo}
+        sedes={sedes}
         plazoActual={existente?.rapida && existente.venceEn ? plazoLegible(existente.venceEn).texto : null}
       />
     </>

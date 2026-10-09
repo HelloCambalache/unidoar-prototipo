@@ -5,7 +5,6 @@ import { cambiosDeVitrina, vitrinaSchema, type VitrinaAntes } from "./vitrina";
 const antes: VitrinaAntes = {
   nombre: "Colegio San Martín",
   tipo: "Colegio privado",
-  zona: "Vicente López",
   fundada: 1950,
   alumnos: 420,
   niveles: "Inicial, Primario",
@@ -17,7 +16,6 @@ const antes: VitrinaAntes = {
   mision: null,
   vision: null,
   valores: ["Respeto", "Esfuerzo"],
-  direccion: "Av. Maipú 1234",
   horarioAdministracion: null,
   logoUrl: null,
   portadaUrl: null,
@@ -32,7 +30,6 @@ const igualQueAntes = () =>
     logoUrl: "",
     nombre: antes.nombre,
     tipo: antes.tipo,
-    zona: antes.zona,
     fundada: String(antes.fundada),
     alumnos: String(antes.alumnos),
     niveles: antes.niveles,
@@ -44,7 +41,6 @@ const igualQueAntes = () =>
     mision: "",
     vision: "",
     valores: antes.valores,
-    direccion: antes.direccion,
     horarioAdministracion: "",
     fotos: antes.fotos,
     novedades: antes.novedades,
@@ -56,8 +52,8 @@ describe("cambiosDeVitrina (lo que queda en la actividad del equipo)", () => {
   });
 
   it("anota solo los campos que cambiaron, con su nombre en castellano", () => {
-    const d = { ...igualQueAntes(), nombre: "Colegio San Martín del Sur", direccion: "Av. Maipú 999" };
-    assert.deepEqual(cambiosDeVitrina(antes, d), ["nombre", "dirección"]);
+    const d = { ...igualQueAntes(), nombre: "Colegio San Martín del Sur", turnos: "Mañana y tarde" };
+    assert.deepEqual(cambiosDeVitrina(antes, d), ["nombre", "turnos"]);
   });
 
   it("no cuenta como cambio los espacios de más ni vacío contra null", () => {

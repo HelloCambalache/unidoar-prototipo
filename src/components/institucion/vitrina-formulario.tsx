@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { actualizarVitrinaComoAdmin } from "@/app/actions/backoffice-instituciones";
 import { actualizarVitrina } from "@/app/actions/institucion";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
@@ -10,7 +10,6 @@ import { VitrinaNovedades, type NovedadEditable } from "@/components/institucion
 import { VitrinaValores } from "@/components/institucion/vitrina-valores";
 import { LogoInstitucion } from "@/components/publico/logo-institucion";
 import { Boton, BotonLink, botonClases } from "@/components/ui/button";
-import { CampoDireccion, type Sugerencia } from "@/components/ui/campo-direccion";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
 import { Insignia } from "@/components/ui/insignia";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
@@ -81,8 +80,6 @@ export function VitrinaFormulario({
   const [fotosEd, setFotosEd] = useState(() => aEditable.fotos(fotos));
   const [novedadesEd, setNovedadesEd] = useState(() => aEditable.novedades(novedades));
   const [errores, setErrores] = useState<Record<string, string>>({});
-  const [firmaUbicacion, setFirmaUbicacion] = useState("");
-  const zonaAutomatica = useRef("");
   // Quitar una imagen reinicia su botón de subida (si no, seguiría mostrando el "✓" de la subida anterior).
   const [reinicios, setReinicios] = useState({ portada: 0, logo: 0 });
 
@@ -109,7 +106,6 @@ export function VitrinaFormulario({
       try {
         const carga = {
           ...d,
-          ubicacion: firmaUbicacion,
           fotos: fotosEd.map((f) => ({ ...(f.id ? { id: f.id } : {}), url: f.url, etiqueta: f.etiqueta })),
           novedades: novedadesEd.map((n) => ({
             ...(n.id ? { id: n.id } : {}),
@@ -132,15 +128,6 @@ export function VitrinaFormulario({
         toast("No pudimos guardar los cambios. Probá de nuevo.", "error");
       }
     });
-  };
-
-  // Al tomar una sugerencia de ubicación, la zona se completa sola si estaba vacía o si era la que se había puesto antes sola.
-  const alElegirUbicacion = (s: Sugerencia | null) => {
-    setFirmaUbicacion(s?.token ?? "");
-    if (s && (!d.zona.trim() || d.zona === zonaAutomatica.current)) {
-      zonaAutomatica.current = s.zona;
-      set("zona", s.zona);
-    }
   };
 
   const cantidadErrores = Object.keys(errores).length;
@@ -288,18 +275,6 @@ export function VitrinaFormulario({
                     ))}
                   </Select>
                   <MensajeError>{errores.tipo}</MensajeError>
-                </div>
-                <div className="min-w-[160px] flex-1">
-                  <input
-                    aria-label="Zona"
-                    aria-invalid={Boolean(errores.zona)}
-                    value={d.zona}
-                    onChange={(e) => set("zona", e.target.value)}
-                    placeholder="Zona (ej. Villa Adelina, Vicente López)"
-                    maxLength={160}
-                    className={cn(EN_LINEA, "text-[13px] text-apagado")}
-                  />
-                  <MensajeError>{errores.zona}</MensajeError>
                 </div>
                 <div className="flex min-w-[160px] flex-1 flex-col">
                   <label className="flex items-center gap-1 text-[13px] text-apagado">
@@ -549,15 +524,9 @@ export function VitrinaFormulario({
           <Tarjeta como="section" className="p-[18px]">
             <h2 className="m-0 mb-3 text-sm leading-none font-semibold">Datos de contacto</h2>
             <div className="flex flex-col gap-2.5">
-              <CampoDireccion
-                proposito="institucion"
-                defaultValue={d.direccion}
-                enviarFirma={false}
-                onCambioTexto={(v) => set("direccion", v)}
-                onElegida={alElegirUbicacion}
-                ayuda="Si la cambiás, volvemos a ubicarla para calcular las distancias."
-                error={errores.direccion}
-              />
+              <p className="m-0 text-[13px] leading-[1.45] text-apagado">
+                La dirección y la zona están en <a href="#sedes">Sedes</a>, al final de la página.
+              </p>
               <Campo etiqueta="Horario de administración" error={errores.horarioAdministracion}>
                 <Input
                   value={d.horarioAdministracion}

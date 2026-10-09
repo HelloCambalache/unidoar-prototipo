@@ -114,6 +114,41 @@ export const instituciones = pgTable(
   (t) => [index("instituciones_propietario_idx").on(t.propietarioId)],
 );
 
+/**
+ * Sedes: los lugares físicos de una institución (un colegio con sede Olivos y sede Pilar). Toda institución tiene siempre una
+ * sede principal (índice único parcial). Las columnas de ubicación de `instituciones` (dirección, partido, provincia, zona,
+ * lat, lng y CUE) son un ESPEJO de la sede principal: se mantienen juntas (`src/lib/queries/sedes.ts`) y sirven a lo que lee
+ * "la institución" sin pensar en sedes. Lo que depende de DÓNDE es la búsqueda (km, mapa, dirección) lee `busquedas.sede_id`.
+ * Tabla creada a mano en la base (con RLS), como la columna `busquedas.sede_id`: ver CLAUDE.md.
+ */
+export const institucionSedes = pgTable(
+  "institucion_sedes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** "Olivos", "Sede Pilar": cómo la llama la institución. La principal arranca como "Sede principal". */
+    nombre: text("nombre").notNull(),
+    direccion: text("direccion"),
+    partido: text("partido"),
+    provincia: text("provincia"),
+    /** Texto de zona para mostrar y cruzar con las zonas de los profesionales, ej. "Villa Adelina, Vicente López". */
+    zona: text("zona"),
+    lat: doublePrecision("lat"),
+    lng: doublePrecision("lng"),
+    /** Código del establecimiento (escuelas): identifica a la sede, no a toda la organización. Lo carga el equipo. */
+    cue: text("cue"),
+    esPrincipal: boolean("es_principal").notNull().default(false),
+    ...marcasDeTiempo,
+  },
+  (t) => [
+    index("institucion_sedes_institucion_idx").on(t.institucionId),
+    uniqueIndex("institucion_sedes_principal_uq").on(t.institucionId).where(sql`${t.esPrincipal}`),
+  ],
+);
+export type InstitucionSede = typeof institucionSedes.$inferSelect;
+
 export const institucionMiembros = pgTable(
   "institucion_miembros",
   {
@@ -209,6 +244,11 @@ export const busquedas = pgTable(
     horario: text("horario"),
     fechaInicio: date("fecha_inicio"),
     zona: text("zona"),
+    /**
+     * En qué sede es la búsqueda: de ahí salen los km, el mapa y la dirección. Null en búsquedas viejas o si se borró la sede
+     * (cerrada): se lee como la sede principal. Columna agregada a mano en la base.
+     */
+    sedeId: uuid("sede_id").references(() => institucionSedes.id, { onDelete: "set null" }),
     descripcion: text("descripcion"),
     requisitos: text("requisitos").array().notNull().default(sql`'{}'::text[]`),
     beneficios: text("beneficios").array().notNull().default(sql`'{}'::text[]`),

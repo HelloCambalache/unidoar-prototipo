@@ -7,18 +7,10 @@ import { Campo, Input } from "@/components/ui/campos";
 import { useToast } from "@/components/ui/toast";
 
 /**
- * Datos de la cuenta que la institución no edita sola (teléfono de contacto, CUIT y CUE). El CUE solo se muestra en los tipos
- * que son establecimientos educativos. El servidor vuelve a validar y deja constancia de qué campos se tocaron.
+ * Datos de la cuenta que la institución no edita sola (teléfono de contacto y CUIT). El CUE es de cada sede y se carga en el editor
+ * de sedes. El servidor vuelve a validar y deja constancia de qué campos se tocaron.
  */
-export function DatosDeCuentaFormulario({
-  institucionId,
-  inicial,
-  conCue,
-}: {
-  institucionId: string;
-  inicial: { telefono: string; cuit: string; cue: string };
-  conCue: boolean;
-}) {
+export function DatosDeCuentaFormulario({ institucionId, inicial }: { institucionId: string; inicial: { telefono: string; cuit: string } }) {
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState(inicial);
@@ -34,7 +26,7 @@ export function DatosDeCuentaFormulario({
     setErrores({});
     empezar(async () => {
       try {
-        const r = await actualizarDatosDeInstitucion(institucionId, { telefono: d.telefono, cuit: d.cuit, ...(conCue ? { cue: d.cue } : { cue: "" }) });
+        const r = await actualizarDatosDeInstitucion(institucionId, { telefono: d.telefono, cuit: d.cuit });
         if (r.ok) {
           toast("Datos de la cuenta guardados.");
         } else {
@@ -63,11 +55,6 @@ export function DatosDeCuentaFormulario({
       <Campo etiqueta="CUIT" error={errores.cuit || undefined}>
         <Input value={d.cuit} maxLength={20} autoComplete="off" aria-invalid={Boolean(errores.cuit)} onChange={(e) => set("cuit", e.target.value)} />
       </Campo>
-      {conCue && (
-        <Campo etiqueta="CUE" error={errores.cue || undefined}>
-          <Input value={d.cue} maxLength={20} autoComplete="off" aria-invalid={Boolean(errores.cue)} onChange={(e) => set("cue", e.target.value)} />
-        </Campo>
-      )}
       <div>
         <Boton type="submit" variante="secundario" tamano="md" disabled={pendiente}>
           {pendiente ? "Guardando…" : "Guardar datos"}

@@ -8,6 +8,8 @@ import {
 } from "@/lib/backoffice-instituciones";
 import { estadoEfectivo, hoyAR } from "@/lib/cobros";
 import { bajaSolicitadaEn } from "@/lib/queries/cuenta";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import type { SedeVista } from "@/lib/sedes";
 import { contiene } from "@/lib/sql-texto";
 
 /*
@@ -37,6 +39,8 @@ export type FilaInstitucion = {
   nombre: string;
   tipo: string;
   zona: string | null;
+  /** Cuántas sedes tiene. */
+  sedes: number;
   plan: string;
   verificada: boolean;
   suspendida: boolean;
@@ -61,6 +65,8 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
         contiene(instituciones.tipo, palabra),
         contiene(sql`coalesce(${instituciones.zona}, '')`, palabra),
         contiene(sql`coalesce(${instituciones.partido}, '')`, palabra),
+        // La zona o el partido de cualquiera de sus sedes (la ficha refleja solo a la principal).
+        sql`exists (select 1 from institucion_sedes s where s.institucion_id = ${instituciones.id} and (${contiene(sql`coalesce(s.zona, '')`, palabra)} or ${contiene(sql`coalesce(s.partido, '')`, palabra)}))`,
         contiene(sql`coalesce(${instituciones.cuit}, '')`, palabra),
       )!,
     );
@@ -93,6 +99,7 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
       nombre: instituciones.nombre,
       tipo: instituciones.tipo,
       zona: instituciones.zona,
+      sedes: cuenta(sql`select count(*) from institucion_sedes s where s.institucion_id = ${INST_ID}`).as("sedes"),
       plan: instituciones.plan,
       verificada: instituciones.verificada,
       suspendida: instituciones.suspendida,
@@ -130,6 +137,8 @@ export type FichaInstitucion = {
   institucion: typeof instituciones.$inferSelect;
   /** Email de la cuenta propietaria (null en instituciones de ejemplo sin cuenta). */
   emailPropietario: string | null;
+  /** Todas sus sedes, la principal primero (el equipo ve también el CUE). */
+  sedes: SedeVista[];
   equipo: { id: string; nombre: string | null; email: string; rol: string; estado: string }[];
   busquedas: {
     id: string;
@@ -165,7 +174,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
   const { institucion } = fila;
   const hoy = hoyAR();
 
-  const [equipo, listaBusquedas, [totales], listaFacturas, actividad, [suspension], baja] = await Promise.all([
+  const [equipo, listaBusquedas, [totales], listaFacturas, actividad, [suspension], baja, sedes] = await Promise.all([
     db
       .select({
         id: institucionMiembros.id,
@@ -238,6 +247,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
           .limit(1)
       : Promise.resolve([]),
     bajaSolicitadaEn(id),
+    sedesDeInstitucion(id),
   ]);
 
   const conEstado = listaFacturas.map((f) => ({
@@ -257,6 +267,7 @@ export async function fichaInstitucion(id: string): Promise<FichaInstitucion | n
   return {
     institucion,
     emailPropietario: fila.emailPropietario,
+    sedes,
     equipo,
     busquedas: listaBusquedas,
     busquedasTotal: totales?.busquedasTotal ?? 0,

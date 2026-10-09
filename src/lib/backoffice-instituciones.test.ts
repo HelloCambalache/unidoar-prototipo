@@ -3,24 +3,28 @@ import { describe, it } from "node:test";
 import { datosDeCuentaSchema, describirAccion } from "./backoffice-instituciones";
 
 describe("datos de la cuenta que edita el equipo", () => {
-  it("acepta teléfono, CUIT y CUE, y recorta los espacios", () => {
-    const r = datosDeCuentaSchema.parse({ telefono: " +54 11 5555-1234 ", cuit: " 30-12345678-9 ", cue: " 600123 " });
-    assert.deepEqual(r, { telefono: "+54 11 5555-1234", cuit: "30-12345678-9", cue: "600123" });
+  it("acepta teléfono y CUIT, y recorta los espacios", () => {
+    const r = datosDeCuentaSchema.parse({ telefono: " +54 11 5555-1234 ", cuit: " 30-12345678-9 " });
+    assert.deepEqual(r, { telefono: "+54 11 5555-1234", cuit: "30-12345678-9" });
   });
 
   it("vacío deja el dato sin cargar (null)", () => {
-    const r = datosDeCuentaSchema.parse({ telefono: "", cuit: "  ", cue: "" });
-    assert.deepEqual(r, { telefono: null, cuit: null, cue: null });
+    const r = datosDeCuentaSchema.parse({ telefono: "", cuit: "  " });
+    assert.deepEqual(r, { telefono: null, cuit: null });
   });
 
   it("rechaza un teléfono demasiado corto o demasiado largo", () => {
-    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "123", cuit: "", cue: "" }).success, false);
-    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "1".repeat(41), cuit: "", cue: "" }).success, false);
+    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "123", cuit: "" }).success, false);
+    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "1".repeat(41), cuit: "" }).success, false);
   });
 
-  it("rechaza un CUIT o CUE que no entra", () => {
-    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "", cuit: "1".repeat(21), cue: "" }).success, false);
-    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "", cuit: "", cue: "1".repeat(21) }).success, false);
+  it("rechaza un CUIT que no entra", () => {
+    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "", cuit: "1".repeat(21) }).success, false);
+  });
+
+  it("el CUE ya no es de la cuenta: es de cada sede y no pasa por acá", () => {
+    const r = datosDeCuentaSchema.parse({ telefono: "", cuit: "", cue: "600123" });
+    assert.ok(!("cue" in r));
   });
 });
 
@@ -34,6 +38,10 @@ describe("actividad del equipo al editar una institución", () => {
 
   it("los datos de la cuenta también", () => {
     assert.equal(describirAccion("institucion.editar_datos", { campos: ["teléfono"] }), "Editó los datos de la cuenta · teléfono");
+  });
+
+  it("las sedes también, con los nombres de lo que cambió", () => {
+    assert.equal(describirAccion("institucion.editar_sedes", { campos: ["sedes agregadas", "CUE de sede"] }), "Editó las sedes · sedes agregadas, CUE de sede");
   });
 
   it("un pago registrado muestra el mes, el medio y la nota si la hay", () => {

@@ -236,6 +236,23 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             </div>
           </Seccion>
 
+          {ficha.sedes.length > 1 && (
+            <Seccion titulo={`Sedes (${ficha.sedes.length})`}>
+              <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-[13px] leading-[1.4] text-tinta-2">
+                {ficha.sedes.map((s) => (
+                  <li key={s.id}>
+                    <div className="font-semibold text-tinta">
+                      {s.nombre}
+                      {s.esPrincipal && <span className="ml-1.5 font-normal text-apagado">· principal</span>}
+                    </div>
+                    <div className="text-apagado">{[s.direccion, s.zona].filter(Boolean).join(" · ") || "Sin dirección"}</div>
+                    {s.cue && <div className="text-apagado">{`CUE ${s.cue}`}</div>}
+                  </li>
+                ))}
+              </ul>
+            </Seccion>
+          )}
+
           <Seccion titulo="Datos">
             <div className="flex flex-col gap-2">
               <Dato k="Tipo">{i.tipo}</Dato>

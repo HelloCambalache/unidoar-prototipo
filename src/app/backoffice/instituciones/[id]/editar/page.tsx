@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DatosDeCuentaFormulario } from "@/components/backoffice/inst-datos-cuenta";
 import { VolverBo } from "@/components/backoffice/inst-volver";
+import { SedesFormulario } from "@/components/institucion/sedes-formulario";
 import { VitrinaFormulario } from "@/components/institucion/vitrina-formulario";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
@@ -9,6 +10,7 @@ import { requerirUsuario } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { TIPOS_CON_CUE } from "@/lib/catalogo";
 import { institucionParaEditar } from "@/lib/queries/backoffice-instituciones";
+import { sedesParaEditar } from "@/lib/queries/sedes";
 import { datosVitrina } from "@/lib/queries/vitrina";
 import { datosInicialesDeVitrina } from "@/lib/vitrina";
 
@@ -27,7 +29,7 @@ export default async function EditarInstitucion({ params }: { params: Promise<{ 
   const i = await institucionParaEditar(id);
   if (!i) notFound();
 
-  const datos = await datosVitrina(i.id);
+  const [datos, sedes] = await Promise.all([datosVitrina(i.id), sedesParaEditar(i)]);
 
   return (
     <>
@@ -44,17 +46,14 @@ export default async function EditarInstitucion({ params }: { params: Promise<{ 
           busquedasAbiertas={datos.busquedasAbiertas}
           almacenamientoDisponible={almacenamientoConfigurado()}
         />
+        <SedesFormulario institucionIdAdmin={i.id} sedes={sedes} conCue={TIPOS_CON_CUE.includes(i.tipo)} />
       </div>
       <Tarjeta className="max-w-[560px] p-[22px]">
         <EtiquetaSeccion className="mb-1">Datos de la cuenta</EtiquetaSeccion>
         <p className="m-0 mb-4 text-[13px] leading-[1.5] text-apagado">
-          Lo que la institución cargó en el alta y no puede cambiar desde su perfil.
+          Lo que la institución cargó en el alta y no puede cambiar desde su perfil. El CUE se carga en cada sede.
         </p>
-        <DatosDeCuentaFormulario
-          institucionId={i.id}
-          inicial={{ telefono: i.telefono ?? "", cuit: i.cuit ?? "", cue: i.cue ?? "" }}
-          conCue={TIPOS_CON_CUE.includes(i.tipo)}
-        />
+        <DatosDeCuentaFormulario institucionId={i.id} inicial={{ telefono: i.telefono ?? "", cuit: i.cuit ?? "" }} />
       </Tarjeta>
     </>
   );
