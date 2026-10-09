@@ -7,7 +7,7 @@ import type { Usuario } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
-import { aplicarResolucionConMotivo, aplicarVerificacion } from "@/lib/backoffice-docentes-escrituras";
+import { aplicarResolucionConMotivo, aplicarVerificacion, aplicarVerificacionDeTitulo } from "@/lib/backoffice-docentes-escrituras";
 import { esUuid } from "@/lib/busquedas";
 import { borrarArchivos } from "@/lib/queries/archivos";
 
@@ -71,6 +71,27 @@ export async function verificarDocente(
     await borrarArchivos(archivosDni);
     revalidarVerificacion(docenteId);
   }
+  return resultado;
+}
+
+/**
+ * Valida el título de alguien ya verificado (quien estudiaba, se recibió y lo subió desde Mi perfil). No pasa por la cola:
+ * un solo botón en la ficha. Le avisa en la campanita.
+ */
+export async function verificarTitulo(docenteId: string): Promise<Resultado> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(docenteId)) return fallo(NO_ENCONTRADO);
+
+  const resultado = await transaccion(async (tx): Promise<Resultado> => {
+    const r = await aplicarVerificacionDeTitulo(tx, docenteId);
+    if (!r.ok) return r;
+    await registrarAuditoria(
+      { usuarioId: admin.id, accion: "docente.verificar_titulo", entidad: "docente", entidadId: docenteId, detalle: r.data },
+      tx,
+    );
+    return ok();
+  });
+  if (resultado.ok) revalidarVerificacion(docenteId);
   return resultado;
 }
 

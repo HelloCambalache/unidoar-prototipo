@@ -27,6 +27,7 @@ import {
   rutaPasoPendienteDocente,
   type EstadoFormulario,
 } from "@/lib/onboarding";
+import { leerPorcentaje } from "@/lib/estudiantes";
 import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
@@ -258,6 +259,14 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     return conError(formData, "Revisá los campos marcados.", { asignaturas: "Elegí asignaturas de la lista de esa categoría." });
   }
 
+  // Quien todavía estudia declara qué porcentaje de las materias aprobó (lo respalda la constancia de alumno regular).
+  let porcentajeMaterias: number | null = null;
+  if (estudio === "estudiante") {
+    const lectura = leerPorcentaje(formData.get("porcentaje"));
+    if (!lectura.ok) return conError(formData, "Revisá los campos marcados.", { porcentaje: lectura.error });
+    porcentajeMaterias = lectura.valor;
+  }
+
   const db = getDb();
   let docente = await docenteDeUsuario(usuario.id);
   if (docente?.onboardingCompleto) redirect(RUTA_INICIO.docente);
@@ -280,10 +289,24 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     if (!docente) return conError(formData, "No pudimos crear tu perfil. Probá de nuevo.");
   }
 
+  // Si cambió a "ya me recibí", la constancia de alumno regular que había subido ya no corresponde.
+  const [previo] = await db.select({ documentos: docenteDetalle.documentos }).from(docenteDetalle).where(eq(docenteDetalle.docenteId, docente.id)).limit(1);
+  const { constancia: constanciaPrevia, ...documentosSinConstancia } = previo?.documentos ?? {};
+  const quitaConstancia = estudio === "recibido" && Boolean(constanciaPrevia);
+
   await db
     .insert(docenteDetalle)
-    .values({ docenteId: docente.id, situacionEstudio: estudio })
-    .onConflictDoUpdate({ target: docenteDetalle.docenteId, set: { situacionEstudio: estudio, actualizadoEn: new Date() } });
+    .values({ docenteId: docente.id, situacionEstudio: estudio, porcentajeMaterias })
+    .onConflictDoUpdate({
+      target: docenteDetalle.docenteId,
+      set: {
+        situacionEstudio: estudio,
+        porcentajeMaterias,
+        ...(quitaConstancia ? { documentos: documentosSinConstancia } : {}),
+        actualizadoEn: new Date(),
+      },
+    });
+  if (quitaConstancia) await borrarArchivos([constanciaPrevia]);
 
   revalidatePath("/docente", "layout");
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/docente/3");
@@ -415,7 +438,7 @@ export async function guardarNivelesYHorarios(_previo: EstadoFormulario, formDat
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/docente/4");
 }
 
-const DOCUMENTOS_DEL_ALTA = ["dniFrente", "dniDorso", "credencial"] as const;
+const DOCUMENTOS_DEL_ALTA = ["dniFrente", "dniDorso", "credencial", "constancia"] as const;
 
 /**
  * "Subí tu documentación" (último paso): guarda los paths de lo que subió al bucket privado y cierra el alta

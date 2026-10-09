@@ -84,7 +84,7 @@ export const hayFiltrosBoDocentes = (f: FiltrosBoDocentes) => !!(f.q || f.discip
 
 /** Un documento del docente tal como lo ve el equipo: con el enlace firmado listo para abrir (vence a los 15 minutos). */
 export type DocumentoBo = {
-  clave: "dniFrente" | "dniDorso" | "credencial" | "conducta" | "cv";
+  clave: "dniFrente" | "dniDorso" | "credencial" | "constancia" | "conducta" | "cv";
   etiqueta: string;
   /** No bloquea la verificación si falta. */
   opcional: boolean;

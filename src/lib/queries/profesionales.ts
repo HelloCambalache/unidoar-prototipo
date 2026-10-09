@@ -22,8 +22,10 @@ import { ETAPA_LABEL } from "@/lib/catalogo";
 import { normalizarTexto } from "@/lib/busqueda-ia";
 import { grillaDesdeLista } from "@/lib/disponibilidad";
 import type { FiltrosDocentes } from "@/lib/filtros-docentes";
+import { esEstudiante } from "@/lib/estudiantes";
 import { distanciaKm } from "@/lib/geo";
 import { grillaDesdeJson, grillaTieneHorarios } from "@/lib/onboarding";
+import { estudiantesEntre } from "@/lib/queries/estudiantes";
 import { docenteVisible } from "@/lib/visibilidad";
 
 /*
@@ -218,6 +220,8 @@ export type DocenteTarjeta = {
   coincide: Coincidencia | null;
   /** Cumple todos los criterios de una búsqueda rápida de contexto. */
   urgente: boolean;
+  /** Todavía estudia (presenta la constancia de alumno regular en lugar del título); null si ya se recibió. */
+  estudiante: { porcentaje: number | null } | null;
   relaciones: RelacionActiva[];
 };
 
@@ -424,13 +428,15 @@ export async function buscarDocentes(args: {
 
   const ids = filas.map((f) => f.id);
   const activasIds = activas.map((a) => a.id);
-  const relaciones =
+  const [relaciones, estudiantes] = await Promise.all([
     ids.length && activasIds.length
-      ? await db
+      ? db
           .select({ docenteId: postulaciones.docenteId, busquedaId: postulaciones.busquedaId, origen: postulaciones.origen })
           .from(postulaciones)
           .where(and(inArray(postulaciones.docenteId, ids), inArray(postulaciones.busquedaId, activasIds)))
-      : [];
+      : [],
+    estudiantesEntre(ids),
+  ]);
 
   const docentesTarjeta = filas.map((f): DocenteTarjeta => {
     const detalle = criterios.map((c, i) => ({ clave: c.clave, etiqueta: c.etiqueta, cumple: f[`c${i}`] }));
@@ -455,6 +461,7 @@ export async function buscarDocentes(args: {
       favorito: f.favorito,
       coincide: criterios.length > 1 ? { cumplidos, total: criterios.length, detalle } : null,
       urgente: !!contexto?.rapida && criterios.length > 1 && cumplidos === criterios.length,
+      estudiante: estudiantes.get(f.id) ?? null,
       relaciones: relaciones.filter((r) => r.docenteId === f.id).map((r) => ({ busquedaId: r.busquedaId, origen: r.origen })),
     };
   });
@@ -485,6 +492,8 @@ export type PerfilDocente = {
   grilla: GrillaDisponibilidad | null;
   /** Cuándo actualizó su disponibilidad por última vez. */
   grillaActualizadaEn: Date | null;
+  /** Todavía estudia: presenta la constancia de alumno regular en lugar del título. Null si ya se recibió. */
+  estudiante: { porcentaje: number | null } | null;
   /** Búsquedas activas de la institución a las que se lo puede invitar, con su situación actual (si ya está). */
   busquedasDelDocente: (BusquedaInvitable & { relacion: { origen: "postulacion" | "invitacion"; etapa: EtapaPostulacion } | null })[];
   /** En qué búsquedas de la institución está cargado, en cualquier estado. */
@@ -527,8 +536,13 @@ export async function perfilDeDocente(
       .where(and(eq(cvEnviados.docenteId, docenteId), eq(cvEnviados.institucionId, institucionId)))
       .limit(1),
     db
-      // Solo la grilla: docente_detalle también guarda DNI, CUIL y domicilio, que no se leen acá.
-      .select({ grilla: docenteDetalle.grillaDisponibilidad, actualizadoEn: docenteDetalle.actualizadoEn })
+      // Solo la grilla y si estudia: docente_detalle también guarda DNI, CUIL y domicilio, que no se leen acá.
+      .select({
+        grilla: docenteDetalle.grillaDisponibilidad,
+        actualizadoEn: docenteDetalle.actualizadoEn,
+        situacionEstudio: docenteDetalle.situacionEstudio,
+        porcentajeMaterias: docenteDetalle.porcentajeMaterias,
+      })
       .from(docenteDetalle)
       .where(eq(docenteDetalle.docenteId, docenteId))
       .limit(1),
@@ -566,6 +580,7 @@ export async function perfilDeDocente(
     puedeContactar: !!cv || relaciones.some((r) => r.origen === "postulacion"),
     grilla,
     grillaActualizadaEn: usaGuardada ? horarios!.actualizadoEn : grilla ? docente.actualizadoEn : null,
+    estudiante: esEstudiante(horarios?.situacionEstudio) ? { porcentaje: horarios?.porcentajeMaterias ?? null } : null,
     busquedasDelDocente: activas.map((b) => {
       const r = relaciones.find((x) => x.busquedaId === b.id);
       return { ...b, relacion: r ? { origen: r.origen, etapa: r.etapa } : null };

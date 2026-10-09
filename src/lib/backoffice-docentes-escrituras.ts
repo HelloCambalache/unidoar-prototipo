@@ -4,6 +4,7 @@ import { docenteDetalle, docentes } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { VERIFICACION_BO } from "@/lib/backoffice-docentes";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
+import { esEstudiante } from "@/lib/estudiantes";
 import { sinArchivosDeDni } from "@/lib/perfil-docente";
 import { avisar } from "@/lib/queries/avisos";
 import type { Ejecutor } from "@/lib/queries/pipeline";
@@ -68,14 +69,19 @@ export async function aplicarVerificacion(
   const { docente } = cola;
 
   const [detalle] = await tx
-    .select({ documentos: docenteDetalle.documentos })
+    .select({ documentos: docenteDetalle.documentos, situacionEstudio: docenteDetalle.situacionEstudio })
     .from(docenteDetalle)
     .where(eq(docenteDetalle.docenteId, docente.id))
     .limit(1);
   const docs = detalle?.documentos ?? {};
+  // Quien todavía estudia presenta la constancia de alumno regular: respalda su identidad y su condición de estudiante, pero NO
+  // verifica un título que todavía no existe (aunque el pedido diga lo contrario).
+  const estudiante = esEstudiante(detalle?.situacionEstudio);
+  const tituloVerificado = estudiante ? false : revisado.titulo;
   const sinDocumento = [
     ...(docs.dniFrente && docs.dniDorso ? [] : ["dni"]),
-    ...(revisado.titulo && !docs.credencial ? ["credencial"] : []),
+    ...(estudiante && !docs.constancia ? ["constancia"] : []),
+    ...(tituloVerificado && !docs.credencial ? ["credencial"] : []),
     ...(revisado.antecedentes && !docs.conducta ? ["conducta"] : []),
   ];
 
@@ -83,7 +89,7 @@ export async function aplicarVerificacion(
     .update(docentes)
     .set({
       verificacion: "verificado",
-      tituloVerificado: revisado.titulo,
+      tituloVerificado,
       antecedentesVerificados: revisado.antecedentes,
       verificacionNota: null,
       verificacionRevisadaEn: new Date(),
@@ -97,7 +103,7 @@ export async function aplicarVerificacion(
 
   const queSeVerifico = [
     "tu identidad",
-    ...(revisado.titulo ? ["tu título o credencial"] : []),
+    ...(tituloVerificado ? ["tu título o credencial"] : []),
     ...(revisado.antecedentes ? ["tu certificado de buena conducta"] : []),
   ];
   await avisar(tx, docente.usuarioId, {
@@ -110,13 +116,52 @@ export async function aplicarVerificacion(
   return ok({
     detalle: {
       estadoAnterior: docente.verificacion,
-      titulo: revisado.titulo,
+      titulo: tituloVerificado,
+      estudiante,
       antecedentes: revisado.antecedentes,
       sinDocumento,
       dniBorrado: archivosDni.length > 0,
     },
     archivosDni,
   });
+}
+
+/**
+ * Valida el título de un profesional cuya identidad ya estaba verificada: pasa cuando quien estudiaba se recibe y lo sube
+ * después desde Mi perfil (ya no está en la cola). Solo marca el título; la identidad y los antecedentes no se tocan.
+ */
+export async function aplicarVerificacionDeTitulo(tx: Ejecutor, docenteId: string): Promise<Resultado<Detalle>> {
+  const [d] = await tx
+    .select({
+      id: docentes.id,
+      usuarioId: docentes.usuarioId,
+      verificacion: docentes.verificacion,
+      tituloVerificado: docentes.tituloVerificado,
+    })
+    .from(docentes)
+    .where(eq(docentes.id, docenteId))
+    .limit(1)
+    .for("update");
+  if (!d) return fallo(NO_ENCONTRADO);
+  if (d.verificacion !== "verificado") return fallo("Este perfil todavía no está verificado: el título se revisa desde la cola de verificación.");
+  if (d.tituloVerificado) return fallo("El título ya figura como verificado. Actualizá la pantalla.");
+
+  const [detalle] = await tx
+    .select({ documentos: docenteDetalle.documentos, situacionEstudio: docenteDetalle.situacionEstudio })
+    .from(docenteDetalle)
+    .where(eq(docenteDetalle.docenteId, d.id))
+    .limit(1);
+  if (esEstudiante(detalle?.situacionEstudio)) return fallo("Todavía figura como estudiante: no tiene un título para validar.");
+  if (!detalle?.documentos?.credencial) return fallo("Todavía no subió el título.");
+
+  await tx.update(docentes).set({ tituloVerificado: true, verificacionRevisadaEn: new Date() }).where(eq(docentes.id, d.id));
+  await avisar(tx, d.usuarioId, {
+    tipo: "verificacion",
+    titulo: AVISO_DE,
+    texto: "verificó tu título o credencial. Las instituciones ya lo ven en tu perfil.",
+    enlace: ENLACE_PERFIL,
+  });
+  return ok({ titulo: true });
 }
 
 /** Pasa a «Corrección pedida» o «Rechazado» con el motivo, que se le muestra al docente. */

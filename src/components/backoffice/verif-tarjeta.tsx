@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { cuilLegible, dniLegible } from "@/lib/backoffice-docentes";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { fechaCorta, fechaDeInput, haceTiempo } from "@/lib/fechas";
 import type { ItemCola } from "@/lib/queries/backoffice-docentes";
 import { cn, iniciales } from "@/lib/utils";
@@ -80,7 +81,9 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
             <Dato etiqueta="Nacimiento">
               {item.identidad.fechaNacimiento ? fechaDeInput(item.identidad.fechaNacimiento) : "—"}
             </Dato>
-            <Dato etiqueta="Situación">{item.identidad.estudia ? "Todavía estudia" : "Ya se recibió"}</Dato>
+            <Dato etiqueta="Situación">
+              {item.identidad.estudia ? etiquetaDeEstudiante(item.identidad.porcentajeMaterias) : "Ya se recibió"}
+            </Dato>
           </dl>
           {item.verificacion === "correccion" && item.nota && (
             <div className="mt-4 rounded-lg bg-[#FEF1DF] px-3.5 py-2.5 text-[13px] leading-normal text-[#8A4B07]">
@@ -102,8 +105,14 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
         docenteId={item.id}
         nombre={item.nombre}
         credencial={credencial.etiqueta}
-        tiene={{ dni: doc("dniFrente").subido && doc("dniDorso").subido, credencial: credencial.subido, conducta: doc("conducta").subido }}
+        tiene={{
+          dni: doc("dniFrente").subido && doc("dniDorso").subido,
+          credencial: credencial.subido,
+          constancia: item.documentos.some((d) => d.clave === "constancia" && d.subido),
+          conducta: doc("conducta").subido,
+        }}
         credencialNoAplica={credencial.noAplica}
+        estudiante={item.identidad.estudia}
       />
     </Tarjeta>
   );

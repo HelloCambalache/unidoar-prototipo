@@ -15,6 +15,7 @@ import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { CATEGORIA_INFO, ETAPA_LABEL } from "@/lib/catalogo";
+import { etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { haceTiempo } from "@/lib/fechas";
 import { opcionesDeInvitacion } from "@/lib/invitaciones";
 import { busquedaDeContexto, perfilDeDocente } from "@/lib/queries/profesionales";
@@ -160,8 +161,9 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
                 <div className="text-sm leading-snug text-apagado">
                   {d.subtitulo ?? [info.label, d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ")}
                 </div>
-                {d.zonas.length > 0 && (
+                {(perfil.estudiante || d.zonas.length > 0) && (
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {perfil.estudiante && <Insignia tono="azul">{etiquetaDeEstudiante(perfil.estudiante.porcentaje)}</Insignia>}
                     {d.zonas.map((z) => (
                       <Insignia key={z}>{z}</Insignia>
                     ))}
@@ -173,9 +175,16 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
               <EtiquetaSeccion className="mb-3">Estado de verificación</EtiquetaSeccion>
               <div className="flex flex-wrap gap-x-[26px] gap-y-3 text-[13px] leading-none">
                 <Tilde ok={perfil.verificado}>Identidad (DNI)</Tilde>
-                <Tilde ok={d.tituloVerificado}>
-                  {d.tituloVerificado ? "Título profesional" : "Título · lo valida la institución al contratar"}
-                </Tilde>
+                {perfil.estudiante ? (
+                  // Quien todavía estudia no tiene título que validar: el equipo revisa la constancia de alumno regular junto con el DNI.
+                  <Tilde ok={perfil.verificado}>
+                    {perfil.verificado ? "Constancia de alumno regular" : "Constancia de alumno regular · pendiente"}
+                  </Tilde>
+                ) : (
+                  <Tilde ok={d.tituloVerificado}>
+                    {d.tituloVerificado ? "Título profesional" : "Título · lo valida la institución al contratar"}
+                  </Tilde>
+                )}
                 <Tilde ok={d.antecedentesVerificados}>
                   {d.antecedentesVerificados ? "Certificado de buena conducta" : "Certificado de buena conducta · pendiente"}
                 </Tilde>

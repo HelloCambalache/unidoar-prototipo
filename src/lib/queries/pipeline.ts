@@ -19,6 +19,7 @@ import { distanciaKm, kmLegible } from "@/lib/geo";
 import { autorDeNota, type BusquedaPipeline, type NotaVista, type OpcionBusqueda, type PostulanteTarjeta } from "@/lib/pipeline";
 import { iniciales } from "@/lib/utils";
 import { busquedaPropia } from "@/lib/queries/busquedas";
+import { estudiantesEntre } from "@/lib/queries/estudiantes";
 
 type Db = ReturnType<typeof getDb>;
 /** La base o una transacción: las acciones pasan `tx` para que el chequeo de propiedad y la escritura sean atómicos. */
@@ -84,7 +85,7 @@ export async function pipelineDeBusqueda(
 
   const ids = filas.map((f) => f.p.id);
   const docenteIds = filas.map((f) => f.d.id);
-  const [notas, guardados] = await Promise.all([
+  const [notas, guardados, estudiantes] = await Promise.all([
     ids.length
       ? db
           .select()
@@ -98,6 +99,7 @@ export async function pipelineDeBusqueda(
           .from(favoritos)
           .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "docente"), inArray(favoritos.refId, docenteIds)))
       : [],
+    estudiantesEntre(docenteIds),
   ]);
 
   // Quién escribió cada nota: su nombre en el equipo de esta institución, y su email como último recurso.
@@ -170,6 +172,7 @@ export async function pipelineDeBusqueda(
       cv: {
         verificado: d.verificacion === "verificado",
         tituloVerificado: d.tituloVerificado,
+        estudiante: estudiantes.get(d.id) ?? null,
         antecedentesVerificados: d.antecedentesVerificados,
         subtitulo: d.subtitulo,
         resumen: d.resumen,

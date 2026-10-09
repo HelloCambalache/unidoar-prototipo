@@ -7,6 +7,7 @@ import { Boton } from "@/components/ui/button";
 import { AvisoSinAlmacenamiento, SubirArchivo } from "@/components/ui/subir-archivo";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
 import { AlertaError, EnlaceVolver, TituloPaso } from "@/components/onboarding/elementos";
+import { CONSTANCIA } from "@/lib/estudiantes";
 import { CATEGORIA_ALTA, ID_FORMULARIO_ONBOARDING, type SituacionEstudio } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +62,8 @@ function Fila({
 }
 
 /**
- * "Subí tu documentación": DNI (frente y dorso) y, si ya se recibió, el título o certificación. Los archivos van
+ * "Subí tu documentación": DNI (frente y dorso) y, si ya se recibió, el título o certificación (si todavía estudia, la
+ * constancia de alumno regular en su lugar). Los archivos van
  * al bucket privado; acá solo se guardan sus paths. Subir es opcional: el perfil queda "sin verificar" (pendiente)
  * hasta que el equipo revise lo que haya. Acá se cierra el alta.
  */
@@ -81,6 +83,7 @@ export function PasoDocumentacion({
     dniFrente: Boolean(documentos.dniFrente),
     dniDorso: Boolean(documentos.dniDorso),
     credencial: Boolean(documentos.credencial),
+    constancia: Boolean(documentos.constancia),
   });
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
   const marcar = (clave: keyof typeof cargados) => (valor: string) => setCargados((c) => ({ ...c, [clave]: valor !== "" }));
@@ -134,7 +137,27 @@ export function PasoDocumentacion({
             onCambio={marcar("dniDorso")}
           />
         </Fila>
-        {estudio !== "estudiante" && (
+        {estudio === "estudiante" ? (
+          // Quien todavía estudia presenta la constancia de alumno regular en lugar del título.
+          <Fila
+            icono="credencial"
+            cargado={cargados.constancia}
+            nombre={CONSTANCIA.nombre}
+            detalle={cargados.constancia ? CONSTANCIA.corto : CONSTANCIA.vacio}
+          >
+            <SubirArchivo
+              bucket="privado"
+              carpeta="documentos"
+              nombre="constancia"
+              etiqueta={CONSTANCIA.nombre}
+              variante="boton"
+              textoBoton="Subir archivo"
+              valorInicial={documentos.constancia}
+              disponible={almacenamientoDisponible}
+              onCambio={marcar("constancia")}
+            />
+          </Fila>
+        ) : (
           <Fila
             icono="credencial"
             cargado={cargados.credencial}

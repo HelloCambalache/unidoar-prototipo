@@ -28,6 +28,7 @@ export default async function PasoDocenteCategoria() {
           categoria: docente?.categoria ?? "educador",
           asignaturas: docente?.asignaturas ?? [],
           estudio: detalle?.situacionEstudio === "estudiante" ? "estudiante" : "recibido",
+          porcentaje: detalle?.porcentajeMaterias != null ? String(detalle.porcentajeMaterias) : "",
         }}
       />
     </MarcoOnboarding>

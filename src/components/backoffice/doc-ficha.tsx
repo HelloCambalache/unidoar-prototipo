@@ -5,6 +5,8 @@ import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { cuilLegible, dniLegible, type DocumentoBo } from "@/lib/backoffice-docentes";
 import { CATEGORIA_INFO, ETAPA_LABEL } from "@/lib/catalogo";
+import { DocVerificarTitulo } from "@/components/backoffice/doc-verificar-titulo";
+import { esEstudiante, etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import type { FichaDocenteBo } from "@/lib/queries/backoffice-docentes";
 import { cn, iniciales } from "@/lib/utils";
@@ -195,6 +197,12 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
       : ESTADO.sin;
   const buenaConducta: EstadoDoc = conducta?.subido ? (d.antecedentesVerificados ? ESTADO.validado : ESTADO.revision) : ESTADO.sin;
   const curriculum: EstadoDoc = cv?.subido ? ESTADO.cargado : ESTADO.sin;
+  // Quien todavía estudia: la constancia de alumno regular y el porcentaje que declaró (respaldan su identidad y su condición).
+  const constancia = doc("constancia");
+  const estudia = esEstudiante(identidad.situacionEstudio);
+  const estadoConstancia: EstadoDoc = constancia?.subido ? (identidadValidada ? ESTADO.validado : ESTADO.revision) : ESTADO.sin;
+  // Ya verificado (no está en la cola) con un título cargado que nadie validó: típico de quien estudiaba, se recibió y lo subió después.
+  const titulaParaValidar = identidadValidada && !d.tituloVerificado && !!credencial?.subido && !estudia;
 
   const filas: { clave: string; etiqueta: string; detalle?: string; estado: EstadoDoc; enlaces?: React.ReactNode }[] = [
     {
@@ -205,11 +213,27 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
       enlaces: <Enlaces docs={[{ etiqueta: "Frente", d: frente }, { etiqueta: "Dorso", d: dorso }]} />,
     },
     { clave: "cuil", etiqueta: "CUIL", detalle: identidad.cuil ? cuilLegible(identidad.cuil) : undefined, estado: cuil },
+    ...(estudia || constancia
+      ? [
+          {
+            clave: "constancia",
+            etiqueta: "Constancia de alumno regular",
+            detalle: estudia ? etiquetaDeEstudiante(identidad.porcentajeMaterias) : undefined,
+            estado: estadoConstancia,
+            enlaces: <Enlaces docs={[{ etiqueta: "Ver", d: constancia }]} />,
+          },
+        ]
+      : []),
     {
       clave: "credencial",
       etiqueta: credencial?.etiqueta ?? "Título",
       estado: titulo,
-      enlaces: <Enlaces docs={[{ etiqueta: "Ver", d: credencial }]} />,
+      enlaces: (
+        <>
+          <Enlaces docs={[{ etiqueta: "Ver", d: credencial }]} />
+          {titulaParaValidar && <DocVerificarTitulo docenteId={d.id} nombre={`${d.nombre} ${d.apellido}`.trim()} />}
+        </>
+      ),
     },
     {
       clave: "conducta",

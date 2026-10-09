@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia, Verificado } from "@/components/ui/insignia";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { kmLegible } from "@/lib/geo";
 import { opcionesDeInvitacion } from "@/lib/invitaciones";
 import type { BusquedaInvitable, DocenteTarjeta } from "@/lib/queries/profesionales";
@@ -88,8 +89,9 @@ export function TarjetaDocente({
         <BotonFavoritoDocente docenteId={d.id} nombre={nombreCompleto} favorito={d.favorito} />
       </div>
 
-      {tags.length > 0 && (
+      {(d.estudiante || tags.length > 0) && (
         <div className="mb-2.5 flex flex-wrap gap-1.5">
+          {d.estudiante && <Insignia tono="azul">{etiquetaDeEstudiante(d.estudiante.porcentaje)}</Insignia>}
           {tags.map((t) => (
             <Insignia key={t}>{t}</Insignia>
           ))}

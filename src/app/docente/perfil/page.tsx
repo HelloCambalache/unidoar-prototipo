@@ -14,6 +14,7 @@ import {
 import type { Docente } from "@/db/schema";
 import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirDocente } from "@/lib/auth";
+import { CONSTANCIA, esEstudiante, situacionDeEstudio } from "@/lib/estudiantes";
 import { CATEGORIA_ALTA } from "@/lib/onboarding";
 import { pendientesDePerfil } from "@/lib/perfil";
 import { identidadFija, type DatosPerfil } from "@/lib/perfil-docente";
@@ -46,14 +47,17 @@ export default async function PerfilDocentePage() {
   const estado = (verificado: boolean, subido: boolean): EstadoDocumento =>
     verificado ? "verificado" : subido ? "revision" : "sin";
   const conductaEstado = estado(docente.antecedentesVerificados, !!docs.conducta);
-  // A quien todavía cursa no se le pide el título (salvo que ya lo haya subido): ni en la lista de arriba ni en la sección de documentación.
-  const credencialPide = datos.situacionEstudio !== "estudiante" || !!docs.credencial;
+  // A quien todavía cursa no se le pide el título (salvo que ya lo haya subido) sino la constancia de alumno regular.
+  const estudiante = esEstudiante(datos.situacionEstudio);
+  const credencialPide = !estudiante || !!docs.credencial;
+  const constanciaEstado = estado(docente.verificacion === "verificado" && !!docs.constancia, !!docs.constancia);
   const requisitos: RequisitoVerificacion[] = [
     {
       clave: "dni",
       nombre: "Identidad (DNI)",
       estado: estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso),
     },
+    ...(estudiante ? [{ clave: "constancia" as const, nombre: CONSTANCIA.nombre, estado: constanciaEstado }] : []),
     ...(credencialPide
       ? [
           {
@@ -90,21 +94,35 @@ export default async function PerfilDocentePage() {
                 ? "Falta el frente."
                 : "Subí una foto o un PDF de cada lado. Sin esto no podemos verificar tu perfil.",
     },
-    credencial: credencialPide
-      ? {
-          nombre: credencial.nombre,
-          estado: credencialEstado,
-          editable: abierta && !docente.tituloVerificado,
-          detalle:
-            credencialEstado === "verificado"
-              ? "Ya lo verificamos."
-              : !abierta
-                ? RECHAZADA
-                : credencialEstado === "revision"
-                ? "Lo recibimos y lo estamos revisando."
-                : credencial.vacio,
-        }
-      : null,
+    credencial: {
+      nombre: credencial.nombre,
+      estado: credencialEstado,
+      editable: abierta && !docente.tituloVerificado,
+      detalle:
+        credencialEstado === "verificado"
+          ? "Ya lo verificamos."
+          : !abierta
+            ? RECHAZADA
+            : credencialEstado === "revision"
+              ? "Lo recibimos y lo estamos revisando."
+              : credencial.vacio,
+    },
+    constancia: {
+      estado: constanciaEstado,
+      editable: abierta && docente.verificacion !== "verificado",
+      detalle:
+        constanciaEstado === "verificado"
+          ? "Ya la revisamos junto con tu DNI."
+          : !abierta
+            ? RECHAZADA
+            : constanciaEstado === "revision"
+              ? "La recibimos y la estamos revisando."
+              : docente.verificacion === "verificado"
+                ? "Todavía no la cargaste: escribinos desde Contacto y la sumamos."
+                : `${CONSTANCIA.vacio}. ${CONSTANCIA.corto}.`,
+    },
+    // Quien se recibió y ya está verificado no vuelve a "estudiando" desde acá; con la verificación rechazada lo atiende el equipo.
+    estudiosEditables: abierta && (estudiante || docente.verificacion !== "verificado"),
   };
 
   const inicial: DatosPerfil = {
@@ -127,6 +145,9 @@ export default async function PerfilDocentePage() {
     dniFrente: docs.dniFrente ?? "",
     dniDorso: docs.dniDorso ?? "",
     credencial: docs.credencial ?? "",
+    constancia: docs.constancia ?? "",
+    situacionEstudio: situacionDeEstudio(datos.situacionEstudio),
+    porcentajeMaterias: datos.porcentajeMaterias != null ? String(datos.porcentajeMaterias) : "",
   };
 
   return (

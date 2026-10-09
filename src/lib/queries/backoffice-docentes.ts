@@ -12,8 +12,10 @@ import {
   zonas,
   type CategoriaDocente,
   type Docente,
+  type DocumentosDocente,
   type EtapaPostulacion,
 } from "@/db/schema";
+import { CONSTANCIA, esEstudiante } from "@/lib/estudiantes";
 import { urlFirmada } from "@/lib/almacenamiento";
 import { bajaDocenteSolicitadaEn } from "@/lib/queries/cuenta";
 import {
@@ -197,15 +199,21 @@ const rutaEsImagen = (ruta: string) => !/^https?:\/\//.test(ruta) && /\.(jpe?g|p
 type EntradaDocumentos = {
   categoria: CategoriaDocente;
   cvUrl: string | null;
-  documentos: Partial<Record<"dniFrente" | "dniDorso" | "credencial" | "conducta", string>>;
+  documentos: DocumentosDocente;
   estudia: boolean;
 };
 
-/** Los cinco documentos del alta con su enlace firmado (en paralelo). El CV puede ser un path privado o una URL vieja. */
+/**
+ * Los documentos del alta con su enlace firmado (en paralelo). El CV puede ser un path privado o una URL vieja. Quien todavía
+ * estudia presenta la constancia de alumno regular (obligatoria) en lugar del título (que no le aplica).
+ */
 async function documentosDeDocente(e: EntradaDocumentos): Promise<DocumentoBo[]> {
   const base: { clave: DocumentoBo["clave"]; etiqueta: string; opcional: boolean; noAplica: boolean; ruta: string | null }[] = [
     { clave: "dniFrente", etiqueta: "DNI · frente", opcional: false, noAplica: false, ruta: e.documentos.dniFrente ?? null },
     { clave: "dniDorso", etiqueta: "DNI · dorso", opcional: false, noAplica: false, ruta: e.documentos.dniDorso ?? null },
+    ...(e.estudia || e.documentos.constancia
+      ? [{ clave: "constancia" as const, etiqueta: CONSTANCIA.nombre, opcional: !e.estudia, noAplica: false, ruta: e.documentos.constancia ?? null }]
+      : []),
     {
       clave: "credencial",
       etiqueta: CATEGORIA_ALTA[e.categoria].credencial.nombre,
@@ -231,9 +239,16 @@ async function documentosDeDocente(e: EntradaDocumentos): Promise<DocumentoBo[]>
 }
 
 /** Qué le falta para poder verificarlo: solo lo que bloquea (lo optativo no entra). */
-function faltantesDe(documentos: DocumentoBo[], dni: string | null | undefined, identidadVerificada = false) {
+function faltantesDe(
+  documentos: DocumentoBo[],
+  dni: string | null | undefined,
+  identidadVerificada = false,
+  /** Si todavía estudia: el porcentaje de materias que declaró (null = no lo cargó). Omitido si ya se recibió. */
+  estudiante?: { porcentaje: number | null },
+) {
   const f: string[] = [];
   if (!dni) f.push("Número de DNI");
+  if (estudiante && estudiante.porcentaje == null) f.push("Porcentaje de materias aprobadas");
   for (const d of documentos) {
     // Con la identidad verificada las fotos del DNI se borraron a propósito: no faltan.
     if (identidadVerificada && (d.clave === "dniFrente" || d.clave === "dniDorso")) continue;
@@ -262,7 +277,14 @@ export type FichaDocenteBo = {
   terminos: { version: string; en: Date } | null;
   /** Cuándo pidió la baja de la cuenta, si el pedido sigue en pie. */
   bajaSolicitadaEn: Date | null;
-  identidad: { dni: string | null; cuil: string | null; fechaNacimiento: string | null; situacionEstudio: string | null };
+  identidad: {
+    dni: string | null;
+    cuil: string | null;
+    fechaNacimiento: string | null;
+    situacionEstudio: string | null;
+    /** Solo si todavía estudia: el porcentaje de materias aprobadas que declaró. */
+    porcentajeMaterias: number | null;
+  };
   postulaciones: number;
   contrataciones: number;
   recientes: PostulacionReciente[];
@@ -341,6 +363,7 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
       cuil: detalle?.cuil ?? null,
       fechaNacimiento: detalle?.fechaNacimiento ?? null,
       situacionEstudio: detalle?.situacionEstudio ?? null,
+      porcentajeMaterias: detalle?.porcentajeMaterias ?? null,
     },
     postulaciones: postulacionesPropias,
     contrataciones,
@@ -357,7 +380,12 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
     }),
     perfil: pendientesDePerfil(docente),
     documentos,
-    faltantes: faltantesDe(documentos, detalle?.dni, docente.verificacion === "verificado"),
+    faltantes: faltantesDe(
+      documentos,
+      detalle?.dni,
+      docente.verificacion === "verificado",
+      esEstudiante(detalle?.situacionEstudio) ? { porcentaje: detalle?.porcentajeMaterias ?? null } : undefined,
+    ),
   };
 }
 
@@ -382,7 +410,7 @@ export type ItemCola = {
   zonas: string[];
   telefono: string | null;
   email: string | null;
-  identidad: { dni: string | null; cuil: string | null; fechaNacimiento: string | null; estudia: boolean };
+  identidad: { dni: string | null; cuil: string | null; fechaNacimiento: string | null; estudia: boolean; porcentajeMaterias: number | null };
   documentos: DocumentoBo[];
   faltantes: string[];
 };
@@ -456,9 +484,15 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
           cuil: detalle?.cuil ?? null,
           fechaNacimiento: detalle?.fechaNacimiento ?? null,
           estudia: detalle?.situacionEstudio === "estudiante",
+          porcentajeMaterias: detalle?.porcentajeMaterias ?? null,
         },
         documentos,
-        faltantes: faltantesDe(documentos, detalle?.dni),
+        faltantes: faltantesDe(
+          documentos,
+          detalle?.dni,
+          false,
+          esEstudiante(detalle?.situacionEstudio) ? { porcentaje: detalle?.porcentajeMaterias ?? null } : undefined,
+        ),
       };
     }),
   );

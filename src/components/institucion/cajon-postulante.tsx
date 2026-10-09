@@ -20,6 +20,7 @@ import { Cajon } from "@/components/ui/cajon";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
 import type { EtapaPostulacion } from "@/db/schema";
 import { ETAPA_LABEL } from "@/lib/catalogo";
+import { etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { CARPETA_EXAMEN, MAX_ARCHIVOS_EXAMEN, puedeAdjuntarAlExamen } from "@/lib/examen-preocupacional";
 import { enlaceWhatsapp, ETAPA_MENU, INSIGNIA_ETAPA, type PostulanteTarjeta } from "@/lib/pipeline";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
@@ -469,7 +470,12 @@ function Ficha({
         <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[13px]">
           <Verificacion ok={cv.verificado} texto="Identidad (DNI)" />
           <Verificacion ok={cv.antecedentesVerificados} texto="Certificado de buena conducta" />
-          <Verificacion ok={cv.tituloVerificado} texto="Título" />
+          {cv.estudiante ? (
+            // Quien todavía estudia no tiene título: se muestra cuánto de la carrera lleva y que el equipo revisa la constancia con el DNI.
+            <Verificacion ok={cv.verificado} texto={`${etiquetaDeEstudiante(cv.estudiante.porcentaje)} · constancia de alumno regular`} />
+          ) : (
+            <Verificacion ok={cv.tituloVerificado} texto="Título" />
+          )}
         </ul>
       </section>
 

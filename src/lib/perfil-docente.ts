@@ -44,6 +44,11 @@ export const perfilDocenteSchema = z.object({
   dniFrente: rutaArchivo.optional(),
   dniDorso: rutaArchivo.optional(),
   credencial: rutaArchivo.optional(),
+  /** Constancia de alumno regular de quien todavía estudia: path del bucket privado, en `docente_detalle.documentos`. */
+  constancia: rutaArchivo.optional(),
+  /** Estudios: ausente = no se tocan. El porcentaje viaja como lo escribió la persona; el servidor lo lee con `leerPorcentaje`. */
+  situacionEstudio: z.enum(["estudiante", "recibido"]).optional(),
+  porcentajeMaterias: z.string().trim().max(10).optional(),
 });
 
 export type DatosPerfil = z.infer<typeof perfilDocenteSchema>;

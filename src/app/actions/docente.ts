@@ -22,6 +22,7 @@ import {
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirDocente } from "@/lib/auth";
 import { normalizar } from "@/lib/coincidencia";
+import { decidirEstudios, esEstudiante } from "@/lib/estudiantes";
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { disponibilidadDesdeGrilla } from "@/lib/onboarding";
 import { cambiaElNombre, identidadFija, perfilDocenteSchema } from "@/lib/perfil-docente";
@@ -223,19 +224,49 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
 
   // El certificado de conducta vive en docente_detalle.documentos (lo crea el alta); se mezcla sin pisar el DNI ni el título.
   const [detalle] = await db
-    .select({ documentos: docenteDetalle.documentos })
+    .select({
+      documentos: docenteDetalle.documentos,
+      situacionEstudio: docenteDetalle.situacionEstudio,
+      porcentajeMaterias: docenteDetalle.porcentajeMaterias,
+    })
     .from(docenteDetalle)
     .where(eq(docenteDetalle.docenteId, docente.id))
     .limit(1);
   const documentos = { ...(detalle?.documentos ?? {}) };
   const documentosAnteriores = { ...documentos };
+
+  // Estudios: "estoy estudiando" (porcentaje + constancia) o "ya me recibí" (título). Ausente en el formulario = no se tocan.
+  const estudiosEnFormulario = datos.situacionEstudio !== undefined;
+  const estudios = estudiosEnFormulario
+    ? decidirEstudios({
+        actual: detalle?.situacionEstudio,
+        pedida: datos.situacionEstudio,
+        porcentaje: datos.porcentajeMaterias,
+        verificacion: docente.verificacion,
+      })
+    : null;
+  if (estudios && !estudios.ok) return fallo(estudios.error, { [estudios.campo]: estudios.error });
+  const estudiante = estudios ? estudios.situacion === "estudiante" : esEstudiante(detalle?.situacionEstudio);
+
   let conductaCambio = false;
-  // Se subió (o se cambió) algo de lo que el equipo tiene que revisar: el DNI o el título.
+  // Se subió (o se cambió) algo de lo que el equipo tiene que revisar: el DNI, la constancia o el título.
   let documentacionNueva = false;
-  const QUE_ES = { conducta: "el certificado", dniFrente: "el frente del DNI", dniDorso: "el dorso del DNI", credencial: "el título" } as const;
-  for (const clave of ["conducta", "dniFrente", "dniDorso", "credencial"] as const) {
+  // Subió un título que todavía no se revisó: si el perfil ya está verificado, el equipo lo valida desde la ficha.
+  let tituloNuevo = false;
+  const QUE_ES = {
+    conducta: "el certificado",
+    dniFrente: "el frente del DNI",
+    dniDorso: "el dorso del DNI",
+    credencial: "el título",
+    constancia: "la constancia de alumno regular",
+  } as const;
+  // Quien se recibió ya no necesita la constancia: se quita (y se borra de Storage al terminar).
+  if (!estudiante && estudiosEnFormulario) delete documentos.constancia;
+  for (const clave of ["conducta", "dniFrente", "dniDorso", "credencial", "constancia"] as const) {
     const nuevo = datos[clave];
     if (nuevo === undefined || nuevo === (documentos[clave] ?? "")) continue;
+    // La constancia solo corresponde a quien estudia: si se recibió se ignora lo que haya mandado.
+    if (clave === "constancia" && !estudiante) continue;
     // Lo ya verificado no se reemplaza desde acá, y a quien se le rechazó la verificación lo atiende el equipo.
     if (clave !== "conducta") {
       if (docente.verificacion === "rechazado") {
@@ -252,7 +283,10 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     if (nuevo) documentos[clave] = nuevo;
     else delete documentos[clave];
     if (clave === "conducta") conductaCambio = true;
-    else if (nuevo) documentacionNueva = true;
+    else if (nuevo) {
+      documentacionNueva = true;
+      if (clave === "credencial") tituloNuevo = true;
+    }
   }
   const documentosCambio = conductaCambio || documentacionNueva || Object.keys(documentosAnteriores).some((k) => !(k in documentos));
 
@@ -306,26 +340,33 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         ...(documentacionNueva && docente.verificacion === "correccion" ? { verificacion: "pendiente" as const } : {}),
       })
       .where(eq(docentes.id, docente.id));
-    // El equipo se entera de que hay documentación para revisar (solo si todavía no está verificado ni rechazado).
-    if (documentacionNueva && (docente.verificacion === "pendiente" || docente.verificacion === "correccion")) {
+    // El equipo se entera de que hay documentación para revisar: si todavía no está verificado ni rechazado (cola de verificación),
+    // o si ya está verificado y subió el título (se valida desde su ficha).
+    const enCola = docente.verificacion === "pendiente" || docente.verificacion === "correccion";
+    const tituloParaRevisar = tituloNuevo && docente.verificacion === "verificado" && !docente.tituloVerificado;
+    if (documentacionNueva && (enCola || tituloParaRevisar)) {
+      const detalleAviso = tituloParaRevisar && !enCola ? "subió su título para que lo revisen." : "subió documentación para que la revisen.";
       await avisarAAdmins(tx, {
         titulo: `${datos.nombre} ${datos.apellido}`.trim(),
-        texto: "subió documentación para que la revisen.",
+        texto: detalleAviso,
         enlace: `/backoffice/docentes/${docente.id}`,
       });
       await encolarParaEquipo(tx, "M61", {
         docente: `${datos.nombre} ${datos.apellido}`.trim(),
-        detalle: "subió documentación para que la revisen.",
+        detalle: detalleAviso,
         ruta: `/backoffice/docentes/${docente.id}`,
       });
     }
     // La grilla vive en docente_detalle; si el docente no tiene fila (perfil cargado a mano), se crea.
+    const estudiosGuardados = estudios?.ok
+      ? { situacionEstudio: estudios.situacion, porcentajeMaterias: estudios.porcentaje }
+      : {};
     await tx
       .insert(docenteDetalle)
-      .values({ docenteId: docente.id, grillaDisponibilidad: datos.grilla, documentos })
+      .values({ docenteId: docente.id, grillaDisponibilidad: datos.grilla, documentos, ...estudiosGuardados })
       .onConflictDoUpdate({
         target: docenteDetalle.docenteId,
-        set: { grillaDisponibilidad: datos.grilla, ...(documentosCambio ? { documentos } : {}) },
+        set: { grillaDisponibilidad: datos.grilla, ...(documentosCambio ? { documentos } : {}), ...estudiosGuardados },
       });
   });
 

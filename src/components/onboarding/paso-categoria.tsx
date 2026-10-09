@@ -5,6 +5,7 @@ import { guardarCategoriaDocente } from "@/app/actions/onboarding";
 import type { CategoriaDocente } from "@/db/schema";
 import { Boton } from "@/components/ui/button";
 import { AlertaError, SeccionPaso } from "@/components/onboarding/elementos";
+import { Campo, Input } from "@/components/ui/campos";
 import { SelectorAsignaturas } from "@/components/onboarding/selector-asignaturas";
 import { CATEGORIAS } from "@/lib/catalogo";
 import {
@@ -25,12 +26,13 @@ export function PasoCategoria({
   inicial,
 }: {
   catalogo: CatalogoAsignaturas;
-  inicial: { categoria: CategoriaDocente; asignaturas: string[]; estudio: SituacionEstudio };
+  inicial: { categoria: CategoriaDocente; asignaturas: string[]; estudio: SituacionEstudio; porcentaje: string };
 }) {
   const [estado, accion, pendiente] = useActionState(guardarCategoriaDocente, null);
   const [categoria, setCategoria] = useState(inicial.categoria);
   const [elegidas, setElegidas] = useState(inicial.asignaturas);
   const [estudio, setEstudio] = useState(inicial.estudio);
+  const [porcentaje, setPorcentaje] = useState(inicial.porcentaje);
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
 
   const elegirCategoria = (c: CategoriaDocente) => {
@@ -94,7 +96,7 @@ export function PasoCategoria({
 
       <SeccionPaso
         titulo="¿Ya te recibiste?"
-        bajada="Si todavía estás cursando también podés trabajar: no te pedimos el título hasta que lo tengas."
+        bajada="Si todavía estás cursando también podés trabajar: no te pedimos el título hasta que lo tengas, sino la constancia de alumno regular."
         className="mb-0"
       >
         <div role="radiogroup" aria-label="¿Ya te recibiste?" className="mb-[22px] flex gap-2.5 max-[640px]:flex-col">
@@ -111,10 +113,37 @@ export function PasoCategoria({
         </div>
       </SeccionPaso>
 
+      {estudio === "estudiante" && (
+        <div className="mb-[22px]">
+          <Campo
+            etiqueta="Porcentaje de materias aprobadas"
+            requerido
+            error={campos.porcentaje}
+            ayuda="Aproximado. Lo respalda la constancia de alumno regular que subís en el último paso."
+          >
+            <Input
+              name="porcentaje"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={100}
+              step={1}
+              placeholder="Ej. 70"
+              required
+              value={porcentaje}
+              onChange={(e) => setPorcentaje(e.target.value)}
+              aria-invalid={Boolean(campos.porcentaje)}
+              className="max-w-[160px]"
+            />
+          </Campo>
+        </div>
+      )}
+
       <div className="mb-[22px] rounded-[10px] bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
         {estudio === "estudiante" ? (
           <>
-            No te pedimos título: alcanza con el <b className="font-semibold text-tinta">DNI</b>. Subís el título cuando te recibas.
+            No te pedimos título: alcanza con el <b className="font-semibold text-tinta">DNI</b> y la{" "}
+            <b className="font-semibold text-tinta">constancia de alumno regular</b>. Subís el título cuando te recibas.
           </>
         ) : (
           <>

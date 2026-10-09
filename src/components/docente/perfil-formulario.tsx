@@ -15,6 +15,7 @@ import { PerfilEtiquetas } from "@/components/docente/perfil-etiquetas";
 import type { DocumentacionPerfil, EstadoDocumento } from "@/components/docente/perfil-server";
 import type { Resultado } from "@/lib/acciones";
 import { NIVELES } from "@/lib/catalogo";
+import { CONSTANCIA } from "@/lib/estudiantes";
 import type { DatosPerfil } from "@/lib/perfil-docente";
 import { cn } from "@/lib/utils";
 
@@ -136,6 +137,7 @@ export function PerfilFormulario({
   }, [estado, toast]);
 
   const set = <K extends keyof DatosPerfil>(clave: K, valor: DatosPerfil[K]) => setD((p) => ({ ...p, [clave]: valor }));
+  const estudiando = d.situacionEstudio === "estudiante";
   const error = (clave: string) => (estado && !estado.ok ? estado.campos?.[clave] : undefined);
 
   const radios = RADIOS.includes(d.radioKm) ? RADIOS : [...RADIOS, d.radioKm].sort((a, b) => a - b);
@@ -279,7 +281,63 @@ export function PerfilFormulario({
               )}
             </FilaDocumento>
 
-            {documentacion.credencial && (
+            {documentacion.estudiosEditables && (
+              <div className="mt-3.5 rounded-lg border border-borde bg-white px-[18px] py-4">
+                <div className="mb-3 text-sm leading-[1.3] font-semibold">Tus estudios</div>
+                <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
+                  <Campo etiqueta="Situación" error={error("situacionEstudio")}>
+                    <Select
+                      value={estudiando ? "estudiante" : "recibido"}
+                      onChange={(e) => set("situacionEstudio", e.target.value === "estudiante" ? "estudiante" : "recibido")}
+                    >
+                      <option value="recibido">Ya me recibí</option>
+                      <option value="estudiante">Estoy estudiando</option>
+                    </Select>
+                  </Campo>
+                  {estudiando && (
+                    <Campo etiqueta="Materias aprobadas (%)" error={error("porcentajeMaterias")} ayuda="Las instituciones lo ven en tu perfil.">
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={100}
+                        value={d.porcentajeMaterias ?? ""}
+                        onChange={(e) => set("porcentajeMaterias", e.target.value)}
+                      />
+                    </Campo>
+                  )}
+                </div>
+                <p className="m-0 mt-3 text-[13px] leading-[1.45] text-apagado">
+                  {estudiando
+                    ? "Mientras estudiás no te pedimos el título: alcanza con la constancia de alumno regular. Cuando te recibas, cambiá a «Ya me recibí» y subí el título."
+                    : "Si todavía estás cursando, elegí «Estoy estudiando» y subí tu constancia de alumno regular."}
+                </p>
+              </div>
+            )}
+
+            {estudiando && (
+              <FilaDocumento
+                estado={documentacion.constancia.estado}
+                titulo={CONSTANCIA.nombre}
+                detalle={documentacion.constancia.detalle}
+                error={error("constancia")}
+              >
+                {documentacion.constancia.editable && (
+                  <SubirArchivo
+                    bucket="privado"
+                    carpeta="documentos"
+                    nombre="constancia"
+                    etiqueta={CONSTANCIA.nombre}
+                    variante="boton"
+                    textoBoton={d.constancia ? "Constancia cargada" : "Subir constancia"}
+                    valorInicial={inicial.constancia}
+                    onCambio={(v) => set("constancia", v)}
+                  />
+                )}
+              </FilaDocumento>
+            )}
+
+            {(!estudiando || !!inicial.credencial) && (
               <FilaDocumento
                 estado={documentacion.credencial.estado}
                 titulo={documentacion.credencial.nombre}

@@ -566,7 +566,7 @@ export type EstadoCeldaDisponibilidad = "disponible" | "convenir" | "ocupada";
 /** Grilla semanal del alta: 3 franjas × 6 días (lunes a sábado). `docentes.disponibilidad` se deriva de ella. */
 export type GrillaDisponibilidad = Record<"manana" | "tarde" | "contraturno", EstadoCeldaDisponibilidad[]>;
 /** Paths del bucket privado de Storage (nunca URLs): las firmadas se generan al leer. */
-export type DocumentosDocente = Partial<Record<"dniFrente" | "dniDorso" | "credencial" | "conducta", string>>;
+export type DocumentosDocente = Partial<Record<"dniFrente" | "dniDorso" | "credencial" | "constancia" | "conducta", string>>;
 
 /**
  * Datos del docente que no se listan ni se filtran y que no deben salir en consultas públicas
@@ -584,7 +584,7 @@ export const docenteDetalle = pgTable("docente_detalle", {
   direccion: text("direccion"),
   partido: text("partido"),
   provincia: text("provincia"),
-  /** recibido | estudiante (a quien todavía cursa no se le pide título). */
+  /** recibido | estudiante (a quien todavía cursa no se le pide título: se le pide la constancia de alumno regular). */
   situacionEstudio: text("situacion_estudio"),
   grillaDisponibilidad: jsonb("grilla_disponibilidad").$type<GrillaDisponibilidad>(),
   documentos: jsonb("documentos")
@@ -626,6 +626,11 @@ export const institucionFotos = pgTable(
     url: text("url").notNull(),
     /** "Patio y canchas", "Natatorio"… */
     etiqueta: text("etiqueta"),
+  /**
+   * Solo si es estudiante: qué porcentaje de las materias tiene aprobado (0 a 100). Lo declara la persona y lo respalda la
+   * constancia de alumno regular (`documentos.constancia`). Null si ya se recibió. Agregada a mano en la base (alter table).
+   */
+  porcentajeMaterias: integer("porcentaje_materias"),
     orden: integer("orden").notNull().default(0),
     creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
   },

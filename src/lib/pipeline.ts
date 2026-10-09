@@ -57,6 +57,8 @@ export type PostulanteTarjeta = {
   cv: {
     verificado: boolean;
     tituloVerificado: boolean;
+    /** Todavía estudia (presenta la constancia de alumno regular en lugar del título); null si ya se recibió. */
+    estudiante: { porcentaje: number | null } | null;
     antecedentesVerificados: boolean;
     subtitulo: string | null;
     resumen: string | null;

@@ -13,9 +13,11 @@ type Props = {
   /** Nombre de la credencial según la categoría ("Título docente", "Libreta de guardavidas…"). */
   credencial: string;
   /** Qué hay realmente cargado: sirve para avisar antes de verificar algo que no se pudo revisar en la plataforma. */
-  tiene: { dni: boolean; credencial: boolean; conducta: boolean };
+  tiene: { dni: boolean; credencial: boolean; constancia: boolean; conducta: boolean };
   /** Quien todavía estudia no tiene título que revisar. */
   credencialNoAplica: boolean;
+  /** Todavía estudia: en lugar del título se revisa la constancia de alumno regular (no marca el título como verificado). */
+  estudiante: boolean;
 };
 
 const MIN_MOTIVO = 5;
@@ -24,11 +26,12 @@ const MIN_MOTIVO = 5;
  * Revisión de un docente de la cola: casillas por documento revisado y tres acciones.
  * Verificar exige haber revisado la identidad; pedir corrección y rechazar exigen un motivo (que le llega al docente).
  */
-export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencialNoAplica }: Props) {
+export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencialNoAplica, estudiante }: Props) {
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [identidad, setIdentidad] = useState(false);
   const [titulo, setTitulo] = useState(false);
+  const [constancia, setConstancia] = useState(false);
   const [antecedentes, setAntecedentes] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [errorRevision, setErrorRevision] = useState<string | null>(null);
@@ -57,14 +60,21 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
       setErrorRevision("Tildá «Revisé el DNI» para poder verificar.");
       return;
     }
+    // Las instituciones ven "constancia de alumno regular" con tilde cuando el perfil está verificado: que alguien la haya mirado.
+    if (estudiante && !constancia) {
+      setErrorRevision("Tildá «Revisé la constancia de alumno regular» para poder verificar.");
+      return;
+    }
     setErrorRevision(null);
     const faltan = [
       ...(tiene.dni ? [] : ["el DNI (frente y dorso)"]),
-      ...(titulo && !tiene.credencial ? [credencial.toLowerCase()] : []),
+      // Quien estudia presenta la constancia (obligatoria); quien se recibió, el título si se lo marca como revisado.
+      ...(estudiante ? (tiene.constancia ? [] : ["la constancia de alumno regular"]) : titulo && !tiene.credencial ? [credencial.toLowerCase()] : []),
       ...(antecedentes && !tiene.conducta ? ["el certificado de buena conducta"] : []),
     ];
     if (faltan.length > 0 && !window.confirm(`En la plataforma no figura: ${faltan.join(", ")}. ¿Verificar a ${nombre} igual?`)) return;
-    ejecutar(() => verificarDocente(docenteId, { identidad, titulo, antecedentes }), `${nombre} quedó verificado/a`);
+    // La constancia respalda la identidad y el estado de estudiante: no verifica el título (que todavía no existe).
+    ejecutar(() => verificarDocente(docenteId, { identidad, titulo: estudiante ? false : titulo, antecedentes }), `${nombre} quedó verificado/a`);
   };
 
   const conMotivo = (
@@ -91,10 +101,15 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
         <Casilla checked={identidad} onChange={(e) => setIdentidad(e.target.checked)}>
           Revisé el DNI (identidad)
         </Casilla>
-        <Casilla checked={titulo} disabled={credencialNoAplica} onChange={(e) => setTitulo(e.target.checked)}>
-          Revisé {credencial.toLowerCase()}
-          {credencialNoAplica && <span className="text-sutil"> (todavía estudia)</span>}
-        </Casilla>
+        {estudiante ? (
+          <Casilla checked={constancia} onChange={(e) => setConstancia(e.target.checked)}>
+            Revisé la constancia de alumno regular <span className="text-sutil">(todavía estudia)</span>
+          </Casilla>
+        ) : (
+          <Casilla checked={titulo} disabled={credencialNoAplica} onChange={(e) => setTitulo(e.target.checked)}>
+            Revisé {credencial.toLowerCase()}
+          </Casilla>
+        )}
         <Casilla checked={antecedentes} onChange={(e) => setAntecedentes(e.target.checked)}>
           Revisé el certificado de buena conducta
         </Casilla>

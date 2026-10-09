@@ -320,6 +320,7 @@ export async function datosParaPerfil(docente: Docente) {
         grilla: docenteDetalle.grillaDisponibilidad,
         documentos: docenteDetalle.documentos,
         situacionEstudio: docenteDetalle.situacionEstudio,
+        porcentajeMaterias: docenteDetalle.porcentajeMaterias,
       })
       .from(docenteDetalle)
       .where(eq(docenteDetalle.docenteId, docente.id))
@@ -337,6 +338,7 @@ export async function datosParaPerfil(docente: Docente) {
     grilla: guardada && grillaTieneHorarios(guardada) ? guardada : grillaDesdeLista(docente.disponibilidad),
     documentos: (detalle[0]?.documentos ?? {}) as DocumentosDocente,
     situacionEstudio: detalle[0]?.situacionEstudio ?? null,
+    porcentajeMaterias: detalle[0]?.porcentajeMaterias ?? null,
   };
 }
 
