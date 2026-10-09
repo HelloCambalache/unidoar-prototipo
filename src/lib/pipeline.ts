@@ -84,7 +84,14 @@ export type BusquedaPipeline = {
   postulantes: number;
 };
 
-export type OpcionBusqueda = { id: string; puesto: string; estado: "activa" | "pausada" | "cerrada"; nuevos: number };
+export type OpcionBusqueda = {
+  id: string;
+  puesto: string;
+  estado: "activa" | "pausada" | "cerrada";
+  nuevos: number;
+  /** En qué sede es la búsqueda (null en las viejas sin sede): permite filtrar la lista por sede. */
+  sedeId: string | null;
+};
 
 /** Nombre de cada etapa en los menús de "Mover a…" (el de las columnas está en ETAPAS, catalogo.ts). */
 export const ETAPA_MENU: Record<EtapaPostulacion, string> = {

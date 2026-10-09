@@ -22,6 +22,8 @@ import {
   disciplinasParaFiltro,
   vocabularioBuscador,
 } from "@/lib/queries/profesionales";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import { puntosDeReferencia } from "@/lib/sedes";
 import { BarraBuscadorDocentes } from "./barra-buscador-docentes";
 import { PaginacionLista } from "./paginacion-lista";
 import { PanelFiltrosDocentes } from "./panel-filtros-docentes";
@@ -63,9 +65,11 @@ export async function PantallaBuscadorDocentes({
   const filtros = contexto ? inicial : { ...inicial, busqueda: null };
   const activas = await busquedasActivas(institucion.id);
   const contextoId = contexto && activas.some((a) => a.id === contexto.id) ? contexto.id : null;
+  // La cercanía se mide desde la sede de la búsqueda elegida o, sin búsqueda, desde todas las sedes (cada profesional, a la más cercana).
+  const puntos = puntosDeReferencia(await sedesDeInstitucion(institucion.id), contexto?.sedeId, { nombre: institucion.nombre, lat: institucion.lat, lng: institucion.lng });
 
   const [resultado, disciplinas] = await Promise.all([
-    buscarDocentes({ institucion, usuarioId: usuario.id, filtros, rapidas, contexto, activas }),
+    buscarDocentes({ puntos, usuarioId: usuario.id, filtros, rapidas, contexto, activas }),
     disciplinasParaFiltro(filtros.categoria, filtros.disciplinas),
   ]);
 
@@ -123,7 +127,7 @@ export async function PantallaBuscadorDocentes({
           filtros={filtros}
           leido={interpretacion ? { etiquetas: interpretacion.leido, reconocido: interpretacion.reconocido } : null}
           sugerencias={sugerencias}
-          puedeOrdenarPorCercania={institucion.lat != null && institucion.lng != null}
+          puedeOrdenarPorCercania={puntos.length > 0}
         />
 
         {resultado.total > 0 && (

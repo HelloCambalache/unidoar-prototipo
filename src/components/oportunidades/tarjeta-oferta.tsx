@@ -60,10 +60,10 @@ export function TarjetaOferta({
         <p className="m-0 mb-3 line-clamp-3 text-[13px] leading-normal text-apagado">{oferta.descripcion}</p>
       )}
       <div className="mb-3.5 flex flex-col gap-1.5 text-[13px] leading-[1.4] text-tinta-2">
-        {(oferta.zona || km) && (
+        {(oferta.zona || km || oferta.sede) && (
           <div className="flex items-center gap-2">
             <Icono nombre="ubicacion" tamano={14} trazo={2} className="text-apagado" />
-            {[oferta.zona, km].filter(Boolean).join(" · ")}
+            {[oferta.sede, oferta.zona, km].filter(Boolean).join(" · ")}
           </div>
         )}
         {oferta.horario && (

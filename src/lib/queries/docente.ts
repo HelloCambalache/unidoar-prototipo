@@ -5,6 +5,7 @@ import {
   asignaturas,
   busquedas,
   docenteDetalle,
+  institucionSedes,
   instituciones,
   notificaciones,
   postulaciones,
@@ -19,6 +20,7 @@ import { grillaDesdeJson, grillaTieneHorarios } from "@/lib/onboarding";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { cursosParaDocente } from "@/lib/queries/cursos";
 import { busquedaVigente, kmEntre } from "@/lib/queries/instituciones";
+import { sedesDeInstituciones } from "@/lib/queries/sedes";
 import { institucionVisible } from "@/lib/visibilidad";
 
 /** El dashboard muestra cuatro tarjetas por fila (diseño del prototipo): recomendadas, instituciones y cursos. */
@@ -111,7 +113,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
   const hace14 = new Date(ahora.getTime() - 14 * DIA);
   const hace30 = new Date(ahora.getTime() - 30 * DIA);
 
-  const [vigentes, mias, vistas, conBusquedas, cursosVigentes, detalle] = await Promise.all([
+  const [vigentesConSede, mias, vistas, conBusquedas, cursosVigentes, detalle] = await Promise.all([
     db
       .select({
         id: busquedas.id,
@@ -129,9 +131,15 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
         partido: instituciones.partido,
         instLat: instituciones.lat,
         instLng: instituciones.lng,
+        // Dónde queda la búsqueda: su sede (si no tiene, la ubicación de la institución de arriba).
+        sedeId: institucionSedes.id,
+        sedePartido: institucionSedes.partido,
+        sedeLat: institucionSedes.lat,
+        sedeLng: institucionSedes.lng,
       })
       .from(busquedas)
       .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+      .leftJoin(institucionSedes, eq(institucionSedes.id, busquedas.sedeId))
       .where(busquedaVigente(ahora))
       .orderBy(desc(busquedas.creadoEn))
       .limit(300),
@@ -183,6 +191,10 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       .limit(1),
   ]);
 
+  // Los kilómetros y el partido salen de la sede de cada búsqueda; las que no tienen sede usan los de la institución.
+  const vigentes = vigentesConSede.map(({ sedeId, sedePartido, sedeLat, sedeLng, ...b }) =>
+    sedeId ? { ...b, partido: sedePartido, instLat: sedeLat, instLng: sedeLng } : b,
+  );
   const yaPostuladas = new Set(mias.map((p) => p.busquedaId));
   const yo = { lat: docente.lat, lng: docente.lng };
 
@@ -232,10 +244,15 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       }),
     );
 
+  // Con varias sedes cuenta la más cercana: "cerca" si alguna está en sus zonas o dentro de su radio.
+  const sedesPor = await sedesDeInstituciones(conBusquedas.map((i) => i.id));
   const destacadas = conBusquedas
     .map((i) => {
-      const km = kmEntre(yo, i);
-      const cerca = coincideZona(i.zona, docente.zonas) || (km != null && km <= docente.radioKm);
+      const sedes = sedesPor.get(i.id) ?? [];
+      const lugares = sedes.length > 0 ? sedes : [{ zona: i.zona, lat: i.lat, lng: i.lng }];
+      const kms = lugares.map((s) => kmEntre(yo, s)).filter((k): k is number => k != null);
+      const km = kms.length > 0 ? Math.min(...kms) : null;
+      const cerca = lugares.some((s) => coincideZona(s.zona, docente.zonas)) || (km != null && km <= docente.radioKm);
       return { i, km, cerca };
     })
     .sort(

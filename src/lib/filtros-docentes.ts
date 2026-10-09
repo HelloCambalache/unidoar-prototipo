@@ -21,7 +21,7 @@ export const TIPOS_FILTRO = ["Titular", "Suplencia", "Temporada", "Freelance"] a
 export const ORDENES = [
   { clave: "recomendados", etiqueta: "Recomendados" },
   { clave: "experiencia", etiqueta: "Más experiencia" },
-  { clave: "cercania", etiqueta: "Más cerca de tu institución" },
+  { clave: "cercania", etiqueta: "Más cerca de tu sede" },
   { clave: "nombre", etiqueta: "Nombre (A–Z)" },
 ] as const;
 export type OrdenDocentes = (typeof ORDENES)[number]["clave"];

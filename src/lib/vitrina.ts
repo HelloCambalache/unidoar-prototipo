@@ -51,7 +51,6 @@ export type DatosFormularioVitrina = {
   logoUrl: string;
   nombre: string;
   tipo: string;
-  zona: string;
   fundada: string;
   alumnos: string;
   niveles: string;
@@ -63,7 +62,6 @@ export type DatosFormularioVitrina = {
   mision: string;
   vision: string;
   valores: string[];
-  direccion: string;
   horarioAdministracion: string;
 };
 
@@ -74,7 +72,6 @@ export function datosInicialesDeVitrina(i: Institucion): DatosFormularioVitrina 
     logoUrl: i.logoUrl ?? "",
     nombre: i.nombre,
     tipo: i.tipo,
-    zona: i.zona ?? "",
     fundada: i.fundada?.toString() ?? "",
     alumnos: i.alumnos?.toString() ?? "",
     niveles: i.niveles ?? "",
@@ -86,7 +83,6 @@ export function datosInicialesDeVitrina(i: Institucion): DatosFormularioVitrina 
     mision: i.mision ?? "",
     vision: i.vision ?? "",
     valores: i.valores,
-    direccion: i.direccion ?? "",
     horarioAdministracion: i.horarioAdministracion ?? "",
   };
 }
@@ -144,7 +140,6 @@ export const vitrinaSchema = z.object({
   logoUrl: rutaArchivo,
   nombre: z.string().trim().min(2, "Poné el nombre de la institución").max(120, "Máximo 120 caracteres"),
   tipo: z.string().trim().min(2, "Elegí el tipo de institución").max(60),
-  zona: corto(160),
   fundada: numeroOpcional(1800, new Date().getFullYear()),
   alumnos: numeroOpcional(0, 200_000),
   niveles: corto(160),
@@ -156,9 +151,6 @@ export const vitrinaSchema = z.object({
   mision: corto(600),
   vision: corto(600),
   valores: z.array(z.string().trim().min(1).max(40, "Cada valor puede tener hasta 40 caracteres")).max(MAX_VALORES, `Hasta ${MAX_VALORES} valores`),
-  direccion: z.string().trim().min(3, "Completá la dirección").max(200, "Máximo 200 caracteres"),
-  /** Firma de la sugerencia de ubicación que eligió la persona (/api/ubicacion); el servidor la verifica antes de usarla. */
-  ubicacion: z.string().max(4000).optional(),
   horarioAdministracion: corto(120),
   fotos: z.array(vitrinaFotoSchema).max(MAX_FOTOS, `Hasta ${MAX_FOTOS} fotos`),
   novedades: z.array(vitrinaNovedadSchema).max(MAX_NOVEDADES, `Hasta ${MAX_NOVEDADES} novedades`),
@@ -190,7 +182,6 @@ export function sinRepetidos(lista: string[]) {
 export type VitrinaAntes = {
   nombre: string;
   tipo: string;
-  zona: string | null;
   fundada: number | null;
   alumnos: number | null;
   niveles: string | null;
@@ -202,7 +193,6 @@ export type VitrinaAntes = {
   mision: string | null;
   vision: string | null;
   valores: string[];
-  direccion: string | null;
   horarioAdministracion: string | null;
   logoUrl: string | null;
   portadaUrl: string | null;
@@ -213,7 +203,6 @@ export type VitrinaAntes = {
 const CAMPOS_DE_VITRINA: [keyof VitrinaAntes & keyof DatosVitrina, string][] = [
   ["nombre", "nombre"],
   ["tipo", "tipo"],
-  ["zona", "zona"],
   ["fundada", "año de fundación"],
   ["alumnos", "alumnos"],
   ["niveles", "niveles"],
@@ -224,7 +213,6 @@ const CAMPOS_DE_VITRINA: [keyof VitrinaAntes & keyof DatosVitrina, string][] = [
   ["contactoRol", "rol de contacto"],
   ["mision", "misión"],
   ["vision", "visión"],
-  ["direccion", "dirección"],
   ["horarioAdministracion", "horario de administración"],
   ["logoUrl", "logo"],
   ["portadaUrl", "portada"],

@@ -31,7 +31,10 @@ export function TarjetaDocente({
   const nombreCompleto = `${d.nombre} ${d.apellido}`.trim();
   const perfilHref = `/institucion/docente/${d.id}?desde=buscador${contextoId ? `&busqueda=${contextoId}` : ""}`;
   const tags = [...d.asignaturas.slice(0, 3), ...d.niveles.slice(0, 1)];
-  const zona = [d.zonas.join(" · "), kmLegible(d.distanciaKm)].filter(Boolean).join(" · ");
+  // "a 5 km" y, cuando la institución tiene varias sedes, de cuál: "a 5 km de Sede Pilar".
+  const km = kmLegible(d.distanciaKm);
+  const distancia = km && d.sedeCercana ? `${km} de ${d.sedeCercana}` : km;
+  const zona = [d.zonas.join(" · "), distancia].filter(Boolean).join(" · ");
   const horario = [
     d.disponibilidad.join(" · "),
     d.aniosExperiencia != null ? `${d.aniosExperiencia} ${d.aniosExperiencia === 1 ? "año" : "años"} de experiencia` : "",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { enlaceWhatsapp } from "@/lib/pipeline";
-import { PLANES, pesos, planDe, type PlanClave } from "@/lib/planes";
+import { PLANES, PLANES_VIGENTES, pesos, planDe, type PlanClave } from "@/lib/planes";
 
 /*
  * Reglas de cobros compartidas por el backoffice (servidor y cliente). Sin acceso a base.
@@ -9,8 +9,17 @@ import { PLANES, pesos, planDe, type PlanClave } from "@/lib/planes";
 
 const ZONA = "America/Argentina/Buenos_Aires";
 
+/** Todas las claves, incluidas las de los planes que ya no se venden: una factura vieja las usa. */
 export const CLAVES_PLAN = Object.keys(PLANES) as [PlanClave, ...PlanClave[]];
 export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && Object.hasOwn(PLANES, v);
+
+/**
+ * Las claves que puede elegir un selector. Son las vigentes más, si la institución está en un
+ * plan heredado, el suyo: así el backoffice puede dejarla donde está sin ofrecérselo a otras.
+ */
+export function clavesParaElegir(actual?: string): PlanClave[] {
+  return esClavePlan(actual) && !PLANES[actual].vigente ? [...PLANES_VIGENTES, actual] : [...PLANES_VIGENTES];
+}
 
 export const MEDIOS_PAGO = ["Transferencia", "Tarjeta", "Débito automático", "Efectivo", "Mercado Pago"] as const;
 
@@ -108,12 +117,13 @@ export function equivalenteMensual(plan: string) {
   return p.periodo === "año" ? Math.round(p.precio / 12) : p.precio;
 }
 
-/** "$ 54.000/mes" · "$ 720.000/año" */
+/** "$ 50.000/mes" · "$ 15.000/mes por sede" */
 export function precioDePlan(plan: string) {
   const p = planDe(plan);
-  return `${pesos(p.precio)}/${p.periodo}`;
+  return `${pesos(p.precio)}/${p.periodo}${p.porSede ? " por sede" : ""}`;
 }
 
+/** Lo que se factura por mes. En Multisede es el precio de UNA sede: el total lo pone el equipo. */
 export const montoDePlan = (plan: string) => planDe(plan).precio;
 
 /** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
@@ -156,7 +166,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido" | "por_sede";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -188,6 +198,8 @@ export function planificarFacturas(
     const omitir = (motivo: MotivoOmision) => omitidas.push({ institucionId: inst.id, motivo });
 
     if (!esClavePlan(inst.plan)) omitir("plan_desconocido");
+    // Multisede se cobra por sede y no guardamos cuántas tiene: la factura la arma el equipo.
+    else if (PLANES[inst.plan].porSede) omitir("por_sede");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
     else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
     else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {

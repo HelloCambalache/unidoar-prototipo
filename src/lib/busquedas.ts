@@ -48,6 +48,8 @@ export const busquedaFormularioSchema = busquedaSchema.extend({
   beneficios: lista,
   /** Solo para "Suplencia rápida": hasta cuándo se acepta respuesta. Vacío = mantener el vencimiento actual. */
   venceEnHoras: vacioAUndefined(z.coerce.number().int().min(1).max(168).optional()),
+  /** En qué sede es la búsqueda: el servidor comprueba que sea de la institución (vacío = la principal, o la que ya tenía). */
+  sedeId: vacioAUndefined(z.guid().optional()),
 });
 export type BusquedaFormulario = z.infer<typeof busquedaFormularioSchema>;
 

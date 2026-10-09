@@ -6,6 +6,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { InstitucionCvBoton, InstitucionFavoritoBoton } from "@/components/docente/instituciones-acciones";
 import { InstitucionLogo } from "@/components/docente/instituciones-logo";
+import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
@@ -28,7 +29,8 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
   const { slug } = await params;
   const datos = await perfilInstitucion(slug, usuario.id, docente.id);
   if (!datos) notFound();
-  const { institucion: i, busquedas, favorita, cvEnviado, fotos, novedades } = datos;
+  const { institucion: i, busquedas, favorita, cvEnviado, fotos, novedades, sedes } = datos;
+  const variasSedes = sedes.length > 1;
 
   const cifras: { valor: string; etiqueta: string; grande: boolean }[] = [];
   if (i.alumnos != null) cifras.push({ valor: String(i.alumnos), etiqueta: "alumnos", grande: true });
@@ -85,7 +87,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
                 {i.verificada && <Insignia tono="verde">Institución verificada</Insignia>}
               </div>
               <div className="mt-[3px] text-sm leading-[1.4] text-apagado">
-                {[i.tipo, i.zona].filter(Boolean).join(" · ")}
+                {[i.tipo, variasSedes ? `${sedes.length} sedes` : i.zona].filter(Boolean).join(" · ")}
               </div>
             </div>
           </section>
@@ -116,6 +118,17 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           <VitrinaInstalaciones fotos={fotos} nombre={i.nombre} />
           <VitrinaNovedadesLista novedades={novedades} />
 
+          {variasSedes && (
+            <Tarjeta como="section" className="mb-4">
+              <EtiquetaSeccion className="mb-2.5">Sedes</EtiquetaSeccion>
+              <ListaDeSedes sedes={sedes} />
+              {i.horarioAdministracion && (
+                <div className="mt-3 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
+              )}
+            </Tarjeta>
+          )}
+
+          {!variasSedes && (
           <Tarjeta como="section" className="mb-4">
             <EtiquetaSeccion className="mb-1.5">Dónde queda</EtiquetaSeccion>
             <div className="flex h-[120px] items-center justify-center rounded-lg border border-dashed border-[#CFCCC5] bg-[repeating-linear-gradient(45deg,#F5F4F0,#F5F4F0_10px,#EFEEEA_10px,#EFEEEA_20px)] px-3 text-center text-[13px] leading-[1.4] text-sutil">
@@ -138,6 +151,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
               <div className="mt-1 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
             )}
           </Tarjeta>
+          )}
 
           <Tarjeta como="section">
             <h2 className="m-0 mb-3.5 text-lg leading-[1.3] font-semibold">Búsquedas activas</h2>
@@ -154,7 +168,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
                       {b.rapida && <Insignia tono="naranja">Rápida</Insignia>}
                     </div>
                     <div className="mb-3 flex-1 text-xs leading-[1.3] text-apagado">
-                      {[b.tipo, b.turno].filter(Boolean).join(" · ")}
+                      {[b.sede, b.tipo, b.turno].filter(Boolean).join(" · ")}
                     </div>
                     <BotonLink href={`/docente/oferta/${b.id}`} variante="secundario" tamano="sm" className="self-start">
                       Ver oferta

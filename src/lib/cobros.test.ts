@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  clavesParaElegir,
   equivalenteMensual,
   errorDeFechaDePago,
   estadoEfectivo,
@@ -139,6 +140,22 @@ describe("recordatorio de cobro", () => {
   });
 });
 
+describe("qué planes ofrece un selector", () => {
+  it("ofrece los vigentes a una institución que ya está en uno", () => {
+    assert.deepEqual(clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede"]);
+  });
+
+  it("le suma el suyo a la que quedó en un plan heredado, sin ofrecérselo a las demás", () => {
+    assert.deepEqual(clavesParaElegir("fundador"), ["colegio", "deportiva", "multisede", "fundador"]);
+    assert.ok(!clavesParaElegir("colegio").includes("fundador"));
+  });
+
+  it("sin plan conocido, solo los vigentes", () => {
+    assert.deepEqual(clavesParaElegir(undefined), ["colegio", "deportiva", "multisede"]);
+    assert.deepEqual(clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede"]);
+  });
+});
+
 describe("facturas automáticas (planificarFacturas)", () => {
   const P = "2026-10";
   const HOY = "2026-10-07";
@@ -156,6 +173,12 @@ describe("facturas automáticas (planificarFacturas)", () => {
   });
   const una = (i: InstitucionFacturable, recientes: FacturaReciente[], periodo = P, hoy = HOY) =>
     planificarFacturas([i], recientes, periodo, hoy);
+
+  it("no factura sola a una multisede: el total depende de cuántas sedes tiene", () => {
+    const r = una(inst("m", "multisede"), [f("m", "2026-09", "multisede", "pagada")]);
+    assert.deepEqual(r.crear, []);
+    assert.deepEqual(r.omitidas, [{ institucionId: "m", motivo: "por_sede" }]);
+  });
 
   it("crea la del mes con el monto del plan y el día de cobro por defecto", () => {
     const r = una(inst("a", "fundador", null, "Transferencia"), [f("a", "2026-09", "fundador", "pagada")]);

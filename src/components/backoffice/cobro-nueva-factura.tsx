@@ -6,7 +6,7 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import { CLAVES_PLAN, etiquetaPeriodo, fechaCobroDelPeriodo, MEDIOS_PAGO, montoDePlan, precioDePlan } from "@/lib/cobros";
+import { clavesParaElegir, etiquetaPeriodo, fechaCobroDelPeriodo, MEDIOS_PAGO, montoDePlan, precioDePlan } from "@/lib/cobros";
 import { PLANES, pesos, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -108,7 +108,7 @@ export function CobroNuevaFactura({
           </Campo>
           <Campo etiqueta="Plan" requerido error={errores.plan}>
             <Select value={planElegido} onChange={(e) => setPlanElegido(e.target.value as PlanClave)}>
-              {CLAVES_PLAN.map((c) => (
+              {clavesParaElegir(plan).map((c) => (
                 <option key={c} value={c}>
                   {PLANES[c].label} · {precioDePlan(c)}
                 </option>
@@ -128,6 +128,7 @@ export function CobroNuevaFactura({
         </div>
         <p className="m-0 mb-4 rounded-lg bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
           Monto de la factura: <b className="font-semibold">{pesos(montoDePlan(planElegido))}</b>
+          {PLANES[planElegido].porSede && " por sede: multiplicalo por las sedes de la red al registrar el pago."}
         </p>
         {errores._ && (
           <p role="alert" className="m-0 mb-3 text-xs text-[#b91c1c]">

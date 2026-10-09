@@ -2,6 +2,7 @@ import { LogoInstitucion } from "@/components/docente/logo-institucion";
 import { BotonLink } from "@/components/ui/button";
 import { Insignia, Verificado } from "@/components/ui/insignia";
 import type { InstitucionCatalogo } from "@/lib/queries/instituciones";
+import { resumenDeSedes } from "@/lib/sedes";
 
 /** "Sin búsquedas abiertas" · "1 búsqueda abierta" · "3 búsquedas abiertas" */
 export function etiquetaBusquedasAbiertas(n: number) {
@@ -18,7 +19,7 @@ export function TarjetaInstitucion({
   href,
   estrella,
 }: {
-  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "busquedasActivas">;
+  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "busquedasActivas" | "sedes">;
   href: string;
   estrella?: React.ReactNode;
 }) {
@@ -32,7 +33,7 @@ export function TarjetaInstitucion({
               <span className="min-w-0">{i.nombre}</span>
               {i.verificada && <Verificado tamano={14} />}
             </h2>
-            <div className="text-xs leading-[1.35] text-apagado">{[i.tipo, i.zona].filter(Boolean).join(" · ")}</div>
+            <div className="text-xs leading-[1.35] text-apagado">{[i.tipo, i.zona, resumenDeSedes(i.sedes)].filter(Boolean).join(" · ")}</div>
           </div>
         </div>
         {estrella}

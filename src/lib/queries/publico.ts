@@ -5,7 +5,9 @@ import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
 import { CUPOS_FUNDADOR, nombrePublico } from "@/lib/publico";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
+import { aSedePublica, type SedePublica } from "@/lib/sedes";
 import type { VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
 import { busquedaDeInstitucionActiva, docenteVisible, institucionVisible } from "@/lib/visibilidad";
 
@@ -86,12 +88,16 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
   };
 });
 
-/** Cupos del plan Fundador que quedan (instituciones reales con ese plan, sin contar las de ejemplo). */
+/*
+ * Cupos de institución fundadora que quedan. Son las primeras CUPOS_FUNDADOR instituciones reales
+ * que se suman, sin contar las de ejemplo: se cuenta por antigüedad y no por plan, porque desde que
+ * el arancel sale del tipo de institución ninguna cuenta nueva queda con el plan "fundador".
+ */
 export const cuposFundadorRestantes = cache(async (): Promise<number> => {
   const [{ n }] = await getDb()
     .select({ n: count() })
     .from(instituciones)
-    .where(and(eq(instituciones.plan, "fundador"), eq(instituciones.esDemo, false)));
+    .where(eq(instituciones.esDemo, false));
   return Math.max(0, CUPOS_FUNDADOR - n);
 });
 
@@ -286,7 +292,10 @@ export type PerfilInstitucionPublico = {
   horarioAdministracion: string | null;
   fotos: VitrinaFotoVista[];
   novedades: VitrinaNovedadVista[];
-  busquedas: { id: string; puesto: string; tipo: string; turno: string | null; rapida: boolean }[];
+  /** Todas sus sedes, la principal primero (sin el CUE). */
+  sedes: SedePublica[];
+  /** `sede`: en cuál es la búsqueda, solo cuando la institución tiene más de una. */
+  busquedas: { id: string; puesto: string; tipo: string; turno: string | null; rapida: boolean; sede: string | null }[];
 };
 
 /** Perfil público de una institución por su slug, con sus búsquedas activas. Null si no existe. */
@@ -298,7 +307,7 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
     .where(and(eq(instituciones.slug, slug), institucionVisible))
     .limit(1);
   if (!inst) return null;
-  const [abiertas, fotos, novedades] = await Promise.all([
+  const [abiertas, fotos, novedades, sedes] = await Promise.all([
     db
       .select({
         id: busquedas.id,
@@ -306,13 +315,16 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
         tipo: busquedas.tipo,
         turno: busquedas.turno,
         rapida: busquedas.rapida,
+        sedeId: busquedas.sedeId,
       })
       .from(busquedas)
       .where(and(eq(busquedas.institucionId, inst.id), eq(busquedas.estado, "activa")))
       .orderBy(desc(busquedas.rapida), desc(busquedas.creadoEn)),
     fotosDeInstitucion(inst.id),
     novedadesDeInstitucion(inst.id, 6),
+    sedesDeInstitucion(inst.id),
   ]);
+  const nombreDeSede = new Map(sedes.map((s) => [s.id, s.nombre] as const));
   return {
     id: inst.id,
     slug: inst.slug,
@@ -335,6 +347,7 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
     horarioAdministracion: inst.horarioAdministracion,
     fotos,
     novedades,
-    busquedas: abiertas,
+    sedes: sedes.map(aSedePublica),
+    busquedas: abiertas.map(({ sedeId, ...b }) => ({ ...b, sede: sedes.length > 1 && sedeId ? (nombreDeSede.get(sedeId) ?? null) : null })),
   };
 });

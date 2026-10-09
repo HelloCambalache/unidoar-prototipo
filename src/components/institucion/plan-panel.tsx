@@ -6,10 +6,9 @@ import { BotonAccion } from "@/components/institucion/boton-accion";
 import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { useToast } from "@/components/ui/toast";
+import { clavesParaElegir } from "@/lib/cobros";
 import { pesos, PLANES, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
-
-const CLAVES = Object.keys(PLANES) as PlanClave[];
 
 /**
  * Plan actual, próximo cobro y "Cambiar de plan". Todavía no hay pasarela de pago: elegir un plan no cobra
@@ -124,7 +123,7 @@ export function PlanPanel({
 
       {abierto && puedeCambiar && !solicitud && (
         <div className="mt-5 flex max-w-[1180px] flex-wrap gap-4">
-          {CLAVES.map((clave) => {
+          {clavesParaElegir(plan).map((clave) => {
             const p = PLANES[clave];
             const esActual = clave === plan;
             return (

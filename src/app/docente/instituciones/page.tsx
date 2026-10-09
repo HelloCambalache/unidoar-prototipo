@@ -47,25 +47,30 @@ export default async function InstitucionesDocentePage({ searchParams }: { searc
   };
 
   const hayFiltros = !!(f.q || f.tipo || f.zona || f.favoritas);
-  const pines: PinInstitucion[] = instituciones.flatMap((i) =>
-    i.lat != null && i.lng != null
-      ? [
-          {
-            id: i.id,
-            slug: i.slug,
-            nombre: i.nombre,
-            tipo: i.tipo,
-            zona: i.zona,
-            logoUrl: i.logoUrl,
-            lat: i.lat,
-            lng: i.lng,
-            busquedasActivas: i.busquedasActivas,
-            favorita: i.favorita,
-            verificada: i.verificada,
-          },
-        ]
-      : [],
-  );
+  // Un pin por cada sede ubicada (una institución con una sola sede tiene un solo pin, como siempre).
+  const pines: PinInstitucion[] = instituciones.flatMap((i) => {
+    const lugares = i.sedes.length > 0 ? i.sedes : [{ nombre: i.nombre, zona: i.zona, lat: i.lat, lng: i.lng }];
+    return lugares.flatMap((s) =>
+      s.lat != null && s.lng != null
+        ? [
+            {
+              id: i.id,
+              slug: i.slug,
+              nombre: i.nombre,
+              sede: i.sedes.length > 1 ? s.nombre : null,
+              tipo: i.tipo,
+              zona: s.zona ?? i.zona,
+              logoUrl: i.logoUrl,
+              lat: s.lat,
+              lng: s.lng,
+              busquedasActivas: i.busquedasActivas,
+              favorita: i.favorita,
+              verificada: i.verificada,
+            },
+          ]
+        : [],
+    );
+  });
 
   return (
     <>

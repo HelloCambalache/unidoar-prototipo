@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
+import { planPorTipo } from "@/lib/planes";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { eq, like } from "drizzle-orm";
@@ -31,6 +32,7 @@ import { leerPorcentaje } from "@/lib/estudiantes";
 import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
+import { guardarSedePrincipal } from "@/lib/queries/sedes";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { ubicacionDeInstitucion } from "@/lib/ubicacion";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
@@ -135,7 +137,6 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
     osm: true,
   });
   const ubicacion = ubicacionDeInstitucion(delCatalogo, deLaDireccion);
-  const db = getDb();
   const existente = await institucionPropia(usuario.id);
   const datos = {
     nombre: d.nombre,
@@ -147,24 +148,32 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
     cuit: orNull(d.cuit),
     // El código CUE es solo de los establecimientos educativos.
     cue: TIPOS_CON_CUE.includes(d.tipo) ? orNull(d.cue) : null,
+  };
+  // El lugar es de la sede principal (la ficha de la institución recibe la copia en el mismo paso). Sin coordenadas nuevas
+  // se conservan las que ya tenía.
+  const ubicacionDeLaSede = {
     direccion: d.direccion,
     partido: d.partido,
     provincia: d.provincia,
     zona: ubicacion.zona,
+    cue: datos.cue,
+    ...(ubicacion.lat != null && ubicacion.lng != null ? { lat: ubicacion.lat, lng: ubicacion.lng } : {}),
   };
 
   if (existente) {
-    await db
-      .update(instituciones)
-      .set({ ...datos, lat: ubicacion.lat ?? existente.lat, lng: ubicacion.lng ?? existente.lng })
-      .where(eq(instituciones.id, existente.id));
+    await transaccion(async (tx) => {
+      await tx.update(instituciones).set(datos).where(eq(instituciones.id, existente.id));
+      await guardarSedePrincipal(tx, existente.id, ubicacionDeLaSede);
+    });
   } else {
     const crear = async (slug: string) =>
       transaccion(async (tx) => {
         const [creada] = await tx
           .insert(instituciones)
-          .values({ ...datos, slug, propietarioId: usuario.id, lat: ubicacion.lat, lng: ubicacion.lng, esDemo: false })
+          // El plan sale del tipo de institución, no de lo que elija: ver planPorTipo en src/lib/planes.ts.
+          .values({ ...datos, slug, plan: planPorTipo(d.tipo), propietarioId: usuario.id, esDemo: false })
           .returning({ id: instituciones.id });
+        await guardarSedePrincipal(tx, creada!.id, ubicacionDeLaSede);
         await tx
           .insert(institucionMiembros)
           .values({

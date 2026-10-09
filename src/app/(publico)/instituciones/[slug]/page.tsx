@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icono } from "@/components/icons";
+import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Imagen } from "@/components/publico/imagen";
 import { LogoInstitucion } from "@/components/publico/logo-institucion";
@@ -46,6 +47,7 @@ export default async function PerfilInstitucion({ params }: Props) {
   ].filter((d): d is { valor: string; etiqueta: string; grande: boolean } => !!d);
 
   const ubicacion = [inst.direccion, inst.zona].filter(Boolean).join(", ");
+  const variasSedes = inst.sedes.length > 1;
   const cantidad = inst.busquedas.length;
 
   return (
@@ -88,7 +90,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                 </div>
                 <div className="mt-[3px] text-sm leading-snug text-apagado">
                   {inst.tipo}
-                  {inst.zona ? ` · ${inst.zona}` : ""}
+                  {variasSedes ? ` · ${inst.sedes.length} sedes` : inst.zona ? ` · ${inst.zona}` : ""}
                 </div>
               </div>
             </Tarjeta>
@@ -123,7 +125,19 @@ export default async function PerfilInstitucion({ params }: Props) {
             <VitrinaInstalaciones fotos={inst.fotos} nombre={inst.nombre} />
             <VitrinaNovedadesLista novedades={inst.novedades} />
 
-            {ubicacion && (
+            {variasSedes && (
+              <Tarjeta como="section" className="mb-4">
+                <EtiquetaSeccion>Sedes</EtiquetaSeccion>
+                <ListaDeSedes sedes={inst.sedes} />
+                {inst.horarioAdministracion && (
+                  <div className="mt-3 text-[13px] leading-snug text-apagado">
+                    {`Horario de administración: ${inst.horarioAdministracion}`}
+                  </div>
+                )}
+              </Tarjeta>
+            )}
+
+            {!variasSedes && ubicacion && (
               <Tarjeta como="section" className="mb-4">
                 <EtiquetaSeccion>Dónde queda</EtiquetaSeccion>
                 <div className="flex items-start gap-2 text-sm leading-normal text-tinta-2">
@@ -165,7 +179,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                           )}
                         </div>
                         <p className="m-0 mb-3 flex-1 text-xs leading-[1.3] text-apagado">
-                          {[b.tipo, b.turno].filter(Boolean).join(" · ")}
+                          {[b.sede, b.tipo, b.turno].filter(Boolean).join(" · ")}
                         </p>
                         {accion && (
                           <BotonLink href={accion.href} variante="secundario" tamano="sm" className="self-start">

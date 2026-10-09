@@ -17,7 +17,9 @@ import {
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
+import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
+import type { SedeVista } from "@/lib/sedes";
 import type { VitrinaGuardada } from "@/lib/vitrina";
 
 /*
@@ -42,6 +44,26 @@ export async function actualizarVitrina(entrada: unknown): Promise<Resultado<Vit
   }
   const r = await guardarVitrinaDeInstitucion(institucion, usuario.id, entrada);
   return r.ok ? ok(r.data.guardado) : r;
+}
+
+/**
+ * "Guardar sedes" de Mi perfil: la lista completa de sedes de la institución (las reglas están en `guardarSedesDeInstitucion`, que
+ * comparte con el backoffice). El CUE no lo carga la institución: lo respeta solo cuando lo carga el equipo.
+ */
+export async function actualizarSedes(entrada: unknown): Promise<Resultado<{ sedes: SedeVista[] }>> {
+  const { usuario, institucion } = await requerirInstitucion();
+  if (!esRolGestor(await rolEnInstitucion(institucion, usuario.id))) {
+    return fallo("Solo el dueño y los administradores pueden editar las sedes.");
+  }
+  const r = await guardarSedesDeInstitucion(institucion, entrada, { puedeEditarCue: false });
+  if (!r.ok) return r;
+  // Las sedes se ven en el menú, en las dos páginas de perfil, en el catálogo y en las ofertas de los profesionales.
+  revalidatePath("/institucion", "layout");
+  revalidatePath(`/instituciones/${institucion.slug}`);
+  revalidatePath(`/docente/instituciones/${institucion.slug}`);
+  revalidatePath("/docente/instituciones");
+  revalidatePath("/instituciones");
+  return ok({ sedes: r.data.sedes });
 }
 
 /* ───────────────────────────── Mi cuenta ───────────────────────────── */
