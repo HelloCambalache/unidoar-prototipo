@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Icono } from "@/components/icons";
+import { useToast } from "@/components/ui/toast";
+import { enlaceDeWhatsApp } from "@/lib/compartir-perfil";
 import { BotonLink } from "@/components/ui/button";
 import {
   PACK_LANZAMIENTO,
@@ -23,6 +25,9 @@ const ETIQUETA: Record<string, string> = {
   multisede: `Más de ${SEDES_MULTISEDE} sedes`,
 };
 
+/** Lo que se manda al recomendar: lo escribe la institución que ya está, a un colega. */
+const TEXTO_REFERIDO = "Te paso UNIDOAR, lo usamos para cubrir búsquedas de profesionales:";
+
 /** Los tipos que entran en cada arancel, para que quien elige sepa si es el suyo. */
 function detalleDe(clave: PlanClave) {
   if (clave === "multisede") return PLANES.multisede.detalle;
@@ -34,10 +39,20 @@ function detalleDe(clave: PlanClave) {
  * Tarjeta de precio de las instituciones. El arancel depende del tipo, así que en vez de una tarjeta
  * por precio hay una sola con un desplegable: la institución se elige a sí misma y ve lo que paga.
  */
-export function PlanesInstituciones({ beneficios }: { beneficios: readonly string[] }) {
+export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly string[]; url: string }) {
   const [clave, setClave] = useState<PlanClave>("colegio");
+  const toast = useToast();
   const plan = PLANES[clave];
   const pack = packDe(clave);
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast("Enlace copiado");
+    } catch {
+      toast("No pudimos copiarlo solo: copiá la dirección de esta página.", "error");
+    }
+  };
 
   return (
     <article className="relative flex min-w-[320px] flex-[1.15] flex-col overflow-hidden rounded-[14px] bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
@@ -92,11 +107,45 @@ export function PlanesInstituciones({ beneficios }: { beneficios: readonly strin
         ))}
       </ul>
 
-      <p className="relative mt-5 mb-0 rounded-lg bg-white/8 px-3.5 py-2.5 text-[13px] leading-[1.5] text-white/70">
-        Pack de {PACK_LANZAMIENTO.meses} meses por adelantado:{" "}
-        <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
-        {plan.porSede ? ", por sede" : ""}.
-      </p>
+      <div className="relative mt-5 rounded-lg bg-white/8 px-4 py-3.5">
+        <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
+          1 mes bonificado
+        </span>
+        <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
+        <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
+          Contratás el pack de {PACK_LANZAMIENTO.meses} meses y pagás {PACK_LANZAMIENTO.mesesQueSePagan}:{" "}
+          <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
+          {plan.porSede ? ", por sede" : ""}.
+        </p>
+      </div>
+
+      <div className="relative mt-3 rounded-lg bg-white/8 px-4 py-3.5">
+        <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
+          1 mes más
+        </span>
+        <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Plan Referidos</div>
+        <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
+          Recomendás a otra institución y se suma a la red: pagás {PACK_LANZAMIENTO.mesesConReferido} de los{" "}
+          {PACK_LANZAMIENTO.meses}.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a
+            href={enlaceDeWhatsApp(`${TEXTO_REFERIDO} ${url}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-3 py-1.5 text-xs leading-none font-semibold text-white/85 transition-colors hover:bg-white/10"
+          >
+            Recomendar por WhatsApp
+          </a>
+          <button
+            type="button"
+            onClick={copiar}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/25 px-3 py-1.5 text-xs leading-none font-semibold text-white/85 transition-colors hover:bg-white/10"
+          >
+            Copiar enlace
+          </button>
+        </div>
+      </div>
 
       <BotonLink
         href={RUTA_REGISTRO_INSTITUCION}

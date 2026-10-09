@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Icono } from "@/components/icons";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { BotonLink } from "@/components/ui/button";
-import { PACK_LANZAMIENTO } from "@/lib/planes";
 import { CUPOS_FUNDADOR, RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { cuposFundadorRestantes } from "@/lib/queries/publico";
+import { origenSitio } from "@/lib/sitio";
 
 export const metadata: Metadata = {
   title: "Planes y aranceles",
@@ -32,7 +32,7 @@ const BENEFICIOS_INSTITUCION = [
 ];
 
 export default async function Planes() {
-  const cupos = await cuposFundadorRestantes();
+  const [cupos, origen] = await Promise.all([cuposFundadorRestantes(), origenSitio()]);
   const hayCupos = cupos > 0;
 
   return (
@@ -75,37 +75,7 @@ export default async function Planes() {
             </BotonLink>
           </article>
 
-          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} />
-        </div>
-
-        {/* ── Promociones de lanzamiento ──────────────────────────────── */}
-        <h2 className="mt-14 mb-1.5 text-[26px] leading-tight font-semibold tracking-[-0.02em] text-tinta">
-          Promociones de lanzamiento
-        </h2>
-        <p className="m-0 mb-7 max-w-[70ch] text-[15px] leading-[1.6] text-apagado">
-          Sobre el pack de {PACK_LANZAMIENTO.meses} meses, y se acumulan: pagando por adelantado y recomendando,
-          terminás pagando {PACK_LANZAMIENTO.mesesConReferido} de {PACK_LANZAMIENTO.meses}.
-        </p>
-        <div className="flex flex-wrap gap-6">
-          <article className="min-w-[280px] flex-1 rounded-[14px] border border-borde bg-white px-7 py-6">
-            <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-              1 mes bonificado
-            </span>
-            <h3 className="mt-3.5 mb-1.5 text-[17px] leading-tight font-semibold text-tinta">Pago por adelantado</h3>
-            <p className="m-0 text-sm leading-[1.55] text-apagado">
-              Contratás el pack de {PACK_LANZAMIENTO.meses} meses y pagás {PACK_LANZAMIENTO.mesesQueSePagan}.
-            </p>
-          </article>
-          <article className="min-w-[280px] flex-1 rounded-[14px] border border-borde bg-white px-7 py-6">
-            <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-              1 mes más
-            </span>
-            <h3 className="mt-3.5 mb-1.5 text-[17px] leading-tight font-semibold text-tinta">Plan Referidos</h3>
-            <p className="m-0 text-sm leading-[1.55] text-apagado">
-              Recomendás a otra institución y se suma a la red: pagás {PACK_LANZAMIENTO.mesesConReferido} de los{" "}
-              {PACK_LANZAMIENTO.meses}.
-            </p>
-          </article>
+          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} url={`${origen}/planes`} />
         </div>
 
         {/* ── Instituciones fundadoras ────────────────────────────────── */}
