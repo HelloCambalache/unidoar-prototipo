@@ -77,32 +77,20 @@ export async function datosVitrina(institucionId: string) {
 
 const vacioANull = (v: string) => (v.trim() ? v.trim() : null);
 
-/** Lo que se encontró para la dirección: partido y provincia solo cuando la dirección cambió. */
-export type UbicacionParaGuardar = { lat: number; lng: number; zona: string; partido?: string; provincia?: string };
-
 /**
  * Persiste "Guardar cambios" de Mi perfil en una sola transacción: datos de la institución, valores, galería y
  * novedades. Recibe el estado completo (ya validado): lo que ya no viene se borra, lo que trae un `id` de esta
  * institución se actualiza y lo demás se crea; un `id` ajeno o inexistente se trata como nuevo, nunca se toca la
  * fila de otra institución. Devuelve las listas ya con sus ids, en el orden en que se muestran.
  * La autorización y la validación de las URLs de imágenes las hace la acción que la llama.
- * `ubicacion` (si la dirección se pudo ubicar) actualiza las coordenadas y, si cambió la dirección, el partido y la provincia.
  */
-export async function guardarVitrina(institucionId: string, d: DatosVitrina, ubicacion: UbicacionParaGuardar | null = null) {
+export async function guardarVitrina(institucionId: string, d: DatosVitrina) {
   return transaccion(async (tx) => {
     await tx
       .update(instituciones)
       .set({
-        ...(ubicacion
-          ? {
-              lat: ubicacion.lat,
-              lng: ubicacion.lng,
-              ...(ubicacion.partido && ubicacion.provincia ? { partido: ubicacion.partido, provincia: ubicacion.provincia } : {}),
-            }
-          : {}),
         nombre: d.nombre,
         tipo: d.tipo,
-        zona: vacioANull(d.zona) ?? ubicacion?.zona ?? null,
         fundada: d.fundada,
         alumnos: d.alumnos,
         niveles: vacioANull(d.niveles),
@@ -114,7 +102,6 @@ export async function guardarVitrina(institucionId: string, d: DatosVitrina, ubi
         mision: vacioANull(d.mision),
         vision: vacioANull(d.vision),
         valores: sinRepetidos(d.valores),
-        direccion: d.direccion,
         horarioAdministracion: vacioANull(d.horarioAdministracion),
         logoUrl: vacioANull(d.logoUrl),
         portadaUrl: vacioANull(d.portadaUrl),

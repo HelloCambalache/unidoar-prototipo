@@ -21,6 +21,7 @@ import { correoDeBusquedaUrgente } from "@/lib/correo/eventos";
 import { MS } from "@/lib/fechas";
 import { avisarAVarios, avisarCierreDeBusqueda } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
+import { sedeParaBusqueda } from "@/lib/queries/sedes";
 import { docentesAvisables, resumenCoincidencias } from "@/lib/queries/coincidencias";
 
 /** Pantallas de la institución y del docente que muestran búsquedas o sus conteos. */
@@ -65,9 +66,12 @@ export async function crearBusqueda(
   const datos = parsear(busquedaFormularioSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);
 
+  const sede = await sedeParaBusqueda(institucion.id, datos.data.sedeId);
+  if (!sede) return fallo("Revisá los campos marcados.", { sedeId: "Elegí una sede de la lista." });
+
   const valores = valoresDeBusqueda(datos.data);
-  // Si no cambió la zona del formulario, la búsqueda hereda la de la institución.
-  const zona = valores.zona ?? institucion.zona ?? null;
+  // Si no cambió la zona del formulario, la búsqueda hereda la de su sede.
+  const zona = valores.zona ?? sede.zona ?? institucion.zona ?? null;
   const ahora = new Date();
   const venceEn = valores.rapida ? new Date(ahora.getTime() + (datos.data.venceEnHoras ?? 24) * MS.HORA) : null;
 
@@ -76,7 +80,7 @@ export async function crearBusqueda(
   const avisados = await transaccion(async (tx) => {
     const [creada] = await tx
       .insert(busquedas)
-      .values({ institucionId: institucion.id, ...valores, zona, venceEn })
+      .values({ institucionId: institucion.id, sedeId: sede.id, ...valores, zona, venceEn })
       .returning({ id: busquedas.id });
     await avisarAVarios(
       tx,
@@ -122,6 +126,10 @@ export async function editarBusqueda(
   const actual = await busquedaPropia(institucion.id, busquedaId);
   if (!actual) return fallo("No encontramos esa búsqueda.");
 
+  // La sede que se manda, o la que ya tenía (una búsqueda vieja sin sede pasa a la principal).
+  const sede = await sedeParaBusqueda(institucion.id, datos.data.sedeId, actual.sedeId);
+  if (!sede) return fallo("Revisá los campos marcados.", { sedeId: "Elegí una sede de la lista." });
+
   const valores = valoresDeBusqueda(datos.data);
   const ahora = new Date();
   let venceEn: Date | null = null;
@@ -134,7 +142,7 @@ export async function editarBusqueda(
 
   await getDb()
     .update(busquedas)
-    .set({ ...valores, zona: valores.zona ?? institucion.zona ?? null, venceEn })
+    .set({ ...valores, sedeId: sede.id, zona: valores.zona ?? sede.zona ?? institucion.zona ?? null, venceEn })
     .where(and(eq(busquedas.id, actual.id), eq(busquedas.institucionId, institucion.id)));
 
   revalidarBusquedas(actual.id);

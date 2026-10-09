@@ -81,7 +81,7 @@ export default async function InstitucionesBackoffice({
                     {i.nombre}
                   </Link>
                   <div className="mt-0.5 text-xs leading-snug text-apagado">
-                    {[i.tipo, i.zona].filter(Boolean).join(" · ")}
+                    {[i.tipo, i.zona, i.sedes > 1 ? `${i.sedes} sedes` : null].filter(Boolean).join(" · ")}
                   </div>
                 </td>
                 <td>{nombreDePlan(i.plan)}</td>

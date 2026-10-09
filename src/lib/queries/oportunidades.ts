@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import {
   busquedas,
   favoritos,
+  institucionSedes,
   instituciones,
   postulaciones,
   type Busqueda,
@@ -12,6 +13,8 @@ import {
   type EtapaPostulacion,
 } from "@/db/schema";
 import { distanciaKm } from "@/lib/geo";
+import { contarSedes } from "@/lib/queries/sedes";
+import { lugarDeBusqueda } from "@/lib/sedes";
 import { busquedaAbierta, RADIO_MAX, tiempoRestante, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { contiene } from "@/lib/sql-texto";
@@ -30,8 +33,10 @@ export type OfertaListada = {
   /** "40 min", "18 hs": cuánto falta para que venza una rápida (se calcula en el servidor). */
   responderEn: string | null;
   descripcion: string | null;
-  /** Zona de la búsqueda o, si no tiene, la de la institución. */
+  /** Zona de la búsqueda o, si no tiene, la de su sede (o la de la institución en las búsquedas sin sede). */
   zona: string | null;
+  /** Nombre de la sede donde es la búsqueda; solo si la institución tiene más de una. */
+  sede: string | null;
   /** "Turno mañana · 18 hs semanales" */
   horario: string | null;
   institucion: {
@@ -43,7 +48,7 @@ export type OfertaListada = {
     lat: number | null;
     lng: number | null;
   };
-  /** Distancia entre el docente y la institución; null si falta alguna de las dos ubicaciones. */
+  /** Distancia entre el docente y la sede de la búsqueda; null si falta alguna de las dos ubicaciones. */
   km: number | null;
   favorita: boolean;
   /** Si el docente ya figura en esta búsqueda (postulado o invitado). */
@@ -126,22 +131,28 @@ export async function listarOportunidades(
         nombre: instituciones.nombre,
         logoUrl: instituciones.logoUrl,
         verificada: instituciones.verificada,
+        direccion: instituciones.direccion,
         zona: instituciones.zona,
         lat: instituciones.lat,
         lng: instituciones.lng,
       },
+      sede: institucionSedes,
     })
     .from(busquedas)
     .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+    .leftJoin(institucionSedes, eq(institucionSedes.id, busquedas.sedeId))
     .where(and(...condiciones))
     .orderBy(desc(busquedas.rapida), desc(busquedas.creadoEn))
     .limit(500);
 
   const limitaRadio = origen !== null && radio < RADIO_MAX;
+  const cantidadDeSedes = await contarSedes([...new Set(filas.map((f) => f.institucion.id))]);
 
   const ofertas: OfertaListada[] = [];
-  for (const { busqueda: b, institucion: i } of filas) {
-    const km = origen && i.lat != null && i.lng != null ? distanciaKm(origen, { lat: i.lat, lng: i.lng }) : null;
+  for (const { busqueda: b, institucion: i, sede } of filas) {
+    // Los kilómetros, el mapa y la zona salen de la sede de la búsqueda (o, sin sede, de la institución).
+    const lugar = lugarDeBusqueda(sede, i);
+    const km = origen && lugar.lat != null && lugar.lng != null ? distanciaKm(origen, { lat: lugar.lat, lng: lugar.lng }) : null;
     // Sin distancia calculable no se descarta: mejor mostrarla que esconder una oferta posible.
     if (limitaRadio && km !== null && km > radio) continue;
     const etapa = etapaPorBusqueda.get(b.id);
@@ -156,9 +167,10 @@ export async function listarOportunidades(
       rapida: b.rapida,
       responderEn: b.rapida && b.venceEn ? tiempoRestante(b.venceEn, ahora) : null,
       descripcion: b.descripcion,
-      zona: b.zona ?? i.zona,
+      zona: b.zona ?? lugar.zona,
+      sede: sede && (cantidadDeSedes.get(i.id) ?? 0) > 1 ? sede.nombre : null,
       horario: horarioDeBusqueda(b),
-      institucion: { id: i.id, slug: i.slug, nombre: i.nombre, logoUrl: i.logoUrl, verificada: i.verificada, lat: i.lat, lng: i.lng },
+      institucion: { id: i.id, slug: i.slug, nombre: i.nombre, logoUrl: i.logoUrl, verificada: i.verificada, lat: lugar.lat, lng: lugar.lng },
       km,
       favorita: idsFavoritas.has(b.id),
       postulacion: estado ? { texto: estado.texto, tono: estado.tono } : null,
@@ -192,6 +204,8 @@ export type DetalleOferta = {
     lat: number | null;
     lng: number | null;
   };
+  /** Nombre de la sede donde es la búsqueda; solo si la institución tiene más de una. */
+  sede: string | null;
   km: number | null;
   /** Fila del docente en esta búsqueda, si se postuló o lo invitaron. */
   postulacion: { id: string; etapa: EtapaPostulacion; origen: "postulacion" | "invitacion"; examenRealizado: boolean } | null;
@@ -207,13 +221,17 @@ export type DetalleOferta = {
 export async function detalleOferta(busquedaId: string, docente: Docente): Promise<DetalleOferta | null> {
   const db = getDb();
   const [fila] = await db
-    .select({ busqueda: busquedas, institucion: instituciones })
+    .select({ busqueda: busquedas, institucion: instituciones, sede: institucionSedes })
     .from(busquedas)
     .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+    .leftJoin(institucionSedes, eq(institucionSedes.id, busquedas.sedeId))
     .where(and(eq(busquedas.id, busquedaId), institucionVisible))
     .limit(1);
   if (!fila) return null;
-  const { busqueda, institucion } = fila;
+  const { busqueda, institucion, sede } = fila;
+  // Dónde queda: la sede de la búsqueda o, sin sede, la institución (que refleja a su sede principal).
+  const lugar = lugarDeBusqueda(sede, institucion);
+  const cantidadDeSedes = sede ? ((await contarSedes([institucion.id])).get(institucion.id) ?? 0) : 0;
 
   const [[propia], otras, [conteo]] = await Promise.all([
     db
@@ -240,8 +258,8 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
   ]);
 
   const km =
-    docente.lat != null && docente.lng != null && institucion.lat != null && institucion.lng != null
-      ? distanciaKm({ lat: docente.lat, lng: docente.lng }, { lat: institucion.lat, lng: institucion.lng })
+    docente.lat != null && docente.lng != null && lugar.lat != null && lugar.lng != null
+      ? distanciaKm({ lat: docente.lat, lng: docente.lng }, { lat: lugar.lat, lng: lugar.lng })
       : null;
 
   return {
@@ -253,12 +271,13 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
       tipo: institucion.tipo,
       descripcion: institucion.descripcion,
       verificada: institucion.verificada,
-      direccion: institucion.direccion,
-      zona: institucion.zona,
+      direccion: lugar.direccion,
+      zona: lugar.zona,
       logoUrl: institucion.logoUrl,
-      lat: institucion.lat,
-      lng: institucion.lng,
+      lat: lugar.lat,
+      lng: lugar.lng,
     },
+    sede: sede && cantidadDeSedes > 1 ? sede.nombre : null,
     km,
     postulacion: propia ? { id: propia.id, etapa: propia.etapa, origen: propia.origen, examenRealizado: !!propia.examenPreocupacionalEn } : null,
     otras,

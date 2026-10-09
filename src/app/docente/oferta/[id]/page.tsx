@@ -81,10 +81,10 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
             <div className="flex flex-wrap gap-x-[18px] gap-y-2 text-[13px] leading-[1.4] text-tinta-2">
-              {(zona || km) && (
+              {(zona || km || detalle.sede) && (
                 <span className="flex items-center gap-2">
                   <Icono nombre="ubicacion" tamano={14} trazo={2} className="text-apagado" />
-                  {[zona, km].filter(Boolean).join(" · ")}
+                  {[detalle.sede, zona, km].filter(Boolean).join(" · ")}
                 </span>
               )}
               {horario && (
@@ -171,6 +171,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               <div className="mt-2.5 flex items-start gap-[7px] text-[13px] leading-[1.45] text-tinta-2">
                 <Icono nombre="ubicacion" tamano={14} trazo={1.8} className="mt-0.5 text-sutil" />
                 <span>
+                  {detalle.sede && <span className="block text-apagado">{detalle.sede}</span>}
                   {institucion.direccion && <b className="font-semibold">{institucion.direccion}</b>}
                   {institucion.direccion && zona && <br />}
                   {zona && <span className="text-apagado">{zona}</span>}

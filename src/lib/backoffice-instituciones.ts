@@ -41,8 +41,9 @@ export const MOTIVOS_SUSPENSION = [
 ] as const;
 
 /**
- * Datos de la cuenta que el equipo puede corregir y que la institución no edita sola (teléfono de contacto, CUIT y CUE: se cargan
- * en el alta). Vacío los deja sin dato; el teléfono, si se pone, tiene que ser usable.
+ * Datos de la cuenta que el equipo puede corregir y que la institución no edita sola (teléfono de contacto y CUIT: se cargan en el
+ * alta; el CUE es de cada sede y se carga en el editor de sedes). Vacío los deja sin dato; el teléfono, si se pone, tiene que ser
+ * usable.
  */
 const textoOVacio = (max: number) =>
   z
@@ -58,7 +59,6 @@ export const datosDeCuentaSchema = z.object({
     .refine((v) => v === "" || v.length >= 6, "Poné un teléfono completo (mínimo 6 caracteres)")
     .transform((v) => (v ? v : null)),
   cuit: textoOVacio(20),
-  cue: textoOVacio(20),
 });
 export type DatosDeCuenta = z.infer<typeof datosDeCuentaSchema>;
 
@@ -87,6 +87,8 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Editó el perfil público${listaDeCampos(d.campos)}`;
     case "institucion.editar_datos":
       return `Editó los datos de la cuenta${listaDeCampos(d.campos)}`;
+    case "institucion.editar_sedes":
+      return `Editó las sedes${listaDeCampos(d.campos)}`;
     case "institucion.cambiar_plan":
       return `Cambió el plan${texto("de") ? ` de ${nombreDePlan(texto("de")!)}` : ""}${texto("a") ? ` a ${nombreDePlan(texto("a")!)}` : ""}`;
     case "institucion.suspender":

@@ -5,10 +5,8 @@ import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { quitados } from "@/lib/archivos";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { borrarArchivos } from "@/lib/queries/archivos";
-import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
-import { fotosDeInstitucion, guardarVitrina, novedadesDeInstitucion, type UbicacionParaGuardar } from "@/lib/queries/vitrina";
+import { fotosDeInstitucion, guardarVitrina, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { esUrlPublicaPropia } from "@/lib/subidas";
-import { claveDeDireccion, zonaDeUbicacion } from "@/lib/ubicacion";
 import { cambiosDeVitrina, camposDeError, vitrinaSchema, type VitrinaGuardada } from "@/lib/vitrina";
 
 /*
@@ -17,28 +15,6 @@ import { cambiosDeVitrina, camposDeError, vitrinaSchema, type VitrinaGuardada } 
  * (`actualizarVitrinaComoAdmin`). Quien llama ya resolvió QUIÉN puede editar y de QUÉ institución; acá se valida el
  * contenido y se guarda, con las mismas reglas para las dos.
  */
-
-/**
- * Ubica la dirección de la vitrina cuando cambió (o cuando la institución todavía no tenía coordenadas). Con la dirección
- * nueva se actualizan también el partido y la provincia; si no se la encuentra, todo queda como estaba.
- */
-async function ubicacionDeLaVitrina(
-  institucion: { direccion: string | null; partido: string | null; provincia: string | null; lat: number | null; lng: number | null },
-  d: { direccion: string; ubicacion?: string },
-): Promise<UbicacionParaGuardar | null> {
-  const cambio = claveDeDireccion(d.direccion) !== claveDeDireccion(institucion.direccion ?? "");
-  if (!cambio && institucion.lat != null && institucion.lng != null) return null;
-  const u = await ubicarPorDireccion({
-    direccion: d.direccion,
-    // Con la dirección nueva el partido de antes no sirve de pista; sin cambios, sí.
-    partido: cambio ? null : institucion.partido,
-    provincia: cambio ? null : institucion.provincia,
-    token: d.ubicacion,
-    osm: true,
-  });
-  if (!u) return null;
-  return { lat: u.lat, lng: u.lng, zona: zonaDeUbicacion(u), ...(cambio ? { partido: u.partido, provincia: u.provincia } : {}) };
-}
 
 /**
  * Valida y guarda el estado completo del formulario: datos, valores, galería y novedades en una sola transacción. Las fotos y
@@ -80,7 +56,7 @@ export async function guardarVitrinaDeInstitucion(
   if (Object.keys(campos).length > 0) return fallo("Revisá los campos marcados.", campos);
 
   const cambios = cambiosDeVitrina({ ...institucion, fotos: fotosAntes, novedades: novedadesAntes }, d);
-  const guardado = await guardarVitrina(institucion.id, d, await ubicacionDeLaVitrina(institucion, d));
+  const guardado = await guardarVitrina(institucion.id, d);
 
   // Lo que se reemplazó o se quitó (logo, portada, fotos de la galería) deja de ocupar lugar en Storage.
   await borrarArchivos(

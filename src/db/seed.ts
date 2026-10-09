@@ -108,6 +108,28 @@ async function demo() {
     .returning({ id: s.instituciones.id, slug: s.instituciones.slug, zona: s.instituciones.zona });
   const instId = new Map(insts.map((i) => [i.slug, i.id]));
 
+  // Cada institución de ejemplo tiene su sede principal con la ubicación de arriba (igual que las reales, ver src/lib/sedes.ts).
+  const sedesCreadas = await db
+    .insert(s.institucionSedes)
+    .values(
+      INSTITUCIONES.map((i) => {
+        const c = coordsZona.get(i.zona);
+        return {
+          institucionId: instId.get(i.slug)!,
+          nombre: "Sede principal",
+          direccion: i.direccion,
+          partido: i.partido,
+          provincia: "Buenos Aires",
+          zona: i.zonaTexto ?? i.zona,
+          lat: c?.lat,
+          lng: c?.lng,
+          esPrincipal: true,
+        };
+      }),
+    )
+    .returning({ id: s.institucionSedes.id, institucionId: s.institucionSedes.institucionId });
+  const sedeDe = new Map(sedesCreadas.map((x) => [x.institucionId, x.id]));
+
   await db.insert(s.institucionNovedades).values(
     NOVEDADES.map((n) => ({ institucionId: instId.get(n.inst)!, fecha: n.fecha, titulo: n.titulo, texto: n.texto })),
   );
@@ -168,6 +190,7 @@ async function demo() {
     .values(
       BUSQUEDAS.map((b) => ({
         institucionId: instId.get(b.inst)!,
+        sedeId: sedeDe.get(instId.get(b.inst)!),
         puesto: b.puesto,
         categoria: b.categoria,
         disciplina: b.disciplina,

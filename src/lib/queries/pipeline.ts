@@ -20,6 +20,8 @@ import { autorDeNota, type BusquedaPipeline, type NotaVista, type OpcionBusqueda
 import { iniciales } from "@/lib/utils";
 import { busquedaPropia } from "@/lib/queries/busquedas";
 import { estudiantesEntre } from "@/lib/queries/estudiantes";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import { lugarDeBusqueda } from "@/lib/sedes";
 
 type Db = ReturnType<typeof getDb>;
 /** La base o una transacción: las acciones pasan `tx` para que el chequeo de propiedad y la escritura sean atómicos. */
@@ -48,6 +50,7 @@ export async function opcionesDeBusqueda(institucionId: string): Promise<OpcionB
       id: busquedas.id,
       puesto: busquedas.puesto,
       estado: busquedas.estado,
+      sedeId: busquedas.sedeId,
       nuevos: sql<number>`count(${postulaciones.id}) filter (where ${postulaciones.etapa} = 'nuevos')`.mapWith(Number),
     })
     .from(busquedas)
@@ -135,7 +138,10 @@ export async function pipelineDeBusqueda(
     notasPor.set(n.postulacionId, lista);
   }
   const favoritosSet = new Set(guardados.map((g) => g.refId));
-  const origen = institucion.lat != null && institucion.lng != null ? { lat: institucion.lat, lng: institucion.lng } : null;
+  // Los kilómetros se miden desde la sede de la búsqueda; las búsquedas sin sede, desde la institución.
+  const sedeDeLaBusqueda = b.sedeId ? ((await sedesDeInstitucion(institucion.id)).find((s) => s.id === b.sedeId) ?? null) : null;
+  const lugar = lugarDeBusqueda(sedeDeLaBusqueda, institucion);
+  const origen = lugar.lat != null && lugar.lng != null ? { lat: lugar.lat, lng: lugar.lng } : null;
 
   const postulantes = filas.map(({ p, d, emailCuenta }): PostulanteTarjeta => {
     const nombre = `${d.nombre} ${d.apellido}`.trim();

@@ -11,6 +11,8 @@ export type PinInstitucion = {
   id: string;
   slug: string;
   nombre: string;
+  /** Nombre de la sede que marca este pin; solo si la institución tiene más de una. */
+  sede: string | null;
   tipo: string;
   zona: string | null;
   logoUrl: string | null;
@@ -37,8 +39,10 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
   const [listo, setListo] = useState(false);
   const [seleccion, setSeleccion] = useState<string | null>(null);
 
-  const seleccionada = pines.find((p) => p.id === seleccion) ?? null;
-  const firma = pines.map((p) => `${p.id}:${p.lat}:${p.lng}`).join("|");
+  // Una institución con varias sedes tiene varios pines con el mismo id: cada uno se distingue por su posición.
+  const claveDe = (p: PinInstitucion) => `${p.id}:${p.lat}:${p.lng}`;
+  const seleccionada = pines.find((p) => claveDe(p) === seleccion) ?? null;
+  const firma = pines.map(claveDe).join("|");
 
   useEffect(() => {
     let cancelado = false;
@@ -70,11 +74,11 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
     for (const p of pines) {
       const color = p.favorita ? "#97125F" : p.verificada ? "#16214F" : "#9AA09B";
       const marcador = L.marker([p.lat, p.lng], {
-        icon: iconoPin(L, color, p.id === seleccion, { bordeSeleccion: "#1F2421" }),
+        icon: iconoPin(L, color, claveDe(p) === seleccion, { bordeSeleccion: "#1F2421" }),
         title: p.nombre,
         riseOnHover: true,
       });
-      marcador.on("click", () => setSeleccion((previa) => (previa === p.id ? null : p.id)));
+      marcador.on("click", () => setSeleccion((previa) => (previa === claveDe(p) ? null : claveDe(p))));
       capa.addLayer(marcador);
     }
   }, [listo, pines, seleccion]);
@@ -107,6 +111,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
             <div className="text-[12.5px] leading-[1.4] text-apagado">
               {[
                 seleccionada.tipo,
+                seleccionada.sede,
                 seleccionada.zona,
                 seleccionada.busquedasActivas === 1 ? "1 búsqueda abierta" : `${seleccionada.busquedasActivas} búsquedas abiertas`,
               ]

@@ -2,6 +2,8 @@ import "server-only";
 import { and, asc, count, desc, eq, gt, isNull, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { busquedas, cvEnviados, favoritos, institucionMiembros, instituciones, zonas } from "@/db/schema";
+import { sedesDeInstituciones, sedesDeInstitucion } from "@/lib/queries/sedes";
+import { aSedePublica, type SedePublica } from "@/lib/sedes";
 import { normalizar } from "@/lib/coincidencia";
 import { distanciaKm } from "@/lib/geo";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
@@ -31,6 +33,8 @@ export type InstitucionCatalogo = {
   lng: number | null;
   busquedasActivas: number;
   favorita: boolean;
+  /** Todas sus sedes, la principal primero (el mapa pone un pin por cada una y la tarjeta dice cuántas son). */
+  sedes: SedePublica[];
 };
 
 type Ubicacion = { lat: number | null; lng: number | null };
@@ -73,14 +77,19 @@ export async function catalogoInstituciones(usuarioId: string | null, filtros: F
       : [],
   ]);
   const favoritas = new Set(favs.map((f) => f.refId));
+  const sedesPor = await sedesDeInstituciones(filas.map((f) => f.id));
 
   const q = normalizar(filtros.texto);
   const zonaFiltro = normalizar(filtros.zona);
+  // La zona matchea si CUALQUIERA de las sedes está ahí (la ficha refleja solo a la principal).
+  const enZona = (i: (typeof filas)[number]) =>
+    normalizar(`${i.zona ?? ""} ${i.partido ?? ""}`).includes(zonaFiltro) ||
+    (sedesPor.get(i.id) ?? []).some((s) => normalizar(`${s.zona ?? ""} ${s.partido ?? ""}`).includes(zonaFiltro));
   return filas
     .filter((i) => usuarioId !== null || i.verificada || i.busquedasActivas > 0)
     .filter((i) => !q || normalizar(i.nombre).includes(q))
     .filter((i) => !filtros.tipo || i.tipo === filtros.tipo)
-    .filter((i) => !zonaFiltro || normalizar(`${i.zona ?? ""} ${i.partido ?? ""}`).includes(zonaFiltro))
+    .filter((i) => !zonaFiltro || enZona(i))
     .filter((i) => !(usuarioId && filtros.soloFavoritas) || favoritas.has(i.id))
     .map(
       (i): InstitucionCatalogo => ({
@@ -96,6 +105,7 @@ export async function catalogoInstituciones(usuarioId: string | null, filtros: F
         lng: i.lng,
         busquedasActivas: i.busquedasActivas,
         favorita: favoritas.has(i.id),
+        sedes: (sedesPor.get(i.id) ?? []).map(aSedePublica),
       }),
     );
 }
@@ -143,7 +153,7 @@ export async function perfilInstitucion(slug: string, usuarioId: string, docente
     .limit(1);
   if (!institucion) return null;
 
-  const [abiertas, favorito, cv, fotos, novedades] = await Promise.all([
+  const [abiertas, favorito, cv, fotos, novedades, sedes] = await Promise.all([
     db
       .select({
         id: busquedas.id,
@@ -152,6 +162,7 @@ export async function perfilInstitucion(slug: string, usuarioId: string, docente
         turno: busquedas.turno,
         nivel: busquedas.nivel,
         rapida: busquedas.rapida,
+        sedeId: busquedas.sedeId,
       })
       .from(busquedas)
       .where(and(eq(busquedas.institucionId, institucion.id), busquedaVigente()))
@@ -166,13 +177,17 @@ export async function perfilInstitucion(slug: string, usuarioId: string, docente
       .where(and(eq(cvEnviados.docenteId, docenteId), eq(cvEnviados.institucionId, institucion.id))),
     fotosDeInstitucion(institucion.id),
     novedadesDeInstitucion(institucion.id, 6),
+    sedesDeInstitucion(institucion.id),
   ]);
+  const nombreDeSede = new Map(sedes.map((s) => [s.id, s.nombre] as const));
 
   return {
     institucion,
     fotos,
     novedades,
-    busquedas: abiertas,
+    sedes: sedes.map(aSedePublica),
+    // En qué sede es cada búsqueda; solo se dice cuando la institución tiene más de una.
+    busquedas: abiertas.map(({ sedeId, ...b }) => ({ ...b, sede: sedes.length > 1 && sedeId ? (nombreDeSede.get(sedeId) ?? null) : null })),
     favorita: (favorito[0]?.n ?? 0) > 0,
     cvEnviado: (cv[0]?.n ?? 0) > 0,
   };

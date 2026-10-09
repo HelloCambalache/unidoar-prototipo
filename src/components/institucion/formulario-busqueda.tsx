@@ -19,11 +19,16 @@ export type ValoresFormulario = {
   cargaHoraria: string;
   turno: (typeof TURNOS)[number] | "";
   fechaInicio: string;
+  /** En qué sede es la búsqueda (vacío si la institución todavía no tiene ninguna guardada). */
+  sedeId: string;
   zona: string;
   descripcion: string;
   requisitos: string;
   beneficios: string;
 };
+
+/** Una sede para elegir al publicar: su zona se usa como zona de la búsqueda. */
+export type SedeParaElegir = { id: string; nombre: string; zona: string };
 
 export type CatalogoDisciplinas = Record<CategoriaDocente, { rubro: string; items: string[] }[]>;
 
@@ -41,12 +46,15 @@ export function FormularioBusqueda({
   busquedaId,
   inicial,
   catalogo,
+  sedes,
   plazoActual,
 }: {
   modo: "crear" | "editar";
   busquedaId?: string;
   inicial: ValoresFormulario;
   catalogo: CatalogoDisciplinas;
+  /** Las sedes de la institución; con una sola no se pregunta en cuál es. */
+  sedes: SedeParaElegir[];
   /** Solo al editar una rápida: "Vence en 18 hs", para ofrecer conservarlo. */
   plazoActual?: string | null;
 }) {
@@ -71,6 +79,15 @@ export function FormularioBusqueda({
     incluirSinVerificar: false,
     turnoExtra: false,
   });
+
+  // Al cambiar de sede, la zona se actualiza sola si estaba vacía o era la de la sede anterior (si la persona la ajustó, se respeta).
+  const cambiarSede = (sedeId: string) =>
+    setV((previo) => {
+      const anterior = sedes.find((s) => s.id === previo.sedeId);
+      const nueva = sedes.find((s) => s.id === sedeId);
+      const acompaniar = !previo.zona.trim() || previo.zona === (anterior?.zona ?? "");
+      return { ...previo, sedeId, zona: acompaniar && nueva ? nueva.zona : previo.zona };
+    });
 
   const esRapida = v.tipo === "Suplencia rápida";
   const cancelar = modo === "editar" && busquedaId ? `/institucion/postulantes?busqueda=${busquedaId}` : "/institucion/busquedas";
@@ -216,7 +233,21 @@ export function FormularioBusqueda({
           </Campo>
         </div>
 
-        <Campo etiqueta="Zona" ayuda="Tomada del perfil de la institución. Podés ampliarla a partidos linderos desde el panel." error={errores.zona}>
+        {sedes.length > 1 ? (
+          <Campo etiqueta="Sede" requerido ayuda="Los kilómetros que ven los profesionales se miden hasta esta sede." error={errores.sedeId}>
+            <Select name="sedeId" value={v.sedeId} onChange={(e) => cambiarSede(e.target.value)} aria-invalid={!!errores.sedeId}>
+              {sedes.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.zona ? `${s.nombre} · ${s.zona}` : s.nombre}
+                </option>
+              ))}
+            </Select>
+          </Campo>
+        ) : (
+          <input type="hidden" name="sedeId" value={v.sedeId} />
+        )}
+
+        <Campo etiqueta="Zona" ayuda={sedes.length > 1 ? "Tomada de la sede. Podés ampliarla a partidos linderos desde el panel." : "Tomada del perfil de la institución. Podés ampliarla a partidos linderos desde el panel."} error={errores.zona}>
           <Input
             name="zona"
             value={v.zona}

@@ -16,14 +16,13 @@ import {
   type Docente,
   type EtapaPostulacion,
   type GrillaDisponibilidad,
-  type Institucion,
 } from "@/db/schema";
 import { ETAPA_LABEL } from "@/lib/catalogo";
 import { normalizarTexto } from "@/lib/busqueda-ia";
 import { grillaDesdeLista } from "@/lib/disponibilidad";
 import type { FiltrosDocentes } from "@/lib/filtros-docentes";
 import { esEstudiante } from "@/lib/estudiantes";
-import { distanciaKm } from "@/lib/geo";
+import { sedeMasCercana, type PuntoDeReferencia } from "@/lib/sedes";
 import { grillaDesdeJson, grillaTieneHorarios } from "@/lib/onboarding";
 import { estudiantesEntre } from "@/lib/queries/estudiantes";
 import { docenteVisible } from "@/lib/visibilidad";
@@ -74,6 +73,15 @@ const distanciaSql = (lat: number, lng: number) => sql`(12742 * asin(sqrt(least(
   power(sin(radians(${D.lat} - ${lat}::double precision) / 2), 2)
   + cos(radians(${lat}::double precision)) * cos(radians(${D.lat}))
   * power(sin(radians(${D.lng} - ${lng}::double precision) / 2), 2)))))`;
+
+/** La menor distancia del docente a cualquiera de los puntos (sedes). */
+const distanciaMinimaSql = (puntos: PuntoDeReferencia[]) =>
+  puntos.length === 1
+    ? distanciaSql(puntos[0]!.lat, puntos[0]!.lng)
+    : sql`least(${sql.join(
+        puntos.map((p) => distanciaSql(p.lat, p.lng)),
+        sql`, `,
+      )})`;
 
 const esDelCatalogo = and(eq(docentes.onboardingCompleto, true), ne(docentes.verificacion, "rechazado"), docenteVisible);
 
@@ -135,6 +143,8 @@ export type BusquedaContexto = {
   tipo: string;
   rapida: boolean;
   estado: "activa" | "pausada" | "cerrada";
+  /** En qué sede es: desde ahí se mide la cercanía de los profesionales. */
+  sedeId: string | null;
 };
 
 /** La búsqueda de la URL, solo si es de esta institución (el id viene del cliente: se verifica). */
@@ -150,6 +160,7 @@ export async function busquedaDeContexto(institucionId: string, busquedaId: stri
       tipo: busquedas.tipo,
       rapida: busquedas.rapida,
       estado: busquedas.estado,
+      sedeId: busquedas.sedeId,
     })
     .from(busquedas)
     .where(and(eq(busquedas.id, busquedaId), eq(busquedas.institucionId, institucionId)))
@@ -215,6 +226,8 @@ export type DocenteTarjeta = {
   disponibilidad: string[];
   aniosExperiencia: number | null;
   distanciaKm: number | null;
+  /** Cuál sede de la institución es la más cercana; solo se dice cuando se miden varias. */
+  sedeCercana: string | null;
   favorito: boolean;
   /** Null cuando hay un solo criterio activo (la verificación): no dice nada. */
   coincide: Coincidencia | null;
@@ -265,13 +278,13 @@ function condicionZonas(terminos: string[], catalogo: { nombre: string; partido:
  * "Coincide en N de M criterios". Los criterios son hasta seis: categoría, disciplina, nivel, disponibilidad,
  * zona y verificación. Cada uno está activo si hay algo que cumplir: el filtro que puso la institución o, si no
  * hay filtro, lo que pide la búsqueda de contexto (?busqueda=). La zona, sin filtro de zonas, se evalúa contra
- * la ubicación de la institución (el docente está dentro de su propio radio de traslado) y la verificación
- * cuenta siempre. N es cuántos de esos M cumple el docente.
+ * la sede de la búsqueda de contexto o, sin búsqueda, contra cualquiera de las sedes (el docente está dentro de su
+ * propio radio de traslado de alguna) y la verificación cuenta siempre. N es cuántos de esos M cumple el docente.
  */
 function armarCriterios(
   f: FiltrosDocentes,
   ctx: BusquedaContexto | null,
-  inst: Pick<Institucion, "lat" | "lng">,
+  puntos: PuntoDeReferencia[],
   catalogo: { nombre: string; partido: string | null }[],
 ): Criterio[] {
   const out: Criterio[] = [];
@@ -290,11 +303,11 @@ function armarCriterios(
 
   if (f.zonas.length) {
     out.push({ clave: "zona", etiqueta: "Zona", expr: condicionZonas(f.zonas, catalogo) });
-  } else if (inst.lat != null && inst.lng != null) {
+  } else if (puntos.length > 0) {
     out.push({
       clave: "zona",
       etiqueta: "Zona",
-      expr: sql`(${D.lat} is not null and ${D.lng} is not null and ${distanciaSql(inst.lat, inst.lng)} <= ${D.radioKm})`,
+      expr: sql`(${D.lat} is not null and ${D.lng} is not null and ${distanciaMinimaSql(puntos)} <= ${D.radioKm})`,
     });
   }
 
@@ -361,7 +374,8 @@ type FilaBuscador = Pick<
 > & { favorito: boolean } & Record<`c${number}`, boolean>;
 
 export async function buscarDocentes(args: {
-  institucion: Pick<Institucion, "lat" | "lng">;
+  /** Desde dónde se mide la cercanía: la sede de la búsqueda elegida o todas las sedes (ver `puntosDeReferencia`). */
+  puntos: PuntoDeReferencia[];
   usuarioId: string;
   filtros: FiltrosDocentes;
   /** Pantalla de búsquedas rápidas: solo docentes "disponibles ya". */
@@ -370,11 +384,11 @@ export async function buscarDocentes(args: {
   /** Búsquedas activas de la institución: para marcar a quién ya invitó o se postuló. */
   activas: BusquedaInvitable[];
 }): Promise<ResultadoBuscador> {
-  const { institucion, usuarioId, filtros, rapidas, contexto, activas } = args;
+  const { puntos, usuarioId, filtros, rapidas, contexto, activas } = args;
   const db = getDb();
   const catalogo = await catalogoZonas();
   const donde = and(esDelCatalogo, ...armarCondiciones(filtros, rapidas, usuarioId, catalogo));
-  const criterios = armarCriterios(filtros, contexto, institucion, catalogo);
+  const criterios = armarCriterios(filtros, contexto, puntos, catalogo);
 
   const [{ n: total }] = await db.select({ n: count() }).from(docentes).where(donde);
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
@@ -384,12 +398,12 @@ export async function buscarDocentes(args: {
     criterios.map((c) => sql`coalesce(${c.expr}, false)::int`),
     sql` + `,
   )})`;
-  const conCoordenadas = institucion.lat != null && institucion.lng != null;
+  const conCoordenadas = puntos.length > 0;
   const orden: SQL[] =
     filtros.orden === "experiencia"
       ? [sql`${D.anios} desc nulls last`, sql`${puntaje} desc`]
       : filtros.orden === "cercania" && conCoordenadas
-        ? [sql`${distanciaSql(institucion.lat!, institucion.lng!)} asc nulls last`, sql`${puntaje} desc`]
+        ? [sql`${distanciaMinimaSql(puntos)} asc nulls last`, sql`${puntaje} desc`]
         : filtros.orden === "nombre"
           ? []
           : [sql`${puntaje} desc`, sql`(${D.verificacion} = 'verificado') desc`, sql`${D.anios} desc nulls last`];
@@ -441,6 +455,8 @@ export async function buscarDocentes(args: {
   const docentesTarjeta = filas.map((f): DocenteTarjeta => {
     const detalle = criterios.map((c, i) => ({ clave: c.clave, etiqueta: c.etiqueta, cumple: f[`c${i}`] }));
     const cumplidos = detalle.filter((d) => d.cumple).length;
+    // El profesional se mide contra la sede más cercana (si hay una sola, esa).
+    const cerca = f.lat != null && f.lng != null ? sedeMasCercana({ lat: f.lat, lng: f.lng }, puntos) : null;
     return {
       id: f.id,
       nombre: f.nombre,
@@ -454,10 +470,8 @@ export async function buscarDocentes(args: {
       niveles: f.niveles,
       disponibilidad: f.disponibilidad,
       aniosExperiencia: f.aniosExperiencia,
-      distanciaKm:
-        conCoordenadas && f.lat != null && f.lng != null
-          ? distanciaKm({ lat: institucion.lat!, lng: institucion.lng! }, { lat: f.lat, lng: f.lng })
-          : null,
+      distanciaKm: cerca ? cerca.km : null,
+      sedeCercana: cerca && puntos.length > 1 ? cerca.sede.nombre : null,
       favorito: f.favorito,
       coincide: criterios.length > 1 ? { cumplidos, total: criterios.length, detalle } : null,
       urgente: !!contexto?.rapida && criterios.length > 1 && cumplidos === criterios.length,

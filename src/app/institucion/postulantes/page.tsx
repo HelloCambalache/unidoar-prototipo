@@ -11,6 +11,7 @@ import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid, plural } from "@/lib/busquedas";
 import { busquedaPorDefecto, opcionesDeBusqueda, pipelineDeBusqueda } from "@/lib/queries/pipeline";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Postulantes" };
@@ -41,12 +42,17 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
     );
   }
 
-  const [datos, opciones] = await Promise.all([
+  const [datos, opciones, sedes] = await Promise.all([
     pipelineDeBusqueda(institucion, usuario.id, busquedaId),
     consultaOpciones,
+    sedesDeInstitucion(institucion.id),
   ]);
   if (!datos) notFound();
   const { busqueda, postulantes } = datos;
+  // Filtro por sede de la lista de búsquedas (?sede=): solo vale una sede de esta institución.
+  const pedidaSede = uno(sp.sede);
+  const sedeFiltro = sedes.some((s) => s.id === pedidaSede) ? pedidaSede : "";
+  const sedeDeLaBusqueda = sedes.length > 1 ? (sedes.find((s) => s.id === opciones.find((o) => o.id === busqueda.id)?.sedeId)?.nombre ?? null) : null;
   const cerrada = busqueda.estado === "cerrada";
   const base = `/institucion/postulantes?busqueda=${busqueda.id}`;
 
@@ -120,12 +126,19 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
         <EstadoBusqueda b={{ estado: busqueda.estado, rapida: busqueda.rapida, plazo: null }} />
         <span className="text-sm leading-none text-apagado">
           {plural(busqueda.postulantes, "postulante", "postulantes")} · publicada {busqueda.publicada}
+          {sedeDeLaBusqueda && ` · ${sedeDeLaBusqueda}`}
         </span>
       </div>
 
       {opciones.length > 1 && (
         <div className="mb-3.5">
-          <SelectorBusqueda opciones={opciones} actual={busqueda.id} vista={vista} />
+          <SelectorBusqueda
+            opciones={opciones}
+            actual={busqueda.id}
+            vista={vista}
+            sedes={sedes.map((s) => ({ id: s.id, nombre: s.nombre }))}
+            sedeFiltro={sedeFiltro}
+          />
         </div>
       )}
 

@@ -10,6 +10,8 @@ import {
   type FiltrosCoincidencia,
   type ResumenCoincidencias,
 } from "@/lib/busquedas";
+import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import { sedeMasCercana } from "@/lib/sedes";
 import { iniciales } from "@/lib/utils";
 import { docenteVisible } from "@/lib/visibilidad";
 
@@ -173,13 +175,17 @@ export type DocenteRecomendado = {
 
 /**
  * Docentes verificados de la zona de la institución (y partidos linderos), de las categorías
- * de sus búsquedas abiertas, que todavía no se postularon a ninguna de ellas.
+ * de sus búsquedas abiertas, que todavía no se postularon a ninguna de ellas. Con varias sedes cuentan las zonas de todas
+ * y la distancia es a la sede más cercana.
  */
 export async function docentesRecomendados(
   institucion: Institucion,
   { categorias = [], limite }: { categorias?: CategoriaDocente[]; limite: number },
 ): Promise<DocenteRecomendado[]> {
-  const z = await resolverZonas(institucion.zona ?? institucion.partido);
+  const sedes = await sedesDeInstitucion(institucion.id);
+  // El texto de zona junta el de todas las sedes (cada nombre de zona del catálogo que aparezca suma); sin sedes, el de la ficha.
+  const textoDeZonas = sedes.map((s) => s.zona ?? s.partido).filter(Boolean).join(" ");
+  const z = await resolverZonas(textoDeZonas || (institucion.zona ?? institucion.partido));
   const c: SQL[] = [
     eq(docentes.onboardingCompleto, true),
     docenteVisible,
@@ -199,10 +205,11 @@ export async function docentesRecomendados(
     .orderBy(sql`${docentes.aniosExperiencia} desc nulls last`, desc(docentes.creadoEn))
     .limit(limite * 3);
 
-  const origen = institucion.lat != null && institucion.lng != null ? { lat: institucion.lat, lng: institucion.lng } : null;
+  // Sin sedes (todavía sin crear), la ubicación de la ficha hace de única sede.
+  const lugares = sedes.length > 0 ? sedes : [{ lat: institucion.lat, lng: institucion.lng }];
   return candidatos
     .map((d) => {
-      const km = origen && d.lat != null && d.lng != null ? distanciaKm(origen, { lat: d.lat, lng: d.lng }) : null;
+      const km = d.lat != null && d.lng != null ? (sedeMasCercana({ lat: d.lat, lng: d.lng }, lugares)?.km ?? null) : null;
       const nombre = `${d.nombre} ${d.apellido}`.trim();
       const materia = d.asignaturas[0] ?? null;
       const lugar = kmLegible(km) ?? d.zonas[0] ?? null;

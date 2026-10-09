@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import {
   busquedas,
   institucionMiembros,
+  institucionSedes,
   instituciones,
   postulacionNotas,
   postulaciones,
@@ -12,6 +13,7 @@ import {
 import { diaHoraLegible, enlaceGoogleCalendar, fechaHoraCorta } from "@/lib/calendario";
 import type { FiltrosPostulaciones } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
+import { lugarDeBusqueda } from "@/lib/sedes";
 import { haceCuanto } from "@/lib/utils";
 import { horarioDeBusqueda } from "@/lib/queries/oportunidades";
 
@@ -61,10 +63,13 @@ export async function postulacionesDelDocente(
       zonaBusqueda: busquedas.zona,
       institucion: instituciones.nombre,
       zonaInstitucion: instituciones.zona,
+      sedeId: institucionSedes.id,
+      zonaSede: institucionSedes.zona,
     })
     .from(postulaciones)
     .innerJoin(busquedas, eq(busquedas.id, postulaciones.busquedaId))
     .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+    .leftJoin(institucionSedes, eq(institucionSedes.id, busquedas.sedeId))
     .where(eq(postulaciones.docenteId, docenteId))
     .orderBy(desc(postulaciones.creadoEn));
 
@@ -74,7 +79,8 @@ export async function postulacionesDelDocente(
     puesto: f.puesto,
     institucion: f.institucion,
     nivel: f.nivel,
-    zona: f.zonaBusqueda ?? f.zonaInstitucion,
+    // La de la búsqueda; si no tiene, la de su sede (o la de la institución en las búsquedas sin sede).
+    zona: f.zonaBusqueda ?? (f.sedeId ? f.zonaSede : f.zonaInstitucion),
     estado: estadoParaDocente(f.etapa, f.busquedaEstado, !!f.examenPreocupacionalEn),
     cuando: haceCuanto(f.creadoEn, ahora),
   }));
@@ -138,14 +144,17 @@ export type DetallePostulacion = {
 export async function detallePostulacion(postulacionId: string, docenteId: string): Promise<DetallePostulacion | null> {
   const db = getDb();
   const [fila] = await db
-    .select({ postulacion: postulaciones, busqueda: busquedas, institucion: instituciones })
+    .select({ postulacion: postulaciones, busqueda: busquedas, institucion: instituciones, sede: institucionSedes })
     .from(postulaciones)
     .innerJoin(busquedas, eq(busquedas.id, postulaciones.busquedaId))
     .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+    .leftJoin(institucionSedes, eq(institucionSedes.id, busquedas.sedeId))
     .where(and(eq(postulaciones.id, postulacionId), eq(postulaciones.docenteId, docenteId)))
     .limit(1);
   if (!fila) return null;
-  const { postulacion: p, busqueda: b, institucion: i } = fila;
+  const { postulacion: p, busqueda: b, institucion: i, sede } = fila;
+  // Dónde es: la sede de la búsqueda o, sin sede, la institución.
+  const lugar = lugarDeBusqueda(sede, i);
 
   const notas = await db
     .select({ id: postulacionNotas.id, texto: postulacionNotas.texto, creadoEn: postulacionNotas.creadoEn })
@@ -164,7 +173,7 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     estado,
     etapa: p.etapa,
     envio: `${p.origen === "invitacion" ? "Invitación recibida" : "Postulación enviada"} ${haceCuanto(p.creadoEn)}`,
-    zona: b.zona ?? i.zona,
+    zona: b.zona ?? lugar.zona,
     horario: horarioDeBusqueda(b),
     tipo: b.tipo,
     descripcion: b.descripcion,
@@ -179,7 +188,7 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
             titulo: `${tituloAgenda} — ${i.nombre}`,
             inicio: p.entrevistaEn,
             detalle: `Postulación a "${b.puesto}" en ${i.nombre}. Agendado desde UNIDOAR.`,
-            lugar: i.direccion,
+            lugar: lugar.direccion,
           }),
         }
       : null,

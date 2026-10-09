@@ -8,14 +8,15 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
-import { TIPOS_CON_CUE } from "@/lib/catalogo";
 import { esUuid } from "@/lib/busquedas";
 import { precioDePlan } from "@/lib/cobros";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { planDe } from "@/lib/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
+import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
+import type { SedeVista } from "@/lib/sedes";
 import type { VitrinaGuardada } from "@/lib/vitrina";
 
 /*
@@ -127,8 +128,36 @@ export async function actualizarVitrinaComoAdmin(institucionId: string, entrada:
 }
 
 /**
- * Corrige los datos de la cuenta que la institución no edita sola: teléfono, CUIT y CUE (el CUE solo existe en los tipos que son
- * establecimientos educativos). Deja auditoría con los nombres de lo que cambió, nunca los valores.
+ * Edita las sedes de una institución desde el backoffice: la misma lista y las mismas validaciones que usa la institución
+ * (`guardarSedesDeInstitucion`), más el CUE de cada sede, que solo carga el equipo. Queda en la actividad de la cuenta con los
+ * nombres de lo que se tocó (sin los valores) y no se le avisa a la institución.
+ */
+export async function actualizarSedesComoAdmin(institucionId: string, entrada: unknown): Promise<Resultado<{ sedes: SedeVista[] }>> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
+  const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+  if (!inst) return fallo(NO_ENCONTRADA);
+
+  const r = await guardarSedesDeInstitucion(inst, entrada, { puedeEditarCue: true });
+  if (!r.ok) return r;
+  if (r.data.cambios.length > 0) {
+    await registrarAuditoria({
+      usuarioId: admin.id,
+      accion: "institucion.editar_sedes",
+      entidad: "institucion",
+      entidadId: inst.id,
+      detalle: { institucionId: inst.id, nombre: inst.nombre, campos: r.data.cambios },
+    });
+  }
+  revalidarInstitucion(inst.id, inst.slug);
+  revalidatePath(`/docente/instituciones/${inst.slug}`);
+  revalidatePath("/docente/instituciones");
+  return ok({ sedes: r.data.sedes });
+}
+
+/**
+ * Corrige los datos de la cuenta que la institución no edita sola: teléfono y CUIT (el CUE es de cada sede: se carga en sus sedes).
+ * Deja auditoría con los nombres de lo que cambió, nunca los valores.
  */
 export async function actualizarDatosDeInstitucion(institucionId: string, entrada: unknown): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
@@ -141,10 +170,8 @@ export async function actualizarDatosDeInstitucion(institucionId: string, entrad
       .select({
         id: instituciones.id,
         nombre: instituciones.nombre,
-        tipo: instituciones.tipo,
         telefono: instituciones.telefono,
         cuit: instituciones.cuit,
-        cue: instituciones.cue,
       })
       .from(instituciones)
       .where(eq(instituciones.id, institucionId))
@@ -152,11 +179,10 @@ export async function actualizarDatosDeInstitucion(institucionId: string, entrad
       .for("update");
     if (!inst) return fallo(NO_ENCONTRADA);
 
-    const nuevo = { telefono: datos.data.telefono, cuit: datos.data.cuit, cue: TIPOS_CON_CUE.includes(inst.tipo) ? datos.data.cue : null };
+    const nuevo = { telefono: datos.data.telefono, cuit: datos.data.cuit };
     const campos = [
       ...(nuevo.telefono !== (inst.telefono ?? null) ? ["teléfono"] : []),
       ...(nuevo.cuit !== (inst.cuit ?? null) ? ["CUIT"] : []),
-      ...(nuevo.cue !== (inst.cue ?? null) ? ["CUE"] : []),
     ];
     if (campos.length === 0) return ok();
 
