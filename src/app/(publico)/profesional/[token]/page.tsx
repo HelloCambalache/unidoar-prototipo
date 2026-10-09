@@ -202,7 +202,7 @@ export default async function PerfilCompartidoPage({ params }: Props) {
           <Tarjeta className="p-[22px]">
             <h2 className="m-0 mb-1.5 text-base leading-[1.3] font-semibold text-tinta">UNIDOAR</h2>
             <p className="m-0 text-[13px] leading-normal text-apagado">
-              Conectamos instituciones con educadores, entrenadores y guardavidas con identidad y título verificados. Este perfil lo
+              Conectamos instituciones con docentes, entrenadores y guardavidas con identidad y título verificados. Este perfil lo
               compartió su titular: no incluye teléfono, email ni documentos.
             </p>
           </Tarjeta>

@@ -4,9 +4,9 @@
  */
 
 /** Versión vigente de /terminos. Cambia cuando se actualiza el texto: ahí hay que pedir una nueva aceptación. */
-export const VERSION_TERMINOS = "2026-09";
+export const VERSION_TERMINOS = "2026-10";
 /** Lo que dice la página de términos como "Última actualización". */
-export const TERMINOS_ACTUALIZADOS = "septiembre de 2026";
+export const TERMINOS_ACTUALIZADOS = "octubre de 2026";
 /** Lo mismo para la política de privacidad (/privacidad). */
 export const PRIVACIDAD_ACTUALIZADA = "octubre de 2026";
 

@@ -31,6 +31,7 @@ export const TERMINOS_ROL = [
   "Profesor",
   "Profesora",
   "Educador",
+  "Docente",
   "Maestra",
   "Maestro",
   "Entrenador",

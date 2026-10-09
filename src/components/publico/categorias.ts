@@ -33,18 +33,18 @@ export type CategoriaPublica = {
 export const CATEGORIAS_PUBLICAS: Record<CategoriaDocente, CategoriaPublica> = {
   educador: {
     ruta: "/educadores",
-    nombre: "Educadores",
-    eyebrow: "Categoría · Educadores",
-    titular: "Necesitás un profesor de Matemática o una maestra de grado para el lunes. No tres semanas de WhatsApp.",
+    nombre: "Docentes",
+    eyebrow: "Categoría · Docentes",
+    titular: "Resolvé suplencias e incorporaciones al instante, sin perder semanas de gestiones.",
     bajada:
-      "UNIDOAR es el catálogo de profesionales de tu zona —de Nivel Inicial a Terciario—, con identidad y título verificados, ordenados por afinidad. Sin comisión por contratación.",
-    chips: ["Nivel Inicial", "Primario", "Secundario", "Terciario", "Música", "Matemática", "Idiomas"],
+      "UNIDOAR es el catálogo de profesionales de tu zona —de Nivel Inicial a Universitario—, con identidad y título verificados, ordenados por afinidad. Sin comisión por contratación.",
+    chips: ["Nivel Inicial", "Primario", "Secundario", "Terciario", "Universitario", "Docentes especiales", "Música", "Matemática", "Idiomas"],
     cta: "Ver profesionales de mi zona",
     bandaTitulo: "Con UNIDOAR, conseguís profesores de todas las materias, con horas cátedra claras",
     verificados: ["profesor verificado", "profesores verificados"],
     fotoHero: "/assets/bgProfesores.png",
     fotoTarjeta: "/assets/cat-profesores.jpg",
-    descripcionTarjeta: "Inicial, primario, secundario y terciario",
+    descripcionTarjeta: "Inicial, primario, secundario, terciario, universitario y docentes especiales",
     fotoUrgente: "/assets/profe-ciencias.jpg",
     urgente: {
       titulo: "Se te va un profesor a mitad de semestre. Publicá la búsqueda hoy",

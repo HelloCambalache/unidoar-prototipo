@@ -9,7 +9,7 @@ export const CATEGORIA_INFO: Record<
   CategoriaDocente,
   { label: string; labelDocente: string; color: string; tint: string; ink: string; plural: string }
 > = {
-  educador: { label: "Educador/a", labelDocente: "Educador/a", plural: "Educadores", color: "#DD553F", tint: "#FDE9E1", ink: "#8A2F1A" },
+  educador: { label: "Docente", labelDocente: "Docente", plural: "Docentes", color: "#DD553F", tint: "#FDE9E1", ink: "#8A2F1A" },
   entrenador: { label: "Entrenador/a", labelDocente: "Entrenador/a", plural: "Entrenadores", color: "#F59332", tint: "#FEF1DF", ink: "#8A4B07" },
   guardavidas: { label: "Guardavidas", labelDocente: "Guardavidas", plural: "Guardavidas", color: "#82D8E9", tint: "#E3F6FA", ink: "#14596A" },
 };

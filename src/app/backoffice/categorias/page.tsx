@@ -110,7 +110,7 @@ export default async function CategoriasBackoffice({
           <p className="m-0 text-[12.5px] leading-normal text-sutil">
             Al renombrar una asignatura se actualiza también en los perfiles profesionales y en las búsquedas que ya la usan. Si la
             eliminás, deja de ofrecerse al publicar búsquedas y en el alta, pero se mantiene en lo que ya existe. Las categorías de
-            cargo son fijas: Educador, Entrenador y Guardavidas.
+            cargo son fijas: Docente, Entrenador y Guardavidas.
           </p>
         </div>
       </div>

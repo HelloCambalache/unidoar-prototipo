@@ -38,12 +38,12 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
 
       <div className="relative mx-auto max-w-[1160px] text-center">
         <h1 className="mx-auto mt-[18px] mb-4 max-w-[22ch] font-display text-[52px] leading-[1.1] font-bold tracking-[-0.035em] text-balance text-navy-700 max-[900px]:text-[42px] max-[560px]:text-[32px]">
-          Donde el talento de la educación, el deporte y el arte hacen match con las instituciones.
+          Donde el talento de la educación, el deporte y el arte hacen match con instituciones privadas.
         </h1>
         <p className="mx-auto max-w-[740px] text-[17px] leading-[1.6] text-apagado">
-          En UNIDOAR, nuestra tecnología conecta de manera directa e inteligente a profesionales con colegios, clubes,
-          institutos de idiomas y academias. Una app simple y accesible para resolver búsquedas, postulaciones y
-          coberturas de trabajo en forma inmediata.
+          En UNIDOAR, nuestra tecnología conecta de manera directa e inteligente a profesionales calificados con
+          colegios, gimnasios, clubes y academias de idiomas y arte. Una app simple y accesible para resolver
+          coberturas, búsquedas y postulaciones de trabajo en forma inmediata.
         </p>
 
         <div className="mt-[30px] mb-[46px] flex flex-wrap justify-center gap-3">
@@ -64,7 +64,7 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
               variante="primario"
               className="h-10 min-h-10 rounded-full px-5 text-sm"
             >
-              Busco trabajo
+              Busco empleo
             </BotonLink>
           </div>
         </div>
@@ -85,7 +85,7 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
             <span aria-hidden className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,0)_40%,rgba(4,11,53,.78)_100%)]" />
             <span className="absolute right-6 bottom-[22px] left-6 text-white">
               <span className="mb-[5px] block font-display text-[26px] leading-[1.15] font-bold tracking-[-0.02em] max-[560px]:text-xl">
-                Educadores, entrenadores y guardavidas
+                Docentes, entrenadores y guardavidas
               </span>
               <span className="block text-sm leading-normal text-white/80">Una sola red para todas las categorías.</span>
             </span>

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ROLES_CONSULTA = ["Institución", "Educador/a", "Entrenador/a / Instructor/a", "Guardavidas", "Otro"] as const;
+export const ROLES_CONSULTA = ["Institución", "Docente", "Entrenador/a / Instructor/a", "Guardavidas", "Otro"] as const;
 
 export const contactoSchema = z.object({
   nombre: z.string().trim().min(2, "Contanos cómo te llamás").max(120, "Es demasiado largo"),

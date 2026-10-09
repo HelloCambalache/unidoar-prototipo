@@ -83,7 +83,7 @@ export async function PantallaBuscadorDocentes({
     ? "Profesionales verificados y disponibles ya para cubrir suplencias e imprevistos."
     : filtros.soloFavoritos
       ? "Profesionales que fuiste guardando para tener a mano."
-      : "Catálogo completo de educadores, entrenadores y guardavidas de UNIDOAR.";
+      : "Catálogo completo de docentes, entrenadores y guardavidas de UNIDOAR.";
 
   const sinFavoritos = filtros.soloFavoritos && filtrosActivos(filtros) === 1 && resultado.total === 0;
 

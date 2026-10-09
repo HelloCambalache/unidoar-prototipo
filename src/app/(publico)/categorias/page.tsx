@@ -4,7 +4,7 @@ import { resumenPublico } from "@/lib/queries/publico";
 
 export const metadata: Metadata = {
   title: "Buscá profesionales por categoría",
-  description: "Educadores, entrenadores y guardavidas verificados: elegí tu categoría para ver perfiles pensados para eso.",
+  description: "Docentes, entrenadores y guardavidas verificados: elegí tu categoría para ver perfiles pensados para eso.",
 };
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
