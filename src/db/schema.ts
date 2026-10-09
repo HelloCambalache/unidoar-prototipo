@@ -586,6 +586,11 @@ export const docenteDetalle = pgTable("docente_detalle", {
   provincia: text("provincia"),
   /** recibido | estudiante (a quien todavía cursa no se le pide título: se le pide la constancia de alumno regular). */
   situacionEstudio: text("situacion_estudio"),
+  /**
+   * Solo si es estudiante: qué porcentaje de las materias tiene aprobado (0 a 100). Lo declara la persona y lo respalda la
+   * constancia de alumno regular (`documentos.constancia`). Null si ya se recibió. Agregada a mano en la base (alter table).
+   */
+  porcentajeMaterias: integer("porcentaje_materias"),
   grillaDisponibilidad: jsonb("grilla_disponibilidad").$type<GrillaDisponibilidad>(),
   documentos: jsonb("documentos")
     .$type<DocumentosDocente>()
@@ -626,11 +631,6 @@ export const institucionFotos = pgTable(
     url: text("url").notNull(),
     /** "Patio y canchas", "Natatorio"… */
     etiqueta: text("etiqueta"),
-  /**
-   * Solo si es estudiante: qué porcentaje de las materias tiene aprobado (0 a 100). Lo declara la persona y lo respalda la
-   * constancia de alumno regular (`documentos.constancia`). Null si ya se recibió. Agregada a mano en la base (alter table).
-   */
-  porcentajeMaterias: integer("porcentaje_materias"),
     orden: integer("orden").notNull().default(0),
     creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
   },
