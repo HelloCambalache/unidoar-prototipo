@@ -31,6 +31,13 @@ const BENEFICIOS_INSTITUCION = [
   "Cupos de equipo para invitar a quien contrata con vos",
 ];
 
+const BENEFICIOS_FUNDADORA = [
+  "Tarifa de fundador congelada mientras sigas suscripto",
+  "Insignia de Institución Fundadora en tu perfil público",
+  "Tu logo en la portada del sitio",
+  "Las dos promociones de lanzamiento, acumulables",
+];
+
 export default async function Planes() {
   const [cupos, origen] = await Promise.all([cuposFundadorRestantes(), origenSitio()]);
   const hayCupos = cupos > 0;
@@ -69,7 +76,7 @@ export default async function Planes() {
                 Para siempre
               </span>
             </div>
-            <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] text-rosa min-[700px]:mt-[78px]">
+            <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] text-rosa">
               100% gratis
             </div>
             <p className="relative mb-5 text-sm leading-normal text-[#7A1B4E]/75">
@@ -97,55 +104,50 @@ export default async function Planes() {
           </article>
 
           <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} url={`${origen}/planes`} />
-        </div>
 
-        {/* ── Instituciones fundadoras ────────────────────────────────── */}
-        {hayCupos && (
-          <div className="relative mt-14 overflow-hidden rounded-[14px] bg-[linear-gradient(120deg,#6E2413_0%,#A94A32_55%,#C8502F_100%)] px-8 py-9 text-white max-[560px]:px-6">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -top-[90px] -right-[60px] size-[300px] rounded-full bg-[radial-gradient(circle,rgba(245,147,50,.45),transparent_70%)]"
-            />
-            <div className="relative flex flex-wrap items-center justify-between gap-4">
-              <h2 className="m-0 text-[26px] leading-tight font-semibold tracking-[-0.02em]">
-                Instituciones Fundadoras
-              </h2>
-              <span className="rounded-full bg-white/18 px-3 py-1.5 text-xs leading-none font-semibold text-white">
-                Quedan {cupos} de {CUPOS_FUNDADOR} cupos
-              </span>
-            </div>
-            <p className="relative mt-3 mb-6 max-w-[70ch] text-[15px] leading-[1.6] text-white/70">
-              Las primeras {CUPOS_FUNDADOR} instituciones que se suman entran como fundadoras: tarifa preferencial
-              mientras sigan suscriptas y el reconocimiento de haber estado desde el día uno.
-            </p>
-            <ul className="relative m-0 grid list-none grid-cols-2 gap-x-8 gap-y-3 p-0 text-sm leading-normal text-white/85 max-[760px]:grid-cols-1">
-              <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
-                Tarifa de fundador congelada mientras sigas suscripto
-              </li>
-              <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
-                Insignia de Institución Fundadora en tu perfil público
-              </li>
-              <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
-                Tu logo en la portada del sitio, entre las que confiaron primero
-              </li>
-              <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
-                Las dos promociones de lanzamiento, acumulables
-              </li>
-            </ul>
-            <BotonLink
-              href={RUTA_REGISTRO_INSTITUCION}
-              variante="cta"
-              tamano="lg"
-              className="relative mt-7 h-[50px] bg-white text-[#8A2F1A] shadow-[0_4px_14px_rgba(0,0,0,.22)] hover:bg-white hover:text-[#8A2F1A] hover:brightness-95"
-            >
-              Quiero ser institución fundadora
-            </BotonLink>
-          </div>
-        )}
+          {hayCupos && (
+            <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-navy-700/10 bg-celeste px-8 py-9 text-navy-700 max-[560px]:px-6">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-[70px] -right-[60px] size-[230px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.7),transparent_70%)]"
+              />
+              <div className="relative flex flex-wrap items-center justify-between gap-2">
+                <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-700/70 uppercase">
+                  Fundadoras
+                </h2>
+                <span className="rounded-full bg-navy-700 px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
+                  Quedan {cupos} de {CUPOS_FUNDADOR}
+                </span>
+              </div>
+              <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em]">
+                Las primeras {CUPOS_FUNDADOR}
+              </div>
+              <p className="relative mb-5 text-sm leading-normal text-navy-700/75">
+                Las que entran ahora quedan como fundadoras: tarifa preferencial y el reconocimiento de haber estado
+                desde el día uno.
+              </p>
+              <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-navy-700">
+                {BENEFICIOS_FUNDADORA.map((b) => (
+                  <li key={b} className="flex items-start gap-2.5">
+                    <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-navy-700/12">
+                      <Icono nombre="tilde" tamano={11} trazo={2.6} />
+                    </span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <BotonLink
+                href={RUTA_REGISTRO_INSTITUCION}
+                variante="cta"
+                tamano="lg"
+                bloque
+                className="relative mt-[26px] h-[50px] bg-navy-700 text-white shadow-[0_4px_10px_rgba(22,33,79,.25)] hover:bg-navy-700 hover:text-white hover:brightness-125"
+              >
+                Quiero ser fundadora
+              </BotonLink>
+            </article>
+          )}
+        </div>
       </section>
     </>
   );
