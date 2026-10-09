@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const ETIQUETA: Record<string, string> = {
   colegio: "Colegios",
   deportiva: "Clubes y gimnasios",
-  multisede: `Más de ${SEDES_MULTISEDE} sedes`,
+  multisede: `${SEDES_MULTISEDE} sedes o más`,
 };
 
 /** Lo que se manda al recomendar: lo escribe la institución que ya está, a un colega. */

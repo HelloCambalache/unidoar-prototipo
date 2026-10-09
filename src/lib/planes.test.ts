@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { TIPOS_INSTITUCION } from "@/lib/catalogo";
 import {
+  esMultisede,
   packDe,
   PACK_LANZAMIENTO,
   PLANES,
@@ -61,6 +62,12 @@ describe("el precio sale del tipo de institución", () => {
 });
 
 describe("multisede", () => {
+  it("empieza en la quinta sede, no en la sexta", () => {
+    assert.equal(esMultisede(4), false);
+    assert.equal(esMultisede(5), true);
+    assert.equal(esMultisede(9), true);
+  });
+
   it("cobra una vez por sede", () => {
     assert.equal(precioMultisede(6), 90_000);
     assert.equal(precioMultisede(12), 180_000);

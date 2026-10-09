@@ -50,8 +50,8 @@ export const PLANES = {
     label: "Plan Multisede",
     precio: 15_000,
     periodo: "mes",
-    resumen: "Para redes de más de 5 sedes: el precio es por sede.",
-    detalle: "Desde la sede número 6 conviene este plan: se factura por sede, no por institución.",
+    resumen: "Para redes de 5 sedes o más: el precio es por sede.",
+    detalle: "Desde la quinta sede se factura por sede, no por institución.",
     vigente: true,
     porSede: true,
   },
@@ -114,8 +114,11 @@ export const TIPOS_POR_PLAN = {
   deportiva: TIPOS_INSTITUCION.filter((t) => !TIPOS_COLEGIO.includes(t) && t !== "Otro"),
 } as const;
 
-/** Desde esta cantidad de sedes conviene el plan Multisede. */
+/** Desde esta cantidad de sedes (incluida) corresponde el plan Multisede. */
 export const SEDES_MULTISEDE = 5;
+
+/** ¿Le toca el plan Multisede a una red con esta cantidad de sedes? */
+export const esMultisede = (sedes: number) => sedes >= SEDES_MULTISEDE;
 
 /** Lo que paga por mes una red con N sedes. */
 export const precioMultisede = (sedes: number) => PLANES.multisede.precio * Math.max(sedes, 1);

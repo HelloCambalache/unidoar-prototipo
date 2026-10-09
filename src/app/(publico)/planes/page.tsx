@@ -101,16 +101,16 @@ export default async function Planes() {
 
         {/* ── Instituciones fundadoras ────────────────────────────────── */}
         {hayCupos && (
-          <div className="relative mt-14 overflow-hidden rounded-[14px] bg-navy-900 px-8 py-9 text-white max-[560px]:px-6">
+          <div className="relative mt-14 overflow-hidden rounded-[14px] bg-[linear-gradient(120deg,#6E2413_0%,#A94A32_55%,#C8502F_100%)] px-8 py-9 text-white max-[560px]:px-6">
             <span
               aria-hidden
-              className="pointer-events-none absolute -top-[90px] -right-[60px] size-[260px] rounded-full bg-[radial-gradient(circle,rgba(245,147,50,.34),transparent_70%)]"
+              className="pointer-events-none absolute -top-[90px] -right-[60px] size-[300px] rounded-full bg-[radial-gradient(circle,rgba(245,147,50,.45),transparent_70%)]"
             />
             <div className="relative flex flex-wrap items-center justify-between gap-4">
               <h2 className="m-0 text-[26px] leading-tight font-semibold tracking-[-0.02em]">
                 Instituciones Fundadoras
               </h2>
-              <span className="rounded-full bg-ambar/22 px-3 py-1.5 text-xs leading-none font-semibold text-[#FDD9AE]">
+              <span className="rounded-full bg-white/18 px-3 py-1.5 text-xs leading-none font-semibold text-white">
                 Quedan {cupos} de {CUPOS_FUNDADOR} cupos
               </span>
             </div>
@@ -120,19 +120,19 @@ export default async function Planes() {
             </p>
             <ul className="relative m-0 grid list-none grid-cols-2 gap-x-8 gap-y-3 p-0 text-sm leading-normal text-white/85 max-[760px]:grid-cols-1">
               <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-celeste" />
+                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
                 Tarifa de fundador congelada mientras sigas suscripto
               </li>
               <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-celeste" />
+                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
                 Insignia de Institución Fundadora en tu perfil público
               </li>
               <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-celeste" />
+                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
                 Tu logo en la portada del sitio, entre las que confiaron primero
               </li>
               <li className="flex items-start gap-2.5">
-                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-celeste" />
+                <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-[#FFD9A8]" />
                 Las dos promociones de lanzamiento, acumulables
               </li>
             </ul>
@@ -140,7 +140,7 @@ export default async function Planes() {
               href={RUTA_REGISTRO_INSTITUCION}
               variante="cta"
               tamano="lg"
-              className="relative mt-7 h-[50px] bg-ambar text-tinta shadow-[0_4px_10px_rgba(245,147,50,.35)] hover:bg-ambar hover:text-tinta hover:brightness-95"
+              className="relative mt-7 h-[50px] bg-white text-[#8A2F1A] shadow-[0_4px_14px_rgba(0,0,0,.22)] hover:bg-white hover:text-[#8A2F1A] hover:brightness-95"
             >
               Quiero ser institución fundadora
             </BotonLink>
