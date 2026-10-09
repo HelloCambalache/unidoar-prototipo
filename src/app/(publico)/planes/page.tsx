@@ -52,25 +52,46 @@ export default async function Planes() {
 
       <section className="mx-auto w-full max-w-[1200px] flex-1 px-12 pb-16 max-[560px]:px-5">
         <div className="flex flex-wrap items-stretch gap-6">
-          <article className="flex min-w-[300px] flex-1 flex-col rounded-[14px] border border-borde bg-white px-8 py-9 max-[560px]:px-6">
-            <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-300 uppercase">
-              Profesionales
-            </h2>
-            <div className="mt-4 mb-1 text-[38px] min-[700px]:mt-[88px] leading-none font-bold tracking-[-0.02em] text-tinta">
+          <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -top-[70px] -left-[60px] size-[220px] rounded-full bg-[radial-gradient(circle,rgba(151,18,95,.16),transparent_70%)]"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-[70px] -bottom-[80px] size-[240px] rounded-full bg-[radial-gradient(circle,rgba(130,216,233,.35),transparent_70%)]"
+            />
+            <div className="relative flex flex-wrap items-center justify-between gap-2">
+              <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-rosa uppercase">
+                Profesionales
+              </h2>
+              <span className="rounded-full bg-rosa px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
+                Para siempre
+              </span>
+            </div>
+            <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] text-rosa min-[700px]:mt-[78px]">
               100% gratis
             </div>
-            <p className="mb-5 text-sm leading-normal text-apagado">
-              Para siempre. Tu talento no tiene costo: creá tu perfil, verificá tus títulos y postulate.
+            <p className="relative mb-5 text-sm leading-normal text-[#7A1B4E]/75">
+              Tu talento no tiene costo: creá tu perfil, verificá tus títulos y postulate.
             </p>
-            <ul className="m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-tinta-2">
+            <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-[#5E1340]">
               {BENEFICIOS_DOCENTE.map((b) => (
                 <li key={b} className="flex items-start gap-2.5">
-                  <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-navy-700" />
+                  <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-rosa/12 text-rosa">
+                    <Icono nombre="tilde" tamano={11} trazo={2.6} />
+                  </span>
                   {b}
                 </li>
               ))}
             </ul>
-            <BotonLink href={RUTA_REGISTRO_DOCENTE} variante="secundario" tamano="lg" bloque className="mt-[26px]">
+            <BotonLink
+              href={RUTA_REGISTRO_DOCENTE}
+              variante="cta"
+              tamano="lg"
+              bloque
+              className="relative mt-[26px] h-[50px] bg-rosa text-white shadow-[0_4px_10px_rgba(151,18,95,.3)] hover:bg-rosa hover:text-white hover:brightness-110"
+            >
               Soy profesional
             </BotonLink>
           </article>
