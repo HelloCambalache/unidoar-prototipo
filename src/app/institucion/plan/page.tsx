@@ -5,12 +5,13 @@ import { PlanPanel } from "@/components/institucion/plan-panel";
 import { requerirInstitucion } from "@/lib/auth";
 import { pesos } from "@/lib/planes";
 import { datosDePlan } from "@/lib/queries/plan";
+import { catalogoDePlanes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Plan y facturación" };
 
 export default async function PlanYFacturacion() {
   const { usuario, institucion } = await requerirInstitucion();
-  const datos = await datosDePlan(institucion, usuario.id);
+  const [datos, catalogo] = await Promise.all([datosDePlan(institucion, usuario.id), catalogoDePlanes()]);
 
   return (
     <>
@@ -19,6 +20,7 @@ export default async function PlanYFacturacion() {
         bajada="Tu plan, el medio de pago y las facturas anteriores."
       />
       <PlanPanel
+        catalogo={catalogo}
         plan={datos.plan}
         proximoCobro={datos.proxima ? `${datos.proxima.fechaCobroLarga} · ${pesos(datos.proxima.monto)}` : null}
         medioPago={institucion.medioPago}

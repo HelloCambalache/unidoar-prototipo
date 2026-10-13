@@ -6,8 +6,7 @@ import { BotonAccion } from "@/components/institucion/boton-accion";
 import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { useToast } from "@/components/ui/toast";
-import { clavesParaElegir } from "@/lib/cobros";
-import { pesos, PLANES, type PlanClave } from "@/lib/planes";
+import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,6 +14,7 @@ import { cn } from "@/lib/utils";
  * ni cambia nada, deja un pedido que el equipo de UNIDOAR confirma (se muestra acá hasta que lo atienda).
  */
 export function PlanPanel({
+  catalogo,
   plan,
   proximoCobro,
   medioPago,
@@ -22,6 +22,8 @@ export function PlanPanel({
   solicitud,
   puedeCambiar,
 }: {
+  /** Los planes vigentes (los lee el servidor de la base). */
+  catalogo: CatalogoDePlanes;
   plan: PlanClave;
   /** "10 de octubre de 2026 · $ 54.000" */
   proximoCobro: string | null;
@@ -30,13 +32,14 @@ export function PlanPanel({
   solicitud: { id: string; planSolicitado: PlanClave; cuando: string } | null;
   puedeCambiar: boolean;
 }) {
+  const P = crearPlanes(catalogo);
   const toast = useToast();
   const [abierto, setAbierto] = useState(false);
   const [pendiente, empezar] = useTransition();
-  const actual = PLANES[plan];
+  const actual = P.planDe(plan);
 
   const pedir = (destino: PlanClave) => {
-    const p = PLANES[destino];
+    const p = P.planDe(destino);
     const ok = window.confirm(
       `¿Pedir el cambio al ${p.label} (${pesos(p.precio)}/${p.periodo})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
     );
@@ -105,7 +108,7 @@ export function PlanPanel({
               Pedido enviado: el equipo te confirma el cambio y el cobro
             </div>
             <div className="text-[13px] leading-normal text-tinta-2">
-              Pediste pasar al {PLANES[solicitud.planSolicitado].label} · {solicitud.cuando}. Hasta que lo confirmen seguís con el{" "}
+              Pediste pasar al {P.planDe(solicitud.planSolicitado).label} · {solicitud.cuando}. Hasta que lo confirmen seguís con el{" "}
               {actual.label} y no se te cobra nada distinto.
             </div>
           </div>
@@ -123,8 +126,8 @@ export function PlanPanel({
 
       {abierto && puedeCambiar && !solicitud && (
         <div className="mt-5 flex max-w-[1180px] flex-wrap gap-4">
-          {clavesParaElegir(plan).map((clave) => {
-            const p = PLANES[clave];
+          {P.clavesParaElegir(plan).map((clave) => {
+            const p = P.planDe(clave);
             const esActual = clave === plan;
             return (
               <div

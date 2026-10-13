@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  clavesParaElegir,
-  equivalenteMensual,
   errorDeFechaDePago,
   estadoEfectivo,
   etiquetaPeriodo,
@@ -16,6 +14,7 @@ import {
   type FacturaReciente,
   type InstitucionFacturable,
 } from "@/lib/cobros";
+import { CATALOGO_POR_DEFECTO, crearPlanes } from "@/lib/planes";
 
 describe("períodos y fechas de cobro", () => {
   it("suma meses cruzando de año", () => {
@@ -45,11 +44,6 @@ describe("períodos y fechas de cobro", () => {
     assert.equal(estadoEfectivo("pendiente", "2026-10-07", "2026-10-07"), "pendiente");
     assert.equal(estadoEfectivo("pagada", "2026-01-01", "2026-10-07"), "pagada");
     assert.equal(estadoEfectivo("vencida", "2026-12-01", "2026-10-07"), "vencida");
-  });
-
-  it("el plan anual aporta un doceavo al mensual", () => {
-    assert.equal(equivalenteMensual("anual"), 60_000);
-    assert.equal(equivalenteMensual("fundador"), 54_000);
   });
 });
 
@@ -140,22 +134,6 @@ describe("recordatorio de cobro", () => {
   });
 });
 
-describe("qué planes ofrece un selector", () => {
-  it("ofrece los vigentes a una institución que ya está en uno", () => {
-    assert.deepEqual(clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede"]);
-  });
-
-  it("le suma el suyo a la que quedó en un plan heredado, sin ofrecérselo a las demás", () => {
-    assert.deepEqual(clavesParaElegir("fundador"), ["colegio", "deportiva", "multisede", "fundador"]);
-    assert.ok(!clavesParaElegir("colegio").includes("fundador"));
-  });
-
-  it("sin plan conocido, solo los vigentes", () => {
-    assert.deepEqual(clavesParaElegir(undefined), ["colegio", "deportiva", "multisede"]);
-    assert.deepEqual(clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede"]);
-  });
-});
-
 describe("facturas automáticas (planificarFacturas)", () => {
   const P = "2026-10";
   const HOY = "2026-10-07";
@@ -191,6 +169,14 @@ describe("facturas automáticas (planificarFacturas)", () => {
   it("usa el monto de cada plan", () => {
     assert.equal(una(inst("a", "estandar"), []).crear[0]!.monto, 89_000);
     assert.equal(una(inst("a", "anual"), []).crear[0]!.monto, 720_000);
+  });
+
+  it("el monto sale de los planes vigentes: si el equipo cambió el precio, la factura del mes sale con el nuevo", () => {
+    const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
+    catalogo.planes.fundador.precio = 58_000;
+    const r = planificarFacturas([inst("a", "fundador")], [], P, HOY, crearPlanes(catalogo));
+    assert.equal(r.crear[0]!.monto, 58_000);
+    assert.equal(planificarFacturas([inst("a", "fundador")], [], P, HOY).crear[0]!.monto, 54_000, "sin planes, los de lanzamiento");
   });
 
   it("respeta el día de cobro de la institución, y si ya pasó cobra hoy (no nace vencida)", () => {

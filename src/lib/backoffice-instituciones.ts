@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TIPOS_INSTITUCION } from "@/lib/catalogo";
-import { CLAVES_PLAN, esClavePlan, etiquetaPeriodo, nombreDePlan } from "@/lib/cobros";
-import type { PlanClave } from "@/lib/planes";
+import { CLAVES_PLAN, esClavePlan, etiquetaPeriodo } from "@/lib/cobros";
+import { planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
 
 /* Filtros y vocabularios del backoffice de instituciones. Sin acceso a base: los usa también el cliente. */
 
@@ -75,8 +75,9 @@ const listaDeCampos = (campos: unknown) => {
 };
 
 /** Una línea legible para el registro de actividad de la ficha ("Cambió el plan de Fundador a Estándar"). */
-export function describirAccion(accion: string, detalle: Record<string, unknown> | null) {
+export function describirAccion(accion: string, detalle: Record<string, unknown> | null, planes: Planes = planesPorDefecto) {
   const d = detalle ?? {};
+  const nombreDePlan = planes.nombreDePlan;
   const texto = (k: string) => (typeof d[k] === "string" ? (d[k] as string) : null);
   switch (accion) {
     case "institucion.verificar":

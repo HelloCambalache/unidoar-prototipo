@@ -6,17 +6,8 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import {
-  CLAVES_PLAN,
-  DIAS_MAXIMOS_PAGO_ATRASADO,
-  errorDeFechaDePago,
-  etiquetaPeriodo,
-  hoyAR,
-  montoDePlan,
-  precioDePlan,
-  situacionDelMes,
-} from "@/lib/cobros";
-import { PLANES, pesos, type PlanClave } from "@/lib/planes";
+import { DIAS_MAXIMOS_PAGO_ATRASADO, errorDeFechaDePago, etiquetaPeriodo, hoyAR, situacionDelMes } from "@/lib/cobros";
+import { CLAVES_PLAN, crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -30,16 +21,20 @@ export type FacturaDelMes = { periodo: string; pagada: boolean; monto: number };
  */
 export function CobroPagoEfectivo({
   institucionId,
+  catalogo,
   plan,
   periodoSugerido,
   facturas,
 }: {
   institucionId: string;
+  /** Los planes vigentes (los lee el servidor de la base). */
+  catalogo: CatalogoDePlanes;
   plan: PlanClave;
   /** Mes que se propone: la factura impaga más antigua o, si no hay, el primer mes sin factura ("2026-11"). */
   periodoSugerido: string;
   facturas: FacturaDelMes[];
 }) {
+  const P = crearPlanes(catalogo);
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [abierto, setAbierto] = useState(false);
@@ -62,7 +57,7 @@ export function CobroPagoEfectivo({
 
   const factura = PERIODO_VALIDO.test(periodo) ? facturas.find((f) => f.periodo === periodo) : undefined;
   const situacion = situacionDelMes(factura ? { estado: factura.pagada ? "pagada" : "pendiente" } : null);
-  const monto = factura ? factura.monto : montoDePlan(planElegido);
+  const monto = factura ? factura.monto : P.montoDePlan(planElegido);
 
   const guardar = () => {
     const falloFecha = fecha ? errorDeFechaDePago(fecha, hoyAR()) : "Elegí la fecha del pago.";
@@ -146,7 +141,7 @@ export function CobroPagoEfectivo({
             >
               {CLAVES_PLAN.map((c) => (
                 <option key={c} value={c}>
-                  {PLANES[c].label} · {precioDePlan(c)}
+                  {P.planDe(c).label} · {P.precioDePlan(c)}
                 </option>
               ))}
             </Select>

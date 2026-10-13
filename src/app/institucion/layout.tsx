@@ -1,7 +1,7 @@
 import { AppShell, type NavItem } from "@/components/app/app-shell";
 import { requerirInstitucion } from "@/lib/auth";
 import { notificacionesDe } from "@/lib/queries/notificaciones";
-import { planDe } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { iniciales } from "@/lib/utils";
 
 const NAV: NavItem[] = [
@@ -19,8 +19,8 @@ const NAV_PIE: NavItem[] = [{ href: "/institucion/cuenta", label: "Mi cuenta", i
 
 export default async function InstitucionLayout({ children }: { children: React.ReactNode }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const notificaciones = await notificacionesDe(usuario.id);
-  const plan = planDe(institucion.plan);
+  const [notificaciones, P] = await Promise.all([notificacionesDe(usuario.id), planes()]);
+  const plan = P.planDe(institucion.plan);
 
   return (
     <AppShell

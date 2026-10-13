@@ -22,6 +22,7 @@ pnpm test           # pruebas de la lógica pura (src/**/*.test.ts, node:test v�
 pnpm db:push        # aplica src/db/schema.ts a la base (desarrollo)
 pnpm db:rls         # activa RLS en todas las tablas (correrlo después de cada db:push)
 pnpm db:sedes       # crea institucion_sedes y busquedas.sede_id y da a cada institución su sede principal (aditivo, se puede correr de nuevo)
+pnpm db:planes      # crea las tablas planes y planes_condiciones (con RLS) y las llena con los valores de lanzamiento; no pisa lo que ya se editó (aditivo, se puede correr de nuevo)
 pnpm db:storage     # crea los buckets de Storage
 pnpm db:setup       # push + rls + storage + seed, de una
 pnpm db:admin --email=<correo> [--rol=institucion]   # da (o quita) el rol admin: entra a /backoffice
@@ -78,7 +79,7 @@ src/
     acciones.ts           Resultado, ok(), fallo(), parsear() para server actions
     queries/*.ts          lecturas (server-only), una por dominio
     correo/               mails de la app: cola, eventos, plantillas, envío por Resend (ver "Correo")
-    geo.ts perfil.ts planes.ts notificaciones.ts sql-texto.ts auditoria.ts utils.ts
+    geo.ts perfil.ts planes.ts (puro) notificaciones.ts sql-texto.ts auditoria.ts utils.ts
 ```
 
 ### Reglas
@@ -158,6 +159,17 @@ Al pie de Buscar profesionales (`BotonBusquedaUrgente`, `src/components/instituc
 - Reglas de validación y lectura del CSV en `src/lib/contactos.ts`, compartidas con el navegador (que arma la vista previa); el servidor (`src/app/actions/contactos.ts`) vuelve a validar todo.
 - Hasta 500 filas por archivo (512 KB) y 2000 contactos por institución. Hace falta nombre y un email o un teléfono. No se duplican por email ni, si la fila no tiene email, por teléfono (`claveDeTelefono` reconoce un mismo número escrito de distinta forma). El CSV acepta coma, punto y coma o tabulación y UTF-8 o Windows-1252 (el Excel en español).
 - Son datos personales de gente que no tiene cuenta: tenerlo presente al redactar los términos y la política de privacidad.
+
+### Planes y aranceles (editables desde el backoffice)
+
+Lo que se cobra y cómo se llama cada plan **no está en el código**: lo edita el equipo en **`/backoffice/planes`** (menú "Planes") y vive en la base (`planes`: una fila por plan con nombre, precio, resumen, detalle y si se ofrece; `planes_condiciones`: una sola fila con desde cuántas sedes es Multisede, el pack por adelantado y qué tipos de institución pagan el arancel de colegios). Tablas creadas a mano con `pnpm db:planes` (aditivo, con RLS; una tabla nueva sigue necesitando `db:rls`).
+- **`src/lib/planes.ts` es puro** (sin base, sirve en servidor y navegador): la FORMA de los datos, los **valores de lanzamiento** (el respaldo si la base falla o le falta algo: `catalogoDesdeLaBase` completa campo por campo, así una fila rota nunca deja la app sin precios), `crearPlanes(catalogo)` con todas las reglas (`planDe`, `vigentes`, `clavesParaElegir`, `planPorTipo`, `tiposPorPlan`, `esMultisede`, `precioMultisede`, `packDe`, `precioDePlan`, `montoDePlan`, `nombreDePlan`, `equivalenteMensual`) y la validación de lo que se edita (`edicionDePlanesSchema`, `cambiosDePlanes`). Con prueba.
+- **Cómo se usa:** en el servidor `const P = await planes()` (`src/lib/queries/planes.ts`, una lectura por pedido) y `P.montoDePlan(clave)`, `P.planDe(clave).label`…; un componente de cliente recibe `catalogo={P.catalogo}` por props y hace `crearPlanes(catalogo)`. **No importar precios ni nombres de plan fijos** (`PLANES` ya no existe): un lugar nuevo que muestre o calcule con un plan lee el catálogo. `planificarFacturas` recibe los planes como último parámetro (sin pasarlos, los de lanzamiento: así lo usan las pruebas).
+- **Las claves son fijas** (`colegio`, `deportiva`, `multisede`, `fundador`, `estandar`, `anual`): las referencian instituciones y facturas, no se crean ni se borran planes desde la pantalla. `colegio` y `deportiva` no se pueden dejar de ofrecer (los reciben las instituciones nuevas según su tipo). Los planes anteriores (`vigente: false`) siguen editables porque hay cuentas que los tienen.
+- **Un cambio de precio rige para lo que venga:** las facturas ya emitidas guardan su `monto` y no cambian; la factura del mes que se crea después (cron, "Cargar factura", pedidos de plan) sale con el precio nuevo, y la página pública, el plan de cada institución y el selector del backoffice lo muestran enseguida. Cambiar el precio de un plan heredado cambia lo que se les factura de ahí en más a las cuentas que lo tienen: la pantalla muestra cuántas instituciones tiene cada plan y pide confirmar con un resumen.
+- **Guardar** (`guardarPlanes`, `src/app/actions/backoffice-planes.ts`, solo admin): valida de nuevo en el servidor, bloquea la fila de condiciones, compara con una **huella** de lo que se estaba viendo (si otra persona del equipo guardó mientras tanto, no pisa y pide recargar) y deja la auditoría `planes.editar` con los cambios (los precios llevan el valor de antes y de después; de lo demás solo qué campos se tocaron). "Últimos cambios" sale de ahí. Si no cambió nada, no se anota nada.
+- **El mail M55/M56 y los avisos de cambio de plan** reciben el nombre ya resuelto (`P.nombreDePlan`); `describirAccion` toma los planes como parámetro opcional.
+- **Sin pasarela de pago todavía** (ver "Pendiente"): editar un precio no cobra nada ni toca cuentas, solo cambia lo que se factura después.
 
 ### Cuenta, ingreso y registro
 

@@ -14,6 +14,7 @@ import { chipEntrevista, rangoDeSemana } from "@/lib/fechas";
 import { enumerar, pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import { estadisticasInstitucion, integrantesDeEquipo, listarBusquedas } from "@/lib/queries/busquedas";
 import { docentesRecomendados } from "@/lib/queries/coincidencias";
+import { planes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -24,11 +25,20 @@ export default async function DashboardInstitucion() {
 
   // Sin búsquedas todavía: la variante de "institución recién creada".
   if (est.totalBusquedas === 0) {
-    const [equipo, cercanos] = await Promise.all([
+    const [equipo, cercanos, P] = await Promise.all([
       integrantesDeEquipo(institucion.id),
       docentesRecomendados(institucion, { limite: 4 }),
+      planes(),
     ]);
-    return <DashboardPrimeraVez institucion={institucion} nombre={nombre} equipo={equipo} cercanos={cercanos} />;
+    return (
+      <DashboardPrimeraVez
+        institucion={institucion}
+        nombre={nombre}
+        equipo={equipo}
+        cercanos={cercanos}
+        planLabel={P.planDe(institucion.plan).label}
+      />
+    );
   }
 
   const activas = await listarBusquedas(institucion.id, { pestana: "activas", limite: 5 });

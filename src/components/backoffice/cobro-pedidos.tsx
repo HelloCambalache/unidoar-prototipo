@@ -7,7 +7,8 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Textarea } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import { etiquetaPeriodo, nombreDePlan, precioDePlan } from "@/lib/cobros";
+import { etiquetaPeriodo } from "@/lib/cobros";
+import { crearPlanes, type CatalogoDePlanes } from "@/lib/planes";
 
 export type PedidoVista = {
   id: string;
@@ -28,7 +29,8 @@ type Abierto = { pedido: PedidoVista; accion: "aprobar" | "rechazar" } | null;
  * deja lista la factura del mes y avisa; rechazar pide una nota que ve la institución. Ambas pasan por el servidor,
  * que vuelve a chequear que el pedido siga pendiente.
  */
-export function CobroPedidos({ pedidos }: { pedidos: PedidoVista[] }) {
+export function CobroPedidos({ pedidos, catalogo }: { pedidos: PedidoVista[]; catalogo: CatalogoDePlanes }) {
+  const { nombreDePlan, precioDePlan } = crearPlanes(catalogo);
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [abierto, setAbierto] = useState<Abierto>(null);

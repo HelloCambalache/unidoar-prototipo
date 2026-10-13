@@ -20,12 +20,12 @@ import {
   esClavePlan,
   etiquetaPeriodo,
   fechaDeColumna,
-  precioDePlan,
 } from "@/lib/cobros";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { fechaHoraCorta } from "@/lib/calendario";
 import { pesos } from "@/lib/planes";
 import { fichaInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { planes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Institución · Backoffice" };
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
   await requerirUsuario("admin");
   const { id } = await params;
   if (!esUuid(id)) notFound();
-  const ficha = await fichaInstitucion(id);
+  const [ficha, P] = await Promise.all([fichaInstitucion(id), planes()]);
   if (!ficha) notFound();
 
   const { institucion: i, proximoCobro } = ficha;
@@ -124,12 +124,12 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
               { valor: ficha.busquedasActivas, etiqueta: "Búsquedas activas" },
               { valor: ficha.postulaciones, etiqueta: "Postulaciones" },
               { valor: ficha.contrataciones, etiqueta: "Contrataciones" },
-              { valor: precioDePlan(plan), etiqueta: "Suscripción" },
+              { valor: P.precioDePlan(plan), etiqueta: "Suscripción" },
             ]}
           />
 
           <Tarjeta className="p-[22px]">
-            <InstPlan institucionId={i.id} nombre={i.nombre} plan={plan} proximoCobro={proximoTexto} />
+            <InstPlan institucionId={i.id} nombre={i.nombre} catalogo={P.catalogo} plan={plan} proximoCobro={proximoTexto} />
           </Tarjeta>
 
           <section aria-labelledby="busquedas-titulo">
@@ -209,7 +209,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                 {ficha.actividad.map((a) => (
                   <li key={a.id} className="text-[13px] leading-[1.4] text-tinta-2">
-                    {describirAccion(a.accion, a.detalle)}
+                    {describirAccion(a.accion, a.detalle, P)}
                     <span className="block text-xs text-sutil">
                       {haceTiempo(a.cuando, ahora)}
                       {a.quien ? ` · ${a.quien}` : ""}

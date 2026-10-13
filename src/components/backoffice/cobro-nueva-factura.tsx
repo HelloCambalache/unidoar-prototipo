@@ -6,8 +6,8 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import { clavesParaElegir, etiquetaPeriodo, fechaCobroDelPeriodo, MEDIOS_PAGO, montoDePlan, precioDePlan } from "@/lib/cobros";
-import { PLANES, pesos, type PlanClave } from "@/lib/planes";
+import { etiquetaPeriodo, fechaCobroDelPeriodo, MEDIOS_PAGO } from "@/lib/cobros";
+import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -17,18 +17,22 @@ const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
  */
 export function CobroNuevaFactura({
   institucionId,
+  catalogo,
   plan,
   diaCobro,
   medioPago,
   periodoSugerido,
 }: {
   institucionId: string;
+  /** Los planes vigentes (los lee el servidor de la base). */
+  catalogo: CatalogoDePlanes;
   plan: PlanClave;
   diaCobro: number | null;
   medioPago: string | null;
   /** Primer mes que todavía no tiene factura ("2026-11"). */
   periodoSugerido: string;
 }) {
+  const P = crearPlanes(catalogo);
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [abierto, setAbierto] = useState(false);
@@ -108,9 +112,9 @@ export function CobroNuevaFactura({
           </Campo>
           <Campo etiqueta="Plan" requerido error={errores.plan}>
             <Select value={planElegido} onChange={(e) => setPlanElegido(e.target.value as PlanClave)}>
-              {clavesParaElegir(plan).map((c) => (
+              {P.clavesParaElegir(plan).map((c) => (
                 <option key={c} value={c}>
-                  {PLANES[c].label} · {precioDePlan(c)}
+                  {P.planDe(c).label} · {P.precioDePlan(c)}
                 </option>
               ))}
             </Select>
@@ -127,8 +131,8 @@ export function CobroNuevaFactura({
           </Campo>
         </div>
         <p className="m-0 mb-4 rounded-lg bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
-          Monto de la factura: <b className="font-semibold">{pesos(montoDePlan(planElegido))}</b>
-          {PLANES[planElegido].porSede && " por sede: multiplicalo por las sedes de la red al registrar el pago."}
+          Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido))}</b>
+          {P.planDe(planElegido).porSede && " por sede: multiplicalo por las sedes de la red al registrar el pago."}
         </p>
         {errores._ && (
           <p role="alert" className="m-0 mb-3 text-xs text-[#b91c1c]">

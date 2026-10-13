@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { enlaceWhatsapp } from "@/lib/pipeline";
-import { PLANES, PLANES_VIGENTES, pesos, planDe, type PlanClave } from "@/lib/planes";
+import { CLAVES_PLAN, esClavePlan, pesos, planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
+
+// Las claves de plan son fijas (las referencian instituciones y facturas): se re-exportan acá porque los formularios de cobros las usan.
+export { CLAVES_PLAN, esClavePlan };
 
 /*
  * Reglas de cobros compartidas por el backoffice (servidor y cliente). Sin acceso a base.
@@ -8,18 +11,6 @@ import { PLANES, PLANES_VIGENTES, pesos, planDe, type PlanClave } from "@/lib/pl
  */
 
 const ZONA = "America/Argentina/Buenos_Aires";
-
-/** Todas las claves, incluidas las de los planes que ya no se venden: una factura vieja las usa. */
-export const CLAVES_PLAN = Object.keys(PLANES) as [PlanClave, ...PlanClave[]];
-export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && Object.hasOwn(PLANES, v);
-
-/**
- * Las claves que puede elegir un selector. Son las vigentes más, si la institución está en un
- * plan heredado, el suyo: así el backoffice puede dejarla donde está sin ofrecérselo a otras.
- */
-export function clavesParaElegir(actual?: string): PlanClave[] {
-  return esClavePlan(actual) && !PLANES[actual].vigente ? [...PLANES_VIGENTES, actual] : [...PLANES_VIGENTES];
-}
 
 export const MEDIOS_PAGO = ["Transferencia", "Tarjeta", "Débito automático", "Efectivo", "Mercado Pago"] as const;
 
@@ -111,24 +102,6 @@ export function fechaBreve(fecha: string) {
   return anio && nombre && dia ? `${Number(dia)} ${nombre} ${anio}` : fecha;
 }
 
-/** Lo que aporta una institución al MRR: el anual cuenta como precio / 12. */
-export function equivalenteMensual(plan: string) {
-  const p = planDe(plan);
-  return p.periodo === "año" ? Math.round(p.precio / 12) : p.precio;
-}
-
-/** "$ 50.000/mes" · "$ 15.000/mes por sede" */
-export function precioDePlan(plan: string) {
-  const p = planDe(plan);
-  return `${pesos(p.precio)}/${p.periodo}${p.porSede ? " por sede" : ""}`;
-}
-
-/** Lo que se factura por mes. En Multisede es el precio de UNA sede: el total lo pone el equipo. */
-export const montoDePlan = (plan: string) => planDe(plan).precio;
-
-/** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
-export const nombreDePlan = (plan: string) => planDe(plan).label.replace(/^Plan /, "");
-
 /** wa.me con el texto ya escrito. Null si el teléfono no se reconoce como argentino. */
 export function enlaceWhatsappConTexto(telefono: string | null | undefined, texto: string) {
   const base = enlaceWhatsapp(telefono);
@@ -183,6 +156,8 @@ export function planificarFacturas(
   recientes: FacturaReciente[],
   periodo: string,
   hoy: string,
+  /** Los planes vigentes (de dónde salen el monto y si se cobra por sede); sin pasarlos, los valores de lanzamiento. */
+  planes: Planes = planesPorDefecto,
 ): { crear: FacturaPorCrear[]; omitidas: { institucionId: string; motivo: MotivoOmision }[] } {
   const porInstitucion = new Map<string, FacturaReciente[]>();
   for (const f of recientes) {
@@ -199,7 +174,7 @@ export function planificarFacturas(
 
     if (!esClavePlan(inst.plan)) omitir("plan_desconocido");
     // Multisede se cobra por sede y no guardamos cuántas tiene: la factura la arma el equipo.
-    else if (PLANES[inst.plan].porSede) omitir("por_sede");
+    else if (planes.planDe(inst.plan).porSede) omitir("por_sede");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
     else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
     else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
@@ -209,7 +184,7 @@ export function planificarFacturas(
       crear.push({
         institucionId: inst.id,
         plan: inst.plan,
-        monto: montoDePlan(inst.plan),
+        monto: planes.montoDePlan(inst.plan),
         periodo,
         fechaCobro: fecha < hoy ? hoy : fecha,
         medio: inst.medioPago,

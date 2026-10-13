@@ -12,8 +12,9 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { hrefInstituciones, leerFiltrosInstituciones } from "@/lib/backoffice-instituciones";
 import { plural } from "@/lib/busquedas";
-import { nombreDePlan } from "@/lib/cobros";
+import { crearPlanes } from "@/lib/planes";
 import { listarInstituciones, totalInstituciones } from "@/lib/queries/backoffice-instituciones";
+import { catalogoDePlanes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Instituciones · Backoffice" };
 // Datos de contacto y facturación: siempre frescos, nunca cacheados.
@@ -27,7 +28,8 @@ export default async function InstitucionesBackoffice({
   // El layout ya lo exige, pero acá se leen datos sensibles: se vuelve a verificar en cada página.
   await requerirUsuario("admin");
   const filtros = leerFiltrosInstituciones(await searchParams);
-  const [listado, totalGeneral] = await Promise.all([listarInstituciones(filtros), totalInstituciones()]);
+  const [listado, totalGeneral, catalogo] = await Promise.all([listarInstituciones(filtros), totalInstituciones(), catalogoDePlanes()]);
+  const { nombreDePlan } = crearPlanes(catalogo);
   const { filas, total, pagina, paginas } = listado;
   const filtrado =
     !!(filtros.q || filtros.tipo || filtros.plan || filtros.verificacion || filtros.estado);
@@ -42,7 +44,7 @@ export default async function InstitucionesBackoffice({
             : plural(totalGeneral, "institución registrada", "instituciones registradas")
         }
       />
-      <InstFiltros valores={filtros} />
+      <InstFiltros valores={filtros} catalogo={catalogo} />
 
       {filas.length === 0 ? (
         <EstadoVacio

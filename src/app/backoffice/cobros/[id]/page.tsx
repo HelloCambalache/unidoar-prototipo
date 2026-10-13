@@ -22,16 +22,15 @@ import {
   etiquetaPeriodo,
   fechaBreve,
   fechaDeColumna,
-  nombreDePlan,
   periodoActual,
-  precioDePlan,
   sumarMeses,
   textoRecordatorio,
   type EstadoCobro,
 } from "@/lib/cobros";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
-import { PLANES, pesos } from "@/lib/planes";
+import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
+import { planes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Cobros de una institución · Backoffice" };
 export const dynamic = "force-dynamic";
@@ -67,7 +66,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   await requerirUsuario("admin");
   const { id } = await params;
   if (!esUuid(id)) notFound();
-  const d = await detalleDeCobros(id);
+  const [d, P] = await Promise.all([detalleDeCobros(id), planes()]);
   if (!d) notFound();
 
   const { institucion: i, facturas, proximo } = d;
@@ -97,7 +96,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 {i.suspendida && <Insignia tono="naranja">Cuenta suspendida</Insignia>}
               </div>
               <div className="text-sm leading-[1.4] text-apagado">
-                {PLANES[plan].label} · {precioDePlan(plan)}
+                {P.planDe(plan).label} · {P.precioDePlan(plan)}
               </div>
             </div>
             <Link href={`/backoffice/instituciones/${i.id}`} className="text-[13px] leading-none font-medium">
@@ -108,7 +107,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
           {d.pedidosPendientes.length > 0 && (
             <div role="status" className="rounded-ud border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
               <b className="font-semibold">Tiene un pedido de cambio de plan sin atender:</b>{" "}
-              {d.pedidosPendientes.map((p) => `pasar al ${nombreDePlan(p.planSolicitado)} (${haceTiempo(p.creadoEn, ahora)})`).join(", ")}.{" "}
+              {d.pedidosPendientes.map((p) => `pasar al ${P.nombreDePlan(p.planSolicitado)} (${haceTiempo(p.creadoEn, ahora)})`).join(", ")}.{" "}
               <Link href="/backoffice/cobros#pedidos" className="font-semibold text-[#8A4B07] underline">
                 Atenderlo
               </Link>
@@ -151,7 +150,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                       <td className="whitespace-nowrap text-apagado">{fechaDeColumna(f.fechaCobro)}</td>
                       <td className="whitespace-nowrap">
                         {pesos(f.monto)}
-                        <span className="block text-xs text-sutil">{nombreDePlan(f.plan)}</span>
+                        <span className="block text-xs text-sutil">{P.nombreDePlan(f.plan)}</span>
                       </td>
                       <td className="text-apagado">{f.medio ?? "—"}</td>
                       <td>
@@ -179,7 +178,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
           <Seccion titulo="Medio de pago">
             <div className="text-sm leading-normal font-medium text-tinta">{i.medioPago ?? "Sin medio cargado"}</div>
             <div className="text-[13px] leading-normal text-apagado">
-              {PLANES[plan].periodo === "año"
+              {P.planDe(plan).periodo === "año"
                 ? "Pago anual por adelantado"
                 : i.diaCobro
                   ? `Se cobra el día ${i.diaCobro} de cada mes`
@@ -205,12 +204,14 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             )}
             <CobroPagoEfectivo
               institucionId={i.id}
+              catalogo={P.catalogo}
               plan={plan}
               periodoSugerido={impagas[0]?.periodo ?? sugerido}
               facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
             />
             <CobroNuevaFactura
               institucionId={i.id}
+              catalogo={P.catalogo}
               plan={plan}
               diaCobro={i.diaCobro}
               medioPago={i.medioPago}

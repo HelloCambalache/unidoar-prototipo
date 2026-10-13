@@ -7,7 +7,8 @@ import { esUuid } from "@/lib/busquedas";
 import { ESTADO_FACTURA, estadoDeFactura, periodoLegible } from "@/lib/facturacion";
 import { fechaCorta } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
-import { pesos, planDe } from "@/lib/planes";
+import { pesos } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { facturaPropia } from "@/lib/queries/plan";
 
 /** El título de la pestaña es el nombre que sugiere el navegador al guardar el PDF. */
@@ -58,7 +59,7 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
   if (!factura) notFound();
 
   const estado = ESTADO_FACTURA[estadoDeFactura(factura.estado)];
-  const plan = planDe(factura.plan);
+  const plan = (await planes()).planDe(factura.plan);
   const direccion = [institucion.direccion, institucion.partido, institucion.provincia].filter(Boolean).join(", ");
 
   return (

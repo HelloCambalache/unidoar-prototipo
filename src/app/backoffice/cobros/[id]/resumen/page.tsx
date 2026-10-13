@@ -8,12 +8,11 @@ import {
   etiquetaPeriodo,
   fechaBreve,
   fechaDeColumna,
-  nombreDePlan,
-  precioDePlan,
 } from "@/lib/cobros";
 import { fechaCorta } from "@/lib/fechas";
-import { pesos, planDe } from "@/lib/planes";
+import { pesos } from "@/lib/planes";
 import { detalleDeCobros } from "@/lib/queries/backoffice-cobros";
+import { planes } from "@/lib/queries/planes";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +62,7 @@ export default async function ResumenDeCuenta({
   await requerirUsuario("admin");
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!esUuid(id)) notFound();
-  const d = await detalleDeCobros(id);
+  const [d, P] = await Promise.all([detalleDeCobros(id), planes()]);
   if (!d) notFound();
 
   const { institucion: i, facturas } = d;
@@ -84,7 +83,7 @@ export default async function ResumenDeCuenta({
             <p className="m-0 text-[11px] leading-none font-semibold tracking-[.08em] text-sutil uppercase">UNIDOAR · Resumen de cuenta</p>
             <h1 className="font-display m-0 mt-2 text-[26px] leading-[1.15] font-bold tracking-[-0.02em]">{i.nombre}</h1>
             <p className="m-0 mt-1 text-[13.5px] leading-[1.4] text-apagado">
-              Plan {nombreDePlan(i.plan)} · {precioDePlan(i.plan)}
+              Plan {P.nombreDePlan(i.plan)} · {P.precioDePlan(i.plan)}
             </p>
           </div>
           <p className="m-0 text-right text-xs leading-normal text-apagado">Emitido el {emitido}</p>
@@ -107,7 +106,7 @@ export default async function ResumenDeCuenta({
             <p className="m-0">
               <b className="font-semibold">Medio de pago: </b>
               {i.medioPago ?? "—"}
-              {planDe(i.plan).periodo === "mes" && i.diaCobro ? ` · día ${i.diaCobro} de cada mes` : ""}
+              {P.planDe(i.plan).periodo === "mes" && i.diaCobro ? ` · día ${i.diaCobro} de cada mes` : ""}
             </p>
           </div>
         </Seccion>
@@ -153,7 +152,7 @@ export default async function ResumenDeCuenta({
                   <tr key={f.id}>
                     <td className="border-b border-borde py-2 pr-3 font-semibold">{etiquetaPeriodo(f.periodo)}</td>
                     <td className="border-b border-borde py-2 pr-3">{fechaDeColumna(f.fechaCobro)}</td>
-                    <td className="border-b border-borde py-2 pr-3">{nombreDePlan(f.plan)}</td>
+                    <td className="border-b border-borde py-2 pr-3">{P.nombreDePlan(f.plan)}</td>
                     <td className="border-b border-borde py-2 pr-3 text-right whitespace-nowrap">{pesos(f.monto)}</td>
                     <td className="border-b border-borde py-2 pr-3">{f.medio ?? "—"}</td>
                     <td className="border-b border-borde py-2">

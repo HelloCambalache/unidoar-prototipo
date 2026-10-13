@@ -5,45 +5,44 @@ import { Icono } from "@/components/icons";
 import { useToast } from "@/components/ui/toast";
 import { enlaceDeWhatsApp } from "@/lib/compartir-perfil";
 import { BotonLink } from "@/components/ui/button";
-import {
-  PACK_LANZAMIENTO,
-  packDe,
-  pesos,
-  PLANES,
-  PLANES_VIGENTES,
-  SEDES_MULTISEDE,
-  TIPOS_POR_PLAN,
-  type PlanClave,
-} from "@/lib/planes";
+import { crearPlanes, pesos, type CatalogoDePlanes, type Planes, type PlanClave } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { cn } from "@/lib/utils";
 
 /** Cómo se llama cada arancel en los botones: corto, para que entren en una línea. */
-const ETIQUETA: Record<string, string> = {
-  colegio: "Colegios",
-  deportiva: "Clubes y gimnasios",
-  multisede: `${SEDES_MULTISEDE} sedes o más`,
-};
+const etiquetaDe = (P: Planes, clave: PlanClave) =>
+  clave === "colegio"
+    ? "Colegios"
+    : clave === "deportiva"
+      ? "Clubes y gimnasios"
+      : clave === "multisede"
+        ? `${P.condiciones.sedesMultisede} sedes o más`
+        : P.planDe(clave).label;
+
+/** "1 mes" · "2 meses" */
+const meses = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 
 /** Lo que se manda al recomendar: lo escribe la institución que ya está, a un colega. */
 const TEXTO_REFERIDO = "Te paso UNIDOAR, lo usamos para cubrir búsquedas de profesionales:";
 
 /** Los tipos que entran en cada arancel, para que quien elige sepa si es el suyo. */
-function detalleDe(clave: PlanClave) {
-  if (clave === "multisede") return PLANES.multisede.detalle;
-  const tipos = TIPOS_POR_PLAN[clave as keyof typeof TIPOS_POR_PLAN];
-  return tipos ? `Incluye ${tipos.join(", ").toLowerCase()}.` : PLANES[clave].detalle;
+function detalleDe(P: Planes, clave: PlanClave) {
+  if (clave === "multisede") return P.planDe("multisede").detalle;
+  const tipos = P.tiposPorPlan[clave as keyof typeof P.tiposPorPlan];
+  return tipos ? `Incluye ${tipos.join(", ").toLowerCase()}.` : P.planDe(clave).detalle;
 }
 
 /**
  * Tarjeta de precio de las instituciones. El arancel depende del tipo, así que en vez de una tarjeta
  * por precio hay una sola con un desplegable: la institución se elige a sí misma y ve lo que paga.
  */
-export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly string[]; url: string }) {
+export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios: readonly string[]; url: string; catalogo: CatalogoDePlanes }) {
+  const P = crearPlanes(catalogo);
   const [clave, setClave] = useState<PlanClave>("colegio");
   const toast = useToast();
-  const plan = PLANES[clave];
-  const pack = packDe(clave);
+  const plan = P.planDe(clave);
+  const pack = P.packDe(clave);
+  const { meses: mesesDelPack, mesesQueSePagan, mesesConReferido } = P.condiciones.pack;
 
   const copiar = async () => {
     try {
@@ -69,7 +68,7 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
           ¿Qué tipo de institución sos?
         </span>
         <div role="group" aria-labelledby="tipo-institucion" className="flex flex-wrap gap-2">
-          {PLANES_VIGENTES.map((c) => {
+          {P.vigentes.map((c) => {
             const elegido = c === clave;
             return (
               <button
@@ -83,7 +82,7 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
                   elegido ? "bg-white text-navy-700" : "border border-white/25 text-white/75 hover:bg-white/10",
                 )}
               >
-                {ETIQUETA[c] ?? PLANES[c].label}
+                {etiquetaDe(P, c)}
               </button>
             );
           })}
@@ -96,7 +95,7 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
           &nbsp;/ mes{plan.porSede ? " por sede" : ""}
         </span>
       </div>
-      <p className="relative mb-5 text-sm leading-normal text-white/65">{detalleDe(clave)}</p>
+      <p className="relative mb-5 text-sm leading-normal text-white/65">{detalleDe(P, clave)}</p>
 
       <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-white/85">
         {beneficios.map((b) => (
@@ -109,11 +108,11 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
 
       <div className="relative mt-5 rounded-lg bg-white/8 px-4 py-3.5">
         <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-          1 mes bonificado
+          {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
         </span>
         <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
         <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
-          Contratás el pack de {PACK_LANZAMIENTO.meses} meses y pagás {PACK_LANZAMIENTO.mesesQueSePagan}:{" "}
+          Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
           <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
           {plan.porSede ? ", por sede" : ""}.
         </p>
@@ -121,12 +120,12 @@ export function PlanesInstituciones({ beneficios, url }: { beneficios: readonly 
 
       <div className="relative mt-3 rounded-lg bg-white/8 px-4 py-3.5">
         <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-          1 mes más
+          {meses(mesesQueSePagan - mesesConReferido)} más
         </span>
         <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Plan Referidos</div>
         <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
-          Recomendás a otra institución y se suma a la red: pagás {PACK_LANZAMIENTO.mesesConReferido} de los{" "}
-          {PACK_LANZAMIENTO.meses}.
+          Recomendás a otra institución y se suma a la red: pagás {mesesConReferido} de los{" "}
+          {mesesDelPack}.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <a

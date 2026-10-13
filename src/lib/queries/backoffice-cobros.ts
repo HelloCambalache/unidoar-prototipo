@@ -4,11 +4,9 @@ import { getDb } from "@/db";
 import { facturas, instituciones, solicitudesPlan, usuarios } from "@/db/schema";
 import {
   anioActual,
-  equivalenteMensual,
   estadoEfectivo,
   fechaCobroDelPeriodo,
   hoyAR,
-  montoDePlan,
   periodoActual,
   planificarFacturas,
   sumarMeses,
@@ -18,7 +16,8 @@ import {
 } from "@/lib/cobros";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { correoDeFacturaNueva } from "@/lib/correo/eventos";
-import type { PlanClave } from "@/lib/planes";
+import type { PlanClave, Planes } from "@/lib/planes";
+import { planes as cargarPlanes } from "@/lib/queries/planes";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 
 /*
@@ -49,6 +48,7 @@ export type ResumenCobros = {
 
 export async function tablaDeCobros(): Promise<{ resumen: ResumenCobros; filas: FilaCobro[] }> {
   const db = getDb();
+  const P = await cargarPlanes();
   const hoy = hoyAR();
   const [insts, impagas] = await Promise.all([
     db
@@ -77,7 +77,7 @@ export async function tablaDeCobros(): Promise<{ resumen: ResumenCobros; filas: 
 
   const activas = insts.filter((i) => !i.suspendida);
   const resumen: ResumenCobros = {
-    mrr: activas.reduce((suma, i) => suma + equivalenteMensual(i.plan), 0),
+    mrr: activas.reduce((suma, i) => suma + P.equivalenteMensual(i.plan), 0),
     suscripcionesActivas: activas.length,
     vencidos: { cantidad: 0, monto: 0 },
     sinMarcar: 0,
@@ -279,11 +279,13 @@ export async function aplicarPlanAlPeriodoActual(
   tx: EjecutorBo,
   institucion: { id: string; diaCobro: number | null; medioPago: string | null },
   plan: PlanClave,
+  /** Los planes vigentes: de ahí sale el monto. */
+  P: Planes,
   ahora = new Date(),
 ): Promise<ResultadoFacturaDelPeriodo> {
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
-  const monto = montoDePlan(plan);
+  const monto = P.montoDePlan(plan);
 
   const [existente] = await tx
     .select()
@@ -346,6 +348,7 @@ export type ResultadoGeneracion = {
 export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = new Date()): Promise<ResultadoGeneracion> {
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
+  const P = await cargarPlanes();
 
   const activas = await ejecutor
     .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })
@@ -368,6 +371,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
     recientes,
     periodo,
     hoy,
+    P,
   );
 
   const creadas = crear.length

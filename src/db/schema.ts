@@ -747,5 +747,34 @@ export const auditoria = pgTable(
 export type InstitucionNovedad = typeof institucionNovedades.$inferSelect;
 export type InstitucionFoto = typeof institucionFotos.$inferSelect;
 export type Factura = typeof facturas.$inferSelect;
+
+/**
+ * Los planes de las instituciones: lo que se cobra y cómo se llama cada uno, editable desde el backoffice (/backoffice/planes). Las
+ * claves son fijas (las referencian `instituciones.plan` y `facturas.plan`): se editan precio, nombre, textos y si se ofrece. Si una
+ * fila falta o está rota, la app usa los valores de lanzamiento de `src/lib/planes.ts`. Tabla creada a mano con `pnpm db:planes`.
+ */
+export const planes = pgTable("planes", {
+  clave: text("clave").primaryKey(),
+  etiqueta: text("etiqueta").notNull(),
+  /** Pesos por mes (por año en el plan Anual; por sede en Multisede). Los meses ya facturados no cambian: `facturas.monto` guarda lo cobrado. */
+  precio: integer("precio").notNull(),
+  resumen: text("resumen").notNull().default(""),
+  detalle: text("detalle").notNull().default(""),
+  vigente: boolean("vigente").notNull().default(true),
+  ...marcasDeTiempo,
+});
+export type PlanFila = typeof planes.$inferSelect;
+
+/** Condiciones de los planes (una sola fila, `id = 1`): desde cuántas sedes es Multisede, el pack por adelantado y qué tipos pagan el arancel de colegios. */
+export const planesCondiciones = pgTable("planes_condiciones", {
+  id: integer("id").primaryKey().default(1),
+  sedesMultisede: integer("sedes_multisede").notNull(),
+  packMeses: integer("pack_meses").notNull(),
+  packMesesPagos: integer("pack_meses_pagos").notNull(),
+  packMesesReferido: integer("pack_meses_referido").notNull(),
+  tiposColegio: text("tipos_colegio").array().notNull(),
+  ...marcasDeTiempo,
+});
+export type PlanesCondiciones = typeof planesCondiciones.$inferSelect;
 export type SolicitudPlan = typeof solicitudesPlan.$inferSelect;
 export type ContactoInstitucion = typeof contactosInstitucion.$inferSelect;

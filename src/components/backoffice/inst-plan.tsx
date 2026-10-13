@@ -5,8 +5,7 @@ import { cambiarPlanInstitucion } from "@/app/actions/backoffice-instituciones";
 import { Boton } from "@/components/ui/button";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
-import { clavesParaElegir, precioDePlan } from "@/lib/cobros";
-import { PLANES, type PlanClave } from "@/lib/planes";
+import { crearPlanes, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,15 +15,19 @@ import { cn } from "@/lib/utils";
 export function InstPlan({
   institucionId,
   nombre,
+  catalogo,
   plan,
   proximoCobro,
 }: {
   institucionId: string;
   nombre: string;
+  /** Los planes vigentes (los lee el servidor de la base). */
+  catalogo: CatalogoDePlanes;
   plan: PlanClave;
   /** Texto ya armado: "Próximo cobro el 10/10/2026 · $ 54.000" o "Sin cobros pendientes". */
   proximoCobro: string;
 }) {
+  const P = crearPlanes(catalogo);
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [editando, setEditando] = useState(false);
@@ -44,7 +47,7 @@ export function InstPlan({
           toast(r.error, "error");
           return;
         }
-        toast(`Plan cambiado a ${PLANES[elegido].label}`);
+        toast(`Plan cambiado a ${P.planDe(elegido).label}`);
         cerrarTodo();
       } catch {
         toast("No pudimos cambiar el plan. Probá de nuevo.", "error");
@@ -57,8 +60,8 @@ export function InstPlan({
         <div>
           <div className="mb-2.5 text-[11px] leading-none font-semibold tracking-[.06em] text-sutil uppercase">Plan actual</div>
           <div className="flex flex-wrap items-baseline gap-2.5">
-            <span className="text-[20px] leading-tight font-semibold text-navy-700">{PLANES[plan].label}</span>
-            <span className="text-[15px] leading-none font-medium text-tinta-2">{precioDePlan(plan)}</span>
+            <span className="text-[20px] leading-tight font-semibold text-navy-700">{P.planDe(plan).label}</span>
+            <span className="text-[15px] leading-none font-medium text-tinta-2">{P.precioDePlan(plan)}</span>
           </div>
           <div className="mt-1.5 text-[13px] leading-normal text-apagado">{proximoCobro}</div>
         </div>
@@ -79,7 +82,7 @@ export function InstPlan({
         <div className="mt-[18px] border-t border-borde pt-[18px]">
           <fieldset className="m-0 mb-3.5 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-2.5 border-0 p-0">
             <legend className="sr-only">Plan de la institución</legend>
-            {clavesParaElegir(plan).map((clave) => (
+            {P.clavesParaElegir(plan).map((clave) => (
               <label
                 key={clave}
                 className={cn(
@@ -96,15 +99,15 @@ export function InstPlan({
                   className="sr-only"
                 />
                 <span className="mb-1.5 flex items-center justify-between gap-2">
-                  <span className="text-sm leading-tight font-semibold">{PLANES[clave].label}</span>
+                  <span className="text-sm leading-tight font-semibold">{P.planDe(clave).label}</span>
                   {elegido === clave && (
                     <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16214F" strokeWidth="2.6" strokeLinecap="round">
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
                   )}
                 </span>
-                <span className="mb-1.5 block text-[18px] leading-none font-semibold">{precioDePlan(clave)}</span>
-                <span className="block text-xs leading-[1.4] text-apagado">{PLANES[clave].resumen}</span>
+                <span className="mb-1.5 block text-[18px] leading-none font-semibold">{P.precioDePlan(clave)}</span>
+                <span className="block text-xs leading-[1.4] text-apagado">{P.planDe(clave).resumen}</span>
               </label>
             ))}
           </fieldset>
@@ -121,8 +124,8 @@ export function InstPlan({
 
       <DialogoModal abierto={confirmando} onCerrar={() => setConfirmando(false)} titulo={`¿Cambiar el plan de ${nombre}?`}>
         <p className="m-0 mb-1.5 text-sm leading-normal text-tinta-2">
-          Pasa del <b className="font-semibold">{PLANES[plan].label}</b> al <b className="font-semibold">{PLANES[elegido].label}</b>{" "}
-          ({precioDePlan(elegido)}).
+          Pasa del <b className="font-semibold">{P.planDe(plan).label}</b> al <b className="font-semibold">{P.planDe(elegido).label}</b>{" "}
+          ({P.precioDePlan(elegido)}).
         </p>
         <p className="m-0 mb-4 text-sm leading-normal text-apagado">
           Le avisamos a las personas de su equipo. Las facturas ya cargadas no se modifican: si hace falta, ajustalas desde

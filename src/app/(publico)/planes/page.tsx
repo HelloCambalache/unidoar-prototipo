@@ -3,6 +3,7 @@ import { Icono } from "@/components/icons";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { BotonLink } from "@/components/ui/button";
 import { CUPOS_FUNDADOR, RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { catalogoDePlanes } from "@/lib/queries/planes";
 import { cuposFundadorRestantes } from "@/lib/queries/publico";
 import { origenSitio } from "@/lib/sitio";
 
@@ -39,7 +40,7 @@ const BENEFICIOS_FUNDADORA = [
 ];
 
 export default async function Planes() {
-  const [cupos, origen] = await Promise.all([cuposFundadorRestantes(), origenSitio()]);
+  const [cupos, origen, catalogo] = await Promise.all([cuposFundadorRestantes(), origenSitio(), catalogoDePlanes()]);
   const hayCupos = cupos > 0;
 
   return (
@@ -103,7 +104,7 @@ export default async function Planes() {
             </BotonLink>
           </article>
 
-          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} url={`${origen}/planes`} />
+          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} url={`${origen}/planes`} catalogo={catalogo} />
 
           {hayCupos && (
             <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-navy-700/10 bg-celeste px-8 py-9 text-navy-700 max-[560px]:px-6">

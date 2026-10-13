@@ -10,8 +10,8 @@ import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { correoDePedidoDePlanRecibido } from "@/lib/correo/eventos";
-import { nombreDePlan } from "@/lib/cobros";
-import { planDe, PLANES, type PlanClave } from "@/lib/planes";
+import { CLAVES_PLAN } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/queries/plan";
 
@@ -22,7 +22,7 @@ import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/
 
 const SOLO_ADMINISTRADORES = "Solo el dueño y los administradores del equipo pueden pedir cambios de plan.";
 
-const planSchema = z.enum(Object.keys(PLANES) as [PlanClave, ...PlanClave[]], { error: "Ese plan no existe." });
+const planSchema = z.enum(CLAVES_PLAN, { error: "Ese plan no existe." });
 
 const revalidarPlan = () => revalidatePath("/institucion/plan");
 
@@ -35,6 +35,7 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
   const { usuario, institucion } = await requerirInstitucion();
   const destino = planSchema.safeParse(plan);
   if (!destino.success) return fallo("Ese plan no existe.");
+  const P = await planes();
 
   const resultado = await transaccion(async (tx) => {
     const [vigente] = await tx
@@ -45,7 +46,7 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
     if (!vigente) return fallo("No encontramos tu institución.");
 
     if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id, tx))) return fallo(SOLO_ADMINISTRADORES);
-    if (vigente.plan === destino.data) return fallo(`Ya estás en el ${planDe(vigente.plan).label}.`);
+    if (vigente.plan === destino.data) return fallo(`Ya estás en el ${P.planDe(vigente.plan).label}.`);
     if (await solicitudPendiente(institucion.id, tx)) {
       return fallo("Ya tenés un pedido de cambio pendiente. Cancelalo si querés pedir otro plan.");
     }
@@ -61,13 +62,13 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
       {
         tipo: "sistema",
         titulo: institucion.nombre,
-        texto: `pidió pasar del ${planDe(vigente.plan).label} al ${PLANES[destino.data].label}.`,
+        texto: `pidió pasar del ${P.planDe(vigente.plan).label} al ${P.planDe(destino.data).label}.`,
         enlace: "/backoffice/cobros",
       },
     );
-    await encolarParaEquipo(tx, "M63", { institucion: institucion.nombre, plan: nombreDePlan(destino.data), ruta: "/backoffice/cobros" });
+    await encolarParaEquipo(tx, "M63", { institucion: institucion.nombre, plan: P.nombreDePlan(destino.data), ruta: "/backoffice/cobros" });
     // Quien lo pidió recibe la constancia de que lo recibimos.
-    await correoDePedidoDePlanRecibido(tx, { usuarioId: usuario.id, institucion: institucion.nombre, plan: destino.data });
+    await correoDePedidoDePlanRecibido(tx, { usuarioId: usuario.id, institucion: institucion.nombre, plan: P.nombreDePlan(destino.data) });
     return ok();
   });
 

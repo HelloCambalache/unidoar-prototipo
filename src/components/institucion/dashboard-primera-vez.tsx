@@ -4,7 +4,6 @@ import { GrillaCercanos } from "@/components/institucion/docentes-sugeridos";
 import { BotonLink } from "@/components/ui/button";
 import type { Institucion } from "@/db/schema";
 import { focoDeFoto } from "@/lib/fotos";
-import { planDe } from "@/lib/planes";
 import { pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import type { DocenteRecomendado } from "@/lib/queries/coincidencias";
 import { cn, haceCuanto } from "@/lib/utils";
@@ -29,15 +28,17 @@ export function DashboardPrimeraVez({
   nombre,
   equipo,
   cercanos,
+  planLabel,
 }: {
   institucion: Institucion;
   nombre: string;
+  /** Nombre del plan de la institución ("Plan Colegios"), del catálogo vigente. */
+  planLabel: string;
   /** Integrantes del equipo además de quien creó la cuenta. */
   equipo: number;
   cercanos: DocenteRecomendado[];
 }) {
   const perfil = pasosDePerfilInstitucion(institucion);
-  const plan = planDe(institucion.plan);
   const perfilListo = perfil.porcentaje === 100;
 
   const pasos: (PasoPendiente & { listo: boolean })[] = [
@@ -92,7 +93,7 @@ export function DashboardPrimeraVez({
         />
         <div className="relative z-[1] min-w-0 flex-1 px-9 py-[34px] max-[900px]:px-[22px] max-[900px]:py-[26px]">
           <span className="mb-3.5 inline-block rounded-full bg-white/[.14] px-2.5 py-[5px] text-xs leading-none font-semibold text-navy-100">
-            Cuenta creada {creada === "ahora" ? "recién" : creada} · {plan.label}
+            Cuenta creada {creada === "ahora" ? "recién" : creada} · {planLabel}
           </span>
           <h1 className="m-0 mb-2.5 max-w-[20ch] font-display text-[30px] leading-[1.15] font-bold tracking-[-0.025em] text-white max-[560px]:text-[26px]">
             {nombre}, publicá tu primera búsqueda

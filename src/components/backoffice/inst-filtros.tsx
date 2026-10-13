@@ -5,13 +5,14 @@ import { useFiltrosUrl } from "@/components/docente/filtros-url";
 import { Input, Select } from "@/components/ui/campos";
 import { TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { ESTADOS_INSTITUCION, ORDENES_INSTITUCIONES, type FiltrosInstituciones } from "@/lib/backoffice-instituciones";
-import { CLAVES_PLAN, nombreDePlan } from "@/lib/cobros";
+import { CLAVES_PLAN, crearPlanes, type CatalogoDePlanes } from "@/lib/planes";
 
 /**
  * Búsqueda y filtros del listado de instituciones. Todo vive en la URL (el listado lo arma el servidor):
  * cualquier cambio vuelve a la página 1. Los campos son no controlados; "Limpiar" los reinicia cambiando su `key`.
  */
-export function InstFiltros({ valores }: { valores: FiltrosInstituciones }) {
+export function InstFiltros({ valores, catalogo }: { valores: FiltrosInstituciones; catalogo: CatalogoDePlanes }) {
+  const { nombreDePlan } = crearPlanes(catalogo);
   const { aplicar, pendiente } = useFiltrosUrl();
   const [reinicio, setReinicio] = useState(0);
   const demora = useRef<ReturnType<typeof setTimeout>>(undefined);

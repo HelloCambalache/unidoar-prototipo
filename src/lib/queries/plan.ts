@@ -5,7 +5,8 @@ import { facturas, institucionMiembros, solicitudesPlan, type Institucion } from
 import { estadoDeFactura, periodoLegible, type EstadoFactura } from "@/lib/facturacion";
 import { fechaDeInput, haceTiempo } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
-import { planDe, PLANES, type PlanClave } from "@/lib/planes";
+import { esClavePlan, type PlanClave } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
 /*
@@ -96,13 +97,12 @@ export type DatosDePlan = {
   solicitud: SolicitudVista | null;
 };
 
-const esPlan = (clave: string): clave is PlanClave => clave in PLANES;
-
 /** Todo lo que muestra /institucion/plan, en una sola lectura. */
 export async function datosDePlan(institucion: Institucion, usuarioId: string): Promise<DatosDePlan> {
   const db = getDb();
   const ahora = new Date();
-  const [rol, filas, pendiente] = await Promise.all([
+  const [P, rol, filas, pendiente] = await Promise.all([
+    planes(),
     rolEnInstitucion(institucion, usuarioId),
     db
       .select()
@@ -116,7 +116,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
   const lista = filas.map(
     (f): FacturaVista => ({
       id: f.id,
-      planLabel: planDe(f.plan).label,
+      planLabel: P.planDe(f.plan).label,
       periodo: periodoLegible(f.periodo),
       fechaCobro: fechaDeInput(f.fechaCobro),
       fechaCobroLarga: fechaLarga(f.fechaCobro),
@@ -131,13 +131,13 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
     .find((f) => estadoDeFactura(f.estado) === "pendiente");
 
   return {
-    plan: esPlan(institucion.plan) ? institucion.plan : "fundador",
+    plan: esClavePlan(institucion.plan) ? institucion.plan : "fundador",
     puedeCambiar: puedeGestionarPlan(rol),
     facturas: lista,
     proxima: proxima ? (lista.find((f) => f.id === proxima.id) ?? null) : null,
     vencidas: lista.filter((f) => f.estado === "vencida").length,
     solicitud:
-      pendiente && esPlan(pendiente.planSolicitado)
+      pendiente && esClavePlan(pendiente.planSolicitado)
         ? { id: pendiente.id, planSolicitado: pendiente.planSolicitado, cuando: haceTiempo(pendiente.creadoEn, ahora) }
         : null,
   };

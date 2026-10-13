@@ -11,10 +11,11 @@ import { Insignia } from "@/components/ui/insignia";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
-import { etiquetaPeriodo, fechaDeColumna, precioDePlan, type EstadoCobro } from "@/lib/cobros";
+import { etiquetaPeriodo, fechaDeColumna, type EstadoCobro } from "@/lib/cobros";
 import { haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { pedidosDePlanPendientes, tablaDeCobros } from "@/lib/queries/backoffice-cobros";
+import { planes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Planes y cobros · Backoffice" };
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function CobrosBackoffice({
   const pedido = Array.isArray(sp.estado) ? sp.estado[0] : sp.estado;
   const filtro = FILTROS.find((f) => f.clave === pedido)?.clave ?? "todas";
 
-  const [{ resumen, filas }, pedidos] = await Promise.all([tablaDeCobros(), pedidosDePlanPendientes()]);
+  const [{ resumen, filas }, pedidos, P] = await Promise.all([tablaDeCobros(), pedidosDePlanPendientes(), planes()]);
   const ahora = new Date();
   const cantidades: Record<EstadoCobro | "todas", number> = {
     todas: filas.length,
@@ -83,6 +84,7 @@ export default async function CobrosBackoffice({
           Pedidos de cambio de plan{pedidos.length > 0 && ` · ${pedidos.length}`}
         </EtiquetaSeccion>
         <CobroPedidos
+          catalogo={P.catalogo}
           pedidos={pedidos.map((p) => ({
             id: p.id,
             institucionId: p.institucionId,
@@ -140,7 +142,7 @@ export default async function CobrosBackoffice({
                       </Insignia>
                     )}
                   </td>
-                  <td className="whitespace-nowrap">{precioDePlan(f.plan)}</td>
+                  <td className="whitespace-nowrap">{P.precioDePlan(f.plan)}</td>
                   <td>
                     {f.proximo ? (
                       <>

@@ -18,17 +18,16 @@ import {
   fechaCobroDelPeriodo,
   fechaDeColumna,
   hoyAR,
-  montoDePlan,
   pagoEfectivoSchema,
   pagoSchema,
-  precioDePlan,
   rechazoSchema,
   situacionDelMes,
   type FacturaNueva,
   type PagoEfectivo,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
-import { pesos, planDe } from "@/lib/planes";
+import { pesos } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import {
   aplicarPlanAlPeriodoActual,
@@ -142,6 +141,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
   const datos = parsear(pagoEfectivoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fecha, nota, avisar } = datos.data;
+  const P = await planes();
 
   const hoy = hoyAR();
   const errorFecha = errorDeFechaDePago(fecha, hoy);
@@ -177,7 +177,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
         monto = existente.monto;
         await tx.update(facturas).set({ estado: "pagada", pagadaEn, medio: MEDIO }).where(eq(facturas.id, existente.id));
       } else {
-        monto = montoDePlan(plan);
+        monto = P.montoDePlan(plan);
         const [nueva] = await tx
           .insert(facturas)
           .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
@@ -321,7 +321,7 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   const datos = parsear(facturaNuevaSchema, entrada);
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fechaCobro, medio } = datos.data;
-  const monto = montoDePlan(plan);
+  const monto = (await planes()).montoDePlan(plan);
 
   try {
     const resultado = await transaccion(async (tx) => {
@@ -455,6 +455,7 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
   const datos = parsear(aprobacionSchema, { nota });
   if (!datos.ok) return fallo(datos.campos?.nota ?? datos.error, datos.campos);
 
+  const P = await planes();
   let institucionId: string | undefined;
   const resultado = await transaccion(async (tx) => {
     const [pedido] = await tx.select().from(solicitudesPlan).where(eq(solicitudesPlan.id, pedidoId)).limit(1).for("update");
@@ -479,7 +480,7 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
     const plan = pedido.planSolicitado;
 
     await tx.update(instituciones).set({ plan }).where(eq(instituciones.id, inst.id));
-    const factura = await aplicarPlanAlPeriodoActual(tx, inst, plan);
+    const factura = await aplicarPlanAlPeriodoActual(tx, inst, plan, P);
     await tx
       .update(solicitudesPlan)
       .set({ estado: "aprobada", atendidaEn: new Date(), nota: datos.data.nota ?? pedido.nota })
@@ -505,13 +506,13 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `aprobó tu cambio al ${planDe(plan).label} (${precioDePlan(plan)}).${textoDeFactura(factura)}`,
+      texto: `aprobó tu cambio al ${P.planDe(plan).label} (${P.precioDePlan(plan)}).${textoDeFactura(factura)}`,
       enlace: "/institucion/plan",
     });
     await correoDeResolucionDePlan(tx, {
       usuarioIds: await destinatariosDeFacturacion(tx, inst.id),
       institucion: inst.nombre,
-      plan,
+      plan: P.nombreDePlan(plan),
       aprobado: true,
       nota: datos.data.nota ?? null,
       detalle: textoDeFactura(factura).trim() || null,
@@ -530,6 +531,7 @@ export async function rechazarPedidoDePlan(pedidoId: string, nota: string): Prom
   const datos = parsear(rechazoSchema, { nota });
   if (!datos.ok) return fallo(datos.campos?.nota ?? datos.error, datos.campos);
 
+  const P = await planes();
   let institucionId: string | undefined;
   const resultado = await transaccion(async (tx) => {
     const [pedido] = await tx.select().from(solicitudesPlan).where(eq(solicitudesPlan.id, pedidoId)).limit(1).for("update");
@@ -557,7 +559,7 @@ export async function rechazarPedidoDePlan(pedidoId: string, nota: string): Prom
       },
       tx,
     );
-    const solicitado = esClavePlan(pedido.planSolicitado) ? planDe(pedido.planSolicitado).label : "otro plan";
+    const solicitado = esClavePlan(pedido.planSolicitado) ? P.planDe(pedido.planSolicitado).label : "otro plan";
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, pedido.institucionId), {
       tipo: "sistema",
       titulo: "UNIDOAR",
@@ -569,7 +571,7 @@ export async function rechazarPedidoDePlan(pedidoId: string, nota: string): Prom
       await correoDeResolucionDePlan(tx, {
         usuarioIds: await destinatariosDeFacturacion(tx, pedido.institucionId),
         institucion: dueña?.nombre ?? "tu institución",
-        plan: pedido.planSolicitado,
+        plan: P.nombreDePlan(pedido.planSolicitado),
         aprobado: false,
         nota: datos.data.nota,
         detalle: null,

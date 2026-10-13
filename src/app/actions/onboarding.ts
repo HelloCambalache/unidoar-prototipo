@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
-import { planPorTipo } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { eq, like } from "drizzle-orm";
@@ -138,6 +138,7 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   });
   const ubicacion = ubicacionDeInstitucion(delCatalogo, deLaDireccion);
   const existente = await institucionPropia(usuario.id);
+  const P = await planes();
   const datos = {
     nombre: d.nombre,
     tipo: d.tipo,
@@ -170,8 +171,8 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       transaccion(async (tx) => {
         const [creada] = await tx
           .insert(instituciones)
-          // El plan sale del tipo de institución, no de lo que elija: ver planPorTipo en src/lib/planes.ts.
-          .values({ ...datos, slug, plan: planPorTipo(d.tipo), propietarioId: usuario.id, esDemo: false })
+          // El plan sale del tipo de institución, no de lo que elija: ver planPorTipo en src/lib/planes.ts (el catálogo editable de /backoffice/planes).
+          .values({ ...datos, slug, plan: P.planPorTipo(d.tipo), propietarioId: usuario.id, esDemo: false })
           .returning({ id: instituciones.id });
         await guardarSedePrincipal(tx, creada!.id, ubicacionDeLaSede);
         await tx

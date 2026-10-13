@@ -9,9 +9,8 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
 import { esUuid } from "@/lib/busquedas";
-import { precioDePlan } from "@/lib/cobros";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
-import { planDe } from "@/lib/planes";
+import { planes } from "@/lib/queries/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
@@ -216,6 +215,7 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
   const datos = parsear(planInstitucionSchema, { plan });
   if (!datos.ok) return fallo(datos.campos?.plan ?? datos.error, datos.campos);
   const nuevo = datos.data.plan;
+  const P = await planes();
 
   const resultado = await transaccion(async (tx) => {
     const [inst] = await institucionBloqueada(tx, institucionId);
@@ -236,7 +236,7 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `cambió el plan de ${inst.nombre} a ${planDe(nuevo).label} (${precioDePlan(nuevo)}).`,
+      texto: `cambió el plan de ${inst.nombre} a ${P.planDe(nuevo).label} (${P.precioDePlan(nuevo)}).`,
       enlace: "/institucion/plan",
     });
     return ok();

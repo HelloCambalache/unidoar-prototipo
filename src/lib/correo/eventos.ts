@@ -2,7 +2,7 @@ import "server-only";
 import { claveDePostulantes, type Recordatorio } from "./claves";
 import { encolarParaUsuarios } from "./cola";
 import type { EtapaPostulacion } from "@/db/schema";
-import { etiquetaPeriodo, fechaBreve, nombreDePlan } from "@/lib/cobros";
+import { etiquetaPeriodo, fechaBreve } from "@/lib/cobros";
 import { pesos } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -139,19 +139,19 @@ export async function correoDePagoAnulado(ejecutor: Ejecutor, d: Factura) {
   await encolarParaUsuarios(ejecutor, d.usuarioIds, "M54", { institucion: d.institucion, periodo: etiquetaPeriodo(d.periodo), monto: pesos(d.monto) });
 }
 
-/** M55: recibimos el pedido de cambio de plan (para quien lo pidió). */
+/** M55: recibimos el pedido de cambio de plan (para quien lo pidió). `plan` ya viene con el nombre corto (`nombreDePlan`). */
 export async function correoDePedidoDePlanRecibido(ejecutor: Ejecutor, d: { usuarioId: string; institucion: string; plan: string }) {
-  await encolarParaUsuarios(ejecutor, [d.usuarioId], "M55", { institucion: d.institucion, plan: nombreDePlan(d.plan) });
+  await encolarParaUsuarios(ejecutor, [d.usuarioId], "M55", { institucion: d.institucion, plan: d.plan });
 }
 
-/** M56: el equipo aprobó o rechazó el pedido de cambio de plan. */
+/** M56: el equipo aprobó o rechazó el pedido de cambio de plan. `plan` ya viene con el nombre corto (`nombreDePlan`). */
 export async function correoDeResolucionDePlan(
   ejecutor: Ejecutor,
   d: { usuarioIds: string[]; institucion: string; plan: string; aprobado: boolean; nota: string | null; detalle: string | null },
 ) {
   await encolarParaUsuarios(ejecutor, d.usuarioIds, "M56", {
     institucion: d.institucion,
-    plan: nombreDePlan(d.plan),
+    plan: d.plan,
     aprobado: d.aprobado,
     nota: d.nota,
     detalle: d.detalle,
