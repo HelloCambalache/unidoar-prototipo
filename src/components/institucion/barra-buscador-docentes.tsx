@@ -41,7 +41,7 @@ export function BarraBuscadorDocentes({
   rapidas: boolean;
   filtros: FiltrosDocentes;
   /** Lo que se entendió de la frase; null si no hay frase. */
-  leido: { etiquetas: string[]; reconocido: boolean } | null;
+  leido: { etiquetas: string[]; reconocido: boolean; sinEntender: string[] } | null;
   sugerencias: string[];
   puedeOrdenarPorCercania: boolean;
 }) {
@@ -97,6 +97,12 @@ export function BarraBuscadorDocentes({
             <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
               Limpiar
             </Link>
+            {leido.reconocido && leido.sinEntender.length > 0 && (
+              <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
+                No pudimos aplicar como filtro: {leido.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es importante, usá los filtros de al lado o
+                contáselo a quien contactes.
+              </p>
+            )}
           </div>
         )}
       </section>

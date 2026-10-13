@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { CategoriaDocente } from "@/db/schema";
-import { CATEGORIAS, NIVELES, TURNOS } from "@/lib/catalogo";
+import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 
 /* Filtros del buscador de trabajo del docente. Viven en la URL (searchParams) para poder compartirlos. */
 
@@ -13,6 +13,7 @@ export const filtrosOportunidadesSchema = z.object({
   categoria: z.enum(CATEGORIAS).optional().catch(undefined),
   nivel: z.enum(NIVELES).optional().catch(undefined),
   turno: z.enum(TURNOS).optional().catch(undefined),
+  tipo: z.enum(TIPOS_BUSQUEDA).optional().catch(undefined),
   radio: z.coerce.number().int().min(RADIO_MIN).max(RADIO_MAX).optional().catch(undefined),
   rapidas: z.literal("1").optional().catch(undefined),
   favoritos: z.literal("1").optional().catch(undefined),

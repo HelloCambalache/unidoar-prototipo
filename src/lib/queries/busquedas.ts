@@ -19,6 +19,8 @@ export type BusquedaItem = {
   puesto: string;
   categoria: CategoriaDocente;
   disciplina: string;
+  nivel: string | null;
+  turno: string | null;
   rapida: boolean;
   estado: "activa" | "pausada" | "cerrada";
   zona: string | null;
@@ -106,6 +108,8 @@ export async function listarBusquedas(
     puesto: b.puesto,
     categoria: b.categoria,
     disciplina: b.disciplina,
+    nivel: b.nivel,
+    turno: b.turno,
     rapida: b.rapida,
     estado: b.estado,
     zona: b.zona,

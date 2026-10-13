@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icono } from "@/components/icons";
+import { Boton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/campos";
-import { CATEGORIAS, NIVELES, TURNOS } from "@/lib/catalogo";
+import { Insignia } from "@/components/ui/insignia";
+import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import {
   ETIQUETA_FILTRO_CATEGORIA,
   hrefOportunidades,
@@ -32,6 +34,7 @@ export function ControlesBuscador({
   conUbicacion,
   modo,
   publico = false,
+  lectura = null,
   children,
 }: {
   /** Ruta de la pantalla: /docente/oportunidades, /docente/busquedas-rapidas o /buscar-trabajo. */
@@ -45,6 +48,8 @@ export function ControlesBuscador({
   modo: "todas" | "rapidas";
   /** Sitio público (sin sesión): sin rango de distancia ni favoritos. */
   publico?: boolean;
+  /** Lo que se entendió de la frase de "Buscá con IA" (null si no hay frase). Los filtros ya vienen aplicados en `filtros`. */
+  lectura?: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -147,6 +152,7 @@ export function ControlesBuscador({
       </div>
 
       <div className="min-w-0 flex-1 max-[760px]:w-full">
+        <FraseDeBusqueda base={base} vista={filtros.vista} lectura={lectura} limpiarHref={hrefOportunidades(base, {}, { vista: filtros.vista })} />
         <div className="mb-5 flex flex-wrap gap-2.5">
           <CampoTexto
             inicial={filtros.q ?? ""}
@@ -174,6 +180,20 @@ export function ControlesBuscador({
           >
             <option value="">Todos los turnos</option>
             {TURNOS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </Select>
+          <Select
+            aria-label="Tipo de búsqueda"
+            value={filtros.tipo ?? ""}
+            onChange={(e) => aplicar({ tipo: e.target.value || null })}
+            className="w-auto max-w-[150px] min-w-[130px]"
+          >
+            <option value="">Todos los tipos</option>
+            {/* "Suplencia rápida" ya tiene su propio botón: acá no se repite. */}
+            {TIPOS_BUSQUEDA.filter((t) => t !== "Suplencia rápida").map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -392,5 +412,82 @@ function RangoDeBusqueda({
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * "Buscá con IA": una frase libre ("suplencia de inglés, de mañana, primaria") que el servidor convierte en los filtros de al lado.
+ * Una frase nueva reemplaza los filtros; después se pueden ajustar a mano. No hay ningún modelo detrás: ver `leerFraseDeTrabajo`.
+ */
+function FraseDeBusqueda({
+  base,
+  vista,
+  lectura,
+  limpiarHref,
+}: {
+  base: string;
+  vista: FiltrosOportunidades["vista"];
+  lectura: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
+  limpiarHref: string;
+}) {
+  const router = useRouter();
+  const [pendiente, empezar] = useTransition();
+  return (
+    <section aria-label="Buscá con IA" className="mb-4 rounded-[10px] border border-borde bg-white px-[18px] py-4">
+      <div className="mb-2.5 flex items-center gap-2 text-navy-700">
+        <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="flex-none">
+          <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
+          <path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" />
+        </svg>
+        <span className="text-sm leading-none font-semibold">Buscá con IA</span>
+      </div>
+      <form
+        key={lectura?.frase ?? ""}
+        className="flex flex-wrap gap-2.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const frase = String(new FormData(e.currentTarget).get("frase") ?? "").trim();
+          const params = new URLSearchParams();
+          if (frase) params.set("frase", frase);
+          if (vista) params.set("vista", vista);
+          const qs = params.toString();
+          empezar(() => router.push(qs ? `${base}?${qs}` : base));
+        }}
+      >
+        <Input
+          name="frase"
+          aria-label="Contanos qué buscás"
+          defaultValue={lectura?.frase ?? ""}
+          maxLength={200}
+          placeholder="Contanos qué buscás: «suplencia de inglés en primaria, de mañana»"
+          className="min-w-[240px] flex-1"
+        />
+        <Boton type="submit" disabled={pendiente} className="flex-none">
+          Buscar
+        </Boton>
+      </form>
+      {lectura && (
+        <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-borde pt-3.5">
+          <span className="text-[12.5px] leading-none font-medium text-apagado">Entendimos:</span>
+          {lectura.reconocido ? (
+            lectura.leido.map((l) => (
+              <Insignia key={l} tono="azul">
+                {l}
+              </Insignia>
+            ))
+          ) : (
+            <Insignia tono="azul">No reconocimos filtros: te mostramos todas las búsquedas</Insignia>
+          )}
+          <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
+            Limpiar
+          </Link>
+          {lectura.reconocido && lectura.sinEntender.length > 0 && (
+            <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
+              No pudimos aplicar como filtro: {lectura.sinEntender.map((p) => `«${p}»`).join(", ")}.
+            </p>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

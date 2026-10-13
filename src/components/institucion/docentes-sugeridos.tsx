@@ -45,6 +45,16 @@ export function RecomendadosLateral({
                   <div className="mt-0.5 truncate text-xs leading-snug text-apagado">{d.detalle}</div>
                 </div>
               </div>
+              {d.motivos.length > 0 && (
+                <ul aria-label="Por qué te lo recomendamos" className="m-0 mb-2 flex list-none flex-col gap-0.5 p-0">
+                  {d.motivos.slice(0, 2).map((m) => (
+                    <li key={m} className="flex items-start gap-1.5 text-[12px] leading-snug text-tinta-2">
+                      <span aria-hidden className="mt-px text-verde">✓</span>
+                      {m}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <BotonLink href={hrefPerfil(d.id, busquedaId)} variante="secundario" tamano="sm" bloque>
                 Invitar a postularse
               </BotonLink>

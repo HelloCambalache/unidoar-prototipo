@@ -110,6 +110,8 @@ export async function listarOportunidades(
     filtros.categoria ? eq(busquedas.categoria, filtros.categoria) : undefined,
     filtros.nivel ? eq(busquedas.nivel, filtros.nivel) : undefined,
     filtros.turno ? eq(busquedas.turno, filtros.turno) : undefined,
+    // "Suplencia" trae también las suplencias rápidas: quien busca suplencias las quiere todas.
+    filtros.tipo ? (filtros.tipo === "Suplencia" ? inArray(busquedas.tipo, ["Suplencia", "Suplencia rápida"]) : eq(busquedas.tipo, filtros.tipo)) : undefined,
     filtros.rapidas ? eq(busquedas.rapida, true) : undefined,
     filtros.verificadas ? eq(instituciones.verificada, true) : undefined,
     soloFavoritas ? inArray(busquedas.id, [...idsFavoritas]) : undefined,

@@ -125,7 +125,7 @@ export async function PantallaBuscadorDocentes({
           rutaOtraPantalla={rutaOtra}
           rapidas={rapidas}
           filtros={filtros}
-          leido={interpretacion ? { etiquetas: interpretacion.leido, reconocido: interpretacion.reconocido } : null}
+          leido={interpretacion ? { etiquetas: interpretacion.leido, reconocido: interpretacion.reconocido, sinEntender: interpretacion.sinEntender } : null}
           sugerencias={sugerencias}
           puedeOrdenarPorCercania={puntos.length > 0}
         />

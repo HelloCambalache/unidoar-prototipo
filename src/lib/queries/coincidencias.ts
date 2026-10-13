@@ -10,6 +10,7 @@ import {
   type FiltrosCoincidencia,
   type ResumenCoincidencias,
 } from "@/lib/busquedas";
+import { ordenarPorPuntaje, puntuarCandidato, type BusquedaAbierta } from "@/lib/recomendaciones";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { sedeMasCercana } from "@/lib/sedes";
 import { iniciales } from "@/lib/utils";
@@ -171,6 +172,8 @@ export type DocenteRecomendado = {
   /** "Ed. Física · Vicente López" / "Natación · a 2 km" */
   detalle: string;
   etiquetas: string[];
+  /** Por qué se lo recomendamos ("Da Inglés, como tu búsqueda abierta", "A 3 km de tu sede"…), del más importante al menos. */
+  motivos: string[];
 };
 
 /**
@@ -180,7 +183,7 @@ export type DocenteRecomendado = {
  */
 export async function docentesRecomendados(
   institucion: Institucion,
-  { categorias = [], limite }: { categorias?: CategoriaDocente[]; limite: number },
+  { categorias = [], busquedas: abiertas = [], limite }: { categorias?: CategoriaDocente[]; busquedas?: BusquedaAbierta[]; limite: number },
 ): Promise<DocenteRecomendado[]> {
   const sedes = await sedesDeInstitucion(institucion.id);
   // El texto de zona junta el de todas las sedes (cada nombre de zona del catálogo que aparezca suma); sin sedes, el de la ficha.
@@ -203,18 +206,31 @@ export async function docentesRecomendados(
     .from(docentes)
     .where(and(...c))
     .orderBy(sql`${docentes.aniosExperiencia} desc nulls last`, desc(docentes.creadoEn))
-    .limit(limite * 3);
+    .limit(Math.max(limite * 3, 40));
 
   // Sin sedes (todavía sin crear), la ubicación de la ficha hace de única sede.
   const lugares = sedes.length > 0 ? sedes : [{ lat: institucion.lat, lng: institucion.lng }];
-  return candidatos
+  const puntuados = candidatos
     .map((d) => {
       const km = d.lat != null && d.lng != null ? (sedeMasCercana({ lat: d.lat, lng: d.lng }, lugares)?.km ?? null) : null;
       const nombre = `${d.nombre} ${d.apellido}`.trim();
       const materia = d.asignaturas[0] ?? null;
       const lugar = kmLegible(km) ?? d.zonas[0] ?? null;
+      const { puntaje, motivos } = puntuarCandidato(
+        {
+          categoria: d.categoria,
+          asignaturas: d.asignaturas,
+          niveles: d.niveles,
+          disponibilidad: d.disponibilidad,
+          aniosExperiencia: d.aniosExperiencia,
+          tituloVerificado: d.tituloVerificado,
+          km,
+        },
+        abiertas,
+      );
       return {
         km,
+        puntaje,
         fila: {
           id: d.id,
           nombre,
@@ -223,10 +239,12 @@ export async function docentesRecomendados(
           categoria: d.categoria,
           detalle: [materia, lugar].filter(Boolean).join(" · "),
           etiquetas: [d.niveles[0], d.disponibilidad[0]].filter((e): e is string => !!e),
+          motivos,
         } satisfies DocenteRecomendado,
       };
-    })
-    .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity))
+    });
+  // Los que más coinciden con las búsquedas abiertas primero; sin coincidencias, los más cercanos y con más experiencia.
+  return ordenarPorPuntaje(puntuados)
     .slice(0, limite)
     .map((x) => x.fila);
 }

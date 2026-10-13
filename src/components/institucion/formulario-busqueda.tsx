@@ -9,6 +9,7 @@ import { PanelCoincidencias, type Interruptores } from "@/components/institucion
 import type { CategoriaDocente } from "@/db/schema";
 import { OPCIONES_VENCIMIENTO } from "@/lib/busquedas";
 import { CATEGORIA_INFO, CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
+import { sugerirDescripcion, sugerirPuesto, sugerirRequisitos, type DatosParaRedactar } from "@/lib/redaccion-busqueda";
 
 export type ValoresFormulario = {
   puesto: string;
@@ -90,6 +91,18 @@ export function FormularioBusqueda({
     });
 
   const esRapida = v.tipo === "Suplencia rápida";
+  // Lo que ya completó la institución: de ahí salen las sugerencias de título, descripción y requisitos.
+  const paraRedactar: DatosParaRedactar = {
+    categoria: v.categoria,
+    disciplina: disciplinaFinal,
+    nivel: v.nivel,
+    tipo: v.tipo,
+    cargaHoraria: v.cargaHoraria,
+    turno: v.turno,
+    fechaInicio: v.fechaInicio,
+    zona: v.zona,
+  };
+  const sinDisciplina = !disciplinaFinal;
   const cancelar = modo === "editar" && busquedaId ? `/institucion/postulantes?busqueda=${busquedaId}` : "/institucion/busquedas";
 
   return (
@@ -109,6 +122,11 @@ export function FormularioBusqueda({
             placeholder="Ej. Profe de Educación Física — Primario"
           />
         </Campo>
+        {!v.puesto.trim() && (
+          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("puesto", sugerirPuesto(paraRedactar))}>
+            Sugerir título
+          </BotonSugerir>
+        )}
 
         <Campo etiqueta="Categoría" requerido error={errores.categoria}>
           <Select
@@ -267,17 +285,29 @@ export function FormularioBusqueda({
             placeholder="Contá en qué consiste el cargo: grupos, horarios, responsabilidades…"
           />
         </Campo>
+        {!v.descripcion.trim() && (
+          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("descripcion", sugerirDescripcion(paraRedactar))}>
+            Sugerir descripción con lo que ya completaste
+          </BotonSugerir>
+        )}
 
         <div className="grid grid-cols-2 gap-4 max-[640px]:grid-cols-1">
-          <Campo etiqueta="Requisitos" ayuda="Uno por línea." error={errores.requisitos}>
-            <Textarea
-              name="requisitos"
-              value={v.requisitos}
-              onChange={(e) => set("requisitos", e.target.value)}
-              maxLength={2000}
-              placeholder={"Título profesional vigente\nExperiencia en Primario"}
-            />
-          </Campo>
+          <div className="flex flex-col gap-2">
+            <Campo etiqueta="Requisitos" ayuda="Uno por línea." error={errores.requisitos}>
+              <Textarea
+                name="requisitos"
+                value={v.requisitos}
+                onChange={(e) => set("requisitos", e.target.value)}
+                maxLength={2000}
+                placeholder={"Título profesional vigente\nExperiencia en Primario"}
+              />
+            </Campo>
+            {!v.requisitos.trim() && (
+              <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("requisitos", sugerirRequisitos(paraRedactar))}>
+                Sugerir requisitos habituales
+              </BotonSugerir>
+            )}
+          </div>
           <Campo etiqueta="Beneficios" ayuda="Uno por línea." error={errores.beneficios}>
             <Textarea
               name="beneficios"
@@ -317,5 +347,28 @@ export function FormularioBusqueda({
         }}
       />
     </form>
+  );
+}
+
+/**
+ * "Sugerir …": completa un campo vacío con una plantilla armada con lo que ya se cargó (no hay ningún modelo detrás y no se
+ * inventa nada). Solo aparece mientras el campo está vacío; se edita como cualquier texto.
+ */
+function BotonSugerir({ deshabilitado, onClick, children }: { deshabilitado: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <div className="-mt-2 flex flex-col gap-1">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={deshabilitado}
+        className="flex w-max cursor-pointer items-center gap-1.5 rounded text-[12.5px] leading-none font-semibold text-navy-700 hover:underline focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
+      >
+        <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
+        </svg>
+        {children}
+      </button>
+      {deshabilitado && <span className="text-[11.5px] leading-none text-sutil">Elegí primero la disciplina.</span>}
+    </div>
   );
 }

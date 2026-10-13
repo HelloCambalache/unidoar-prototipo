@@ -7,13 +7,9 @@ import { ControlesBuscador } from "@/components/oportunidades/controles-buscador
 import { TarjetaOferta } from "@/components/oportunidades/tarjeta-oferta";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
-import {
-  hrefOportunidades,
-  leerFiltrosOportunidades,
-  RADIO_MAX,
-  type FiltrosOportunidades,
-} from "@/lib/oportunidades";
+import { hrefOportunidades, RADIO_MAX, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { listarOportunidades } from "@/lib/queries/oportunidades";
+import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
 import { cn } from "@/lib/utils";
 
 const BASES = {
@@ -35,7 +31,8 @@ export async function BuscadorOportunidades({
   const { usuario, docente } = await requerirDocente();
   const base = BASES[modo];
   // `filtros` es lo que está en la URL; la pantalla de rápidas agrega el suyo solo para consultar.
-  const filtros: FiltrosOportunidades = { ...leerFiltrosOportunidades(params), ...(modo === "rapidas" && { rapidas: undefined }) };
+  const { filtros: delUsuario, lectura } = await filtrosConFrase(params);
+  const filtros: FiltrosOportunidades = { ...delUsuario, ...(modo === "rapidas" && { rapidas: undefined }) };
   const consulta: FiltrosOportunidades = modo === "rapidas" ? { ...filtros, rapidas: "1" } : filtros;
 
   const { ofertas, radio, conUbicacion } = await listarOportunidades(docente, usuario.id, consulta);
@@ -87,6 +84,7 @@ export async function BuscadorOportunidades({
         radioPorDefecto={docente.radioKm}
         conUbicacion={conUbicacion}
         modo={modo}
+        lectura={lectura}
       >
         <nav
           aria-label="Vista"

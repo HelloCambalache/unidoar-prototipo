@@ -7,9 +7,10 @@ import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { Paginacion } from "@/components/publico/paginacion";
 import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
-import { leerFiltrosOportunidades, RADIO_MAX } from "@/lib/oportunidades";
+import { RADIO_MAX } from "@/lib/oportunidades";
 import { plural } from "@/lib/publico";
 import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunidades";
+import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
 
 export const metadata: Metadata = {
   title: "Búsquedas abiertas",
@@ -36,7 +37,8 @@ function destino(sesion: SesionPublica, o: OfertaListada) {
 export default async function BuscarTrabajo({ searchParams }: { searchParams: Params }) {
   const sp = await searchParams;
   // Sin cuenta no hay ubicación ni favoritas ni mapa: esos parámetros de la URL se ignoran.
-  const filtros = { ...leerFiltrosOportunidades(sp), radio: undefined, favoritos: undefined, vista: undefined };
+  const { filtros: delUsuario, lectura } = await filtrosConFrase(sp, { publico: true });
+  const filtros = { ...delUsuario, radio: undefined, favoritos: undefined, vista: undefined };
   const pedida = Math.max(1, Number.parseInt(primero(sp.pagina) ?? "1", 10) || 1);
 
   const [{ ofertas }, sesion] = await Promise.all([listarOportunidades(null, null, filtros), sesionPublica()]);
@@ -72,6 +74,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
           conUbicacion={false}
           modo="todas"
           publico
+          lectura={lectura}
         >
           <p aria-live="polite" className="mb-4 text-[13px] text-apagado">
             {plural(total, "búsqueda abierta", "búsquedas abiertas")}
