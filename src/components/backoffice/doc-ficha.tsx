@@ -53,8 +53,8 @@ export function DocCabecera({ ficha }: { ficha: FichaDocenteBo }) {
       {ficha.bajaSolicitadaEn && (
         <div role="status" className="mt-4 rounded-lg border border-[#EBD9A8] bg-[#FBF2D8] px-3.5 py-2.5 text-[13px] leading-normal text-[#7A5A0B]">
           <b className="font-semibold">Pidió la baja de la cuenta</b> el {fechaCorta(ficha.bajaSolicitadaEn)}. Hay que escribirle a{" "}
-          {ficha.emailCuenta ?? d.email ?? "su email"} para confirmarla y dar de baja el perfil. Hasta entonces la cuenta sigue
-          funcionando igual.
+          {ficha.emailCuenta ?? d.email ?? "su email"} para confirmar que fue la persona y, después, usar «Procesar baja» (abajo, en Acciones),
+          que borra sus datos. Hasta entonces la cuenta sigue funcionando igual.
         </div>
       )}
       {conNota && (

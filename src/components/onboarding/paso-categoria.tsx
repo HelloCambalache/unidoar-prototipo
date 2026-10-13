@@ -1,11 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { guardarCategoriaDocente } from "@/app/actions/onboarding";
 import type { CategoriaDocente } from "@/db/schema";
 import { Boton } from "@/components/ui/button";
 import { AlertaError, SeccionPaso } from "@/components/onboarding/elementos";
-import { Campo, Input } from "@/components/ui/campos";
+import { Campo, Casilla, Input } from "@/components/ui/campos";
 import { SelectorAsignaturas } from "@/components/onboarding/selector-asignaturas";
 import { CATEGORIAS } from "@/lib/catalogo";
 import {
@@ -24,8 +25,11 @@ import { cn } from "@/lib/utils";
 export function PasoCategoria({
   catalogo,
   inicial,
+  pedirTerminos,
 }: {
   catalogo: CatalogoAsignaturas;
+  /** La cuenta todavía no aceptó los términos (entró con Google desde "Ingresar"): se piden acá, antes de crear el perfil. */
+  pedirTerminos: boolean;
   inicial: { categoria: CategoriaDocente; asignaturas: string[]; estudio: SituacionEstudio; porcentaje: string };
 }) {
   const [estado, accion, pendiente] = useActionState(guardarCategoriaDocente, null);
@@ -151,6 +155,23 @@ export function PasoCategoria({
           </>
         )}
       </div>
+
+      {pedirTerminos && (
+        <div className="mb-4">
+          <Casilla name="aceptaTerminos" required>
+            Acepto los{" "}
+            <Link href="/terminos" target="_blank" className="font-semibold text-navy-700">
+              términos y condiciones
+            </Link>{" "}
+            de UNIDOAR.
+          </Casilla>
+          {campos.aceptaTerminos && (
+            <p role="alert" className="mt-1 text-xs text-[#b91c1c]">
+              {campos.aceptaTerminos}
+            </p>
+          )}
+        </div>
+      )}
 
       <AlertaError className="mb-3.5">{estado && !estado.ok && Object.keys(campos).length === 0 ? estado.error : undefined}</AlertaError>
       <Boton type="submit" variante="cta" bloque disabled={pendiente} className="min-h-12 text-base">

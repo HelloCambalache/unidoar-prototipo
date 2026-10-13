@@ -24,6 +24,7 @@ export default async function PasoDocenteCategoria() {
     <MarcoOnboarding rol="docente" paso={PASOS_DOCENTE.categoria} formId={ID_FORMULARIO_ONBOARDING}>
       <PasoCategoria
         catalogo={catalogo}
+        pedirTerminos={!usuario.terminosAceptadosEn}
         inicial={{
           categoria: docente?.categoria ?? "educador",
           asignaturas: docente?.asignaturas ?? [],

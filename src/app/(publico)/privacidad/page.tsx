@@ -68,7 +68,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     id: "conservacion",
     titulo: "6. Cuánto tiempo los conservamos",
     parrafos: [
-      "Mientras tu cuenta esté activa. Si pedís la baja, el equipo de UNIDOAR se contacta con vos para confirmarla y dar de baja tu perfil. Podemos conservar lo que la ley nos obligue a guardar, por ejemplo los registros de facturación.",
+      "Mientras tu cuenta esté activa. Si pedís la baja, el equipo de UNIDOAR se contacta con vos para confirmarla; al procesarla se borran tu perfil, tus documentos, tus postulaciones y tu usuario de acceso. Podemos conservar lo que la ley nos obligue a guardar, por ejemplo los registros de facturación.",
       "De los mails que te enviamos guardamos un registro (a quién, de qué tipo y su contenido) durante 90 días, para poder reintentar un envío fallido y resolver reclamos.",
     ],
   },

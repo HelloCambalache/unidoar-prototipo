@@ -255,12 +255,18 @@ export async function actualizarPerfilInstitucion(_previo: EstadoFormulario, for
 export async function guardarCategoriaDocente(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const usuario = await usuarioParaAlta("docente");
 
+  // Quien se registró con email o con Google desde "Crear cuenta" ya aceptó los términos en el paso 1. Quien llegó con Google
+  // desde "Ingresar" (sin cuenta) no pasó por esa casilla: los acepta acá, y el servidor lo exige antes de crear su perfil.
+  const faltanTerminos = !usuario.terminosAceptadosEn && formData.get("aceptaTerminos") !== "on";
+  const avisoDeTerminos: Record<string, string> = faltanTerminos ? { aceptaTerminos: "Tenés que aceptar los términos y condiciones" } : {};
+
   const r = parsear(categoriaDocenteSchema, {
     categoria: formData.get("categoria") ?? "",
     asignaturas: textos(formData, "asignaturas"),
     estudio: formData.get("estudio") ?? "",
   });
-  if (!r.ok) return conError(formData, r.error, r.campos);
+  if (!r.ok) return conError(formData, r.error, { ...r.campos, ...avisoDeTerminos });
+  if (faltanTerminos) return conError(formData, "Revisá los campos marcados.", avisoDeTerminos);
   const { categoria, estudio } = r.data;
   const asignaturas = sinRepetidos(r.data.asignaturas);
 
@@ -280,6 +286,8 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
   const db = getDb();
   let docente = await docenteDeUsuario(usuario.id);
   if (docente?.onboardingCompleto) redirect(RUTA_INICIO.docente);
+
+  if (!usuario.terminosAceptadosEn) await registrarAceptacionDeTerminos(usuario.id);
 
   if (docente) {
     await db.update(docentes).set({ categoria, asignaturas }).where(eq(docentes.id, docente.id));

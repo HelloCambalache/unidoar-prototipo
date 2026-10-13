@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocAccionesCuenta } from "@/components/backoffice/doc-acciones-cuenta";
+import { DocProcesarBaja } from "@/components/backoffice/doc-procesar-baja";
 import {
   DocCabecera,
   DocContacto,
@@ -17,6 +18,7 @@ import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { requerirUsuario } from "@/lib/auth";
 import { enlaceWhatsApp } from "@/lib/backoffice-docentes";
 import { esUuid } from "@/lib/busquedas";
+import { resumenParaBaja } from "@/lib/queries/baja-docente";
 import { fichaDocenteBo } from "@/lib/queries/backoffice-docentes";
 
 export const metadata: Metadata = { title: "Ficha del profesional" };
@@ -32,6 +34,8 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
   if (!ficha) notFound();
 
   const d = ficha.docente;
+  // Solo una cuenta real (con acceso y que no es de ejemplo) puede darse de baja.
+  const resumenDeBaja = d.usuarioId && ficha.emailCuenta && !d.esDemo ? await resumenParaBaja(d.id) : null;
   const nombre = `${d.nombre} ${d.apellido}`.trim();
   const whatsapp = enlaceWhatsApp(d.telefono);
 
@@ -80,6 +84,15 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
               </p>
             )}
             <DocAccionesCuenta docenteId={d.id} nombre={nombre} suspendido={d.suspendido} tieneCuenta={!!d.usuarioId} />
+            {resumenDeBaja && ficha.emailCuenta && (
+              <DocProcesarBaja
+                docenteId={d.id}
+                nombre={nombre}
+                email={ficha.emailCuenta}
+                resumen={resumenDeBaja}
+                pidioLaBaja={!!ficha.bajaSolicitadaEn}
+              />
+            )}
           </Tarjeta>
         </aside>
       </div>
