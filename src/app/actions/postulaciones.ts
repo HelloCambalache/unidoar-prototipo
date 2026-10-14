@@ -49,6 +49,10 @@ async function postulacionPropia(postulacionId: string, docenteId: string) {
 /**
  * Postula al docente de la sesión a una búsqueda: crea la postulación en la etapa "nuevos"
  * (única por búsqueda y docente) y avisa a todas las cuentas de la institución.
+ *
+ * Si la institución ya la había invitado, "postularse" es ACEPTAR la invitación: la misma fila pasa de `invitacion` a `postulacion`
+ * (conserva la etapa en la que la institución ya la tiene) y desde ahí la institución puede ver su teléfono y su email. Una invitada
+ * que no acepta ni manda su CV no muestra su contacto (ver `puedeVerElContacto`).
  */
 export async function postular(
   busquedaId: string,
@@ -77,33 +81,38 @@ export async function postular(
   }
 
   const [existente] = await db
-    .select({ origen: postulaciones.origen })
+    .select({ id: postulaciones.id, origen: postulaciones.origen })
     .from(postulaciones)
     .where(and(eq(postulaciones.busquedaId, busqueda.id), eq(postulaciones.docenteId, docente.id)))
     .limit(1);
-  if (existente) {
-    return fallo(
-      existente.origen === "invitacion"
-        ? "La institución ya te invitó a esta búsqueda: figurás en su lista de postulantes."
-        : "Ya te postulaste a esta búsqueda.",
-    );
-  }
+  // Ya se había postulado: nada que hacer. Si solo la invitaron, sigue (acepta la invitación).
+  if (existente && existente.origen !== "invitacion") return fallo("Ya te postulaste a esta búsqueda.");
 
   const destinatarios = await usuariosConAcceso(institucion);
   const nombre = nombreCompleto(docente);
 
   const creada = await transaccion(async (tx) => {
-    const [nueva] = await tx
-      .insert(postulaciones)
-      .values({
-        busquedaId: busqueda.id,
-        docenteId: docente.id,
-        origen: "postulacion",
-        etapa: "nuevos",
-        mensaje: datos.data.mensaje ?? null,
-      })
-      .onConflictDoNothing()
-      .returning({ id: postulaciones.id });
+    let nueva: { id: string } | undefined;
+    if (existente) {
+      // Aceptar la invitación: la misma fila pasa a ser una postulación. El `where` por origen evita que dos pestañas la acepten dos veces.
+      [nueva] = await tx
+        .update(postulaciones)
+        .set({ origen: "postulacion", mensaje: datos.data.mensaje ?? null })
+        .where(and(eq(postulaciones.id, existente.id), eq(postulaciones.origen, "invitacion")))
+        .returning({ id: postulaciones.id });
+    } else {
+      [nueva] = await tx
+        .insert(postulaciones)
+        .values({
+          busquedaId: busqueda.id,
+          docenteId: docente.id,
+          origen: "postulacion",
+          etapa: "nuevos",
+          mensaje: datos.data.mensaje ?? null,
+        })
+        .onConflictDoNothing()
+        .returning({ id: postulaciones.id });
+    }
     if (!nueva) return null;
     if (destinatarios.length > 0) {
       await tx.insert(notificaciones).values(
@@ -111,7 +120,7 @@ export async function postular(
           usuarioId,
           tipo: "postulacion",
           titulo: nombre,
-          texto: `se postuló a ${busqueda.puesto}.`,
+          texto: existente ? `aceptó tu invitación y se postuló a ${busqueda.puesto}.` : `se postuló a ${busqueda.puesto}.`,
           enlace: `/institucion/postulantes?busqueda=${busqueda.id}`,
         })),
       );

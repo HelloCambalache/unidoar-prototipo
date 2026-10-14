@@ -131,7 +131,17 @@ export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePost
       </section>
 
       <div className={cn(ETIQUETA, "mb-2.5")}>Contacto</div>
-      {detalle.contacto === "activo" ? (
+      {detalle.invitada && detalle.contacto !== "cerrado" ? (
+        // La institución la invitó pero ella todavía no aceptó: no ve su teléfono ni su email, así que no puede escribirle (aunque la
+        // haya avanzado de etapa: hasta aceptar, la promesa de "te escribe por WhatsApp" no se cumple).
+        <div className="rounded-lg bg-[#FDE9D8] p-3.5 text-[13px] leading-normal text-[#7A4A12]">
+          {detalle.institucion.nombre} te invitó, pero todavía no ve tu teléfono ni tu email. Aceptá la invitación para postularte: así puede
+          escribirte.
+          <BotonLink variante="cta" bloque className="mt-3" href={`/docente/oferta/${detalle.busquedaId}`}>
+            Aceptar la invitación
+          </BotonLink>
+        </div>
+      ) : detalle.contacto === "activo" ? (
         <div className="flex items-start gap-3 rounded-[10px] border border-[#B9E3CE] bg-verde-tint p-3.5">
           <svg aria-hidden width="20" height="20" viewBox="0 0 24 24" fill="#1E7A4C" className="flex-none">
             <path d="M12 2a10 10 0 00-8.6 15.1L2 22l5.1-1.3A10 10 0 1012 2zm5.6 14.3c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.2.1.4 0 .6-.3.6-.6.8-.8 1.1-.2.2-.4.4-.2.8.6 1.1 1.3 1.8 2.2 2.4.9.6 1.4.8 1.7.6.3-.2.6-.6.9-.9.2-.3.5-.2.8-.1.3.1 1.7.8 2 .9.3.2.5.2.6.4.1.2.1.7-.2 1.4z" />

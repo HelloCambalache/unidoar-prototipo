@@ -144,7 +144,7 @@ export function ResumenPostulaciones({ filas }: { filas: FilaPostulacion[] }) {
             <div className="min-w-0 flex-1">
               <div className="text-sm leading-[1.3] font-semibold">{f.puesto}</div>
               <div className="mt-0.5 text-[12.5px] leading-[1.4] text-apagado">
-                {f.institucion} · postulada el {f.creadaEl}
+                {f.institucion} · {f.invitada ? "invitada" : "postulada"} el {f.creadaEl}
               </div>
             </div>
             <Insignia tono={f.estado.tono}>{f.estado.texto}</Insignia>

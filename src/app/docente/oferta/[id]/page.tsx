@@ -221,7 +221,24 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
             </BotonLink>
           </Tarjeta>
 
-          {postulacion && estado ? (
+          {postulacion && estado && invitada && !cierre && postulacion.etapa !== "contratado" ? (
+            // La institución la invitó pero todavía no aceptó: no puede ver su teléfono ni su email hasta que se postule.
+            <div className="flex flex-col gap-3">
+              <div>
+                <Insignia tono={postulacion.etapa === "nuevos" ? "naranja" : estado.tono}>
+                  {postulacion.etapa === "nuevos" ? "Invitación recibida" : estado.texto}
+                </Insignia>
+              </div>
+              <p className="m-0 text-[13px] leading-normal text-apagado">
+                La institución te invitó y figurás en su lista de postulantes, pero todavía no ve tu teléfono ni tu email. Aceptá la
+                invitación para postularte: así puede escribirte.
+              </p>
+              <FormularioPostular busquedaId={busqueda.id} invitada />
+              <BotonLink variante="secundario" bloque href={`/docente/postulaciones?abrir=${postulacion.id}`}>
+                Ver mis postulaciones
+              </BotonLink>
+            </div>
+          ) : postulacion && estado ? (
             <div className="flex flex-col gap-3">
               <Boton variante={estado.activa ? "exito" : "secundario"} bloque disabled className="min-h-12 disabled:opacity-100">
                 {estado.activa && <Icono nombre="tilde" tamano={16} trazo={2.2} />}
@@ -229,7 +246,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               </Boton>
               <p className="m-0 text-[13px] leading-normal text-apagado">
                 {postulacion.etapa === "nuevos" && invitada
-                  ? "La institución te invitó y ya figurás en su lista de postulantes. Si avanza, te escribe por WhatsApp."
+                  ? "La institución te invitó y figurás en su lista de postulantes."
                   : postulacion.etapa === "nuevos" && estado.activa
                     ? "Te avisamos por WhatsApp si te seleccionan."
                     : "Mirá el detalle y tus notas en Mis postulaciones."}

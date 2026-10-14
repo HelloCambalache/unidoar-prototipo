@@ -122,6 +122,8 @@ export type DetallePostulacion = {
   etapa: EtapaPostulacion;
   /** "Postulación enviada hace 5 días" / "Invitación recibida hace 2 días" */
   envio: string;
+  /** La institución la invitó y todavía no aceptó (no se postuló): no ve su teléfono ni su email. */
+  invitada: boolean;
   zona: string | null;
   horario: string | null;
   tipo: string;
@@ -177,6 +179,7 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     estado,
     etapa: p.etapa,
     envio: `${p.origen === "invitacion" ? "Invitación recibida" : "Postulación enviada"} ${haceCuanto(p.creadoEn)}`,
+    invitada: p.origen === "invitacion",
     zona: b.zona ?? lugar.zona,
     horario: horarioDeBusqueda(b),
     tipo: b.tipo,

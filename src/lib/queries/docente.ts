@@ -77,6 +77,8 @@ export type FilaPostulacion = {
   puesto: string;
   institucion: string;
   creadaEl: string;
+  /** La institución la invitó y todavía no aceptó (no se postuló ella). */
+  invitada: boolean;
   estado: ReturnType<typeof estadoParaDocente>;
 };
 
@@ -147,6 +149,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       .select({
         id: postulaciones.id,
         busquedaId: postulaciones.busquedaId,
+        origen: postulaciones.origen,
         etapa: postulaciones.etapa,
         examenPreocupacionalEn: postulaciones.examenPreocupacionalEn,
         creadoEn: postulaciones.creadoEn,
@@ -312,6 +315,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
       puesto: p.puesto,
       institucion: p.institucion,
       creadaEl: fechaCorta(p.creadoEn),
+      invitada: p.origen === "invitacion",
       estado,
     })),
     totalPostulaciones: mias.length,
