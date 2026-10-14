@@ -168,3 +168,14 @@ export type ResumenCoincidencias = {
 
 /** Tope de notificaciones que dispara una publicación. */
 export const TOPE_AVISOS = 50;
+
+/**
+ * Lo que explica por qué "Búsquedas activas" cuenta menos que lo que hay en la lista: las que vencieron sin que nadie las cerrara
+ * (las rápidas pasan su plazo y siguen "activas" hasta que la institución las cierra) y las pausadas no reciben postulaciones. Null si
+ * no hay ninguna de las dos.
+ */
+export function avisoDeBusquedasSinPostulaciones(vencidas: number, pausadas: number): string | null {
+  const partes = [vencidas > 0 ? `${plural(vencidas, "vencida", "vencidas")} sin cerrar` : null, pausadas > 0 ? plural(pausadas, "pausada", "pausadas") : null];
+  const texto = partes.filter(Boolean).join(" · ");
+  return texto || null;
+}

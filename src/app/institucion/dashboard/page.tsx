@@ -9,7 +9,7 @@ import { RecomendadosLateral } from "@/components/institucion/docentes-sugeridos
 import { ResumenDeBusqueda } from "@/components/institucion/insignias-busqueda";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
-import { plural } from "@/lib/busquedas";
+import { avisoDeBusquedasSinPostulaciones, plural } from "@/lib/busquedas";
 import { chipEntrevista, rangoDeSemana } from "@/lib/fechas";
 import { enumerar, pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import { estadisticasInstitucion, integrantesDeEquipo, listarBusquedas } from "@/lib/queries/busquedas";
@@ -58,7 +58,7 @@ export default async function DashboardInstitucion() {
             ? `, ${conMasNuevos.nuevos} en «${conMasNuevos.puesto}»`
             : ""
         }.`
-      : est.activas > 0
+      : est.vigentes > 0
         ? "No hay postulantes nuevos para revisar. Mirá cómo van tus búsquedas."
         : "No tenés búsquedas abiertas. Publicá una para volver a recibir postulantes.";
 
@@ -74,12 +74,16 @@ export default async function DashboardInstitucion() {
       <div className="mb-[22px] grid grid-cols-4 gap-3.5 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
         <TarjetaMetrica
           etiqueta="Búsquedas activas"
-          valor={est.activas}
-          nota={
+          valor={est.vigentes}
+          nota={[
             est.nuevasEstaSemana > 0
               ? `${est.nuevasEstaSemana} se ${est.nuevasEstaSemana === 1 ? "publicó" : "publicaron"} esta semana`
-              : "ninguna nueva esta semana"
-          }
+              : "ninguna nueva esta semana",
+            // Lo que figura en la lista pero ya no recibe postulaciones (rápidas vencidas sin cerrar, pausadas).
+            avisoDeBusquedasSinPostulaciones(est.vencidas, est.pausadas),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
           href="/institucion/busquedas"
         />
         <TarjetaMetrica etiqueta="Postulantes nuevos" valor={est.nuevos} nota="esperando tu revisión" tono="naranja" />

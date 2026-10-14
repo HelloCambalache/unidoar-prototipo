@@ -12,6 +12,7 @@ import {
 import { metaDeBusqueda, type EstadoFiltro } from "@/lib/busquedas";
 import { diasEntre, duracionLegible, haceTiempo, inicioDeAnio, MS, plazoLegible } from "@/lib/fechas";
 import { contiene } from "@/lib/sql-texto";
+import { busquedaVigente } from "@/lib/visibilidad";
 
 /** Una búsqueda con el resumen de su pipeline, lista para tablas y tarjetas. */
 export type BusquedaItem = {
@@ -127,7 +128,12 @@ export async function listarBusquedas(
 
 export type EstadisticasInstitucion = {
   totalBusquedas: number;
+  /** Todo lo que no está cerrado (también las pausadas y las rápidas vencidas): es lo que lista la pestaña "Activas". */
   activas: number;
+  /** Las que hoy reciben postulaciones: activas y, si son rápidas, dentro de su plazo (`busquedaVigente`). Es lo que cuenta el recuadro. */
+  vigentes: number;
+  /** Rápidas cuyo plazo ya pasó y que nadie cerró. */
+  vencidas: number;
   cerradas: number;
   rapidas: number;
   pausadas: number;
@@ -166,6 +172,8 @@ export async function estadisticasInstitucion(institucionId: string): Promise<Es
       .select({
         total: count(),
         activas: sql<number>`count(*) filter (where ${busquedas.estado} <> 'cerrada')`.mapWith(Number),
+        vigentes: sql<number>`count(*) filter (where ${busquedaVigente})`.mapWith(Number),
+        vencidas: sql<number>`count(*) filter (where ${busquedas.estado} = 'activa' and ${busquedas.rapida} and ${busquedas.venceEn} is not null and ${busquedas.venceEn} <= now())`.mapWith(Number),
         cerradas: sql<number>`count(*) filter (where ${busquedas.estado} = 'cerrada')`.mapWith(Number),
         rapidas: sql<number>`count(*) filter (where ${busquedas.estado} <> 'cerrada' and ${busquedas.rapida})`.mapWith(Number),
         pausadas: sql<number>`count(*) filter (where ${busquedas.estado} = 'pausada')`.mapWith(Number),
@@ -213,6 +221,8 @@ export async function estadisticasInstitucion(institucionId: string): Promise<Es
   return {
     totalBusquedas: b?.total ?? 0,
     activas: b?.activas ?? 0,
+    vigentes: b?.vigentes ?? 0,
+    vencidas: b?.vencidas ?? 0,
     cerradas: b?.cerradas ?? 0,
     rapidas: b?.rapidas ?? 0,
     pausadas: b?.pausadas ?? 0,

@@ -9,7 +9,7 @@ import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
 import type { VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
-import { busquedaDeInstitucionActiva, busquedaVigente, docenteVisible, institucionVisible } from "@/lib/visibilidad";
+import { OCULTAR_EJEMPLOS, busquedaDeInstitucionActiva, busquedaVigente, docenteVisible, institucionVisible } from "@/lib/visibilidad";
 
 /* Lecturas del sitio público (sin sesión). Todo sale de la base: nada de cifras fijas. */
 
@@ -118,8 +118,12 @@ export async function logosInstituciones(limite = 24): Promise<LogoInstitucion[]
 
 export type TestimonioPublico = { id: string; cita: string; autor: string; cargo: string; fotoUrl: string | null };
 
-/** Testimonios de una página: "home", "educadores", "entrenadores" o "guardavidas". */
+/**
+ * Testimonios de una página: "home", "educadores", "entrenadores" o "guardavidas". Los que hay hoy son de ejemplo (personas
+ * inventadas): con `OCULTAR_DATOS_DE_EJEMPLO` no se muestra ninguno, y las secciones sin testimonios no se dibujan.
+ */
 export async function testimoniosDe(pagina: string): Promise<TestimonioPublico[]> {
+  if (OCULTAR_EJEMPLOS) return [];
   return getDb()
     .select({
       id: testimonios.id,

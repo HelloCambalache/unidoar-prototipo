@@ -11,7 +11,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tabla } from "@/components/ui/tabla";
 import { requerirInstitucion } from "@/lib/auth";
-import { ESTADOS_FILTRO, plural, type EstadoFiltro } from "@/lib/busquedas";
+import { ESTADOS_FILTRO, avisoDeBusquedasSinPostulaciones, plural, type EstadoFiltro } from "@/lib/busquedas";
 import { estadisticasInstitucion, listarBusquedas } from "@/lib/queries/busquedas";
 
 export const metadata: Metadata = { title: "Publicaciones" };
@@ -57,12 +57,13 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
       <div className="mt-[18px] grid grid-cols-4 gap-3 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
         <TarjetaMetrica
           etiqueta="Búsquedas activas"
-          valor={est.activas}
-          nota={
-            est.rapidas > 0
-              ? `${est.rapidas} ${est.rapidas === 1 ? "es rápida" : "son rápidas"}`
-              : "ninguna urgente"
-          }
+          valor={est.vigentes}
+          nota={[
+            est.rapidas > 0 ? `${est.rapidas} ${est.rapidas === 1 ? "es rápida" : "son rápidas"}` : "ninguna urgente",
+            avisoDeBusquedasSinPostulaciones(est.vencidas, est.pausadas),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         />
         <TarjetaMetrica
           etiqueta="Postulantes en proceso"

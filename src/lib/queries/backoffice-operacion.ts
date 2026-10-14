@@ -13,6 +13,13 @@ import {
 import { MS } from "@/lib/fechas";
 import { normalizarTexto } from "@/lib/onboarding";
 import { topDocentesPorScoring, type FilaDocenteBo } from "@/lib/queries/backoffice-docentes";
+import {
+  busquedaDeInstitucionActiva,
+  docenteVisible,
+  institucionVisible,
+  sinBusquedasDeEjemploSql,
+  sinDocentesDeEjemploSql,
+} from "@/lib/visibilidad";
 
 /*
  * "Cómo viene la operación": indicadores del marketplace con consultas reales. Lo que no se puede medir
@@ -91,7 +98,7 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
         anterior: sql<number>`count(*) filter (where ${docentes.creadoEn} >= ${ts(anteriorDesde)} and ${docentes.creadoEn} < ${ts(desde)})`.mapWith(Number),
       })
       .from(docentes)
-      .where(and(eq(docentes.onboardingCompleto, true), eq(docentes.suspendido, false), ne(docentes.verificacion, "rechazado"))),
+      .where(and(eq(docentes.onboardingCompleto, true), docenteVisible, ne(docentes.verificacion, "rechazado"))),
 
     // Si la primera postulación es anterior a la publicación el dato es inconsistente y la búsqueda no entra al promedio.
     db.execute<{ horas: string | null; n: number }>(sql`
@@ -100,7 +107,7 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
         select b.creado_en as publicada, min(p.creado_en) as primera
         from busquedas b
         join postulaciones p on p.busqueda_id = b.id and p.origen = 'postulacion'
-        where b.creado_en >= ${ts(desde)} and b.creado_en < ${ts(hasta)}
+        where b.creado_en >= ${ts(desde)} and b.creado_en < ${ts(hasta)} ${sinBusquedasDeEjemploSql}
         group by b.id
       ) x
       where x.primera >= x.publicada`),
@@ -124,7 +131,7 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
         and(
           eq(busquedas.estado, "activa"),
           eq(busquedas.rapida, false),
-          eq(instituciones.suspendida, false),
+          institucionVisible,
           lte(busquedas.creadoEn, haceUnaSemana),
         ),
       )
@@ -138,7 +145,7 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
       .from(instituciones)
       .where(
         and(
-          eq(instituciones.suspendida, false),
+          institucionVisible,
           sql`not exists (select 1 from busquedas b where b.institucion_id = ${INSTITUCION_ID} and b.creado_en >= ${ts(desde)})`,
           sql`not exists (
             select 1 from busquedas b join postulaciones p on p.busqueda_id = b.id
@@ -152,7 +159,7 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
       select coalesce(z.partido, z.nombre) as clave, count(distinct d.id)::int as n
       from docentes d
       join zonas z on z.nombre = any(d.zonas)
-      where d.onboarding_completo and not d.suspendido and d.verificacion <> 'rechazado'
+      where d.onboarding_completo and not d.suspendido and d.verificacion <> 'rechazado' ${sinDocentesDeEjemploSql}
       group by 1`),
 
     db
@@ -162,6 +169,8 @@ export async function metricasOperacion(clave: PeriodoClave): Promise<MetricasOp
         and(
           eq(busquedas.estado, "activa"),
           or(eq(busquedas.rapida, false), isNull(busquedas.venceEn), gt(busquedas.venceEn, ahora)),
+          // Las de una institución suspendida (o de ejemplo, si se ocultan) no son oferta real del mercado.
+          busquedaDeInstitucionActiva,
         ),
       ),
 

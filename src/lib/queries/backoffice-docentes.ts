@@ -29,6 +29,7 @@ import { CATEGORIA_ALTA } from "@/lib/onboarding";
 import { pendientesDePerfil } from "@/lib/perfil";
 import { desgloseScoring, porcentajePerfilParaScoring } from "@/lib/scoring";
 import { contiene, textoPlano } from "@/lib/sql-texto";
+import { OCULTAR_EJEMPLOS } from "@/lib/visibilidad";
 
 /*
  * Lecturas del backoffice sobre docentes: listado con scoring, ficha y cola de verificación.
@@ -173,7 +174,8 @@ export async function listarDocentesBo(f: FiltrosBoDocentes): Promise<ListadoDoc
 
 /** Los de mejor scoring entre los que terminaron el alta (para "Docentes por calidad de perfil" de Operación). */
 export async function topDocentesPorScoring(limite: number): Promise<FilaDocenteBo[]> {
-  const todos = await docentesConScoring(EXISTE_CON_ALTA);
+  // Es lo que muestra "Operación": con los datos de ejemplo ocultos, solo cuentan los profesionales reales.
+  const todos = await docentesConScoring(OCULTAR_EJEMPLOS ? and(EXISTE_CON_ALTA, eq(docentes.esDemo, false)) : EXISTE_CON_ALTA);
   return todos.sort((a, b) => b.scoring - a.scoring || a.nombre.localeCompare(b.nombre, "es")).slice(0, limite);
 }
 
