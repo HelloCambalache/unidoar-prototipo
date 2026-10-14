@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { comparable, confirmaElEmail, enLotes, impedimentoDeBaja, nombreParaBuscar, patronQueContiene } from "@/lib/baja-cuenta";
+import {
+  comparable,
+  confirmaElEmail,
+  confirmaElTexto,
+  cuentasDelEquipoParaBorrar,
+  enLotes,
+  impedimentoDeBaja,
+  impedimentoDeBajaDeInstitucion,
+  nombreParaBuscar,
+  patronQueContiene,
+  slugDeBaja,
+} from "@/lib/baja-cuenta";
 
 describe("confirmar con el email", () => {
   it("acepta el email escrito sin importar mayúsculas ni espacios de más", () => {
@@ -50,5 +61,43 @@ describe("lotes", () => {
   it("parte una lista sin perder nada", () => {
     assert.deepEqual(enLotes([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
     assert.deepEqual(enLotes([], 100), []);
+  });
+});
+
+describe("baja de una institución", () => {
+  it("se confirma escribiendo exactamente el nombre, sin importar mayúsculas ni espacios de más", () => {
+    assert.equal(confirmaElTexto("  colegio   san martín ", "Colegio San Martín"), true);
+    assert.equal(confirmaElTexto("Colegio San Martin", "Colegio San Martín"), false);
+    assert.equal(confirmaElTexto("", "Colegio San Martín"), false);
+  });
+
+  it("se puede dar de baja una institución real que todavía no lo está", () => {
+    assert.equal(impedimentoDeBajaDeInstitucion({ esDemo: false, yaDeBaja: false }), null);
+  });
+
+  it("no una de ejemplo ni una que ya está dada de baja", () => {
+    assert.match(impedimentoDeBajaDeInstitucion({ esDemo: true, yaDeBaja: false }) ?? "", /ejemplo/);
+    assert.match(impedimentoDeBajaDeInstitucion({ esDemo: false, yaDeBaja: true }) ?? "", /ya está dada de baja/);
+    // Si ya está dada de baja se lo dice antes que cualquier otra cosa.
+    assert.match(impedimentoDeBajaDeInstitucion({ esDemo: true, yaDeBaja: true }) ?? "", /ya está dada de baja/);
+  });
+
+  it("de las cuentas del equipo solo se borran las de institución: nunca una admin ni la de quien procesa", () => {
+    const cuentas = [
+      { id: "dueña", rol: "institucion" },
+      { id: "colega", rol: "institucion" },
+      { id: "colega", rol: "institucion" },
+      { id: "staff", rol: "admin" },
+      { id: "yo", rol: "institucion" },
+      { id: "docente", rol: "docente" },
+    ];
+    assert.deepEqual(cuentasDelEquipoParaBorrar(cuentas, "yo"), ["dueña", "colega"]);
+    assert.deepEqual(cuentasDelEquipoParaBorrar([], "yo"), []);
+  });
+
+  it("el enlace de una institución dada de baja ya no lleva su nombre", () => {
+    const slug = slugDeBaja("3f2a9c1e-5b7d-4e8a-9c01-2d3e4f5a6b7c");
+    assert.equal(slug, "baja-3f2a9c1e5b7d");
+    assert.match(slug, /^baja-[0-9a-f]{12}$/);
   });
 });

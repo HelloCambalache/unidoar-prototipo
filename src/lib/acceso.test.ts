@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   ERRORES_DE_INGRESO,
   destinoTrasConfirmar,
+  emailYaRegistrado,
   esFallaDeEnvioDeMail,
   esTipoDeConfirmacion,
   googleActivadoEn,
@@ -74,6 +75,28 @@ describe("enlaces de confirmación del mail (/auth/confirmar)", () => {
 
   it("los destinos son rutas internas seguras", () => {
     for (const t of ["signup", "recovery"] as const) assert.equal(rutaInternaSegura(destinoTrasConfirmar(t)), destinoTrasConfirmar(t));
+  });
+});
+
+describe("registro con un email que ya tiene cuenta", () => {
+  it("con confirmación de mail, Supabase devuelve un usuario sin identidades", () => {
+    assert.equal(emailYaRegistrado(null, { identities: [] }), true);
+  });
+
+  it("sin confirmación de mail, devuelve el error de usuario existente", () => {
+    assert.equal(emailYaRegistrado({ code: "user_already_exists" }, null), true);
+    assert.equal(emailYaRegistrado({ code: "email_exists" }, null), true);
+  });
+
+  it("un registro nuevo no es un email repetido", () => {
+    assert.equal(emailYaRegistrado(null, { identities: [{ provider: "email" }] }), false);
+    assert.equal(emailYaRegistrado(null, { identities: null }), false);
+    assert.equal(emailYaRegistrado(null, null), false);
+  });
+
+  it("otros errores (contraseña débil, mail que no sale) no se confunden con un email repetido", () => {
+    assert.equal(emailYaRegistrado({ code: "weak_password" }, null), false);
+    assert.equal(emailYaRegistrado({ code: "unexpected_failure" }, { identities: [] }), false);
   });
 });
 

@@ -8,6 +8,7 @@ import { sesionActual } from "@/lib/auth";
 import {
   PRIMER_PASO_PROTEGIDO,
   destinoTrasConfirmar,
+  emailYaRegistrado,
   esTipoDeConfirmacion,
   registrarFallaDeMail,
   rutaInternaSegura,
@@ -104,12 +105,11 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     },
   });
   registrarFallaDeMail(error, "registro");
+  // Que el email ya tenga cuenta no se le dice a quien se registra: el formulario serviría para averiguar quién está en UNIDOAR (con
+  // confirmación de mail activa, Supabase devuelve un usuario sin identidades en vez de un error). Se muestra lo mismo que con un email
+  // nuevo, y "Revisá tu mail" aclara qué hacer si ya había una cuenta (`ConfirmarMail`).
+  if (emailYaRegistrado(error, data.user)) return { ok: true, confirmarEmail: r.data.email };
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
-
-  // Con confirmación de mail activa, Supabase no avisa que el email ya existe: devuelve un usuario sin identidades.
-  if (data.user && data.user.identities && data.user.identities.length === 0) {
-    return { ok: false, error: traducirErrorAuth({ code: "user_already_exists" }), codigo: "user_already_exists", valores };
-  }
   if (!data.session) return { ok: true, confirmarEmail: r.data.email };
 
   revalidatePath("/", "layout");

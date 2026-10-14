@@ -106,7 +106,9 @@ export function CuentaBaja({
         <>
           <p className="m-0 mb-4 text-sm leading-normal text-apagado">
             Pedí la baja de la cuenta y de la institución: el equipo de UNIDOAR se contacta con vos para cancelar la suscripción,
-            despublicar tus búsquedas y dar de baja la vitrina. No se borra nada hasta que lo confirmemos juntos.
+            despublicar tus búsquedas y dar de baja la vitrina. No se borra nada hasta que lo confirmemos juntos. Al procesar la baja se
+            borran tu equipo, tus búsquedas, los cursos, los contactos y el perfil público; solo conservamos tus facturas y los datos que
+            figuran en ellas (nombre, CUIT y domicilio), que la ley nos obliga a guardar.
           </p>
           <Boton
             variante="secundario"

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { InstAcciones } from "@/components/backoffice/inst-acciones";
+import { InstProcesarBaja } from "@/components/backoffice/inst-procesar-baja";
 import { InsigniaCuenta, InsigniaFactura, InsigniaVerificada } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
 import { InstPlan } from "@/components/backoffice/inst-plan";
@@ -24,6 +25,7 @@ import {
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { fechaHoraCorta } from "@/lib/calendario";
 import { pesos } from "@/lib/planes";
+import { resumenParaBajaDeInstitucion } from "@/lib/queries/baja-institucion";
 import { fichaInstitucion } from "@/lib/queries/backoffice-instituciones";
 import { planes } from "@/lib/queries/planes";
 
@@ -59,6 +61,9 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
   if (!ficha) notFound();
 
   const { institucion: i, proximoCobro } = ficha;
+  const deBaja = i.bajaEn !== null;
+  // Lo que se llevaría la baja (para el diálogo): solo si se puede procesar, o sea no es de ejemplo ni ya está dada de baja.
+  const resumenDeBaja = !deBaja && !i.esDemo ? await resumenParaBajaDeInstitucion(i.id) : null;
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "fundador";
   const contacto = [i.contactoNombre, i.contactoRol].filter(Boolean).join(" · ");
@@ -81,21 +86,31 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             <div className="min-w-[200px] flex-1">
               <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
                 <h1 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em]">{i.nombre}</h1>
-                <InsigniaCuenta suspendida={i.suspendida} />
+                <InsigniaCuenta suspendida={i.suspendida} baja={deBaja} />
                 <InsigniaVerificada verificada={i.verificada} />
-                {ficha.bajaSolicitadaEn && <Insignia tono="ambar">Baja solicitada</Insignia>}
+                {ficha.bajaSolicitadaEn && !deBaja && <Insignia tono="ambar">Baja solicitada</Insignia>}
               </div>
               <div className="text-sm leading-[1.4] text-apagado">{[i.tipo, i.zona].filter(Boolean).join(" · ")}</div>
               <Link href={`/instituciones/${i.slug}`} className="mt-1.5 inline-block text-[13px] font-medium">
                 Ver vitrina pública →
               </Link>
             </div>
-            <BotonLink href={`/backoffice/instituciones/${i.id}/editar`} variante="secundario" tamano="sm">
-              Editar perfil
-            </BotonLink>
+            {!deBaja && (
+              <BotonLink href={`/backoffice/instituciones/${i.id}/editar`} variante="secundario" tamano="sm">
+                Editar perfil
+              </BotonLink>
+            )}
           </Tarjeta>
 
-          {i.suspendida && (
+          {deBaja && i.bajaEn && (
+            <div role="status" className="rounded-ud border border-borde bg-[#F1F0EC] px-[18px] py-3.5 text-[13.5px] leading-normal text-tinta-2">
+              <b className="font-semibold">Dada de baja el {fechaCorta(i.bajaEn)}.</b> Se borraron su equipo, sus búsquedas, los cursos, los
+              contactos y el perfil público. Queda solo el registro fiscal (nombre, CUIT, domicilio) y las facturas, que se conservan por
+              obligación legal. No se puede reactivar: si vuelve, se crea una cuenta nueva.
+            </div>
+          )}
+
+          {i.suspendida && !deBaja && (
             <div role="status" className="rounded-ud border border-[#EBCFC5] bg-[#F6E6E0] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8F3D28]">
               <b className="font-semibold">Cuenta suspendida.</b>{" "}
               {ficha.motivoSuspension ? (
@@ -111,7 +126,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             </div>
           )}
 
-          {ficha.bajaSolicitadaEn && (
+          {ficha.bajaSolicitadaEn && !deBaja && (
             <div role="status" className="rounded-ud border border-[#EBD9A8] bg-[#FBF2D8] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#7A5A0B]">
               <b className="font-semibold">Pidió la baja de la cuenta</b> el {fechaCorta(ficha.bajaSolicitadaEn)}.{" "}
               {ficha.emailPropietario ? <>Hay que escribirle a {ficha.emailPropietario} para confirmarla, </> : <>Hay que contactarla para confirmarla, </>}
@@ -128,9 +143,11 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             ]}
           />
 
-          <Tarjeta className="p-[22px]">
-            <InstPlan institucionId={i.id} nombre={i.nombre} catalogo={P.catalogo} plan={plan} proximoCobro={proximoTexto} />
-          </Tarjeta>
+          {!deBaja && (
+            <Tarjeta className="p-[22px]">
+              <InstPlan institucionId={i.id} nombre={i.nombre} catalogo={P.catalogo} plan={plan} proximoCobro={proximoTexto} />
+            </Tarjeta>
+          )}
 
           <section aria-labelledby="busquedas-titulo">
             <EtiquetaSeccion className="mb-3" id="busquedas-titulo">
@@ -223,17 +240,21 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
 
         <aside className="flex w-[300px] max-w-full flex-none flex-col gap-4">
           <Seccion titulo="Contacto">
-            <div className="flex flex-col gap-1 text-sm leading-[1.6] text-tinta-2">
-              {contacto ? <span>{contacto}</span> : <span className="text-sutil">Sin persona de contacto cargada</span>}
-              {i.telefono && <span>{i.telefono}</span>}
-              {ficha.emailPropietario ? (
-                <a href={`mailto:${ficha.emailPropietario}`} className="[overflow-wrap:anywhere]">
-                  {ficha.emailPropietario}
-                </a>
-              ) : (
-                <span className="text-sutil">Sin cuenta de acceso vinculada</span>
-              )}
-            </div>
+            {deBaja ? (
+              <div className="text-[13px] leading-[1.4] text-apagado">Se borró con la baja.</div>
+            ) : (
+              <div className="flex flex-col gap-1 text-sm leading-[1.6] text-tinta-2">
+                {contacto ? <span>{contacto}</span> : <span className="text-sutil">Sin persona de contacto cargada</span>}
+                {i.telefono && <span>{i.telefono}</span>}
+                {ficha.emailPropietario ? (
+                  <a href={`mailto:${ficha.emailPropietario}`} className="[overflow-wrap:anywhere]">
+                    {ficha.emailPropietario}
+                  </a>
+                ) : (
+                  <span className="text-sutil">Sin cuenta de acceso vinculada</span>
+                )}
+              </div>
+            )}
           </Seccion>
 
           {ficha.sedes.length > 1 && (
@@ -261,6 +282,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
               {i.cue && <Dato k="CUE">{i.cue}</Dato>}
               {i.fundada && <Dato k="Fundada">{i.fundada}</Dato>}
               <Dato k="Alta en UNIDOAR">{fechaCorta(i.creadoEn)}</Dato>
+              {i.bajaEn && <Dato k="Baja procesada">{fechaCorta(i.bajaEn)}</Dato>}
             </div>
           </Seccion>
 
@@ -300,15 +322,25 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             )}
           </Seccion>
 
-          <Tarjeta className="p-[22px]">
-            <InstAcciones
-              institucionId={i.id}
-              nombre={i.nombre}
-              verificada={i.verificada}
-              suspendida={i.suspendida}
-              enlaceWhatsapp={whatsapp}
-            />
-          </Tarjeta>
+          {!deBaja && (
+            <Tarjeta className="flex flex-col gap-3 p-[22px]">
+              <InstAcciones
+                institucionId={i.id}
+                nombre={i.nombre}
+                verificada={i.verificada}
+                suspendida={i.suspendida}
+                enlaceWhatsapp={whatsapp}
+              />
+              {resumenDeBaja && (
+                <InstProcesarBaja
+                  institucionId={i.id}
+                  nombre={i.nombre}
+                  resumen={resumenDeBaja}
+                  pidioLaBaja={Boolean(ficha.bajaSolicitadaEn)}
+                />
+              )}
+            </Tarjeta>
+          )}
         </aside>
       </div>
     </>

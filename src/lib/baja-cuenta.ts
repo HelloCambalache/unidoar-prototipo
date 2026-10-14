@@ -7,8 +7,32 @@
 /** Un texto listo para comparar con otro: sin espacios de más y sin distinguir mayúsculas. */
 export const comparable = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
 
-/** ¿Escribió el email de la cuenta? Es la confirmación de las acciones que no se pueden deshacer. */
-export const confirmaElEmail = (escrito: string, email: string) => comparable(escrito) !== "" && comparable(escrito) === comparable(email);
+/** ¿Escribió exactamente lo que se le pidió? Es la confirmación de las acciones que no se pueden deshacer. */
+export const confirmaElTexto = (escrito: string, esperado: string) => comparable(escrito) !== "" && comparable(escrito) === comparable(esperado);
+
+/** La baja de un profesional se confirma escribiendo el email de su cuenta. */
+export const confirmaElEmail = confirmaElTexto;
+
+/**
+ * Por qué NO se puede dar de baja esta institución desde el backoffice (null = se puede). Una institución de ejemplo no es una baja
+ * que procesar, y una ya dada de baja ya no tiene nada que borrar.
+ */
+export function impedimentoDeBajaDeInstitucion(institucion: { esDemo: boolean; yaDeBaja: boolean }): string | null {
+  if (institucion.yaDeBaja) return "Esta institución ya está dada de baja.";
+  if (institucion.esDemo) return "Es una institución de ejemplo: no se da de baja desde acá.";
+  return null;
+}
+
+/**
+ * De las cuentas de acceso de una institución (la dueña y las del equipo), cuáles se borran con la baja: solo las de rol
+ * "institucion". Nunca una cuenta del equipo de UNIDOAR (admin) ni la de quien procesa la baja, aunque figure en el equipo.
+ */
+export function cuentasDelEquipoParaBorrar(cuentas: { id: string; rol: string }[], adminId: string): string[] {
+  return [...new Set(cuentas.filter((c) => c.rol === "institucion" && c.id !== adminId).map((c) => c.id))];
+}
+
+/** El enlace público de una institución dada de baja deja de ser el de su nombre: ya no la nombra ni se puede adivinar. */
+export const slugDeBaja = (institucionId: string) => `baja-${institucionId.replace(/-/g, "").slice(0, 12)}`;
 
 /**
  * Por qué NO se puede dar de baja a esta cuenta desde el backoffice (null = se puede). Un perfil de ejemplo, uno sin cuenta

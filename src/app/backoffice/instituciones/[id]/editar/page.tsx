@@ -27,7 +27,8 @@ export default async function EditarInstitucion({ params }: { params: Promise<{ 
   const { id } = await params;
   if (!esUuid(id)) notFound();
   const i = await institucionParaEditar(id);
-  if (!i) notFound();
+  // Una institución dada de baja ya no tiene perfil que editar: solo queda el registro fiscal.
+  if (!i || i.bajaEn) notFound();
 
   const [datos, sedes] = await Promise.all([datosVitrina(i.id), sedesParaEditar(i)]);
 

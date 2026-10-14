@@ -92,7 +92,7 @@ export default async function InstitucionesBackoffice({
                 </td>
                 <td>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <InsigniaCuenta suspendida={i.suspendida} />
+                    <InsigniaCuenta suspendida={i.suspendida} baja={i.deBaja} />
                     {i.pagoVencido && <Insignia tono="ambar">Pago vencido</Insignia>}
                   </div>
                 </td>

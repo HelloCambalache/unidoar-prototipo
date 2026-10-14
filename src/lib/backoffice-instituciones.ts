@@ -9,7 +9,7 @@ import { planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
 export const POR_PAGINA_INSTITUCIONES = 25;
 
 export type OrdenInstituciones = "nombre" | "busquedas" | "recientes";
-export type EstadoInstitucion = "activa" | "suspendida" | "vencida";
+export type EstadoInstitucion = "activa" | "suspendida" | "vencida" | "baja";
 export type VerificacionFiltro = "si" | "no";
 
 export type FiltrosInstituciones = {
@@ -26,6 +26,7 @@ export const ESTADOS_INSTITUCION: { clave: EstadoInstitucion; etiqueta: string }
   { clave: "activa", etiqueta: "Activas" },
   { clave: "suspendida", etiqueta: "Suspendidas" },
   { clave: "vencida", etiqueta: "Con pago vencido" },
+  { clave: "baja", etiqueta: "Dadas de baja" },
 ];
 
 export const ORDENES_INSTITUCIONES: { clave: OrdenInstituciones; etiqueta: string }[] = [
@@ -100,6 +101,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return "Pidió la baja de la cuenta";
     case "cuenta.baja_retirada":
       return "Retiró el pedido de baja";
+    case "cuenta.baja_procesada":
+      return "Procesó la baja: se borraron los datos y quedó el registro fiscal";
+    case "cuenta.baja_incompleta":
+      return "La baja quedó incompleta: falta borrar archivos o usuarios de acceso a mano";
     case "plan.aprobar":
       return `Aprobó el pedido de cambio de plan${texto("a") ? ` a ${nombreDePlan(texto("a")!)}` : ""}`;
     case "plan.rechazar":

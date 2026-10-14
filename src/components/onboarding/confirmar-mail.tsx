@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { reenviarConfirmacion } from "@/app/actions/auth";
 import { Boton } from "@/components/ui/button";
 import { AlertaAviso, AlertaError, TituloPaso } from "@/components/onboarding/elementos";
@@ -42,6 +43,17 @@ export function ConfirmarMail({ email, rol, onOtroEmail }: { email: string; rol:
         }
         className="mb-0"
       />
+      <p className="m-0 text-[13px] leading-normal text-apagado">
+        ¿Ya tenías una cuenta con este email? Entonces no te mandamos otro mail:{" "}
+        <Link href="/ingresar" className="font-semibold text-navy-700 hover:text-naranja">
+          ingresá
+        </Link>{" "}
+        o{" "}
+        <Link href="/ingresar/recuperar" className="font-semibold text-navy-700 hover:text-naranja">
+          recuperá tu contraseña
+        </Link>
+        .
+      </p>
       <ReenviarConfirmacion rol={rol} email={email} />
       <button
         type="button"

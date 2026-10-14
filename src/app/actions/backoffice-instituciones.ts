@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
+import { z } from "zod";
 import { getDb, transaccion } from "@/db";
 import { instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
@@ -11,7 +12,14 @@ import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { planes } from "@/lib/queries/planes";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { avisarAVarios } from "@/lib/queries/avisos";
+import { borrarArchivosDeLaCuenta, borrarUsuarioDeAcceso } from "@/lib/queries/baja-docente";
+import {
+  ACCION_BAJA_DE_INSTITUCION_INCOMPLETA,
+  borrarDatosDeLaInstitucion,
+  borrarPathsPrivados,
+} from "@/lib/queries/baja-institucion";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
@@ -53,7 +61,8 @@ const institucionBloqueada = (tx: EjecutorBo, id: string) =>
       suspendida: instituciones.suspendida,
     })
     .from(instituciones)
-    .where(eq(instituciones.id, id))
+    // Una institución dada de baja ya no admite cambios: para estas acciones es como si no existiera.
+    .where(and(eq(instituciones.id, id), isNull(instituciones.bajaEn)))
     .limit(1)
     .for("update");
 
@@ -109,7 +118,7 @@ export async function actualizarVitrinaComoAdmin(institucionId: string, entrada:
   const admin = await requerirUsuario("admin");
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
-  if (!inst) return fallo(NO_ENCONTRADA);
+  if (!inst || inst.bajaEn) return fallo(NO_ENCONTRADA);
 
   const r = await guardarVitrinaDeInstitucion(inst, admin.id, entrada);
   if (!r.ok) return r;
@@ -135,7 +144,7 @@ export async function actualizarSedesComoAdmin(institucionId: string, entrada: u
   const admin = await requerirUsuario("admin");
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
-  if (!inst) return fallo(NO_ENCONTRADA);
+  if (!inst || inst.bajaEn) return fallo(NO_ENCONTRADA);
 
   const r = await guardarSedesDeInstitucion(inst, entrada, { puedeEditarCue: true });
   if (!r.ok) return r;
@@ -173,7 +182,7 @@ export async function actualizarDatosDeInstitucion(institucionId: string, entrad
         cuit: instituciones.cuit,
       })
       .from(instituciones)
-      .where(eq(instituciones.id, institucionId))
+      .where(and(eq(instituciones.id, institucionId), isNull(instituciones.bajaEn)))
       .limit(1)
       .for("update");
     if (!inst) return fallo(NO_ENCONTRADA);
@@ -328,4 +337,57 @@ export async function reactivarInstitucion(institucionId: string): Promise<Resul
 
   if (resultado.ok) revalidarInstitucion(institucionId);
   return resultado;
+}
+
+/* ───────────────────────────── Baja de la cuenta ───────────────────────────── */
+
+const bajaSchema = z.object({ confirmacion: z.string().trim().min(1, "Escribí el nombre de la institución para confirmar.") });
+
+/**
+ * Procesa la baja de una institución: borra de verdad su equipo y sus cuentas de acceso, sus búsquedas y postulaciones, los cursos,
+ * los contactos privados, el perfil público y los archivos, y CONSERVA el registro fiscal (nombre, tipo, CUIT, domicilio) y las
+ * facturas. No se puede deshacer. Exige escribir el nombre de la institución. Primero la base (en una transacción, con la
+ * auditoría), después Storage y los usuarios de Supabase Auth: si alguno de esos falla, la base ya quedó limpia y se lo dice a quien
+ * la procesa para que termine a mano. Ver src/lib/queries/baja-institucion.ts.
+ */
+export async function procesarBajaInstitucion(institucionId: string, entrada: { confirmacion: string }): Promise<Resultado<{ pendientes: string[] }>> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
+  const datos = parsear(bajaSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
+  if (!datos.ok) return fallo(datos.campos?.confirmacion ?? datos.error, datos.campos);
+
+  // El enlace público de antes, para que deje de mostrarse.
+  const [antes] = await getDb().select({ slug: instituciones.slug }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+
+  const hecho = await transaccion((tx) => borrarDatosDeLaInstitucion(tx, admin.id, institucionId, datos.data.confirmacion));
+  if (!hecho.ok) return hecho;
+  const { cuentasABorrar, imagenes, archivosDeExamen } = hecho.data;
+
+  // La base ya está limpia. Lo que sigue es Storage y los usuarios de acceso: no se deshace lo anterior si algo falla.
+  await borrarArchivos(imagenes);
+  let archivosCompletos = await borrarPathsPrivados(archivosDeExamen);
+  const sinBorrarElAcceso: string[] = [];
+  for (const cuentaId of cuentasABorrar) {
+    if (!(await borrarArchivosDeLaCuenta(cuentaId)).completo) archivosCompletos = false;
+    if (!(await borrarUsuarioDeAcceso(cuentaId))) sinBorrarElAcceso.push(cuentaId);
+  }
+
+  const pendientes: string[] = [];
+  if (!archivosCompletos) pendientes.push("No se pudieron borrar todos sus archivos de Storage: corré pnpm db:limpiar-archivos --borrar.");
+  if (sinBorrarElAcceso.length > 0) {
+    pendientes.push("No se pudo borrar el usuario de acceso de alguien de su equipo: borralo desde Supabase → Authentication → Users.");
+  }
+  if (pendientes.length > 0) {
+    await registrarAuditoria({
+      usuarioId: admin.id,
+      accion: ACCION_BAJA_DE_INSTITUCION_INCOMPLETA,
+      entidad: "institucion",
+      entidadId: institucionId,
+      detalle: { archivosCompletos, accesosSinBorrar: sinBorrarElAcceso },
+    });
+  }
+
+  revalidarInstitucion(institucionId, antes?.slug);
+  revalidatePath("/backoffice/instituciones");
+  return ok({ pendientes });
 }

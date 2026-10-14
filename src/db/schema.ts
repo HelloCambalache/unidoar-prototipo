@@ -107,6 +107,12 @@ export const instituciones = pgTable(
     condicionFiscal: text("condicion_fiscal"),
     /** Backoffice: una cuenta suspendida no puede entrar a su área (ver requerirInstitucion). */
     suspendida: boolean("suspendida").notNull().default(false),
+    /**
+     * Cuándo el equipo procesó la baja de la cuenta (src/lib/queries/baja-institucion.ts). Una institución dada de baja queda como
+     * un registro mínimo para lo fiscal (nombre, CUIT, domicilio y sus facturas) y siempre `suspendida = true`: nunca se reactiva.
+     * Columna agregada a mano: `alter table instituciones add column if not exists baja_en timestamptz`.
+     */
+    bajaEn: timestamp("baja_en", { withTimezone: true }),
     /** Datos de ejemplo sembrados: se pueden borrar sin tocar cuentas reales. */
     esDemo: boolean("es_demo").notNull().default(false),
     ...marcasDeTiempo,

@@ -12,6 +12,7 @@ import { parsear } from "@/lib/acciones";
 import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
 import { institucionComoMiembro } from "@/lib/queries/equipo";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
@@ -320,12 +321,19 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     const { nombre, apellido } = sesion?.apellido
       ? { nombre: sesion.nombre ?? respaldo, apellido: sesion.apellido }
       : partirNombre(sesion?.nombre ?? "", respaldo);
-    await db
+    const [creado] = await db
       .insert(docentes)
-      .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, fotoUrl: sesion?.fotoUrl ?? null, categoria, asignaturas })
-      .onConflictDoNothing();
+      .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, categoria, asignaturas })
+      .onConflictDoNothing()
+      .returning({ id: docentes.id });
     docente = await docenteDeUsuario(usuario.id);
     if (!docente) return conError(formData, "No pudimos crear tu perfil. Probá de nuevo.");
+    // La foto de la cuenta de Google se copia a nuestro Storage (no se guarda su dirección: esos datos los puede escribir cualquiera al
+    // registrarse y apuntarían a un servidor ajeno). Si no se puede, el perfil queda sin foto y la persona sube una.
+    if (creado && sesion?.fotoUrl) {
+      const foto = await copiarFotoDeGoogle(usuario.id, sesion.fotoUrl);
+      if (foto) await db.update(docentes).set({ fotoUrl: foto }).where(eq(docentes.id, docente.id));
+    }
   }
 
   // Si cambió a "ya me recibí", la constancia de alumno regular que había subido ya no corresponde.

@@ -82,6 +82,19 @@ const MENSAJES_POR_CODIGO: Record<string, string> = {
   user_banned: "Esta cuenta está suspendida. Escribinos desde la página de contacto.",
 };
 
+/**
+ * ¿La respuesta de `signUp` indica que ese email ya tenía cuenta? Con la confirmación de mail activa Supabase no devuelve un error:
+ * devuelve un usuario sin identidades. Sin ella devuelve el error `user_already_exists`. En los dos casos el formulario de registro
+ * responde igual que con un email nuevo, para no revelar qué emails están registrados.
+ */
+export function emailYaRegistrado(
+  error: { code?: string } | null | undefined,
+  usuario: { identities?: unknown[] | null } | null | undefined,
+): boolean {
+  if (error) return error.code === "user_already_exists" || error.code === "email_exists";
+  return Array.isArray(usuario?.identities) && usuario.identities.length === 0;
+}
+
 /** Supabase no pudo entregar el mail al SMTP (clave, remitente o dominio mal configurados, o el proveedor caído). Llega como un 500 "unexpected_failure". */
 const MENSAJE_FALLA_DE_MAIL = "No pudimos mandarte el mail en este momento. Probá de nuevo en unos minutos; si sigue pasando, escribinos desde la página de Contacto.";
 const FALLA_DE_MAIL = /error sending .*email/i;

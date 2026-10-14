@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import { auditoria, busquedas, facturas, institucionMiembros, instituciones, usuarios } from "@/db/schema";
 import {
@@ -44,6 +44,8 @@ export type FilaInstitucion = {
   plan: string;
   verificada: boolean;
   suspendida: boolean;
+  /** Se procesó su baja: queda solo el registro fiscal. */
+  deBaja: boolean;
   pagoVencido: boolean;
   busquedasTotal: number;
   busquedasActivas: number;
@@ -75,7 +77,9 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
   if (f.plan) condiciones.push(eq(instituciones.plan, f.plan));
   if (f.verificacion) condiciones.push(eq(instituciones.verificada, f.verificacion === "si"));
   if (f.estado === "activa") condiciones.push(eq(instituciones.suspendida, false));
-  if (f.estado === "suspendida") condiciones.push(eq(instituciones.suspendida, true));
+  // Una dada de baja siempre está suspendida, pero no es lo mismo: tiene su propio estado.
+  if (f.estado === "suspendida") condiciones.push(eq(instituciones.suspendida, true), isNull(instituciones.bajaEn));
+  if (f.estado === "baja") condiciones.push(isNotNull(instituciones.bajaEn));
   if (f.estado === "vencida") condiciones.push(conPagoVencido(hoy));
   const donde = condiciones.length ? and(...condiciones) : undefined;
 
@@ -103,6 +107,7 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
       plan: instituciones.plan,
       verificada: instituciones.verificada,
       suspendida: instituciones.suspendida,
+      deBaja: sql<boolean>`${instituciones.bajaEn} is not null`.mapWith(Boolean).as("de_baja"),
       pagoVencido: sql<boolean>`${conPagoVencido(hoy)}`.mapWith(Boolean).as("pago_vencido"),
       busquedasTotal: cuenta(sql`select count(*) from busquedas b where b.institucion_id = ${INST_ID}`).as(
         "busquedas_total",

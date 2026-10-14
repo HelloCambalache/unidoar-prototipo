@@ -3,7 +3,8 @@ import { ETIQUETA_ESTADO_COBRO, ETIQUETA_ESTADO_FACTURA, type EstadoCobro, type 
 
 /* Insignias de estado de las pantallas de instituciones y cobros del backoffice. */
 
-export function InsigniaCuenta({ suspendida }: { suspendida: boolean }) {
+export function InsigniaCuenta({ suspendida, baja = false }: { suspendida: boolean; baja?: boolean }) {
+  if (baja) return <Insignia tono="neutro">Dada de baja</Insignia>;
   return suspendida ? (
     <Insignia tono="naranja" punto>
       Suspendida
