@@ -156,7 +156,9 @@ export const institucionDatosSchema = z.object({
   direccion: texto(3, 200),
   partido: texto(2, 100),
   provincia: texto(2, 100),
-  aceptaTerminos: z.literal("on", { error: "Tenés que aceptar los términos y condiciones" }),
+  // La casilla solo se dibuja si la cuenta todavía no aceptó los términos (se aceptan en el paso 1 del alta). Quién la exige es
+  // `crearInstitucion`, que mira la constancia de la cuenta: acá no puede ser obligatoria o el alta no se podría completar.
+  aceptaTerminos: z.string().optional(),
 });
 export type InstitucionDatos = z.infer<typeof institucionDatosSchema>;
 
