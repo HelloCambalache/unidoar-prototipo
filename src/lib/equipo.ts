@@ -44,6 +44,24 @@ export const rutaDeInvitacion = (invitacionId: string) => `/invitacion/${invitac
  */
 export const puedeSumarseAlEquipo = (usuario: { terminosAceptadosEn: Date | null }) => usuario.terminosAceptadosEn !== null;
 
+/** Invitaciones sin responder que puede tener una institución a la vez, y personas (activas o invitadas) en su equipo. */
+export const MAX_INVITACIONES_PENDIENTES = 20;
+export const MAX_PERSONAS_EN_EL_EQUIPO = 60;
+
+/**
+ * ¿Se puede invitar a una persona más? Devuelve el motivo si no. Los topes frenan el abuso (una cuenta que llena la base de
+ * invitaciones y manda mails) sin molestar a un equipo normal; si una institución necesita más, lo resuelve el equipo de UNIDOAR.
+ */
+export function motivoDeTopeDeEquipo(activos: number, pendientes: number): string | null {
+  if (pendientes >= MAX_INVITACIONES_PENDIENTES) {
+    return `Ya tenés ${MAX_INVITACIONES_PENDIENTES} invitaciones sin responder. Cancelá las que no hagan falta antes de invitar a alguien más.`;
+  }
+  if (activos + pendientes >= MAX_PERSONAS_EN_EL_EQUIPO) {
+    return `El equipo llegó al máximo de ${MAX_PERSONAS_EN_EL_EQUIPO} personas. Si necesitás más, escribinos desde Contacto.`;
+  }
+  return null;
+}
+
 /** Solo el dueño y los administradores invitan, cambian roles y quitan gente. */
 export const esRolGestor = (rol: string | null | undefined) => rol === "dueno" || rol === "administrador";
 

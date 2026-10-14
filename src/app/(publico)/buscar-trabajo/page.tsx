@@ -122,6 +122,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
               categoria: filtros.categoria,
               nivel: filtros.nivel,
               turno: filtros.turno,
+              tipo: filtros.tipo,
               rapidas: filtros.rapidas,
               verificadas: filtros.verificadas,
             }}

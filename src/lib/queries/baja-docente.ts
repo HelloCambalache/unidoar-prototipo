@@ -116,6 +116,8 @@ export async function borrarDatosDelProfesional(
       or(
         eq(colaCorreos.usuarioId, cuenta.id),
         inArray(sql`lower(${colaCorreos.para})`, emails),
+        // El mensaje que mandó por Contacto vive también en el mail al equipo (M60), con su email adentro de `datos`.
+        inArray(sql`lower(${colaCorreos.datos}->>'email')`, emails),
         sql`${colaCorreos.datos}::text like ${patronQueContiene(docenteId)}`,
         ...(nombre ? [sql`${colaCorreos.datos}::text ilike ${patronQueContiene(nombre)}`] : []),
       ),
@@ -135,10 +137,17 @@ export async function borrarDatosDelProfesional(
 
   // Lo que el equipo anotó sobre ella (verificaciones, suspensiones, el pedido de baja) lleva su nombre y su email adentro:
   // queda qué se hizo, cuándo y quién, sin esos datos.
+  // También lo que se anotó sobre su cuenta (por ejemplo el cambio de email, que guarda los dos emails) y lo que ella misma hizo.
   await tx
     .update(auditoria)
     .set({ detalle: null })
-    .where(and(eq(auditoria.entidad, "docente"), eq(auditoria.entidadId, docenteId)));
+    .where(
+      or(
+        and(eq(auditoria.entidad, "docente"), eq(auditoria.entidadId, docenteId)),
+        and(eq(auditoria.entidad, "usuario"), eq(auditoria.entidadId, cuenta.id)),
+        eq(auditoria.usuarioId, cuenta.id),
+      ),
+    );
 
   // El perfil y, en cascada, postulaciones (con sus notas), CV enviados, inscripciones y datos personales.
   await tx.delete(docentes).where(eq(docentes.id, docenteId));

@@ -5,10 +5,19 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sesionActual } from "@/lib/auth";
-import { PRIMER_PASO_PROTEGIDO, registrarFallaDeMail, rutaInternaSegura, traducirErrorAuth, type EstadoAuth } from "@/lib/acceso";
+import {
+  PRIMER_PASO_PROTEGIDO,
+  destinoTrasConfirmar,
+  esTipoDeConfirmacion,
+  registrarFallaDeMail,
+  rutaInternaSegura,
+  traducirErrorAuth,
+  type EstadoAuth,
+} from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { COOKIE_RECUPERACION, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
 import { COOKIE_TERMINOS, VIDA_COOKIE_TERMINOS_SEGUNDOS, codificarAceptacion } from "@/lib/terminos";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
@@ -179,6 +188,10 @@ export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData)
       path: "/",
       maxAge: VIDA_COOKIE_TERMINOS_SEGUNDOS,
     });
+  } else {
+    // Desde "Ingresar" nadie aceptó nada en este paso: si quedó una constancia de otra persona en este navegador (alguien que aceptó los
+    // términos, empezó con Google y no terminó), no puede terminar valiéndole a esta cuenta nueva.
+    (await cookies()).delete(COOKIE_TERMINOS);
   }
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -237,14 +250,47 @@ export async function cambiarContrasena(_previo: EstadoAuth, formData: FormData)
     .safeParse({ password: texto(formData.get("password")), confirmacion: texto(formData.get("confirmacion")) });
   if (!r.success) return { ok: false, error: "Revisá los campos marcados.", campos: errores(r.error) };
 
-  if (!(await sesionActual())) {
+  // Sin la contraseña actual solo se puede si se llegó por el enlace del mail de recuperación (deja una cookie de unos minutos).
+  const jar = await cookies();
+  if (!(await sesionActual()) || !jar.has(COOKIE_RECUPERACION)) {
     return { ok: false, error: traducirErrorAuth({ code: "otp_expired" }), codigo: "otp_expired" };
   }
 
   const supabase = await crearClienteServidor();
   const { error } = await supabase.auth.updateUser({ password: r.data.password });
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code };
+  jar.delete(COOKIE_RECUPERACION);
 
   revalidatePath("/", "layout");
   redirect("/inicio");
+}
+
+/**
+ * Segundo paso del enlace de un mail de confirmación de registro o de recuperación de contraseña (el primero es la página
+ * /auth/confirmar, que solo muestra un botón). El token se gasta recién acá, cuando la persona toca el botón: los programas que
+ * revisan los enlaces de los mails (antivirus, Outlook "vínculos seguros") abren la dirección pero no aprietan botones, así que ya no
+ * consumen el enlace antes que quien lo recibió. El token viaja en un campo oculto y se verifica en el servidor (`verifyOtp`): anda desde
+ * cualquier dispositivo y la sesión queda abierta en el que se tocó el botón.
+ */
+export async function confirmarEnlace(formData: FormData): Promise<void> {
+  const tipo = texto(formData.get("type"));
+  const tokenHash = texto(formData.get("token_hash"));
+  if (!tokenHash || !esTipoDeConfirmacion(tipo) || !supabaseConfigurado()) redirect("/ingresar?error=enlace");
+
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
+  if (error) redirect("/ingresar?error=enlace");
+
+  // Quien llegó por el enlace de recuperación puede elegir la contraseña nueva sin la actual, durante unos minutos.
+  if (tipo === "recovery") {
+    (await cookies()).set(COOKIE_RECUPERACION, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: VIDA_RECUPERACION_SEGUNDOS,
+    });
+  }
+  revalidatePath("/", "layout");
+  redirect(destinoTrasConfirmar(tipo));
 }

@@ -280,6 +280,13 @@ export const postulaciones = pgTable(
     mensaje: text("mensaje"),
     entrevistaEn: timestamp("entrevista_en", { withTimezone: true }),
     entrevistaTitulo: text("entrevista_titulo"),
+    /**
+     * La agenda PERSONAL del profesional (un recordatorio propio: "llamar a la directora"). Es aparte de `entrevistaEn`, que es la
+     * entrevista que agenda la institución: si compartieran columna, el profesional podría borrarla o la institución verla como suya.
+     * Agregadas a mano (alter table … add column).
+     */
+    agendaDocenteEn: timestamp("agenda_docente_en", { withTimezone: true }),
+    agendaDocenteTitulo: text("agenda_docente_titulo"),
     /** Cuándo la institución anotó que el docente hizo el examen preocupacional (etapa `examen_preocupacional`); null = pendiente. */
     examenPreocupacionalEn: timestamp("examen_preocupacional_en", { withTimezone: true }),
     /** Archivos del estudio (paths del bucket privado + nombre original): ver src/lib/examen-preocupacional.ts. */

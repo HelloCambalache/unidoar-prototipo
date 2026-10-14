@@ -11,6 +11,7 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M12: { nombre: "Lucía", motivo: "El DNI se ve borroso.\nSubilo de nuevo." },
   M13: { nombre: "Lucía", motivo: "No coincide el nombre." },
   M15: { nombre: "Lucía", institucion: null, motivo: "Datos falsos" },
+  M16: { nombre: "Lucía", institucion: null },
   M20: { institucion: "Club Atlético", puesto: "Profesor de natación", ruta: "/docente/buscar-trabajo" },
   M21: { institucion: "Club Atlético", puesto: "Suplencia de matemática", zona: "Quilmes", plazo: "jueves 8 de octubre", ruta: "/docente/buscar-trabajo" },
   M23: { institucion: "Club Atlético", puesto: "Profesor", ruta: "/docente/postulaciones?abrir=1" },
@@ -63,7 +64,7 @@ describe("plantillas de mails", () => {
   it("los grupos opcionales son solo los de contratación", () => {
     const opcionales = (Object.keys(PLANTILLAS) as PlantillaId[]).filter((id) => esGrupoOpcional(PLANTILLAS[id].grupo));
     assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30"]);
-    for (const id of ["M11", "M12", "M13", "M15", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
+    for (const id of ["M11", "M12", "M13", "M15", "M16", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
     for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56"] as const) {
       assert.equal(PLANTILLAS[id].grupo, "facturacion");
       assert.equal(PLANTILLAS[id].remitente, "facturacion");
@@ -146,6 +147,17 @@ describe("plantillas de mails", () => {
     assert.ok(!institucion.texto.includes("El motivo:") && !institucion.texto.includes("> "));
     const sinNombre = armarMail("M15", { nombre: null, institucion: null, motivo: null }, { origen: ORIGEN });
     assert.ok(sinNombre.texto.includes("Hola: suspendimos tu cuenta"));
+  });
+
+  it("M16 avisa la reactivación a un profesional y a una institución, cada uno con su botón", () => {
+    const docente = armarMail("M16", { nombre: "Lucía", institucion: null }, { origen: ORIGEN });
+    assert.ok(docente.texto.includes("Hola Lucía: reactivamos tu cuenta en UNIDOAR."));
+    assert.ok(docente.texto.includes(`${ORIGEN}/docente/dashboard`));
+    const institucion = armarMail("M16", { nombre: null, institucion: "Club Atlético" }, { origen: ORIGEN });
+    assert.ok(institucion.texto.includes("Hola: reactivamos la cuenta de Club Atlético en UNIDOAR."));
+    assert.ok(institucion.texto.includes(`${ORIGEN}/institucion/dashboard`));
+    const sinNombre = armarMail("M16", { nombre: null, institucion: null }, { origen: ORIGEN });
+    assert.ok(sinNombre.texto.includes("Hola: reactivamos tu cuenta"));
   });
 
   it("M60 responde a quien escribió y el resto no define una respuesta propia", () => {

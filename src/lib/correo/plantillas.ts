@@ -22,6 +22,8 @@ export type DatosDe = {
   M13: { nombre: string; motivo: string };
   /** Docente: `nombre` y sin `institucion`. Institución: `institucion` y sin `nombre` (le llega a todo el equipo). */
   M15: { nombre: string | null; institucion: string | null; motivo: string | null };
+  /** El equipo levantó la suspensión. Mismos datos que M15 (sin el motivo): profesional con `nombre`, institución con `institucion`. */
+  M16: { nombre: string | null; institucion: string | null };
   M20: { institucion: string; puesto: string; ruta: string };
   M21: { institucion: string; puesto: string; zona: string | null; plazo: string | null; ruta: string };
   M23: { institucion: string; puesto: string; ruta: string };
@@ -169,6 +171,21 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       ],
       cita: d.motivo ?? undefined,
       boton: { texto: "Escribirnos", ruta: "/contacto" },
+    }),
+  },
+  M16: {
+    grupo: "cuenta",
+    remitente: "app",
+    contenido: (d) => ({
+      asunto: "Reactivamos tu cuenta de UNIDOAR",
+      previa: "Tu cuenta de UNIDOAR volvió a estar activa.",
+      titulo: "Reactivamos tu cuenta",
+      parrafos: [
+        d.institucion
+          ? ["Hola: reactivamos la cuenta de ", n(d.institucion), " en UNIDOAR. El equipo ya puede volver a entrar y usar la plataforma con normalidad."]
+          : ["Hola", d.nombre ? " " : "", d.nombre ? n(d.nombre) : "", ": reactivamos tu cuenta en UNIDOAR. Ya podés volver a entrar y volvés a aparecer en las búsquedas de las instituciones."],
+      ],
+      boton: { texto: "Entrar a UNIDOAR", ruta: d.institucion ? "/institucion/dashboard" : "/docente/dashboard" },
     }),
   },
 

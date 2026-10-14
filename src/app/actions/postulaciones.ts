@@ -17,8 +17,10 @@ import { requerirDocente } from "@/lib/auth";
 import { instanteArgentina } from "@/lib/calendario";
 import { postulacionMensajeSchema } from "@/lib/catalogo";
 import { correoDePostulantes } from "@/lib/correo/eventos";
+import { archivosDeExamen } from "@/lib/examen-preocupacional";
 import { busquedaAbierta, esId, nombreCompleto } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
 
 /** Pantallas del docente que listan o cuentan postulaciones / ofertas. */
@@ -139,7 +141,19 @@ export async function retirarPostulacion(postulacionId: string): Promise<Resulta
 
   const destinatarios = await usuariosConAcceso(institucion);
   const nombre = nombreCompleto(docente);
-  await transaccion(async (tx) => {
+  // Los estudios del examen preocupacional (dato de salud) que la institución haya guardado: se borran de Storage con la postulación.
+  let archivosDelExamen: string[] = [];
+  const resultado = await transaccion(async (tx) => {
+    // Se relee con la fila bloqueada: si en el medio la institución la contrató, no se retira.
+    const [vigente] = await tx
+      .select({ etapa: postulaciones.etapa, archivos: postulaciones.examenPreocupacionalArchivos })
+      .from(postulaciones)
+      .where(eq(postulaciones.id, postulacion.id))
+      .limit(1)
+      .for("update");
+    if (!vigente) return fallo("No encontramos esa postulación.");
+    if (vigente.etapa === "contratado") return fallo("Esta postulación terminó en contratación: ya no se puede retirar.");
+    archivosDelExamen = archivosDeExamen(vigente.archivos).map((a) => a.path);
     await tx.delete(postulaciones).where(eq(postulaciones.id, postulacion.id));
     if (destinatarios.length > 0) {
       await tx.insert(notificaciones).values(
@@ -152,8 +166,12 @@ export async function retirarPostulacion(postulacionId: string): Promise<Resulta
         })),
       );
     }
+    return ok();
   });
 
+  if (!resultado.ok) return resultado;
+  // Después de confirmar el borrado (si falla, el archivo queda como huérfano para `db:limpiar-archivos`).
+  await borrarArchivos(archivosDelExamen);
   revalidarPostulaciones(busqueda.id);
   return ok();
 }
@@ -239,7 +257,10 @@ const agendaSchema = z.object({
   titulo: z.string().trim().min(2, "Poné un título").max(120, "Máximo 120 caracteres"),
 });
 
-/** Guarda la fecha, hora (de Argentina) y título que el docente quiere recordar para esta postulación. */
+/**
+ * Guarda la fecha, hora (de Argentina) y título que el docente quiere recordar para esta postulación. Es su agenda personal: no toca
+ * la entrevista que agenda la institución (otras columnas).
+ */
 export async function agendarDocente(
   postulacionId: string,
   entrada: { fecha: string; hora: string; titulo: string },
@@ -253,7 +274,7 @@ export async function agendarDocente(
 
   const actualizadas = await getDb()
     .update(postulaciones)
-    .set({ entrevistaEn: instante, entrevistaTitulo: datos.data.titulo })
+    .set({ agendaDocenteEn: instante, agendaDocenteTitulo: datos.data.titulo })
     .where(and(eq(postulaciones.id, postulacionId), eq(postulaciones.docenteId, docente.id)))
     .returning({ id: postulaciones.id });
   if (actualizadas.length === 0) return fallo("No encontramos esa postulación.");
@@ -268,7 +289,7 @@ export async function quitarAgendaDocente(postulacionId: string): Promise<Result
 
   const actualizadas = await getDb()
     .update(postulaciones)
-    .set({ entrevistaEn: null, entrevistaTitulo: null })
+    .set({ agendaDocenteEn: null, agendaDocenteTitulo: null })
     .where(and(eq(postulaciones.id, postulacionId), eq(postulaciones.docenteId, docente.id)))
     .returning({ id: postulaciones.id });
   if (actualizadas.length === 0) return fallo("No encontramos esa postulación.");

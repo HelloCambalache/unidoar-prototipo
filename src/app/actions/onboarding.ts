@@ -5,7 +5,7 @@ import { quitados } from "@/lib/archivos";
 import { planes } from "@/lib/queries/planes";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
-import { eq, like } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import { docenteDetalle, docentes, institucionMiembros, instituciones, type DocumentosDocente } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
@@ -25,6 +25,7 @@ import {
   nivelesHorariosSchema,
   partirNombre,
   pathPrivadoSchema,
+  rutaPasoDocente,
   rutaPasoPendienteDocente,
   type EstadoFormulario,
 } from "@/lib/onboarding";
@@ -91,6 +92,16 @@ function sinRepetidos(lista: string[]) {
   });
 }
 
+/** ¿La cuenta ya es miembro activo del equipo de alguna institución? */
+async function esMiembroActivo(usuarioId: string): Promise<boolean> {
+  const [fila] = await getDb()
+    .select({ id: institucionMiembros.id })
+    .from(institucionMiembros)
+    .where(and(eq(institucionMiembros.usuarioId, usuarioId), eq(institucionMiembros.estado, "activo")))
+    .limit(1);
+  return Boolean(fila);
+}
+
 function esViolacionUnica(e: unknown): boolean {
   const codigo = (e as { code?: string; cause?: { code?: string } })?.code ?? (e as { cause?: { code?: string } })?.cause?.code;
   return codigo === "23505";
@@ -114,6 +125,16 @@ async function slugLibre(nombre: string) {
  */
 export async function crearInstitucion(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const usuario = await usuarioParaAlta("institucion");
+  const propia = await institucionPropia(usuario.id);
+
+  if (propia?.verificada) {
+    // El equipo ya revisó el nombre, el tipo y el CUIT: desde acá no se pisan (la pantalla ni siquiera se ofrece; esto cubre un pedido directo).
+    return conError(formData, "Tu institución ya está verificada. Para cambiar sus datos escribinos desde Contacto.");
+  }
+  if (!propia && (await esMiembroActivo(usuario.id))) {
+    // Ya es parte del equipo de otra institución: crear una propia dejaría a la misma persona en dos cuentas.
+    redirect(RUTA_INICIO.institucion);
+  }
 
   const r = parsear(institucionDatosSchema, formData);
   if (!r.ok) return conError(formData, r.error, r.campos);
@@ -137,7 +158,7 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
     osm: true,
   });
   const ubicacion = ubicacionDeInstitucion(delCatalogo, deLaDireccion);
-  const existente = await institucionPropia(usuario.id);
+  const existente = propia;
   const P = await planes();
   const datos = {
     nombre: d.nombre,
@@ -506,6 +527,9 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
   // No se cierra el alta sin lo básico: si falta algo de los pasos anteriores, se vuelve a ese paso.
   const pendiente = rutaPasoPendienteDocente(docente);
   if (pendiente !== "/onboarding/docente/4") redirect(pendiente);
+  // El DNI es lo que el equipo necesita para verificar a la persona: "Guardar borrador" o "Guardar y salir" en "Tu perfil" lo dejan pasar
+  // sin él, así que no se cierra el alta hasta que esté.
+  if (!detalle?.dni) redirect(`${rutaPasoDocente("3")}?falta=dni`);
 
   const asignaturas = docente.asignaturas.slice(0, 2).join(", ");
   await db

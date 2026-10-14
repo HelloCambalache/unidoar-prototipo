@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CategoriaDocente, EstadoCeldaDisponibilidad, GrillaDisponibilidad } from "@/db/schema";
 import { CATEGORIAS, DISPONIBILIDAD, NIVELES } from "@/lib/catalogo";
+import { esCuitValido, soloDigitos } from "@/lib/documentos";
 
 /*
  * Lo que comparten el onboarding (servidor y cliente): pasos, copy, esquemas Zod y la lógica
@@ -247,8 +248,6 @@ export const categoriaDocenteSchema = z.object({
   estudio: z.enum(["recibido", "estudiante"], { error: "Contanos si ya te recibiste" }),
 });
 
-const soloDigitos = (v: string) => v.replace(/[\s.\-]/g, "");
-
 const fechaNacimiento = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
@@ -264,12 +263,13 @@ const dni = z
   .string()
   .trim()
   .transform(soloDigitos)
-  .pipe(z.string().regex(/^\d{7,9}$/, "El DNI tiene 7 u 8 números"));
+  .pipe(z.string().regex(/^\d{7,8}$/, "El DNI tiene 7 u 8 números"));
 const cuil = z
   .string()
   .trim()
   .transform(soloDigitos)
-  .pipe(z.string().regex(/^\d{11}$/, "El CUIL tiene 11 números"));
+  .pipe(z.string().regex(/^\d{11}$/, "El CUIL tiene 11 números"))
+  .refine(esCuitValido, "Revisá el CUIL: el último número no coincide");
 
 /** Datos personales del paso "Tu perfil": cada campo es opcional, pero si viene tiene que tener buen formato. */
 // El nombre y el apellido ya se piden al crear la cuenta (paso 1): acá no se vuelven a pedir ni se tocan.

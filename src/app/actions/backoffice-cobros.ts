@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { transaccion } from "@/db";
+import { getDb, transaccion } from "@/db";
 import { auditoria, facturas, instituciones, solicitudesPlan } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
@@ -28,6 +28,7 @@ import {
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
 import { pesos } from "@/lib/planes";
 import { planes } from "@/lib/queries/planes";
+import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import {
   aplicarPlanAlPeriodoActual,
@@ -177,7 +178,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
         monto = existente.monto;
         await tx.update(facturas).set({ estado: "pagada", pagadaEn, medio: MEDIO }).where(eq(facturas.id, existente.id));
       } else {
-        monto = P.montoDePlan(plan);
+        monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1);
         const [nueva] = await tx
           .insert(facturas)
           .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
@@ -321,7 +322,8 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   const datos = parsear(facturaNuevaSchema, entrada);
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fechaCobro, medio } = datos.data;
-  const monto = (await planes()).montoDePlan(plan);
+  // En un plan por sede (Multisede) el monto es el precio de una sede por las sedes que tiene la institución.
+  const monto = (await planes()).montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1);
 
   try {
     const resultado = await transaccion(async (tx) => {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CategoriaDocente, EtapaPostulacion, RolUsuario } from "@/db/schema";
+import { esCuitValido, formatearCuit } from "@/lib/documentos";
 
 /* Vocabularios compartidos entre formularios, filtros y validación del servidor. */
 
@@ -144,6 +145,17 @@ const textoOpcional = (max = 500) =>
     .optional()
     .transform((v) => (v ? v : undefined));
 
+export const MENSAJE_CUIT = "Revisá el CUIT: tienen que ser 11 números y el último no coincide con los demás";
+
+/** CUIT opcional: vacío = sin dato; si viene, tiene que ser un CUIT real (11 números con su dígito verificador). Se guarda con guiones. */
+const cuitOpcional = z
+  .string()
+  .trim()
+  .max(20)
+  .optional()
+  .refine((v) => !v || esCuitValido(v), MENSAJE_CUIT)
+  .transform((v) => (v ? formatearCuit(v) : undefined));
+
 export const institucionDatosSchema = z.object({
   nombre: texto(2, 120),
   tipo: z.enum(TIPOS_INSTITUCION),
@@ -151,7 +163,7 @@ export const institucionDatosSchema = z.object({
   contactoNombre: texto(2, 120),
   contactoRol: z.enum(ROLES_CONTACTO),
   telefono: texto(6, 40),
-  cuit: textoOpcional(20),
+  cuit: cuitOpcional,
   cue: textoOpcional(20),
   direccion: texto(3, 200),
   partido: texto(2, 100),

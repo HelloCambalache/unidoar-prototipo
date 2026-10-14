@@ -245,9 +245,9 @@ function Ficha({
           >
             Ver perfil completo
           </BotonLink>
-          {cv.cvUrl && (
+          {cv.tieneCv && !p.suspendido && (
             <a
-              href={cv.cvUrl}
+              href={`/api/cv/${p.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className={botonClases({ variante: "secundario", tamano: "sm", className: "flex-1" })}
@@ -269,11 +269,15 @@ function Ficha({
           <p className="m-0 text-xs leading-normal text-apagado">
             El equipo de UNIDOAR suspendió este perfil: por ahora no mostramos su teléfono ni su email.
           </p>
-        ) : (
+        ) : cv.contactoVisible ? (
           <>
             <Fila etiqueta="Teléfono" valor={cv.telefono} />
             <Fila etiqueta="Email" valor={cv.email} />
           </>
+        ) : (
+          <p className="m-0 text-xs leading-normal text-apagado">
+            Todavía no se postuló: cuando lo haga, o te mande su CV, vas a ver su teléfono y su email.
+          </p>
         )}
         <Fila etiqueta="Ubicación" valor={cv.ubicacion ?? (p.zonas.length ? p.zonas.join(", ") : null)} />
       </section>
@@ -379,7 +383,7 @@ function Ficha({
                       >
                         Ver
                       </a>
-                      {puedeAdjuntar && (
+                      {!soloLectura && (
                         <button
                           type="button"
                           onClick={() => quitarExamen(i)}

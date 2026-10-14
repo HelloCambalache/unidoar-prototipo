@@ -9,14 +9,7 @@ const hrefPerfil = (id: string, busquedaId?: string) =>
   `/institucion/docente/${id}${busquedaId ? `?busqueda=${busquedaId}` : ""}`;
 
 /** Columna "Docentes recomendados para vos" del dashboard. */
-export function RecomendadosLateral({
-  docentes,
-  busquedaId,
-}: {
-  docentes: DocenteRecomendado[];
-  /** Búsqueda a la que se invitaría (la más reciente), para que el perfil la traiga preseleccionada. */
-  busquedaId?: string;
-}) {
+export function RecomendadosLateral({ docentes }: { docentes: DocenteRecomendado[] }) {
   return (
     <section aria-label="Profesionales recomendados" className="w-[300px] flex-none rounded-ud border border-borde bg-white p-5 max-[760px]:w-full">
       <h2 className="m-0 mb-1 text-[15px] leading-tight font-semibold">Profesionales recomendados para vos</h2>
@@ -55,7 +48,7 @@ export function RecomendadosLateral({
                   ))}
                 </ul>
               )}
-              <BotonLink href={hrefPerfil(d.id, busquedaId)} variante="secundario" tamano="sm" bloque>
+              <BotonLink href={hrefPerfil(d.id, d.busquedaId ?? undefined)} variante="secundario" tamano="sm" bloque>
                 Invitar a postularse
               </BotonLink>
             </li>

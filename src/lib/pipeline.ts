@@ -69,9 +69,12 @@ export type PostulanteTarjeta = {
     niveles: string[];
     disponibilidad: string[];
     ubicacion: string | null;
+    /** ¿Se muestra su contacto? Solo si se postuló o le mandó su CV a la institución (no alcanza con haberla invitado). */
+    contactoVisible: boolean;
     telefono: string | null;
     email: string | null;
-    cvUrl: string | null;
+    /** ¿Subió un CV? (el archivo se abre por /api/cv/<postulación>). */
+    tieneCv: boolean;
   };
 };
 
@@ -166,3 +169,9 @@ export function enlaceWhatsapp(telefono: string | null | undefined) {
   }
   return n.length === 10 ? `https://wa.me/549${n}` : null;
 }
+
+/**
+ * ¿La institución puede ver el contacto de esta persona? Solo si ella se postuló a una búsqueda o le mandó su CV: que la
+ * institución la haya invitado no alcanza (es la misma regla que la ficha y la lista de Profesionales).
+ */
+export const puedeVerElContacto = (origen: "postulacion" | "invitacion", mandoSuCv: boolean) => origen === "postulacion" || mandoSuCv;

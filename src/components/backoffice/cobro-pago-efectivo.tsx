@@ -21,12 +21,15 @@ export type FacturaDelMes = { periodo: string; pagada: boolean; monto: number };
  */
 export function CobroPagoEfectivo({
   institucionId,
+  sedes,
   catalogo,
   plan,
   periodoSugerido,
   facturas,
 }: {
   institucionId: string;
+  /** Cuántas sedes tiene la institución (el monto de un plan por sede se multiplica por esto). */
+  sedes: number;
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
@@ -57,7 +60,7 @@ export function CobroPagoEfectivo({
 
   const factura = PERIODO_VALIDO.test(periodo) ? facturas.find((f) => f.periodo === periodo) : undefined;
   const situacion = situacionDelMes(factura ? { estado: factura.pagada ? "pagada" : "pendiente" } : null);
-  const monto = factura ? factura.monto : P.montoDePlan(planElegido);
+  const monto = factura ? factura.monto : P.montoDePlan(planElegido, sedes);
 
   const guardar = () => {
     const falloFecha = fecha ? errorDeFechaDePago(fecha, hoyAR()) : "Elegí la fecha del pago.";

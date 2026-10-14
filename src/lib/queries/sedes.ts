@@ -158,3 +158,16 @@ export async function busquedasAbiertasPorSede(institucionId: string, ejecutor: 
     .groupBy(busquedas.sedeId);
   return new Map(filas.flatMap((f) => (f.sedeId ? [[f.sedeId, f.n] as const] : [])));
 }
+
+/** Cuántas sedes tiene cada institución (las que no tienen ninguna cuentan como una: su ubicación de la ficha). Para los planes por sede. */
+export async function cantidadDeSedes(ejecutor: Ejecutor, institucionIds: string[]): Promise<Map<string, number>> {
+  const cantidades = new Map<string, number>(institucionIds.map((id) => [id, 1]));
+  if (institucionIds.length === 0) return cantidades;
+  const filas = await ejecutor
+    .select({ institucionId: institucionSedes.institucionId, n: count() })
+    .from(institucionSedes)
+    .where(inArray(institucionSedes.institucionId, institucionIds))
+    .groupBy(institucionSedes.institucionId);
+  for (const f of filas) cantidades.set(f.institucionId, Math.max(1, f.n));
+  return cantidades;
+}

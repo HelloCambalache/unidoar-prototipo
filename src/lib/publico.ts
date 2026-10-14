@@ -7,12 +7,15 @@ export const CUPOS_FUNDADOR = 20;
 export const RUTA_REGISTRO_INSTITUCION = "/onboarding/institucion/1";
 export const RUTA_REGISTRO_DOCENTE = "/onboarding/docente/1";
 
-/** Datos de contacto que muestra /contacto (los del prototipo: confirmarlos antes de salir a producción). */
-export const CONTACTO_SITIO = {
-  email: "hola@unidoar.com",
-  whatsapp: "11 5555-0000",
+/**
+ * Datos de contacto que muestra /contacto. El WhatsApp es `null` hasta tener el número real: así no se muestra uno de ejemplo
+ * (poner el número acá y la tarjeta aparece sola). El email tiene que ser un buzón que alguien lea.
+ */
+export const CONTACTO_SITIO: { email: string; whatsapp: string | null; horario: string } = {
+  email: "hola@unidoar.com.ar",
+  whatsapp: null,
   horario: "Lunes a viernes, 9 a 18 hs",
-} as const;
+};
 
 /** Valor de `testimonios.pagina` de cada categoría. */
 export const PAGINA_TESTIMONIOS: Record<CategoriaDocente, string> = {

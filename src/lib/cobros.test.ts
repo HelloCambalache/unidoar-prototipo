@@ -152,10 +152,14 @@ describe("facturas automáticas (planificarFacturas)", () => {
   const una = (i: InstitucionFacturable, recientes: FacturaReciente[], periodo = P, hoy = HOY) =>
     planificarFacturas([i], recientes, periodo, hoy);
 
-  it("no factura sola a una multisede: el total depende de cuántas sedes tiene", () => {
-    const r = una(inst("m", "multisede"), [f("m", "2026-09", "multisede", "pagada")]);
-    assert.deepEqual(r.crear, []);
-    assert.deepEqual(r.omitidas, [{ institucionId: "m", motivo: "por_sede" }]);
+  it("factura una multisede por la cantidad de sedes que tiene", () => {
+    const r = planificarFacturas([{ ...inst("m", "multisede"), sedes: 6 }], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
+    assert.equal(r.crear[0]!.monto, 90_000, "6 sedes × $ 15.000");
+    assert.deepEqual(r.omitidas, []);
+    const sinDato = planificarFacturas([inst("m", "multisede")], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
+    assert.equal(sinDato.crear[0]!.monto, 15_000, "sin saber las sedes, una");
+    const otroPlan = planificarFacturas([{ ...inst("a", "colegio"), sedes: 6 }], [f("a", "2026-09", "colegio", "pagada")], P, HOY);
+    assert.equal(otroPlan.crear[0]!.monto, 50_000, "un plan que no es por sede no se multiplica");
   });
 
   it("crea la del mes con el monto del plan y el día de cobro por defecto", () => {

@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, count, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { getDb } from "@/db";
-import { colaCorreos, usuarios, type CorreoEnCola } from "@/db/schema";
+import { colaCorreos, docentes, usuarios, type CorreoEnCola } from "@/db/schema";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { rutaDeBaja, rutaDeBajaConUnClic } from "./baja";
 import { destinatariosDelEquipo, modoCorreo, origenDeLosMails, remitenteDe } from "./config";
@@ -72,7 +72,17 @@ export async function encolarParaUsuarios<P extends PlantillaId>(
   if (modoCorreo() === "apagado") return;
   const ids = [...new Set(usuarioIds.filter(Boolean))];
   if (ids.length === 0) return;
-  const cuentas = await ejecutor.select({ id: usuarios.id, email: usuarios.email }).from(usuarios).where(inArray(usuarios.id, ids));
+  let cuentas = await ejecutor.select({ id: usuarios.id, email: usuarios.email }).from(usuarios).where(inArray(usuarios.id, ids));
+  // Los avisos de contratación (invitaciones, preselección, entrevistas, ofertas) no salen hacia un profesional suspendido: no puede
+  // entrar y el enlace terminaría en "cuenta suspendida". Los de la cuenta (como el aviso de la propia suspensión) sí.
+  if (esGrupoOpcional(PLANTILLAS[plantilla].grupo)) {
+    const suspendidos = await ejecutor
+      .select({ usuarioId: docentes.usuarioId })
+      .from(docentes)
+      .where(and(inArray(docentes.usuarioId, ids), eq(docentes.suspendido, true)));
+    const fuera = new Set(suspendidos.map((s) => s.usuarioId));
+    cuentas = cuentas.filter((c) => !fuera.has(c.id));
+  }
   if (cuentas.length === 0) return;
   await ejecutor
     .insert(colaCorreos)

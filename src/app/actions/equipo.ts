@@ -8,7 +8,7 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarCorreo } from "@/lib/correo/cola";
-import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema, rutaDeInvitacion } from "@/lib/equipo";
+import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema, motivoDeTopeDeEquipo, rutaDeInvitacion } from "@/lib/equipo";
 import { membresiaDeUsuario, miembroDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
 
 /*
@@ -107,6 +107,16 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
       return fallo(mensaje, { email: mensaje });
     }
   }
+
+  const [conteo] = await db
+    .select({
+      activos: sql<number>`count(*) filter (where ${institucionMiembros.estado} = 'activo')`.mapWith(Number),
+      pendientes: sql<number>`count(*) filter (where ${institucionMiembros.estado} = 'invitado')`.mapWith(Number),
+    })
+    .from(institucionMiembros)
+    .where(eq(institucionMiembros.institucionId, institucion.id));
+  const tope = motivoDeTopeDeEquipo(conteo?.activos ?? 0, conteo?.pendientes ?? 0);
+  if (tope) return fallo(tope);
 
   // Quién invita, para el mail: el dueño figura con el nombre de contacto de la institución; el resto, con su nombre en el equipo.
   const nombreDeQuienInvita =

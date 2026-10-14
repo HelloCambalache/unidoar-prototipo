@@ -22,13 +22,20 @@ export type CandidatoRecomendable = {
 
 /** Lo que se sabe de una búsqueda abierta de la institución. */
 export type BusquedaAbierta = {
+  /** Para saber a cuál invitarlo: la que mejor coincide con el candidato. */
+  id?: string;
   categoria: CategoriaDocente;
   disciplina: string;
   nivel: string | null;
   turno: string | null;
 };
 
-export type Puntuado = { puntaje: number; motivos: string[] };
+export type Puntuado = {
+  puntaje: number;
+  motivos: string[];
+  /** La búsqueda abierta con la que más coincide (null si no coincide con ninguna en disciplina, nivel ni turno). */
+  busquedaId: string | null;
+};
 
 const igual = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -64,7 +71,8 @@ function afinidadConBusqueda(c: CandidatoRecomendable, b: BusquedaAbierta) {
  * abierta con la que más coincide; sin búsquedas, cuentan solo la cercanía, la experiencia y el título.
  */
 export function puntuarCandidato(c: CandidatoRecomendable, busquedas: BusquedaAbierta[]): Puntuado {
-  const mejor = busquedas.map((b) => afinidadConBusqueda(c, b)).sort((a, b) => b.puntos - a.puntos)[0] ?? { puntos: 0, motivos: [] };
+  const afinidades = busquedas.map((b) => ({ ...afinidadConBusqueda(c, b), id: b.id ?? null })).sort((a, b) => b.puntos - a.puntos);
+  const mejor = afinidades[0] ?? { puntos: 0, motivos: [], id: null };
   const motivos = [...mejor.motivos];
   const cerca = kmLegible(c.km);
   // kmLegible ya trae el "a": "a 5 km" → "A 5 km de tu sede".
@@ -72,7 +80,7 @@ export function puntuarCandidato(c: CandidatoRecomendable, busquedas: BusquedaAb
   if ((c.aniosExperiencia ?? 0) >= 3) motivos.push(`${c.aniosExperiencia} años de experiencia`);
   if (c.tituloVerificado) motivos.push("Título verificado");
   const puntaje = mejor.puntos + puntosPorCercania(c.km) + puntosPorExperiencia(c.aniosExperiencia) + (c.tituloVerificado ? 5 : 0);
-  return { puntaje, motivos };
+  return { puntaje, motivos, busquedaId: mejor.puntos > 0 ? mejor.id : null };
 }
 
 /** Ordena de más a menos recomendable; ante un empate, el más cercano primero. */

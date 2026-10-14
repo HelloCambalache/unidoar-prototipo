@@ -34,6 +34,7 @@ import { esPathPrivadoPropio } from "@/lib/subidas";
 
 const NO_ENCONTRADA = "No encontramos esa postulación.";
 const BUSQUEDA_CERRADA = "La búsqueda está cerrada. Reabrila para mover postulantes.";
+const PERFIL_SUSPENDIDO = "El equipo de UNIDOAR suspendió este perfil: por ahora no se puede avanzar con esta persona.";
 
 /** Pantallas que listan o cuentan postulaciones, de las dos puntas. */
 function revalidarPipeline() {
@@ -67,6 +68,8 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
     if (!fila) return fallo(NO_ENCONTRADA);
     if (fila.busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
+    // A un perfil suspendido no se lo puede mover (ni se le avisa): solo archivar, que es silencioso.
+    if (fila.docente.suspendido && destino.data !== "descartado") return fallo(PERFIL_SUSPENDIDO);
     if (fila.postulacion.etapa === destino.data) return ok();
 
     await tx
@@ -193,8 +196,8 @@ export async function quitarArchivoExamen(postulacionId: string, indice: number)
   const resultado = await transaccion(async (tx) => {
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
     if (!fila) return fallo(NO_ENCONTRADA);
+    // Quitar se puede en cualquier etapa (también con la búsqueda cerrada): es un dato de salud y la institución tiene que poder borrarlo siempre.
     const { postulacion } = fila;
-    if (!puedeAdjuntarAlExamen(postulacion.etapa)) return fallo(SOLO_EN_EL_EXAMEN);
 
     const actuales = archivosDeExamen(postulacion.examenPreocupacionalArchivos);
     const archivo = actuales[indice];
@@ -249,6 +252,7 @@ export async function contratarPostulacion(
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda, docente } = fila;
     if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala antes de contratar.");
+    if (docente.suspendido) return fallo(PERFIL_SUSPENDIDO);
     if (busqueda.estado === "cerrada" && postulacion.etapa !== "contratado") return fallo(BUSQUEDA_CERRADA);
     if (faltaExamenPreocupacional(postulacion) && datos.data.sinExamen !== "on") {
       return fallo("Todavía no anotaste que hizo el examen preocupacional.", {
@@ -328,6 +332,7 @@ export async function agendarEntrevista(
     const { postulacion, busqueda, docente } = fila;
     if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
     if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala para agendar.");
+    if (docente.suspendido) return fallo(PERFIL_SUSPENDIDO);
     if (postulacion.etapa === "contratado") return fallo("Esta persona ya está contratada.");
 
     const anterior = postulacion.entrevistaEn;

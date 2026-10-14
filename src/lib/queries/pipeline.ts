@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   busquedas,
+  cvEnviados,
   docentes,
   favoritos,
   institucionMiembros,
@@ -16,7 +17,7 @@ import { diaHoraLegible } from "@/lib/calendario";
 import { archivosDeExamen } from "@/lib/examen-preocupacional";
 import { aFechaHoraAR, chipEntrevista, diasEntre, fechaCorta, haceTiempo } from "@/lib/fechas";
 import { distanciaKm, kmLegible } from "@/lib/geo";
-import { autorDeNota, type BusquedaPipeline, type NotaVista, type OpcionBusqueda, type PostulanteTarjeta } from "@/lib/pipeline";
+import { autorDeNota, puedeVerElContacto, type BusquedaPipeline, type NotaVista, type OpcionBusqueda, type PostulanteTarjeta } from "@/lib/pipeline";
 import { iniciales } from "@/lib/utils";
 import { busquedaPropia } from "@/lib/queries/busquedas";
 import { estudiantesEntre } from "@/lib/queries/estudiantes";
@@ -88,7 +89,7 @@ export async function pipelineDeBusqueda(
 
   const ids = filas.map((f) => f.p.id);
   const docenteIds = filas.map((f) => f.d.id);
-  const [notas, guardados, estudiantes] = await Promise.all([
+  const [notas, guardados, estudiantes, conCv] = await Promise.all([
     ids.length
       ? db
           .select()
@@ -103,7 +104,15 @@ export async function pipelineDeBusqueda(
           .where(and(eq(favoritos.usuarioId, usuarioId), eq(favoritos.tipo, "docente"), inArray(favoritos.refId, docenteIds)))
       : [],
     estudiantesEntre(docenteIds),
+    // Quienes le mandaron su CV a esta institución: junto con quienes se postularon, son los únicos cuyo contacto se muestra.
+    docenteIds.length
+      ? db
+          .select({ docenteId: cvEnviados.docenteId })
+          .from(cvEnviados)
+          .where(and(eq(cvEnviados.institucionId, institucion.id), inArray(cvEnviados.docenteId, docenteIds)))
+      : [],
   ]);
+  const mandaronCv = new Set(conCv.map((c) => c.docenteId));
 
   // Quién escribió cada nota: su nombre en el equipo de esta institución, y su email como último recurso.
   const autorIds = [...new Set(notas.flatMap((n) => (n.usuarioId ? [n.usuarioId] : [])))];
@@ -189,10 +198,13 @@ export async function pipelineDeBusqueda(
         niveles: d.niveles,
         disponibilidad: d.disponibilidad,
         ubicacion: kmLegible(km),
-        // De un perfil suspendido no se muestra el contacto (tampoco el WhatsApp, que sale del teléfono).
-        telefono: d.suspendido ? null : d.telefono,
-        email: d.suspendido ? null : (d.email ?? emailCuenta ?? null),
-        cvUrl: d.cvUrl,
+        // El contacto (teléfono, email y el WhatsApp que sale de él) solo se muestra de quien se postuló o mandó su CV: una invitación
+        // no alcanza. Y de un perfil suspendido, nunca.
+        contactoVisible: !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)),
+        telefono: !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)) ? d.telefono : null,
+        email: !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)) ? (d.email ?? emailCuenta ?? null) : null,
+        // El archivo no viaja al navegador: "Descargar CV" pasa por /api/cv/<postulación>, que comprueba de quién es y firma la URL.
+        tieneCv: Boolean(d.cvUrl),
       },
     };
   });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { autorDeNota, notaDeTarjeta } from "./pipeline";
+import { autorDeNota, notaDeTarjeta, puedeVerElContacto } from "./pipeline";
 
 describe("nota de la tarjeta del tablero", () => {
   const sinEntrevista = { entrevista: null };
@@ -42,5 +42,19 @@ describe("quién escribió una nota", () => {
     assert.equal(autorDeNota({ usuarioId: OTRA, yo: YO, email: "lucia.perez@colegio.edu.ar" }), "lucia.perez");
     assert.equal(autorDeNota({ usuarioId: OTRA, yo: YO }), null);
     assert.equal(autorDeNota({ usuarioId: null, yo: YO, nombreEnElEquipo: "Marina" }), null);
+  });
+});
+
+describe("quién muestra su contacto en el tablero", () => {
+  it("quien se postuló", () => {
+    assert.equal(puedeVerElContacto("postulacion", false), true);
+  });
+
+  it("quien le mandó su CV a la institución, aunque la hayan invitado", () => {
+    assert.equal(puedeVerElContacto("invitacion", true), true);
+  });
+
+  it("no quien solo fue invitado: una invitación no alcanza", () => {
+    assert.equal(puedeVerElContacto("invitacion", false), false);
   });
 });

@@ -70,6 +70,14 @@ describe("planes vigentes y heredados", () => {
     assert.equal(P.nombreDePlan("fundador"), "Fundador");
     assert.equal(P.montoDePlan("multisede"), 15_000);
   });
+
+  it("un plan por sede se factura por la cantidad de sedes; los demás, no", () => {
+    assert.equal(P.montoDePlan("multisede", 6), 90_000);
+    assert.equal(P.montoDePlan("multisede", 0), 15_000, "nunca menos de una sede");
+    assert.equal(P.montoDePlan("colegio", 6), 50_000);
+    assert.equal(P.equivalenteMensual("multisede", 4), 60_000);
+    assert.equal(P.equivalenteMensual("anual", 6), 60_000, "el anual no es por sede");
+  });
 });
 
 describe("el precio sale del tipo de institución", () => {

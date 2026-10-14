@@ -18,7 +18,7 @@ import { lugarDeBusqueda } from "@/lib/sedes";
 import { busquedaAbierta, RADIO_MAX, tiempoRestante, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { contiene } from "@/lib/sql-texto";
-import { busquedaDeInstitucionActiva, institucionVisible } from "@/lib/visibilidad";
+import { busquedaDeInstitucionActiva, busquedaVigente, institucionVisible } from "@/lib/visibilidad";
 
 type TonoInsignia = ReturnType<typeof estadoParaDocente>["tono"];
 
@@ -247,7 +247,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
       .where(
         and(
           eq(busquedas.institucionId, institucion.id),
-          eq(busquedas.estado, "activa"),
+          busquedaVigente,
           ne(busquedas.id, busqueda.id),
         ),
       )
@@ -256,7 +256,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
     db
       .select({ total: count() })
       .from(busquedas)
-      .where(and(eq(busquedas.institucionId, institucion.id), eq(busquedas.estado, "activa"))),
+      .where(and(eq(busquedas.institucionId, institucion.id), busquedaVigente)),
   ]);
 
   const km =

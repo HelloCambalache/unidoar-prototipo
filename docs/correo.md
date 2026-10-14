@@ -73,6 +73,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M06 | Se invita a alguien al equipo | La persona invitada (aunque no tenga cuenta) | cuenta |
 | M11, M12, M13 | El equipo verifica, pide corregir o rechaza el perfil del docente | El docente | cuenta |
 | M15 | El equipo suspende una cuenta | El docente, o todo el equipo de la institución | cuenta |
+| M16 | El equipo reactiva una cuenta suspendida | El docente, o todo el equipo de la institución | cuenta |
 | M20 | Una institución invita a un docente a postularse | El docente | contratación |
 | M21 | Se publica una búsqueda **rápida** que encaja | Docentes que encajan (tope 3 por día) | contratación |
 | M23, M26 | Pasa a Preseleccionados / se le envía una oferta | El docente (una vez por postulación) | contratación |

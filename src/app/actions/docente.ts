@@ -20,6 +20,7 @@ import {
   zonas,
 } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
+import { institucionVisible } from "@/lib/visibilidad";
 import { requerirDocente } from "@/lib/auth";
 import { normalizar } from "@/lib/coincidencia";
 import { decidirEstudios, esEstudiante } from "@/lib/estudiantes";
@@ -90,7 +91,7 @@ export async function enviarCvAInstitucion(institucionId: string): Promise<Resul
   const [institucion] = await db
     .select({ id: instituciones.id, slug: instituciones.slug, nombre: instituciones.nombre })
     .from(instituciones)
-    .where(eq(instituciones.id, id.data))
+    .where(and(eq(instituciones.id, id.data), institucionVisible))
     .limit(1);
   if (!institucion) return fallo("Esa institución ya no existe.");
 
@@ -123,7 +124,8 @@ export async function inscribirseCurso(cursoId: string): Promise<Resultado> {
   const [curso] = await db
     .select({ id: cursos.id, titulo: cursos.titulo, fechaFinal: cursos.fechaFinal, institucionId: cursos.institucionId })
     .from(cursos)
-    .where(eq(cursos.id, id.data))
+    .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
+    .where(and(eq(cursos.id, id.data), institucionVisible))
     .limit(1);
   if (!curso) return fallo("Ese curso ya no existe.");
   if (curso.fechaFinal && curso.fechaFinal < hoyArgentina()) return fallo("Este curso ya terminó y no admite inscripciones.");
@@ -314,7 +316,28 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     }
   }
 
-  await transaccion(async (tx) => {
+  const guardado = await transaccion(async (tx) => {
+    // Todo lo de arriba se decidió con el perfil tal como estaba al abrir esta acción. Si el equipo lo revisó mientras tanto (verificó,
+    // pidió una corrección, rechazó), guardar con esa foto vieja pisaría su resolución: se relee con la fila bloqueada y, si cambió, se corta.
+    const [vigente] = await tx
+      .select({
+        verificacion: docentes.verificacion,
+        tituloVerificado: docentes.tituloVerificado,
+        antecedentesVerificados: docentes.antecedentesVerificados,
+      })
+      .from(docentes)
+      .where(eq(docentes.id, docente.id))
+      .limit(1)
+      .for("update");
+    if (
+      !vigente ||
+      vigente.verificacion !== docente.verificacion ||
+      vigente.tituloVerificado !== docente.tituloVerificado ||
+      vigente.antecedentesVerificados !== docente.antecedentesVerificados
+    ) {
+      return fallo("El equipo acaba de revisar tu perfil y algo cambió. Recargá la página y volvé a guardar.");
+    }
+
     await tx
       .update(docentes)
       .set({
@@ -368,7 +391,9 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         target: docenteDetalle.docenteId,
         set: { grillaDisponibilidad: datos.grilla, ...(documentosCambio ? { documentos } : {}), ...estudiosGuardados },
       });
+    return ok();
   });
+  if (!guardado.ok) return guardado;
 
   // Foto, CV y certificado que se reemplazaron o se quitaron: se borran de Storage (lo que no vino en el formulario no cambió).
   await borrarArchivos(

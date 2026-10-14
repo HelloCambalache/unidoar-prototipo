@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: "Institución" };
 const QUE_VE = [
   { texto: "Tu perfil completo y tu CV", si: true },
   { texto: "Tu estado de verificación", si: true },
-  { texto: "Tu teléfono, sólo si te preselecciona", si: true },
+  { texto: "Tu teléfono, solo si te postulás o le mandás tu CV", si: true },
   { texto: "No compartimos tu DNI ni tus documentos", si: false },
 ];
 

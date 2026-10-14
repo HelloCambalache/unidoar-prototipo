@@ -161,6 +161,9 @@ export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePost
               <div className="min-w-0 flex-1">
                 <div className="mb-0.5 text-[13.5px] leading-[1.3] font-semibold text-verde">{detalle.agenda.titulo}</div>
                 <div className="text-[12.5px] leading-[1.4] text-verde first-letter:uppercase">{detalle.agenda.cuando}</div>
+                {detalle.agenda.deLaInstitucion && (
+                  <div className="mt-1 text-[11.5px] leading-[1.4] text-verde">Entrevista agendada por la institución</div>
+                )}
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -172,15 +175,17 @@ export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePost
               >
                 Agregar a Google Calendar
               </a>
-              <Boton
-                variante="secundario"
-                tamano="sm"
-                onClick={quitarAgenda}
-                disabled={pendiente}
-                className="border-[#F0C4BD] text-[#DC2626] hover:text-[#DC2626]"
-              >
-                Quitar
-              </Boton>
+              {!detalle.agenda.deLaInstitucion && (
+                <Boton
+                  variante="secundario"
+                  tamano="sm"
+                  onClick={quitarAgenda}
+                  disabled={pendiente}
+                  className="border-[#F0C4BD] text-[#DC2626] hover:text-[#DC2626]"
+                >
+                  Quitar
+                </Boton>
+              )}
             </div>
           </div>
         ) : (

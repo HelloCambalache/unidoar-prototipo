@@ -36,8 +36,8 @@ export function ConfirmarMail({ email, rol, onOtroEmail }: { email: string; rol:
         titulo="Revisá tu mail para confirmar tu cuenta"
         bajada={
           <>
-            Te mandamos un enlace a <b className="font-semibold text-tinta">{email}</b>. Abrilo en este mismo navegador y seguimos
-            con el alta. Si no lo ves, fijate en spam.
+            Te mandamos un enlace a <b className="font-semibold text-tinta">{email}</b>. Tocá el botón del mail (desde la compu o desde
+            el celular) y seguimos con el alta. Si no lo ves, fijate en spam.
           </>
         }
         className="mb-0"

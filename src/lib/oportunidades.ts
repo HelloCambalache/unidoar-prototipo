@@ -1,11 +1,14 @@
 import { z } from "zod";
 import type { CategoriaDocente } from "@/db/schema";
-import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
+import { CATEGORIA_INFO, CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 
 /* Filtros del buscador de trabajo del docente. Viven en la URL (searchParams) para poder compartirlos. */
 
-/** El slider llega hasta acá y este valor significa "Toda la zona" (sin límite de km). */
-export const RADIO_MAX = 50;
+/**
+ * El slider llega hasta acá y este valor significa "Toda la zona" (sin límite de km). Es 100 y no 50 porque en el perfil se puede elegir
+ * "hasta 50 km", que es un radio de verdad: si "sin límite" fuera 50, esa elección mostraría ofertas de todo el país.
+ */
+export const RADIO_MAX = 100;
 export const RADIO_MIN = 2;
 
 export const filtrosOportunidadesSchema = z.object({
@@ -78,17 +81,18 @@ export function hrefPostulaciones(
   return qs ? `/docente/postulaciones?${qs}` : "/docente/postulaciones";
 }
 
+// Los nombres salen de CATEGORIA_INFO (la categoría "educador" se llama "Docente"): un solo lugar para cambiarlos.
 export const ETIQUETA_FILTRO_CATEGORIA: Record<CategoriaDocente, string> = {
-  educador: "Educador/a",
-  entrenador: "Entrenador/a / Instructor/a",
-  guardavidas: "Guardavidas",
+  educador: CATEGORIA_INFO.educador.label,
+  entrenador: `${CATEGORIA_INFO.entrenador.label} / Instructor/a`,
+  guardavidas: CATEGORIA_INFO.guardavidas.label,
 };
 
 /** Leyenda del mapa: se muestra solo para las categorías que tienen pines. */
 export const LEYENDA_CATEGORIA: Record<CategoriaDocente, string> = {
-  educador: "Educadores",
-  entrenador: "Entrenadores / Instructores",
-  guardavidas: "Guardavidas",
+  educador: CATEGORIA_INFO.educador.plural,
+  entrenador: `${CATEGORIA_INFO.entrenador.plural} / Instructores`,
+  guardavidas: CATEGORIA_INFO.guardavidas.plural,
 };
 
 /** "40 min", "18 hs", "3 días"; null si ya venció. */

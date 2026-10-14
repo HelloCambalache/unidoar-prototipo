@@ -4,8 +4,17 @@ import { datosDeCuentaSchema, describirAccion } from "./backoffice-instituciones
 
 describe("datos de la cuenta que edita el equipo", () => {
   it("acepta teléfono y CUIT, y recorta los espacios", () => {
-    const r = datosDeCuentaSchema.parse({ telefono: " +54 11 5555-1234 ", cuit: " 30-12345678-9 " });
-    assert.deepEqual(r, { telefono: "+54 11 5555-1234", cuit: "30-12345678-9" });
+    const r = datosDeCuentaSchema.parse({ telefono: " +54 11 5555-1234 ", cuit: " 30-71234567-1 " });
+    assert.deepEqual(r, { telefono: "+54 11 5555-1234", cuit: "30-71234567-1" });
+  });
+
+  it("guarda el CUIT con guiones aunque lo escriban pegado", () => {
+    assert.equal(datosDeCuentaSchema.parse({ telefono: "", cuit: "30712345671" }).cuit, "30-71234567-1");
+  });
+
+  it("rechaza un CUIT con el dígito verificador equivocado o de otra longitud", () => {
+    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "", cuit: "30-71234567-9" }).success, false);
+    assert.equal(datosDeCuentaSchema.safeParse({ telefono: "", cuit: "30-7123456-1" }).success, false);
   });
 
   it("vacío deja el dato sin cargar (null)", () => {

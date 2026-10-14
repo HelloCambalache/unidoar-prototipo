@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -45,7 +45,7 @@ nuestro código con la API de Resend.
 | M13 | No pudimos verificar tu perfil (con el motivo) | El equipo lo rechaza | Docente | App | En la app | Lanzamiento |
 | M14 | Tu institución fue verificada / se quitó la verificación | El equipo cambia el sello | Institución (dueño y equipo) | App | En la app | Pronto |
 | M15 | Tu cuenta fue suspendida (motivo y cómo regularizar) | El equipo suspende | Docente, institución | App | En la app | Lanzamiento |
-| M16 | Reactivamos tu cuenta | El equipo reactiva | Docente, institución | App | En la app | Pronto |
+| M16 | Reactivamos tu cuenta | El equipo reactiva | Docente, institución | App | Hecho | Pronto |
 | M17 | Recibimos tu pedido de baja | Al pedir la baja en Mi cuenta | Docente, institución | App | Solo un aviso en pantalla | Pronto |
 | M18 | Tu baja quedó confirmada | El equipo la procesa | Docente, institución | App | No existe (se hace a mano) | Pronto |
 

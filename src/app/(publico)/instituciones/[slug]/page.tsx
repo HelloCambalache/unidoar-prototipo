@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const VISTA_INSTITUCION = [
   { ok: true, texto: "Tu perfil completo y tu CV" },
   { ok: true, texto: "Tu estado de verificación" },
-  { ok: true, texto: "Tu teléfono, sólo si te preselecciona" },
+  { ok: true, texto: "Tu teléfono, solo si te postulás o le mandás tu CV" },
   { ok: false, texto: "No compartimos tu DNI ni tus documentos" },
 ];
 

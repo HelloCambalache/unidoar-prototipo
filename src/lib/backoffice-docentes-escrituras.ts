@@ -214,7 +214,7 @@ export async function aplicarSuspension(tx: Ejecutor, adminId: string, docenteId
 
 export async function aplicarReactivacion(tx: Ejecutor, docenteId: string, nota?: string): Promise<Resultado<Detalle>> {
   const [d] = await tx
-    .select({ id: docentes.id, usuarioId: docentes.usuarioId, suspendido: docentes.suspendido })
+    .select({ id: docentes.id, usuarioId: docentes.usuarioId, nombre: docentes.nombre, suspendido: docentes.suspendido })
     .from(docentes)
     .where(eq(docentes.id, docenteId))
     .limit(1)
@@ -229,5 +229,7 @@ export async function aplicarReactivacion(tx: Ejecutor, docenteId: string, nota?
     texto: "reactivó tu cuenta. Ya podés volver a usar UNIDOAR con normalidad.",
     enlace: "/docente/dashboard",
   });
+  // Como la suspensión (M15): con la cuenta suspendida no se ve la campanita, así que el mail avisa que ya puede volver a entrar.
+  await encolarParaUsuarios(tx, d.usuarioId ? [d.usuarioId] : [], "M16", { nombre: d.nombre, institucion: null });
   return ok(nota ? { nota } : {});
 }

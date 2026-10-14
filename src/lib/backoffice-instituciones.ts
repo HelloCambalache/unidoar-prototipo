@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { MENSAJE_CUIT, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { CLAVES_PLAN, esClavePlan, etiquetaPeriodo } from "@/lib/cobros";
+import { esCuitValido, formatearCuit } from "@/lib/documentos";
 import { planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
 
 /* Filtros y vocabularios del backoffice de instituciones. Sin acceso a base: los usa también el cliente. */
@@ -43,14 +44,8 @@ export const MOTIVOS_SUSPENSION = [
 /**
  * Datos de la cuenta que el equipo puede corregir y que la institución no edita sola (teléfono de contacto y CUIT: se cargan en el
  * alta; el CUE es de cada sede y se carga en el editor de sedes). Vacío los deja sin dato; el teléfono, si se pone, tiene que ser
- * usable.
+ * usable, y el CUIT tiene que ser un CUIT real (se guarda con guiones: es el que sale en las facturas).
  */
-const textoOVacio = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Máximo ${max} caracteres`)
-    .transform((v) => (v ? v : null));
 export const datosDeCuentaSchema = z.object({
   telefono: z
     .string()
@@ -58,7 +53,12 @@ export const datosDeCuentaSchema = z.object({
     .max(40, "Máximo 40 caracteres")
     .refine((v) => v === "" || v.length >= 6, "Poné un teléfono completo (mínimo 6 caracteres)")
     .transform((v) => (v ? v : null)),
-  cuit: textoOVacio(20),
+  cuit: z
+    .string()
+    .trim()
+    .max(20, "Máximo 20 caracteres")
+    .refine((v) => v === "" || esCuitValido(v), MENSAJE_CUIT)
+    .transform((v) => (v ? formatearCuit(v) : null)),
 });
 export type DatosDeCuenta = z.infer<typeof datosDeCuentaSchema>;
 

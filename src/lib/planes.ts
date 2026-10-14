@@ -175,16 +175,20 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return `${pesos(p.precio)}/${p.periodo}${p.porSede ? " por sede" : ""}`;
   };
 
-  /** Lo que se factura por mes. En Multisede es el precio de UNA sede: el total lo pone el equipo. */
-  const montoDePlan = (clave: string) => planDe(clave).precio;
+  /** Lo que se factura por período. En un plan por sede (Multisede) es el precio de una sede por la cantidad de sedes de la institución. */
+  const montoDePlan = (clave: string, sedes = 1) => {
+    const p = planDe(clave);
+    return p.porSede ? p.precio * Math.max(1, Math.floor(sedes)) : p.precio;
+  };
 
   /** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
   const nombreDePlan = (clave: string) => planDe(clave).label.replace(/^Plan /, "");
 
-  /** Lo que aporta una institución al MRR: el anual cuenta como precio / 12. */
-  const equivalenteMensual = (clave: string) => {
+  /** Lo que aporta una institución al MRR: el anual cuenta como precio / 12 y un plan por sede, el precio por la cantidad de sedes. */
+  const equivalenteMensual = (clave: string, sedes = 1) => {
     const p = planDe(clave);
-    return p.periodo === "año" ? Math.round(p.precio / 12) : p.precio;
+    const monto = montoDePlan(clave, sedes);
+    return p.periodo === "año" ? Math.round(monto / 12) : monto;
   };
 
   return {

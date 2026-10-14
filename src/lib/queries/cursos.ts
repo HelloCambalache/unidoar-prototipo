@@ -1,10 +1,11 @@
 import "server-only";
-import { asc, count, desc, eq, getTableColumns } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cursos, docentes, inscripcionesCurso, instituciones } from "@/db/schema";
 import { normalizar } from "@/lib/coincidencia";
 import { avancePorFechas, hoyArgentina } from "@/lib/fechas-curso";
 import { distanciaKm } from "@/lib/geo";
+import { institucionVisible } from "@/lib/visibilidad";
 
 export type CursoBase = {
   id: string;
@@ -85,7 +86,8 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
       .from(cursos)
       .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
       .leftJoin(inscripcionesCurso, eq(inscripcionesCurso.cursoId, cursos.id))
-      .where(soloId ? eq(cursos.id, soloId) : undefined)
+      // Los cursos de una institución suspendida no se ven ni admiten inscripciones.
+      .where(soloId ? and(eq(cursos.id, soloId), institucionVisible) : institucionVisible)
       .groupBy(cursos.id, instituciones.id)
       .orderBy(asc(cursos.fechaInicio), asc(cursos.titulo)),
     db

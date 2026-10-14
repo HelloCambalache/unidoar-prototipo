@@ -174,6 +174,8 @@ export type DocenteRecomendado = {
   etiquetas: string[];
   /** Por qué se lo recomendamos ("Da Inglés, como tu búsqueda abierta", "A 3 km de tu sede"…), del más importante al menos. */
   motivos: string[];
+  /** La búsqueda abierta de la institución con la que más coincide: a esa se lo invita. Null si no coincide con ninguna. */
+  busquedaId: string | null;
 };
 
 /**
@@ -216,7 +218,7 @@ export async function docentesRecomendados(
       const nombre = `${d.nombre} ${d.apellido}`.trim();
       const materia = d.asignaturas[0] ?? null;
       const lugar = kmLegible(km) ?? d.zonas[0] ?? null;
-      const { puntaje, motivos } = puntuarCandidato(
+      const { puntaje, motivos, busquedaId } = puntuarCandidato(
         {
           categoria: d.categoria,
           asignaturas: d.asignaturas,
@@ -240,6 +242,7 @@ export async function docentesRecomendados(
           detalle: [materia, lugar].filter(Boolean).join(" · "),
           etiquetas: [d.niveles[0], d.disponibilidad[0]].filter((e): e is string => !!e),
           motivos,
+          busquedaId,
         } satisfies DocenteRecomendado,
       };
     });

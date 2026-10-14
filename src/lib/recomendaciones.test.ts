@@ -87,3 +87,18 @@ describe("ordenar", () => {
     assert.deepEqual(ordenados.map((x) => x.id), ["b", "c", "a", "d"]);
   });
 });
+
+describe("a qué búsqueda se lo invita", () => {
+  const natacion: BusquedaAbierta = { id: "b-natacion", categoria: "educador", disciplina: "Natación", nivel: null, turno: null };
+  const ingles: BusquedaAbierta = { id: "b-ingles", categoria: "educador", disciplina: "Inglés", nivel: null, turno: null };
+
+  it("a la que mejor coincide, no a la más reciente", () => {
+    // "Natación" es la más reciente (va primero) pero el candidato da Inglés.
+    assert.equal(puntuarCandidato(candidato, [natacion, ingles]).busquedaId, "b-ingles");
+  });
+
+  it("si no coincide con ninguna, no se elige una al azar", () => {
+    assert.equal(puntuarCandidato(candidato, [natacion]).busquedaId, null);
+    assert.equal(puntuarCandidato(candidato, []).busquedaId, null);
+  });
+});

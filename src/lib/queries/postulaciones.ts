@@ -133,7 +133,8 @@ export type DetallePostulacion = {
    * activo: avanzó de etapa y contacta por WhatsApp; cerrado: terminó sin seguir.
    */
   contacto: "pendiente" | "activo" | "cerrado";
-  agenda: { titulo: string; cuando: string; googleHref: string } | null;
+  /** La entrevista que agendó la institución (solo lectura) o, si no hay, el recordatorio propio del profesional. */
+  agenda: { titulo: string; deLaInstitucion: boolean; cuando: string; googleHref: string } | null;
   /** Solo en la etapa "Examen preocupacional": si la institución ya anotó que lo hizo. */
   examenPreocupacional: "pendiente" | "realizado" | null;
   /** Solo las notas del propio docente: las de la institución son privadas del otro lado. */
@@ -163,7 +164,10 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     .orderBy(desc(postulacionNotas.creadoEn));
 
   const estado = estadoParaDocente(p.etapa, b.estado, !!p.examenPreocupacionalEn);
-  const tituloAgenda = p.entrevistaTitulo?.trim() || "Entrevista";
+  // Si la institución agendó una entrevista, es la que se muestra (solo lectura); si no, la agenda personal del profesional.
+  const deLaInstitucion = p.entrevistaEn != null;
+  const inicioAgenda = p.entrevistaEn ?? p.agendaDocenteEn;
+  const tituloAgenda = (deLaInstitucion ? p.entrevistaTitulo : p.agendaDocenteTitulo)?.trim() || (deLaInstitucion ? "Entrevista" : "Mi recordatorio");
 
   return {
     id: p.id,
@@ -180,13 +184,14 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
     puedeRetirar: estado.activa,
     // Archivada (etapa interna "descartado") se ve como pendiente: no se le avisa. Cerrada la búsqueda, ya es un "no siguió".
     contacto: p.etapa === "descartado" ? (b.estado === "cerrada" ? "cerrado" : "pendiente") : p.etapa === "nuevos" ? "pendiente" : "activo",
-    agenda: p.entrevistaEn
+    agenda: inicioAgenda
       ? {
           titulo: tituloAgenda,
-          cuando: diaHoraLegible(p.entrevistaEn),
+          deLaInstitucion,
+          cuando: diaHoraLegible(inicioAgenda),
           googleHref: enlaceGoogleCalendar({
             titulo: `${tituloAgenda} — ${i.nombre}`,
-            inicio: p.entrevistaEn,
+            inicio: inicioAgenda,
             detalle: `Postulación a "${b.puesto}" en ${i.nombre}. Agendado desde UNIDOAR.`,
             lugar: lugar.direccion,
           }),

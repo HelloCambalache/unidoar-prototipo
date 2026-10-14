@@ -377,7 +377,7 @@ export function PerfilFormulario({
           <Tarjeta como="section" className="mb-4 p-[22px]">
             <h2 className={cn(TITULO_SECCION, "mb-3.5")}>Contacto y trabajo</h2>
             <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
-              <Campo etiqueta="Teléfono o WhatsApp" error={error("telefono")} ayuda="Solo lo ven las instituciones que te preseleccionan.">
+              <Campo etiqueta="Teléfono o WhatsApp" error={error("telefono")} ayuda="Solo lo ven las instituciones a las que te postulás o les mandás tu CV.">
                 <Input type="tel" autoComplete="tel" value={d.telefono} onChange={(e) => set("telefono", e.target.value)} />
               </Campo>
               <Campo etiqueta="Email" ayuda="Es el email de tu cuenta.">

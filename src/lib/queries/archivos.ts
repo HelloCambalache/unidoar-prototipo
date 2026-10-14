@@ -1,5 +1,5 @@
 import "server-only";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cursos, docenteDetalle, docentes, institucionFotos, instituciones, postulaciones } from "@/db/schema";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
@@ -51,5 +51,48 @@ export async function borrarArchivos(valores: (string | null | undefined)[]): Pr
     }
   } catch (error) {
     console.error("[archivos] no se pudieron borrar los archivos reemplazados", error);
+  }
+}
+
+/** Todos los archivos de un bucket bajo un prefijo, bajando por las carpetas, con cuándo se subieron. */
+async function listarConFecha(bucket: string, prefijo: string): Promise<{ path: string; creado: Date }[]> {
+  const supabase = clienteAdmin();
+  const encontrados: { path: string; creado: Date }[] = [];
+  for (let desde = 0; ; desde += 100) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefijo, { limit: 100, offset: desde });
+    if (error) throw new Error(`No pude listar "${bucket}/${prefijo}": ${error.message}`);
+    for (const item of data) {
+      const ruta = `${prefijo}/${item.name}`;
+      // Las carpetas vienen sin id; los archivos, con metadata.
+      if (item.id === null) encontrados.push(...(await listarConFecha(bucket, ruta)));
+      else encontrados.push({ path: ruta, creado: new Date(item.created_at ?? Date.now()) });
+    }
+    if (data.length < 100) return encontrados;
+  }
+}
+
+/**
+ * Borra los documentos privados de una cuenta (`<usuario>/documentos/…`) que ninguna fila usa: las subidas que se reemplazaron o se
+ * abandonaron antes de guardar. Se llama al verificar un perfil, para que no quede ninguna foto de DNI suelta. Respeta una hora de
+ * margen (una subida en curso todavía no está guardada) y nunca rompe la acción que la llama.
+ */
+export async function borrarDocumentosSueltos(docenteId: string): Promise<number> {
+  try {
+    if (!almacenamientoConfigurado()) return 0;
+    const [d] = await getDb().select({ usuarioId: docentes.usuarioId }).from(docentes).where(eq(docentes.id, docenteId)).limit(1);
+    if (!d?.usuarioId) return 0;
+    const limite = Date.now() - 60 * 60 * 1000;
+    const sueltos: string[] = [];
+    for (const a of await listarConFecha("privado", `${d.usuarioId}/documentos`)) {
+      if (a.creado.getTime() < limite && !(await estaEnUso(a.path, a.path))) sueltos.push(a.path);
+    }
+    for (let i = 0; i < sueltos.length; i += 100) {
+      const { error } = await clienteAdmin().storage.from("privado").remove(sueltos.slice(i, i + 100));
+      if (error) console.error("[archivos] no se pudieron borrar documentos sueltos:", error.message);
+    }
+    return sueltos.length;
+  } catch (error) {
+    console.error("[archivos] no se pudieron limpiar los documentos sueltos", error);
+    return 0;
   }
 }

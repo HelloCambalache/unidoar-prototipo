@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { alternarFavoritoInstitucion, enviarCvAInstitucion } from "@/app/actions/docente";
 import { Boton } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -85,11 +85,15 @@ export function InstitucionEstrella({
   );
 }
 
-/** "Enviar mi CV": una vez por institución; después queda confirmado. */
+/**
+ * "Enviar mi CV": una vez por institución; después queda confirmado. Enviarlo le habilita a la institución ver tu teléfono y tu
+ * email y no se puede deshacer, así que antes pide una confirmación.
+ */
 export function InstitucionCvBoton({ institucionId, enviado }: { institucionId: string; enviado: boolean }) {
   const toast = useToast();
   const [yaEnviado, setYaEnviado] = useOptimistic(enviado);
   const [pendiente, empezar] = useTransition();
+  const [confirmando, setConfirmando] = useState(false);
 
   const enviar = () =>
     empezar(async () => {
@@ -97,17 +101,38 @@ export function InstitucionCvBoton({ institucionId, enviado }: { institucionId: 
       const r = await enviarCvAInstitucion(institucionId);
       if (r.ok) toast("Le enviamos tu CV a la institución");
       else toast(r.error, "error");
+      setConfirmando(false);
     });
 
+  if (yaEnviado) {
+    return (
+      <Boton bloque variante="exito" disabled className="mb-2">
+        ✓ CV enviado
+      </Boton>
+    );
+  }
+
+  if (confirmando) {
+    return (
+      <div className="mb-2 flex flex-col gap-2 rounded-lg border border-borde bg-superficie p-3">
+        <p className="m-0 text-[13px] leading-normal text-tinta-2">
+          Al enviar tu CV, esta institución va a poder ver tu <b className="font-semibold">teléfono y tu email</b>. No se puede deshacer.
+        </p>
+        <div className="flex gap-2">
+          <Boton tamano="sm" disabled={pendiente} onClick={enviar}>
+            {pendiente ? "Enviando…" : "Sí, enviar mi CV"}
+          </Boton>
+          <Boton tamano="sm" variante="fantasma" disabled={pendiente} onClick={() => setConfirmando(false)}>
+            Cancelar
+          </Boton>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Boton
-      bloque
-      variante={yaEnviado ? "exito" : "primario"}
-      disabled={yaEnviado || pendiente}
-      onClick={enviar}
-      className="mb-2"
-    >
-      {yaEnviado ? "✓ CV enviado" : "Enviar mi CV"}
+    <Boton bloque variante="primario" onClick={() => setConfirmando(true)} className="mb-2">
+      Enviar mi CV
     </Boton>
   );
 }

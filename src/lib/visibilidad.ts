@@ -20,3 +20,9 @@ export const docenteVisible = eq(docentes.suspendido, false);
 export const busquedaDeInstitucionActiva = sql`not exists (
   select 1 from ${instituciones} i where i.id = ${busquedas.institucionId} and i.suspendida
 )`;
+
+/**
+ * La búsqueda sigue recibiendo postulaciones: está activa y, si es una búsqueda rápida, todavía no venció su plazo. Nada cierra solo
+ * las rápidas vencidas, así que todo listado y contador público de búsquedas abiertas tiene que filtrar por esto y no solo por `estado`.
+ */
+export const busquedaVigente = sql`(${busquedas.estado} = 'activa' and (${busquedas.rapida} = false or ${busquedas.venceEn} is null or ${busquedas.venceEn} > now()))`;

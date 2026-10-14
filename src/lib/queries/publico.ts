@@ -4,12 +4,12 @@ import { and, asc, count, countDistinct, desc, eq, gt, isNull, or, sql } from "d
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
-import { CUPOS_FUNDADOR, nombrePublico } from "@/lib/publico";
+import { CUPOS_FUNDADOR } from "@/lib/publico";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
 import type { VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
-import { busquedaDeInstitucionActiva, docenteVisible, institucionVisible } from "@/lib/visibilidad";
+import { busquedaDeInstitucionActiva, busquedaVigente, docenteVisible, institucionVisible } from "@/lib/visibilidad";
 
 /* Lecturas del sitio público (sin sesión). Todo sale de la base: nada de cifras fijas. */
 
@@ -54,7 +54,7 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
         ),
       })
       .from(busquedas)
-      .where(and(eq(busquedas.estado, "activa"), busquedaDeInstitucionActiva))
+      .where(and(busquedaVigente, busquedaDeInstitucionActiva))
       .groupBy(busquedas.categoria),
     db
       .select({
@@ -131,45 +131,6 @@ export async function testimoniosDe(pagina: string): Promise<TestimonioPublico[]
     .from(testimonios)
     .where(eq(testimonios.pagina, pagina))
     .orderBy(asc(testimonios.orden), asc(testimonios.autor));
-}
-
-/* ───────── Perfiles destacados (landings de categoría) ───────── */
-
-export type PerfilDestacado = {
-  id: string;
-  /** "Martina A.": en público no se muestra el apellido completo. */
-  nombre: string;
-  detalle: string;
-  fotoUrl: string | null;
-};
-
-export async function perfilesDestacados(categoria: CategoriaDocente, limite = 2): Promise<PerfilDestacado[]> {
-  const filas = await getDb()
-    .select({
-      id: docentes.id,
-      nombre: docentes.nombre,
-      apellido: docentes.apellido,
-      subtitulo: docentes.subtitulo,
-      asignaturas: docentes.asignaturas,
-      fotoUrl: docentes.fotoUrl,
-    })
-    .from(docentes)
-    .where(
-      and(
-        eq(docentes.categoria, categoria),
-        eq(docentes.verificacion, "verificado"),
-        eq(docentes.onboardingCompleto, true),
-        docenteVisible,
-      ),
-    )
-    .orderBy(desc(sql`coalesce(${docentes.aniosExperiencia}, 0)`), asc(docentes.nombre))
-    .limit(limite);
-  return filas.map((f) => ({
-    id: f.id,
-    nombre: nombrePublico(f.nombre, f.apellido),
-    detalle: f.subtitulo || f.asignaturas.slice(0, 2).join(" · "),
-    fotoUrl: f.fotoUrl,
-  }));
 }
 
 /* ───────── Búsquedas ───────── */
@@ -318,7 +279,7 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
         sedeId: busquedas.sedeId,
       })
       .from(busquedas)
-      .where(and(eq(busquedas.institucionId, inst.id), eq(busquedas.estado, "activa")))
+      .where(and(eq(busquedas.institucionId, inst.id), busquedaVigente))
       .orderBy(desc(busquedas.rapida), desc(busquedas.creadoEn)),
     fotosDeInstitucion(inst.id),
     novedadesDeInstitucion(inst.id, 6),

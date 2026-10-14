@@ -17,6 +17,7 @@ const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
  */
 export function CobroNuevaFactura({
   institucionId,
+  sedes,
   catalogo,
   plan,
   diaCobro,
@@ -24,6 +25,8 @@ export function CobroNuevaFactura({
   periodoSugerido,
 }: {
   institucionId: string;
+  /** Cuántas sedes tiene la institución (el monto de un plan por sede se multiplica por esto). */
+  sedes: number;
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
@@ -131,8 +134,8 @@ export function CobroNuevaFactura({
           </Campo>
         </div>
         <p className="m-0 mb-4 rounded-lg bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
-          Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido))}</b>
-          {P.planDe(planElegido).porSede && " por sede: multiplicalo por las sedes de la red al registrar el pago."}
+          Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido, sedes))}</b>
+          {P.planDe(planElegido).porSede && ` (${sedes} ${sedes === 1 ? "sede" : "sedes"} × ${pesos(P.planDe(planElegido).precio)})`}
         </p>
         {errores._ && (
           <p role="alert" className="m-0 mb-3 text-xs text-[#b91c1c]">

@@ -9,7 +9,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { aplicarResolucionConMotivo, aplicarVerificacion, aplicarVerificacionDeTitulo } from "@/lib/backoffice-docentes-escrituras";
 import { esUuid } from "@/lib/busquedas";
-import { borrarArchivos } from "@/lib/queries/archivos";
+import { borrarArchivos, borrarDocumentosSueltos } from "@/lib/queries/archivos";
 
 /*
  * Cola de verificación de identidad y antecedentes. Las tres acciones arrancan por requerirUsuario("admin"),
@@ -69,6 +69,8 @@ export async function verificarDocente(
   if (resultado.ok) {
     // Las fotos del DNI ya no están en la base: se borran de Storage recién ahora, con la verificación confirmada.
     await borrarArchivos(archivosDni);
+    // Y las que se subieron y se reemplazaron o abandonaron antes de guardar: /privacidad promete que no queda ninguna foto del DNI.
+    await borrarDocumentosSueltos(docenteId);
     revalidarVerificacion(docenteId);
   }
   return resultado;

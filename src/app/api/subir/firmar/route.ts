@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { usuarioActual } from "@/lib/auth";
+import { negarSubida } from "@/lib/queries/subidas-permiso";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { CARPETA_DE_PASO, LIMITE_PDF, mb, tipoDeCarpeta } from "@/lib/subidas";
 
@@ -22,6 +23,8 @@ export async function POST(req: Request) {
   }
   const usuario = await usuarioActual();
   if (!usuario) return responder({ ok: false, error: "Iniciá sesión para subir archivos." }, 401);
+  const negada = await negarSubida(usuario);
+  if (negada) return responder({ ok: false, error: negada.error }, negada.status);
 
   const datos = entrada.safeParse(await req.json().catch(() => null));
   if (!datos.success) return responder({ ok: false, error: "Elegí un archivo para subir." }, 400);

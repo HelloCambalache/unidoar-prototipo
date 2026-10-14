@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icono } from "@/components/icons";
 import { BotonLink } from "@/components/ui/button";
-import { Avatar, Insignia } from "@/components/ui/insignia";
+import { Insignia } from "@/components/ui/insignia";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
 import { focoDeFoto } from "@/lib/fotos";
@@ -10,17 +10,13 @@ import { RUTA_PUBLICAR_BUSQUEDA, RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-bu
 import {
   busquedasUrgentes,
   cuposFundadorRestantes,
-  perfilesDestacados,
   resumenPublico,
   testimoniosDe,
-  type PerfilDestacado,
 } from "@/lib/queries/publico";
-import { iniciales } from "@/lib/utils";
 import { BandaFundador } from "./banda-fundador";
 import { CarruselTestimonios } from "./carrusel-testimonios";
 import { CATEGORIAS_PUBLICAS, estiloBotonAcento, estiloCategoria } from "./categorias";
 import { FilaEstadisticas } from "./fila-estadisticas";
-import { Imagen } from "./imagen";
 import { ListaUrgentes } from "./lista-urgentes";
 import { sesionPublica } from "./sesion";
 
@@ -32,9 +28,8 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
   const pub = CATEGORIAS_PUBLICAS[categoria];
   const info = CATEGORIA_INFO[categoria];
 
-  const [resumen, perfiles, urgentes, testimonios, cupos, sesion] = await Promise.all([
+  const [resumen, urgentes, testimonios, cupos, sesion] = await Promise.all([
     resumenPublico(),
-    perfilesDestacados(categoria, 2),
     busquedasUrgentes({ categoria, limite: 3 }),
     testimoniosDe(PAGINA_TESTIMONIOS[categoria]),
     cuposFundadorRestantes(),
@@ -133,21 +128,14 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
                 </Insignia>
               )}
             </div>
-            {perfiles.length > 0 ? (
-              <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-                {perfiles.map((p) => (
-                  <PerfilTarjeta key={p.id} perfil={p} />
-                ))}
-              </ul>
-            ) : (
-              <p className="text-[13px] leading-normal text-apagado">
-                Todavía no hay perfiles verificados en esta categoría.{" "}
-                <Link href={RUTA_REGISTRO_DOCENTE} className="font-semibold text-navy-700 underline">
-                  Sumate como profesional
-                </Link>
-                .
-              </p>
-            )}
+            {/* No se muestran personas: nadie aceptó aparecer en una página pública. Solo se cuenta cuántas hay. */}
+            <p className="m-0 text-[13px] leading-normal text-apagado">
+              Las instituciones con cuenta ven los perfiles verificados: identidad y título revisados por el equipo.{" "}
+              <Link href={RUTA_REGISTRO_DOCENTE} className="font-semibold text-navy-700 underline">
+                Sumate como profesional
+              </Link>
+              .
+            </p>
           </div>
         </aside>
       </section>
@@ -283,21 +271,5 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
 
       <BandaFundador cupos={cupos} categoria={categoria} />
     </div>
-  );
-}
-
-function PerfilTarjeta({ perfil: p }: { perfil: PerfilDestacado }) {
-  return (
-    <li className="flex items-center gap-3 rounded-lg border border-borde bg-white p-3.5">
-      {p.fotoUrl ? (
-        <Imagen src={p.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(p.fotoUrl) }} className="size-[42px] flex-none rounded-full object-cover" />
-      ) : (
-        <Avatar iniciales={iniciales(p.nombre)} tamano={42} />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="text-sm leading-tight font-semibold text-tinta">{p.nombre}</div>
-        {p.detalle && <div className="mt-[3px] text-xs leading-[1.35] text-apagado">{p.detalle}</div>}
-      </div>
-    </li>
   );
 }

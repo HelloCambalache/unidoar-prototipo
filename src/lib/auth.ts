@@ -88,7 +88,16 @@ export async function asegurarUsuario(rol: Exclude<RolUsuario, "admin">): Promis
     })
     .onConflictDoNothing()
     .returning();
-  if (creado) return creado;
+  if (creado) {
+    // La constancia ya quedó en la fila: la cookie no hace falta más. Solo se puede borrar desde una acción; en una página falla y
+    // queda hasta que vence (una hora), por eso `ingresarConGoogle` también la borra al empezar un ingreso sin términos.
+    try {
+      (await cookies()).delete(COOKIE_TERMINOS);
+    } catch {
+      // Estamos en una página: no se puede modificar la cookie desde acá.
+    }
+    return creado;
+  }
   const [fila] = await getDb().select().from(usuarios).where(eq(usuarios.id, sesion.id)).limit(1);
   return fila!;
 }

@@ -128,7 +128,14 @@ export function textoRecordatorio(contacto: string | null, institucion: string, 
 
 /* ───────── Facturas automáticas ───────── */
 
-export type InstitucionFacturable = { id: string; plan: string; diaCobro: number | null; medioPago: string | null };
+export type InstitucionFacturable = {
+  id: string;
+  plan: string;
+  diaCobro: number | null;
+  medioPago: string | null;
+  /** Cuántas sedes tiene (cuenta en un plan por sede como Multisede; sin dato, una). */
+  sedes?: number;
+};
 /** Una factura ya existente de la institución, de los últimos 12 períodos (el actual incluido). */
 export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string };
 export type FacturaPorCrear = {
@@ -139,7 +146,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido" | "por_sede";
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -173,8 +180,6 @@ export function planificarFacturas(
     const omitir = (motivo: MotivoOmision) => omitidas.push({ institucionId: inst.id, motivo });
 
     if (!esClavePlan(inst.plan)) omitir("plan_desconocido");
-    // Multisede se cobra por sede y no guardamos cuántas tiene: la factura la arma el equipo.
-    else if (planes.planDe(inst.plan).porSede) omitir("por_sede");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
     else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
     else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
@@ -184,7 +189,8 @@ export function planificarFacturas(
       crear.push({
         institucionId: inst.id,
         plan: inst.plan,
-        monto: planes.montoDePlan(inst.plan),
+        // En un plan por sede (Multisede), el precio de una sede por las sedes que tiene la institución.
+        monto: planes.montoDePlan(inst.plan, inst.sedes),
         periodo,
         fechaCobro: fecha < hoy ? hoy : fecha,
         medio: inst.medioPago,

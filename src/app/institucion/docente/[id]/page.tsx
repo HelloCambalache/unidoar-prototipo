@@ -113,8 +113,13 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
   );
   const nivelesYAsignaturas = d.asignaturas.length > 0 || d.niveles.length > 0;
   // El CV vive en un bucket privado: se guarda el path y el enlace se firma al mostrarlo.
-  const cvEnlace = d.cvUrl ? (/^https?:\/\//.test(d.cvUrl) ? d.cvUrl : await urlFirmada(d.cvUrl)) : null;
-  const sinCv = d.cvUrl ? "No pudimos abrir el CV ahora. Probá de nuevo en un rato." : `${nombre} todavía no cargó su CV.`;
+  // De un perfil suspendido no se abre el CV: trae el mismo contacto que no se muestra.
+  const cvEnlace = d.cvUrl && !d.suspendido ? (/^https?:\/\//.test(d.cvUrl) ? d.cvUrl : await urlFirmada(d.cvUrl)) : null;
+  const sinCv = d.suspendido
+    ? "El equipo de UNIDOAR suspendió este perfil: por ahora no se puede abrir su CV."
+    : d.cvUrl
+      ? "No pudimos abrir el CV ahora. Probá de nuevo en un rato."
+      : `${nombre} todavía no cargó su CV.`;
 
   return (
     <div>

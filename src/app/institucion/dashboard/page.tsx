@@ -45,7 +45,7 @@ export default async function DashboardInstitucion() {
   const recomendados = await docentesRecomendados(institucion, {
     categorias: [...new Set(activas.map((b) => b.categoria))],
     // Con qué se compara a cada candidato: disciplina, nivel y turno de lo que la institución está buscando.
-    busquedas: activas.map((b) => ({ categoria: b.categoria, disciplina: b.disciplina, nivel: b.nivel, turno: b.turno })),
+    busquedas: activas.map((b) => ({ id: b.id, categoria: b.categoria, disciplina: b.disciplina, nivel: b.nivel, turno: b.turno })),
     limite: 3,
   });
   const perfil = pasosDePerfilInstitucion(institucion);
@@ -144,7 +144,7 @@ export default async function DashboardInstitucion() {
             </ul>
           )}
         </section>
-        <RecomendadosLateral docentes={recomendados} busquedaId={activas[0]?.id} />
+        <RecomendadosLateral docentes={recomendados} />
       </div>
 
       {perfil.porcentaje < 100 && (

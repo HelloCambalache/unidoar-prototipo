@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { rutaInternaSegura } from "@/lib/acceso";
 import { baseDelSitio } from "@/lib/auth-enlaces";
+import { COOKIE_RECUPERACION, esRutaDeRecuperacion, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
@@ -26,5 +27,17 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return falla("enlace");
 
-  return NextResponse.redirect(`${base}${rutaInternaSegura(searchParams.get("next"), "/inicio")}`);
+  const destino = rutaInternaSegura(searchParams.get("next"), "/inicio");
+  const respuesta = NextResponse.redirect(`${base}${destino}`);
+  // Los mails de recuperación viejos (con el enlace de Supabase) también dejan elegir la contraseña nueva.
+  if (esRutaDeRecuperacion(destino)) {
+    respuesta.cookies.set(COOKIE_RECUPERACION, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: VIDA_RECUPERACION_SEGUNDOS,
+    });
+  }
+  return respuesta;
 }

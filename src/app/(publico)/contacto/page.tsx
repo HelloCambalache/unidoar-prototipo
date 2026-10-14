@@ -25,10 +25,12 @@ export default function Contacto() {
               {CONTACTO_SITIO.email}
             </a>
           </div>
-          <div className="rounded-lg bg-[#F5F4F0] p-5">
-            <h2 className="mb-1.5 text-[13px] leading-none font-semibold text-tinta">WhatsApp</h2>
-            <p className="text-sm leading-normal text-apagado">{CONTACTO_SITIO.whatsapp}</p>
-          </div>
+          {CONTACTO_SITIO.whatsapp && (
+            <div className="rounded-lg bg-[#F5F4F0] p-5">
+              <h2 className="mb-1.5 text-[13px] leading-none font-semibold text-tinta">WhatsApp</h2>
+              <p className="text-sm leading-normal text-apagado">{CONTACTO_SITIO.whatsapp}</p>
+            </div>
+          )}
           <div className="rounded-lg bg-[#F5F4F0] p-5">
             <h2 className="mb-1.5 text-[13px] leading-none font-semibold text-tinta">Horario de atención</h2>
             <p className="text-sm leading-normal text-apagado">{CONTACTO_SITIO.horario}</p>

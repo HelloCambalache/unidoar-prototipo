@@ -31,6 +31,8 @@ import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { planes } from "@/lib/queries/planes";
+import { cantidadDeSedes } from "@/lib/queries/sedes";
+import { getDb } from "@/db";
 
 export const metadata: Metadata = { title: "Cobros de una institución · Backoffice" };
 export const dynamic = "force-dynamic";
@@ -68,6 +70,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   if (!esUuid(id)) notFound();
   const [d, P] = await Promise.all([detalleDeCobros(id), planes()]);
   if (!d) notFound();
+  // Para un plan por sede (Multisede): cuántas sedes tiene, que es por lo que se multiplica el precio.
+  const sedes = (await cantidadDeSedes(getDb(), [id])).get(id) ?? 1;
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
@@ -204,6 +208,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             )}
             <CobroPagoEfectivo
               institucionId={i.id}
+              sedes={sedes}
               catalogo={P.catalogo}
               plan={plan}
               periodoSugerido={impagas[0]?.periodo ?? sugerido}
@@ -211,6 +216,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             />
             <CobroNuevaFactura
               institucionId={i.id}
+              sedes={sedes}
               catalogo={P.catalogo}
               plan={plan}
               diaCobro={i.diaCobro}

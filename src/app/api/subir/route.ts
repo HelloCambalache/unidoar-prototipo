@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { usuarioActual } from "@/lib/auth";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
+import { negarSubida } from "@/lib/queries/subidas-permiso";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import {
   BUCKETS,
@@ -32,6 +33,8 @@ export async function POST(req: Request) {
 
   const usuario = await usuarioActual();
   if (!usuario) return responder({ ok: false, error: "Iniciá sesión para subir archivos." }, 401);
+  const negada = await negarSubida(usuario);
+  if (negada) return responder({ ok: false, error: negada.error }, negada.status);
 
   // Corta antes de leer el cuerpo entero si ya es evidente que no entra.
   const declarado = Number(req.headers.get("content-length") ?? 0);

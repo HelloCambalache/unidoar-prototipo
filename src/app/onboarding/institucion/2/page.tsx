@@ -20,6 +20,8 @@ export const metadata: Metadata = { title: "Tu institución" };
 export default async function PasoInstitucion2() {
   const usuario = await usuarioParaAlta("institucion");
   const institucion = await institucionPropia(usuario.id);
+  // Con la institución verificada el equipo ya revisó estos datos: no se vuelven a editar desde el alta (`crearInstitucion` también lo corta).
+  if (institucion?.verificada) redirect(RUTA_INICIO.institucion);
   if (!institucion) {
     // Quien llega invitado al equipo de otra institución (o ya es miembro) no crea una propia: entra directo...
     if (await institucionComoMiembro(usuario, (await datosDeSesion())?.nombre)) redirect(RUTA_INICIO.institucion);

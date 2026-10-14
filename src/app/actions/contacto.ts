@@ -1,6 +1,6 @@
 "use server";
 
-import { and, count, eq, gt, sql } from "drizzle-orm";
+import { count, gt, sql } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import { mensajesContacto } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
@@ -9,6 +9,8 @@ import { encolarParaEquipo } from "@/lib/correo/cola";
 
 /** Mensajes por email y hora: corta el spam sin pedir captcha. */
 const MAX_POR_HORA = 5;
+/** Mensajes de todos juntos por hora: el uso normal es de unos pocos al día; esto solo se alcanza con un ataque. */
+const MAX_EN_TOTAL_POR_HORA = 40;
 
 const texto = (v: FormDataEntryValue | null) => (typeof v === "string" ? v : "");
 
@@ -32,17 +34,19 @@ export async function enviarContacto(_previo: EstadoContacto, formData: FormData
 
   try {
     const db = getDb();
-    const [{ n }] = await db
-      .select({ n: count() })
+    const [{ deEsteEmail, enTotal }] = await db
+      .select({
+        deEsteEmail: sql<number>`count(*) filter (where ${mensajesContacto.email} = ${r.data.email})`.mapWith(Number),
+        enTotal: count(),
+      })
       .from(mensajesContacto)
-      .where(
-        and(
-          eq(mensajesContacto.email, r.data.email),
-          gt(mensajesContacto.creadoEn, sql`now() - interval '1 hour'`),
-        ),
-      );
-    if (n >= MAX_POR_HORA) {
+      .where(gt(mensajesContacto.creadoEn, sql`now() - interval '1 hour'`));
+    if (deEsteEmail >= MAX_POR_HORA) {
       return { ok: false, error: "Ya recibimos varios mensajes tuyos. Te respondemos a la brevedad.", valores };
+    }
+    // Cambiando de email se esquiva el tope de arriba: este corta una avalancha desde cualquier lado (el captcha lo reemplazaría).
+    if (enTotal >= MAX_EN_TOTAL_POR_HORA) {
+      return { ok: false, error: "Estamos recibiendo muchos mensajes en este momento. Probá de nuevo en un rato.", valores };
     }
     // El mensaje y el mail al equipo se guardan juntos: si uno falla, no queda el otro.
     await transaccion(async (tx) => {

@@ -20,7 +20,7 @@ export default async function MiCuentaDocente({ searchParams }: { searchParams: 
     <>
       <EncabezadoPagina
         titulo="Mi cuenta"
-        bajada="Tus datos de acceso a UNIDOAR. Lo que ven las instituciones (tu experiencia, tus zonas y tus documentos) se edita en Mi perfil."
+        bajada="Tus datos de acceso a UNIDOAR. Lo que ven las instituciones (tu experiencia, tus zonas y tu CV) se edita en Mi perfil."
       />
       <div className="flex max-w-[980px] flex-col gap-4">
         {avisoEmail === "confirmado" && <AvisoEmailConfirmado email={usuario.email} />}

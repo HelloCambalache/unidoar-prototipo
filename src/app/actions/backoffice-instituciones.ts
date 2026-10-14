@@ -314,12 +314,15 @@ export async function reactivarInstitucion(institucionId: string): Promise<Resul
       },
       tx,
     );
-    await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
+    const destinatarios = await destinatariosDeInstitucion(tx, inst.id);
+    await avisarAVarios(tx, destinatarios, {
       tipo: "sistema",
       titulo: "UNIDOAR",
       texto: `reactivó la cuenta de ${inst.nombre}. Ya podés volver a usar UNIDOAR con normalidad.`,
       enlace: "/institucion/dashboard",
     });
+    // Como la suspensión (M15): quien estaba suspendido no veía la campanita, así que el mail es la forma de enterarse de que ya puede entrar.
+    await encolarParaUsuarios(tx, destinatarios, "M16", { nombre: null, institucion: inst.nombre });
     return ok();
   });
 
