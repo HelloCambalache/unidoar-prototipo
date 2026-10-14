@@ -210,6 +210,23 @@ type SedeComparable = { id?: string | null; nombre: string; direccion: string | 
 const comoTexto = (v: string | null | undefined) => (v ?? "").trim();
 
 /**
+ * Una huella de las sedes guardadas cuando se abrió la pantalla: se manda al guardar y el servidor la compara con lo que hay en ese
+ * momento; si no coinciden, otra persona del equipo las cambió mientras tanto y no se pisa lo suyo. Solo cuentan las sedes que ya existen
+ * (las que tienen `id`), en cualquier orden, y de cada una lo que se edita: nombre, dirección, zona, cuál es la principal y, si quien
+ * edita puede cargarlo (`conCue`), el CUE. La ubicación en el mapa no entra: sale de la dirección.
+ */
+export function huellaDeSedes(
+  sedes: readonly { id?: string | null; nombre: string; direccion: string | null; zona: string | null; cue: string | null; esPrincipal: boolean }[],
+  opciones: { conCue: boolean },
+): string {
+  return JSON.stringify(
+    sedes
+      .flatMap((s) => (s.id ? [[s.id, comoTexto(s.nombre), comoTexto(s.direccion), comoTexto(s.zona), opciones.conCue ? comoTexto(s.cue) : "", s.esPrincipal] as const] : []))
+      .sort((a, b) => a[0].localeCompare(b[0])),
+  );
+}
+
+/**
  * Nombres (en castellano) de lo que cambió entre las sedes guardadas y las que se mandan, para la actividad del equipo: nunca los
  * valores. Las sedes se emparejan por `id`; una sin `id` (o con uno que no existía) es nueva.
  */

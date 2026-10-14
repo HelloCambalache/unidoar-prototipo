@@ -1,12 +1,12 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { transaccion } from "@/db";
-import { institucionSedes, type Institucion } from "@/db/schema";
+import { institucionSedes, instituciones, type Institucion } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { TIPOS_CON_CUE } from "@/lib/catalogo";
 import { busquedasAbiertasPorSede, sedesDeInstitucion, sincronizarEspejo } from "@/lib/queries/sedes";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
-import { cambiosDeSedes, puedeQuitarSede, sedesEntradaSchema, validarSedes, type SedeVista } from "@/lib/sedes";
+import { cambiosDeSedes, huellaDeSedes, puedeQuitarSede, sedesEntradaSchema, validarSedes, type SedeVista } from "@/lib/sedes";
 import { claveDeDireccion, zonaDeUbicacion } from "@/lib/ubicacion";
 import { camposDeError } from "@/lib/vitrina";
 
@@ -30,7 +30,7 @@ export async function guardarSedesDeInstitucion(
   institucion: Pick<Institucion, "id" | "tipo">,
   entrada: unknown,
   opciones: { puedeEditarCue: boolean },
-): Promise<Resultado<{ sedes: SedeVista[]; cambios: string[] }>> {
+): Promise<Resultado<{ sedes: SedeVista[]; huella: string; cambios: string[] }>> {
   const r = sedesEntradaSchema.safeParse(entrada);
   if (!r.success) return fallo("Revisá los campos marcados.", camposDeError(r.error));
   const enviadas = r.data.sedes;
@@ -41,6 +41,11 @@ export async function guardarSedesDeInstitucion(
   const antes = await sedesDeInstitucion(institucion.id);
   const porId = new Map(antes.map((s) => [s.id, s]));
   const conCue = opciones.puedeEditarCue && TIPOS_CON_CUE.includes(institucion.tipo);
+
+  // La huella de lo que la persona estaba viendo (la pantalla la manda junto con las sedes). Primero una comprobación rápida, antes de
+  // ubicar las direcciones; y otra, la que vale, dentro de la transacción con la institución bloqueada. Sin huella no se compara.
+  const huellaEsperada = huellaDeLaEntrada(entrada);
+  if (huellaEsperada !== undefined && huellaDeSedes(antes, { conCue }) !== huellaEsperada) return fallo(SE_CAMBIARON_MIENTRAS_TANTO);
 
   // Las que ya no vienen: no se pueden quitar con búsquedas abiertas o pausadas (hay que cerrarlas o pasarlas a otra sede).
   const idsQueQuedan = new Set(enviadas.flatMap((s) => (s.id && porId.has(s.id) ? [s.id] : [])));
@@ -95,7 +100,11 @@ export async function guardarSedesDeInstitucion(
     });
   }
 
-  await transaccion(async (tx) => {
+  const conflicto = await transaccion(async (tx) => {
+    // Con la institución bloqueada, dos personas que guardan a la vez se turnan; la segunda ve lo que guardó la primera.
+    await tx.select({ id: instituciones.id }).from(instituciones).where(eq(instituciones.id, institucion.id)).limit(1).for("update");
+    if (huellaEsperada !== undefined && huellaDeSedes(await sedesDeInstitucion(institucion.id, tx), { conCue }) !== huellaEsperada) return true;
+
     // La principal anterior se suelta primero: el índice único solo admite una principal por institución.
     await tx
       .update(institucionSedes)
@@ -111,7 +120,9 @@ export async function guardarSedesDeInstitucion(
       else await tx.insert(institucionSedes).values({ ...campos, institucionId: institucion.id });
     }
     await sincronizarEspejo(tx, institucion.id);
+    return false;
   });
+  if (conflicto) return fallo(SE_CAMBIARON_MIENTRAS_TANTO);
 
   const despues = await sedesDeInstitucion(institucion.id);
   // Lo comparado es lo que se mandó (con el id de cada una) contra lo que había: las nuevas no tienen id todavía.
@@ -119,5 +130,14 @@ export async function guardarSedesDeInstitucion(
     antes,
     guardar.map((g) => ({ id: g.id, nombre: g.nombre, direccion: g.direccion, zona: g.zona, cue: g.cue, esPrincipal: g.esPrincipal })),
   );
-  return ok({ sedes: despues, cambios });
+  return ok({ sedes: despues, huella: huellaDeSedes(despues, { conCue }), cambios });
+}
+
+const SE_CAMBIARON_MIENTRAS_TANTO =
+  "Otra persona del equipo cambió las sedes mientras las editabas, y no queremos pisar sus cambios. Recargá la página para ver lo último y volvé a hacer los tuyos.";
+
+/** La huella que mandó la pantalla (no es parte de lo que se valida y guarda: va aparte). Sin ella no se compara, como antes. */
+function huellaDeLaEntrada(entrada: unknown): string | undefined {
+  const huella = typeof entrada === "object" && entrada !== null ? (entrada as { huella?: unknown }).huella : undefined;
+  return typeof huella === "string" ? huella : undefined;
 }

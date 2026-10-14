@@ -4,6 +4,7 @@ import {
   aSedePublica,
   cambiosDeSedes,
   espejoDePrincipal,
+  huellaDeSedes,
   MAX_SEDES,
   nombreVisibleDeSede,
   ordenarSedes,
@@ -251,5 +252,44 @@ describe("qué cambió en las sedes (para la actividad del equipo)", () => {
 
   it("un id que no existía se trata como sede nueva", () => {
     assert.deepEqual(cambiosDeSedes([olivos], [olivos, { ...pilar, id: "2f9b3f50-8b2c-4d8d-9c74-2b8c0c6d5e33" }]), ["sedes agregadas"]);
+  });
+});
+
+describe("huella de las sedes (detecta que otra persona las cambió mientras tanto)", () => {
+  const s = (id: string, extra: Partial<{ nombre: string; direccion: string | null; zona: string | null; cue: string | null; esPrincipal: boolean }> = {}) => ({
+    id,
+    nombre: "Sede",
+    direccion: "Calle 1",
+    zona: "Olivos",
+    cue: null as string | null,
+    esPrincipal: false,
+    ...extra,
+  });
+
+  it("es la misma sin importar el orden ni los espacios de más", () => {
+    const a = huellaDeSedes([s("a", { esPrincipal: true }), s("b")], { conCue: false });
+    const b = huellaDeSedes([s("b", { nombre: " Sede " }), s("a", { esPrincipal: true, direccion: "Calle 1 " })], { conCue: false });
+    assert.equal(a, b);
+  });
+
+  it("cambia si cambia el nombre, la dirección, la zona, cuál es la principal o si se suma o se quita una sede", () => {
+    const base = huellaDeSedes([s("a", { esPrincipal: true }), s("b")], { conCue: false });
+    assert.notEqual(huellaDeSedes([s("a", { esPrincipal: true, nombre: "Otra" }), s("b")], { conCue: false }), base);
+    assert.notEqual(huellaDeSedes([s("a", { esPrincipal: true, direccion: "Calle 2" }), s("b")], { conCue: false }), base);
+    assert.notEqual(huellaDeSedes([s("a", { esPrincipal: true, zona: "Pilar" }), s("b")], { conCue: false }), base);
+    assert.notEqual(huellaDeSedes([s("a"), s("b", { esPrincipal: true })], { conCue: false }), base);
+    assert.notEqual(huellaDeSedes([s("a", { esPrincipal: true })], { conCue: false }), base);
+    assert.notEqual(huellaDeSedes([s("a", { esPrincipal: true }), s("b"), s("c")], { conCue: false }), base);
+  });
+
+  it("el CUE cuenta solo para quien puede cargarlo (si no, un cambio del equipo falsearía un conflicto a la institución)", () => {
+    const sin = [s("a", { esPrincipal: true })];
+    const con = [s("a", { esPrincipal: true, cue: "600123" })];
+    assert.equal(huellaDeSedes(sin, { conCue: false }), huellaDeSedes(con, { conCue: false }));
+    assert.notEqual(huellaDeSedes(sin, { conCue: true }), huellaDeSedes(con, { conCue: true }));
+  });
+
+  it("las sedes sin id (la que se ofrece cuando todavía no hay ninguna guardada) no cuentan", () => {
+    assert.equal(huellaDeSedes([{ ...s("x"), id: undefined }], { conCue: false }), huellaDeSedes([], { conCue: false }));
   });
 });

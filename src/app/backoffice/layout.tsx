@@ -11,6 +11,7 @@ const NAV: NavItem[] = [
   { href: "/backoffice/cobros", label: "Cobros", icono: "plan" },
   { href: "/backoffice/planes", label: "Planes", icono: "estrella" },
   { href: "/backoffice/mensajes", label: "Mensajes", icono: "publicaciones" },
+  { href: "/backoffice/altas-sin-terminar", label: "Altas sin terminar", icono: "equipo" },
 ];
 
 export default async function BackofficeLayout({ children }: { children: React.ReactNode }) {

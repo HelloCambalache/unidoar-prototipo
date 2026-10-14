@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, isNull, notInArray, or, sql } from "drizzle-orm
 import { getDb, transaccion } from "@/db";
 import { busquedas, cursos, institucionFotos, institucionNovedades, instituciones, postulaciones } from "@/db/schema";
 import {
+  huellaDeVitrina,
   sinRepetidos,
   type BusquedaAbierta,
   type CursoVitrina,
@@ -83,9 +84,26 @@ const vacioANull = (v: string) => (v.trim() ? v.trim() : null);
  * institución se actualiza y lo demás se crea; un `id` ajeno o inexistente se trata como nuevo, nunca se toca la
  * fila de otra institución. Devuelve las listas ya con sus ids, en el orden en que se muestran.
  * La autorización y la validación de las URLs de imágenes las hace la acción que la llama.
+ *
+ * `huellaEsperada` es la huella de lo que la persona estaba viendo (`huellaDeVitrina`). Con la fila de la institución bloqueada se la
+ * compara con lo que hay ahora; si no coincide, otra persona del equipo guardó mientras tanto: no se escribe nada y devuelve
+ * `{ conflicto: true }`. Si ya no hace falta compararla (no vino), se guarda como siempre.
  */
-export async function guardarVitrina(institucionId: string, d: DatosVitrina) {
+export async function guardarVitrina(
+  institucionId: string,
+  d: DatosVitrina,
+  huellaEsperada?: string,
+): Promise<{ conflicto: true } | ({ conflicto: false; huella: string } & VitrinaGuardadaSinHuella)> {
   return transaccion(async (tx) => {
+    // Lo que hay ahora, con la fila bloqueada: dos personas que guardan a la vez se turnan en vez de pisarse.
+    const [antes] = await tx.select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1).for("update");
+    const fotosAntes = await leerGaleria(tx, institucionId);
+    const novedadesAntes = await leerNovedades(tx, institucionId);
+    if (!antes) return { conflicto: true as const };
+    if (huellaEsperada !== undefined && huellaDeVitrina({ ...antes, fotos: fotosAntes, novedades: novedadesAntes }) !== huellaEsperada) {
+      return { conflicto: true as const };
+    }
+
     await tx
       .update(instituciones)
       .set({
@@ -160,21 +178,32 @@ export async function guardarVitrina(institucionId: string, d: DatosVitrina) {
       }
     }
 
-    const fotos = await tx
-      .select({ id: institucionFotos.id, url: institucionFotos.url, etiqueta: institucionFotos.etiqueta })
-      .from(institucionFotos)
-      .where(eq(institucionFotos.institucionId, institucionId))
-      .orderBy(institucionFotos.orden, institucionFotos.creadoEn);
-    const novedades = await tx
-      .select({
-        id: institucionNovedades.id,
-        titulo: institucionNovedades.titulo,
-        texto: institucionNovedades.texto,
-        fecha: institucionNovedades.fecha,
-      })
-      .from(institucionNovedades)
-      .where(eq(institucionNovedades.institucionId, institucionId))
-      .orderBy(desc(institucionNovedades.fecha), desc(institucionNovedades.creadoEn));
-    return { fotos: fotos.map((f) => ({ id: f.id, url: f.url, etiqueta: f.etiqueta ?? "" })), novedades };
+    const fotos = await leerGaleria(tx, institucionId);
+    const novedades = await leerNovedades(tx, institucionId);
+    // La huella de lo que quedó guardado: la pantalla compara el próximo guardado contra esta.
+    const [despues] = await tx.select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+    return { conflicto: false as const, fotos, novedades, huella: huellaDeVitrina({ ...despues!, fotos, novedades }) };
   });
+}
+
+type Tx = Parameters<Parameters<typeof transaccion>[0]>[0];
+type VitrinaGuardadaSinHuella = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[] };
+
+/** La galería en el orden en que se muestra. */
+async function leerGaleria(tx: Tx, institucionId: string): Promise<VitrinaFotoVista[]> {
+  const filas = await tx
+    .select({ id: institucionFotos.id, url: institucionFotos.url, etiqueta: institucionFotos.etiqueta })
+    .from(institucionFotos)
+    .where(eq(institucionFotos.institucionId, institucionId))
+    .orderBy(institucionFotos.orden, institucionFotos.creadoEn);
+  return filas.map((f) => ({ id: f.id, url: f.url, etiqueta: f.etiqueta ?? "" }));
+}
+
+/** Las novedades en el orden en que se muestran (la más reciente primero). */
+async function leerNovedades(tx: Tx, institucionId: string): Promise<VitrinaNovedadVista[]> {
+  return tx
+    .select({ id: institucionNovedades.id, titulo: institucionNovedades.titulo, texto: institucionNovedades.texto, fecha: institucionNovedades.fecha })
+    .from(institucionNovedades)
+    .where(eq(institucionNovedades.institucionId, institucionId))
+    .orderBy(desc(institucionNovedades.fecha), desc(institucionNovedades.creadoEn));
 }

@@ -50,7 +50,7 @@ export async function actualizarVitrina(entrada: unknown): Promise<Resultado<Vit
  * "Guardar sedes" de Mi perfil: la lista completa de sedes de la institución (las reglas están en `guardarSedesDeInstitucion`, que
  * comparte con el backoffice). El CUE no lo carga la institución: lo respeta solo cuando lo carga el equipo.
  */
-export async function actualizarSedes(entrada: unknown): Promise<Resultado<{ sedes: SedeVista[] }>> {
+export async function actualizarSedes(entrada: unknown): Promise<Resultado<{ sedes: SedeVista[]; huella: string }>> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!esRolGestor(await rolEnInstitucion(institucion, usuario.id))) {
     return fallo("Solo el dueño y los administradores pueden editar las sedes.");
@@ -63,7 +63,7 @@ export async function actualizarSedes(entrada: unknown): Promise<Resultado<{ sed
   revalidatePath(`/docente/instituciones/${institucion.slug}`);
   revalidatePath("/docente/instituciones");
   revalidatePath("/instituciones");
-  return ok({ sedes: r.data.sedes });
+  return ok({ sedes: r.data.sedes, huella: r.data.huella });
 }
 
 /* ───────────────────────────── Mi cuenta ───────────────────────────── */

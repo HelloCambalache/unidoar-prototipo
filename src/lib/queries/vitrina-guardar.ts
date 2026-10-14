@@ -56,7 +56,11 @@ export async function guardarVitrinaDeInstitucion(
   if (Object.keys(campos).length > 0) return fallo("Revisá los campos marcados.", campos);
 
   const cambios = cambiosDeVitrina({ ...institucion, fotos: fotosAntes, novedades: novedadesAntes }, d);
-  const guardado = await guardarVitrina(institucion.id, d);
+  // La huella de lo que la persona estaba viendo (la pantalla la manda junto con el resto): `guardarVitrina` la compara con lo que hay
+  // al momento de guardar y, si otra persona del equipo guardó mientras tanto, no pisa lo suyo.
+  const huellaEsperada = huellaDeLaEntrada(entrada);
+  const guardado = await guardarVitrina(institucion.id, d, huellaEsperada);
+  if (guardado.conflicto) return fallo(SE_CAMBIO_MIENTRAS_TANTO);
 
   // Lo que se reemplazó o se quitó (logo, portada, fotos de la galería) deja de ocupar lugar en Storage.
   await borrarArchivos(
@@ -72,5 +76,14 @@ export async function guardarVitrinaDeInstitucion(
   revalidatePath(`/docente/instituciones/${institucion.slug}`);
   revalidatePath("/docente/instituciones");
   revalidatePath("/instituciones");
-  return ok({ guardado, cambios });
+  return ok({ guardado: { fotos: guardado.fotos, novedades: guardado.novedades, huella: guardado.huella }, cambios });
+}
+
+const SE_CAMBIO_MIENTRAS_TANTO =
+  "Otra persona del equipo guardó cambios en el perfil mientras lo editabas, y no los queremos pisar. Recargá la página para ver lo último y volvé a hacer tus cambios.";
+
+/** La huella que mandó la pantalla (no es parte de lo que se valida y guarda: va aparte). Sin ella no se compara, como antes. */
+function huellaDeLaEntrada(entrada: unknown): string | undefined {
+  const huella = typeof entrada === "object" && entrada !== null ? (entrada as { huella?: unknown }).huella : undefined;
+  return typeof huella === "string" ? huella : undefined;
 }

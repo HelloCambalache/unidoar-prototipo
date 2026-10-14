@@ -47,10 +47,13 @@ const aFila = (s: SedeInicial): Fila => ({
  */
 export function SedesFormulario({
   sedes,
+  huella,
   conCue = false,
   institucionIdAdmin,
 }: {
   sedes: SedeInicial[];
+  /** Huella de las sedes guardadas cuando se abrió la pantalla (`huellaDeSedes`): el servidor no pisa lo que otra persona cambió mientras tanto. */
+  huella: string;
   /** Solo el equipo, y solo en los tipos de institución que son establecimientos educativos. */
   conCue?: boolean;
   institucionIdAdmin?: string;
@@ -59,6 +62,8 @@ export function SedesFormulario({
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [filas, setFilas] = useState<Fila[]>(() => sedes.map(aFila));
+  // Contra qué se compara el próximo guardado: lo que se abrió, y después lo que quedó guardado con el último "Guardar".
+  const [huellaBase, setHuellaBase] = useState(huella);
   const [errores, setErrores] = useState<Record<string, string>>({});
   /** El motivo de un rechazo que no es de un campo (por ejemplo, quitar una sede con búsquedas abiertas): queda a la vista. */
   const [rechazo, setRechazo] = useState<string | null>(null);
@@ -96,6 +101,7 @@ export function SedesFormulario({
     empezar(async () => {
       try {
         const carga = {
+          huella: huellaBase,
           sedes: filas.map((f) => ({
             ...(f.id ? { id: f.id } : {}),
             nombre: f.nombre,
@@ -110,6 +116,7 @@ export function SedesFormulario({
         if (r.ok) {
           // Las sedes vuelven con sus ids: así el próximo guardado actualiza en vez de duplicar.
           setFilas(r.data.sedes.map(aFila));
+          setHuellaBase(r.data.huella);
           toast(admin ? "Sedes guardadas." : "Sedes guardadas: ya se ven en tu perfil y en tus búsquedas.");
         } else {
           setErrores(r.campos ?? {});

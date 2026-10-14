@@ -87,8 +87,11 @@ export function datosInicialesDeVitrina(i: Institucion): DatosFormularioVitrina 
   };
 }
 
-/** Lo que devuelve "Guardar cambios" del perfil público: las listas ya con sus ids. */
-export type VitrinaGuardada = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[] };
+/**
+ * Lo que devuelve "Guardar cambios" del perfil público: las listas ya con sus ids y la huella de lo que quedó guardado (para que el
+ * próximo guardado compare contra esto y no contra lo que se abrió al principio).
+ */
+export type VitrinaGuardada = { fotos: VitrinaFotoVista[]; novedades: VitrinaNovedadVista[]; huella: string };
 
 /* ───────── Esquema de "Guardar cambios" ───────── */
 
@@ -219,6 +222,20 @@ const CAMPOS_DE_VITRINA: [keyof VitrinaAntes & keyof DatosVitrina, string][] = [
 ];
 
 const comoTexto = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
+
+/**
+ * Una huella de lo que había guardado cuando se abrió la pantalla del perfil público: la pantalla la manda al guardar y el servidor la
+ * compara con lo que hay en ese momento. Si no coinciden, otra persona del equipo guardó mientras tanto y NO se pisa lo suyo (lo mismo
+ * que ya hace Planes). La galería y las novedades van en el orden en que se muestran (el de la base).
+ */
+export function huellaDeVitrina(v: VitrinaAntes): string {
+  return JSON.stringify({
+    campos: CAMPOS_DE_VITRINA.map(([k]) => comoTexto(v[k])),
+    valores: sinRepetidos(v.valores),
+    fotos: v.fotos.map((f) => [f.url, comoTexto(f.etiqueta)]),
+    novedades: v.novedades.map((n) => [n.titulo, n.texto, n.fecha]),
+  });
+}
 
 /** Nombres (en castellano) de lo que cambió entre lo guardado y lo que se manda: campos, valores, galería y novedades. */
 export function cambiosDeVitrina(antes: VitrinaAntes, d: DatosVitrina): string[] {

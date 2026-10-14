@@ -9,7 +9,8 @@ import { esRolGestor } from "@/lib/equipo";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { sedesParaEditar } from "@/lib/queries/sedes";
 import { datosVitrina } from "@/lib/queries/vitrina";
-import { datosInicialesDeVitrina } from "@/lib/vitrina";
+import { huellaDeSedes } from "@/lib/sedes";
+import { datosInicialesDeVitrina, huellaDeVitrina } from "@/lib/vitrina";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 
@@ -45,8 +46,9 @@ export default async function Vitrina() {
         cursos={datos.cursos}
         busquedasAbiertas={datos.busquedasAbiertas}
         almacenamientoDisponible={almacenamientoConfigurado()}
+        huella={huellaDeVitrina({ ...i, fotos: datos.fotos, novedades: datos.novedades })}
       />
-      <SedesFormulario sedes={sedes} />
+      <SedesFormulario sedes={sedes} huella={huellaDeSedes(sedes, { conCue: false })} />
     </>
   );
 }

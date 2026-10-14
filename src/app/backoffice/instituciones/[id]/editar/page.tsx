@@ -12,7 +12,8 @@ import { TIPOS_CON_CUE } from "@/lib/catalogo";
 import { institucionParaEditar } from "@/lib/queries/backoffice-instituciones";
 import { sedesParaEditar } from "@/lib/queries/sedes";
 import { datosVitrina } from "@/lib/queries/vitrina";
-import { datosInicialesDeVitrina } from "@/lib/vitrina";
+import { huellaDeSedes } from "@/lib/sedes";
+import { datosInicialesDeVitrina, huellaDeVitrina } from "@/lib/vitrina";
 
 export const metadata: Metadata = { title: "Editar institución · Backoffice" };
 export const dynamic = "force-dynamic";
@@ -46,8 +47,14 @@ export default async function EditarInstitucion({ params }: { params: Promise<{ 
           cursos={datos.cursos}
           busquedasAbiertas={datos.busquedasAbiertas}
           almacenamientoDisponible={almacenamientoConfigurado()}
+          huella={huellaDeVitrina({ ...i, fotos: datos.fotos, novedades: datos.novedades })}
         />
-        <SedesFormulario institucionIdAdmin={i.id} sedes={sedes} conCue={TIPOS_CON_CUE.includes(i.tipo)} />
+        <SedesFormulario
+          institucionIdAdmin={i.id}
+          sedes={sedes}
+          huella={huellaDeSedes(sedes, { conCue: TIPOS_CON_CUE.includes(i.tipo) })}
+          conCue={TIPOS_CON_CUE.includes(i.tipo)}
+        />
       </div>
       <Tarjeta className="max-w-[560px] p-[22px]">
         <EtiquetaSeccion className="mb-1">Datos de la cuenta</EtiquetaSeccion>

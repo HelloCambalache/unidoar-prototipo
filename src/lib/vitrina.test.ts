@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cambiosDeVitrina, vitrinaSchema, type VitrinaAntes } from "./vitrina";
+import { cambiosDeVitrina, huellaDeVitrina, vitrinaSchema, type VitrinaAntes } from "./vitrina";
 
 const antes: VitrinaAntes = {
   nombre: "Colegio San Martín",
@@ -77,5 +77,31 @@ describe("cambiosDeVitrina (lo que queda en la actividad del equipo)", () => {
     const cambios = cambiosDeVitrina(antes, d);
     assert.deepEqual(cambios, ["descripción"]);
     assert.ok(!cambios.join(" ").includes("secreto"));
+  });
+});
+
+describe("huella del perfil público (detecta que otra persona guardó mientras tanto)", () => {
+  it("es la misma para el mismo contenido, aunque cambien los espacios de más o un null por vacío", () => {
+    const parecida: VitrinaAntes = { ...antes, nombre: "  Colegio San Martín ", mision: "", logoUrl: "  " };
+    assert.equal(huellaDeVitrina(parecida), huellaDeVitrina(antes));
+  });
+
+  it("cambia si cambia cualquier campo, los valores, la galería o las novedades", () => {
+    const base = huellaDeVitrina(antes);
+    assert.notEqual(huellaDeVitrina({ ...antes, descripcion: "Otra descripción." }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, alumnos: 421 }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, valores: ["Respeto"] }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, fotos: [] }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, fotos: [{ url: "https://x.test/a.jpg", etiqueta: "Cancha" }] }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, novedades: [] }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, novedades: [{ titulo: "Acto", texto: "Viernes", fecha: "2026-10-02" }] }), base);
+  });
+
+  it("no confunde un campo con otro (los valores no se corren de lugar)", () => {
+    assert.notEqual(huellaDeVitrina({ ...antes, mision: "x", vision: null }), huellaDeVitrina({ ...antes, mision: null, vision: "x" }));
+  });
+
+  it("no cambia por repetidos en los valores, que al guardar se descartan", () => {
+    assert.equal(huellaDeVitrina({ ...antes, valores: ["Respeto", "respeto", "Esfuerzo"] }), huellaDeVitrina(antes));
   });
 });

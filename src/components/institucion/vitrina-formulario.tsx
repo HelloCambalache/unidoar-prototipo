@@ -61,10 +61,13 @@ export function VitrinaFormulario({
   busquedasAbiertas,
   almacenamientoDisponible,
   institucionIdAdmin,
+  huella,
 }: {
   slug: string;
   verificada: boolean;
   inicial: DatosFormularioVitrina;
+  /** Huella de lo guardado cuando se abrió la pantalla (`huellaDeVitrina`): el servidor no pisa lo que otra persona cambió mientras tanto. */
+  huella: string;
   fotos: VitrinaFotoVista[];
   novedades: VitrinaNovedadVista[];
   cursos: CursoVitrina[];
@@ -77,6 +80,8 @@ export function VitrinaFormulario({
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState(inicial);
+  // Contra qué se compara el próximo guardado: lo que se abrió, y después lo que quedó guardado con el último "Guardar cambios".
+  const [huellaBase, setHuellaBase] = useState(huella);
   const [fotosEd, setFotosEd] = useState(() => aEditable.fotos(fotos));
   const [novedadesEd, setNovedadesEd] = useState(() => aEditable.novedades(novedades));
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -106,6 +111,7 @@ export function VitrinaFormulario({
       try {
         const carga = {
           ...d,
+          huella: huellaBase,
           fotos: fotosEd.map((f) => ({ ...(f.id ? { id: f.id } : {}), url: f.url, etiqueta: f.etiqueta })),
           novedades: novedadesEd.map((n) => ({
             ...(n.id ? { id: n.id } : {}),
@@ -119,6 +125,7 @@ export function VitrinaFormulario({
           // Las listas vuelven con sus ids: así el próximo guardado actualiza en vez de duplicar.
           setFotosEd(aEditable.fotos(r.data.fotos));
           setNovedadesEd(aEditable.novedades(r.data.novedades));
+          setHuellaBase(r.data.huella);
           toast(admin ? "Cambios guardados: ya se ven en la vitrina pública de la institución." : "Cambios guardados: ya se ven en tu vitrina pública.");
         } else {
           setErrores(r.campos ?? {});

@@ -140,7 +140,7 @@ export async function actualizarVitrinaComoAdmin(institucionId: string, entrada:
  * (`guardarSedesDeInstitucion`), más el CUE de cada sede, que solo carga el equipo. Queda en la actividad de la cuenta con los
  * nombres de lo que se tocó (sin los valores) y no se le avisa a la institución.
  */
-export async function actualizarSedesComoAdmin(institucionId: string, entrada: unknown): Promise<Resultado<{ sedes: SedeVista[] }>> {
+export async function actualizarSedesComoAdmin(institucionId: string, entrada: unknown): Promise<Resultado<{ sedes: SedeVista[]; huella: string }>> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
@@ -160,7 +160,7 @@ export async function actualizarSedesComoAdmin(institucionId: string, entrada: u
   revalidarInstitucion(inst.id, inst.slug);
   revalidatePath(`/docente/instituciones/${inst.slug}`);
   revalidatePath("/docente/instituciones");
-  return ok({ sedes: r.data.sedes });
+  return ok({ sedes: r.data.sedes, huella: r.data.huella });
 }
 
 /**
