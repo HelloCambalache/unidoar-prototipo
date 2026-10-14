@@ -75,6 +75,9 @@ type Definicion<P extends PlantillaId> = {
   contenido: (datos: DatosDe[P]) => Contenido;
 };
 
+/** "docente" → "profesional", "institucion" → "institución": cómo se nombra a quien pide la baja en lo que lee el equipo. */
+const tipoDeCuenta = (tipo: string) => (tipo === "docente" ? "profesional" : tipo === "institucion" ? "institución" : tipo);
+
 const minuscula = (texto: string) => texto.charAt(0).toLowerCase() + texto.slice(1);
 
 export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
@@ -155,13 +158,14 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
         d.institucion
           ? ["Hola: suspendimos la cuenta de ", n(d.institucion), " en UNIDOAR."]
           : ["Hola", d.nombre ? " " : "", d.nombre ? n(d.nombre) : "", ": suspendimos tu cuenta en UNIDOAR."],
-        ...(d.motivo ? [["El motivo:"]] : []),
         [
           d.institucion
             ? "Mientras esté suspendida el equipo no puede usar la plataforma ni la institución aparece en las búsquedas de los profesionales."
             : "Mientras esté suspendida no podés usar la plataforma ni aparecés en las búsquedas de las instituciones.",
           " Escribinos para ver cómo regularizarla.",
         ],
+        // El motivo va al final, justo antes de la cita que lo muestra: así "El motivo:" encabeza lo que sigue.
+        ...(d.motivo ? [["El motivo:"]] : []),
       ],
       cita: d.motivo ?? undefined,
       boton: { texto: "Escribirnos", ruta: "/contacto" },
@@ -407,9 +411,9 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
     remitente: "app",
     contenido: (d) => ({
       asunto: `${d.cuenta} pidió la baja`,
-      previa: `Pedido de baja de ${d.tipo}.`,
+      previa: `Pedido de baja de ${tipoDeCuenta(d.tipo)}.`,
       titulo: "Pedido de baja",
-      parrafos: [[n(d.cuenta), " (", d.tipo, ") pidió dar de baja su cuenta."]],
+      parrafos: [[n(d.cuenta), " (", tipoDeCuenta(d.tipo), ") pidió dar de baja su cuenta."]],
       boton: { texto: "Verlo en el backoffice", ruta: d.ruta },
     }),
   },

@@ -160,4 +160,20 @@ describe("plantillas de mails", () => {
     assert.ok(!esPlantilla("__proto__"));
     assert.equal(escaparHtml(`<a href="x">&</a>`), "&lt;a href=&quot;x&quot;&gt;&amp;&lt;/a&gt;");
   });
+
+  it("en la suspensión, 'El motivo:' encabeza la cita con el motivo (no el texto de las consecuencias)", () => {
+    const m = armarMail("M15", { nombre: "Lucía", institucion: null, motivo: "Datos falsos" }, { origen: ORIGEN });
+    const aviso = m.texto.indexOf("Mientras esté suspendida");
+    const encabezado = m.texto.indexOf("El motivo:");
+    const cita = m.texto.indexOf("> Datos falsos");
+    assert.ok(aviso >= 0 && encabezado > aviso && cita > encabezado, "orden: consecuencias, 'El motivo:', cita");
+    assert.ok(!m.texto.slice(encabezado, cita).includes("Mientras"), "entre el encabezado y la cita no hay otro texto");
+  });
+
+  it("el pedido de baja nombra 'profesional' e 'institución', no el valor interno", () => {
+    const profesional = armarMail("M62", { cuenta: "Lucía Pérez", tipo: "docente", ruta: "/backoffice/docentes" }, { origen: ORIGEN });
+    assert.ok(profesional.texto.includes("(profesional)") && !profesional.texto.includes("(docente)"));
+    const institucion = armarMail("M62", { cuenta: "Colegio Norte", tipo: "institucion", ruta: "/backoffice/instituciones" }, { origen: ORIGEN });
+    assert.ok(institucion.texto.includes("(institución)") && !institucion.texto.includes("(institucion)"));
+  });
 });
