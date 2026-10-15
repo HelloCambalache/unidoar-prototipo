@@ -1,4 +1,3 @@
-import { Icono } from "@/components/icons";
 import type { SedePublica } from "@/lib/sedes";
 
 /** Enlace al mapa de una sede: por coordenadas si las tiene y, si no, por el texto de la dirección. */
@@ -15,13 +14,22 @@ function enlaceAlMapa(s: SedePublica) {
 export function ListaDeSedes({ sedes }: { sedes: SedePublica[] }) {
   return (
     <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
-      {sedes.map((s) => {
+      {sedes.map((s, n) => {
         const mapa = enlaceAlMapa(s);
         return (
-          <li key={`${s.nombre}-${s.direccion ?? ""}`} className="flex items-start gap-2 text-sm leading-normal text-tinta-2">
-            <Icono nombre="ubicacion" tamano={16} className="mt-0.5 flex-none text-apagado" />
+          <li key={`${s.nombre}-${s.direccion ?? ""}`} className="flex items-start gap-3 text-sm leading-normal text-tinta-2">
+            {/* Número de la sede (vienen ordenadas: la principal es la 1). */}
+            <span
+              aria-hidden
+              className="mt-px inline-flex size-7 flex-none items-center justify-center rounded-full bg-navy-900 text-[12.5px] font-semibold text-white"
+            >
+              {n + 1}
+            </span>
             <div className="min-w-0">
-              <div className="font-semibold text-tinta">{s.nombre}</div>
+              <div className="font-semibold text-tinta">
+                <span className="sr-only">Sede {n + 1}: </span>
+                {s.nombre}
+              </div>
               {s.direccion && <div>{s.direccion}</div>}
               {s.zona && <div className="text-apagado">{s.zona}</div>}
               {mapa && (

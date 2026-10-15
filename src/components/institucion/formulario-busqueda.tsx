@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { crearBusqueda, editarBusqueda } from "@/app/actions/busquedas";
+import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
 import { PanelCoincidencias, type Interruptores } from "@/components/institucion/panel-coincidencias";
@@ -10,6 +11,7 @@ import type { CategoriaDocente } from "@/db/schema";
 import { OPCIONES_VENCIMIENTO } from "@/lib/busquedas";
 import { CATEGORIA_INFO, CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { sugerirDescripcion, sugerirPuesto, sugerirRequisitos, type DatosParaRedactar } from "@/lib/redaccion-busqueda";
+import { cn } from "@/lib/utils";
 
 export type ValoresFormulario = {
   puesto: string;
@@ -91,6 +93,20 @@ export function FormularioBusqueda({
     });
 
   const esRapida = v.tipo === "Suplencia rápida";
+  // Al crear se pueden elegir varias sedes (una búsqueda por sede); al editar, la búsqueda es de una sola.
+  const multiples = modo === "crear" && sedes.length > 1;
+  const [sedesSel, setSedesSel] = useState<string[]>(v.sedeId ? [v.sedeId] : []);
+  const alternarSede = (id: string) => {
+    if (!multiples) {
+      setSedesSel([id]);
+      cambiarSede(id);
+      return;
+    }
+    const siguiente = sedesSel.includes(id) ? sedesSel.filter((x) => x !== id) : [...sedesSel, id];
+    setSedesSel(siguiente);
+    // La zona del formulario acompaña a la primera sede elegida (con una sola, es la de siempre).
+    if (siguiente[0] && siguiente[0] !== v.sedeId) cambiarSede(siguiente[0]);
+  };
   // Lo que ya completó la institución: de ahí salen las sugerencias de título, descripción y requisitos.
   const paraRedactar: DatosParaRedactar = {
     categoria: v.categoria,
@@ -252,19 +268,74 @@ export function FormularioBusqueda({
         </div>
 
         {sedes.length > 1 ? (
-          <Campo etiqueta="Sede" requerido ayuda="Los kilómetros que ven los profesionales se miden hasta esta sede." error={errores.sedeId}>
-            <Select name="sedeId" value={v.sedeId} onChange={(e) => cambiarSede(e.target.value)} aria-invalid={!!errores.sedeId}>
-              {sedes.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.zona ? `${s.nombre} · ${s.zona}` : s.nombre}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+            <legend className="mb-1.5 p-0 text-[13px] font-semibold text-tinta">
+              {modo === "crear" ? "¿En qué sedes es?" : "Sede"} <span className="text-naranja">*</span>
+            </legend>
+            <p className="m-0 mb-1 text-[12.5px] leading-snug text-apagado">
+              {modo === "crear"
+                ? "Podés marcar varias: publicamos una búsqueda igual en cada sede. Los kilómetros que ven los profesionales se miden hasta cada una."
+                : "Los kilómetros que ven los profesionales se miden hasta esta sede."}
+            </p>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2.5">
+              {sedes.map((s, n) => {
+                const marcada = sedesSel.includes(s.id);
+                return (
+                  <label
+                    key={s.id}
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-[16px] border-[1.5px] p-3.5 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30",
+                      marcada ? "border-navy-700 bg-navy-50" : "border-borde bg-white hover:border-borde-fuerte",
+                    )}
+                  >
+                    <input
+                      type={multiples ? "checkbox" : "radio"}
+                      name={multiples ? "sedeIds" : "sedeId"}
+                      value={s.id}
+                      checked={marcada}
+                      onChange={() => alternarSede(s.id)}
+                      className="sr-only"
+                    />
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "inline-flex size-8 flex-none items-center justify-center rounded-full text-[13px] font-semibold",
+                        marcada ? "bg-navy-900 text-white" : "bg-lienzo text-tinta-2",
+                      )}
+                    >
+                      {marcada && multiples ? <Icono nombre="tilde" tamano={14} trazo={2.6} /> : n + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[14px] leading-tight font-semibold text-tinta">
+                        Sede {n + 1} · {s.nombre}
+                      </span>
+                      {s.zona && <span className="mt-0.5 block text-[12.5px] leading-snug text-apagado">{s.zona}</span>}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            {multiples && <input type="hidden" name="sedeId" value={sedesSel[0] ?? ""} />}
+            {errores.sedeId && (
+              <p role="alert" className="m-0 text-xs text-[#b91c1c]">
+                {errores.sedeId}
+              </p>
+            )}
+            {multiples && sedesSel.length > 1 && (
+              <p className="m-0 rounded-xl bg-navy-50 px-3 py-2 text-[13px] font-medium text-navy-700">
+                Se van a publicar {sedesSel.length} búsquedas, una por sede. Cada una se gestiona por separado.
+              </p>
+            )}
+          </fieldset>
         ) : (
           <input type="hidden" name="sedeId" value={v.sedeId} />
         )}
 
+        {multiples && sedesSel.length > 1 ? (
+          <p className="m-0 text-[13px] leading-snug text-apagado">
+            <span className="font-semibold text-tinta">Zona:</span> cada búsqueda toma la zona de su sede.
+          </p>
+        ) : (
         <Campo etiqueta="Zona" ayuda={sedes.length > 1 ? "Tomada de la sede. Podés ampliarla a partidos linderos desde el panel." : "Tomada del perfil de la institución. Podés ampliarla a partidos linderos desde el panel."} error={errores.zona}>
           <Input
             name="zona"
@@ -274,6 +345,7 @@ export function FormularioBusqueda({
             placeholder="Ej. Villa Adelina, Vicente López"
           />
         </Campo>
+        )}
 
         <Campo etiqueta="Descripción" error={errores.descripcion}>
           <Textarea

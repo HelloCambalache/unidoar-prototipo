@@ -10,6 +10,7 @@ const NAV: NavItem[] = [
   { href: "/institucion/buscar-docentes", label: "Buscar profesionales", icono: "buscar", tambien: ["/institucion/busquedas-rapidas", "/institucion/docente"] },
   { href: "/institucion/base-de-docentes", label: "Profesionales", icono: "profesionales" },
   { href: "/institucion/vitrina", label: "Mi perfil", icono: "vitrina" },
+  { href: "/institucion/sedes", label: "Sedes", icono: "ubicacion" },
   { href: "/institucion/cursos", label: "Mis cursos", icono: "cursos" },
   { href: "/institucion/equipo", label: "Equipo", icono: "equipo" },
   { href: "/institucion/plan", label: "Plan", icono: "plan" },

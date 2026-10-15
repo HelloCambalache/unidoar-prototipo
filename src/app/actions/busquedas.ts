@@ -21,7 +21,8 @@ import { correoDeBusquedaUrgente } from "@/lib/correo/eventos";
 import { MS } from "@/lib/fechas";
 import { avisarAVarios, avisarCierreDeBusqueda } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
-import { sedeParaBusqueda } from "@/lib/queries/sedes";
+import { sedeParaBusqueda, sedesDeInstitucion } from "@/lib/queries/sedes";
+import { sedesElegidas } from "@/lib/sedes";
 import { docentesAvisables, resumenCoincidencias } from "@/lib/queries/coincidencias";
 
 /** Pantallas de la institución y del docente que muestran búsquedas o sus conteos. */
@@ -66,50 +67,68 @@ export async function crearBusqueda(
   const datos = parsear(busquedaFormularioSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);
 
-  const sede = await sedeParaBusqueda(institucion.id, datos.data.sedeId);
-  if (!sede) return fallo("Revisá los campos marcados.", { sedeId: "Elegí una sede de la lista." });
+  // Varias sedes a la vez ("sedeIds"): se crea una búsqueda igual en cada una. Si no vienen, la sede única de siempre ("sedeId").
+  const pedidas = formData.getAll("sedeIds").map(String);
+  let sedes: { id: string; zona: string | null }[];
+  if (pedidas.length > 0) {
+    const eleccion = sedesElegidas(pedidas, await sedesDeInstitucion(institucion.id));
+    if (!eleccion.ok) return fallo("Revisá los campos marcados.", { sedeId: eleccion.error });
+    sedes = eleccion.sedes;
+  } else {
+    const sede = await sedeParaBusqueda(institucion.id, datos.data.sedeId);
+    if (!sede) return fallo("Revisá los campos marcados.", { sedeId: "Elegí una sede de la lista." });
+    sedes = [sede];
+  }
 
   const valores = valoresDeBusqueda(datos.data);
-  // Si no cambió la zona del formulario, la búsqueda hereda la de su sede.
-  const zona = valores.zona ?? sede.zona ?? institucion.zona ?? null;
+  const varias = sedes.length > 1;
   const ahora = new Date();
   const venceEn = valores.rapida ? new Date(ahora.getTime() + (datos.data.venceEnHoras ?? 24) * MS.HORA) : null;
 
-  const destinatarios = await docentesAvisables(filtrosDeFormulario(datos.data, zona, formData));
+  // Con una sede, la zona del formulario (o la de la sede). Con varias, cada búsqueda toma la zona de su sede.
+  const planes = await Promise.all(
+    sedes.map(async (sede) => {
+      const zona = (varias ? null : valores.zona) ?? sede.zona ?? institucion.zona ?? null;
+      return { sede, zona, destinatarios: await docentesAvisables(filtrosDeFormulario(datos.data, zona, formData)) };
+    }),
+  );
 
   const avisados = await transaccion(async (tx) => {
-    const [creada] = await tx
-      .insert(busquedas)
-      .values({ institucionId: institucion.id, sedeId: sede.id, ...valores, zona, venceEn })
-      .returning({ id: busquedas.id });
-    await avisarAVarios(
-      tx,
-      destinatarios.map((d) => d.usuarioId),
-      {
+    // A cada profesional se le avisa una sola vez por publicación, aunque encaje en varias sedes (por la primera en la que encaja).
+    const yaAvisados = new Set<string>();
+    for (const { sede, zona, destinatarios } of planes) {
+      const [creada] = await tx
+        .insert(busquedas)
+        .values({ institucionId: institucion.id, sedeId: sede.id, ...valores, zona, venceEn })
+        .returning({ id: busquedas.id });
+      const nuevos = destinatarios.map((d) => d.usuarioId).filter((u) => !yaAvisados.has(u));
+      nuevos.forEach((u) => yaAvisados.add(u));
+      if (nuevos.length === 0) continue;
+      await avisarAVarios(tx, nuevos, {
         tipo: valores.rapida ? "urgente" : "invitacion",
         titulo: institucion.nombre,
         texto: valores.rapida
           ? `necesita una suplencia urgente: ${valores.puesto}. Respondé antes de que venza.`
           : `publicó una búsqueda que encaja con tu perfil: ${valores.puesto}.`,
         enlace: `/docente/oferta/${creada!.id}`,
-      },
-    );
-    // Solo las búsquedas rápidas se avisan por mail: las comunes quedan en la campanita (y, más adelante, en el resumen semanal).
-    if (valores.rapida) {
-      await correoDeBusquedaUrgente(tx, {
-        usuarioIds: destinatarios.map((d) => d.usuarioId),
-        institucion: institucion.nombre,
-        puesto: valores.puesto,
-        zona,
-        plazo: venceEn ? diaHoraLegible(venceEn) : null,
-        busquedaId: creada!.id,
       });
+      // Solo las búsquedas rápidas se avisan por mail: las comunes quedan en la campanita (y, más adelante, en el resumen semanal).
+      if (valores.rapida) {
+        await correoDeBusquedaUrgente(tx, {
+          usuarioIds: nuevos,
+          institucion: institucion.nombre,
+          puesto: valores.puesto,
+          zona,
+          plazo: venceEn ? diaHoraLegible(venceEn) : null,
+          busquedaId: creada!.id,
+        });
+      }
     }
-    return destinatarios.length;
+    return yaAvisados.size;
   });
 
   revalidarBusquedas();
-  redirect(`/institucion/busquedas?publicada=${avisados}`);
+  redirect(`/institucion/busquedas?publicada=${avisados}${varias ? `&sedes=${sedes.length}` : ""}`);
 }
 
 /** Guarda los cambios de una búsqueda propia. No vuelve a avisar a los docentes. */

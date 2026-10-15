@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { EstadoVacio } from "@/components/app/estado-vacio";
-import { SedesFormulario } from "@/components/institucion/sedes-formulario";
 import { VitrinaFormulario } from "@/components/institucion/vitrina-formulario";
 import { BotonLink } from "@/components/ui/button";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
@@ -9,7 +8,6 @@ import { esRolGestor } from "@/lib/equipo";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { sedesParaEditar } from "@/lib/queries/sedes";
 import { datosVitrina } from "@/lib/queries/vitrina";
-import { huellaDeSedes } from "@/lib/sedes";
 import { datosInicialesDeVitrina, huellaDeVitrina } from "@/lib/vitrina";
 
 export const metadata: Metadata = { title: "Mi perfil" };
@@ -48,7 +46,17 @@ export default async function Vitrina() {
         almacenamientoDisponible={almacenamientoConfigurado()}
         huella={huellaDeVitrina({ ...i, fotos: datos.fotos, novedades: datos.novedades })}
       />
-      <SedesFormulario sedes={sedes} huella={huellaDeSedes(sedes, { conCue: false })} />
+      <section className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-tarjeta border border-linea bg-white p-6">
+        <div>
+          <h2 className="font-display m-0 mb-1 text-[18px] font-semibold text-navy-900">Sedes</h2>
+          <p className="m-0 text-[13.5px] text-apagado">
+            {sedes.length === 1 ? "Tenés 1 sede." : `Tenés ${sedes.length} sedes.`} Ahora se cargan y se editan en su propia pantalla.
+          </p>
+        </div>
+        <BotonLink href="/institucion/sedes" variante="secundario" className="rounded-full">
+          Ir a Sedes
+        </BotonLink>
+      </section>
     </>
   );
 }
