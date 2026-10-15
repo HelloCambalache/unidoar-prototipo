@@ -79,6 +79,18 @@ export function ControlesBuscador({
       aria-busy={pendiente}
       className="flex items-start gap-6 max-[860px]:flex-col max-[860px]:items-stretch max-[860px]:gap-4"
     >
+      {app ? (
+        <PanelFiltrosApp
+          filtros={filtros}
+          modo={modo}
+          radio={radio}
+          radioPorDefecto={radioPorDefecto}
+          conUbicacion={conUbicacion}
+          reinicios={reinicios}
+          aplicar={aplicar}
+          limpiar={limpiar}
+        />
+      ) : (
       <div
         className={cn(
           "w-[250px] flex-none bg-white p-[18px]",
@@ -156,6 +168,7 @@ export function ControlesBuscador({
           </div>
         </div>
       </div>
+      )}
 
       <div className="min-w-0 flex-1 max-[760px]:w-full">
         <FraseDeBusqueda
@@ -298,20 +311,50 @@ function BotonFiltro({
   );
 }
 
-function Interruptor({ activo, etiqueta, onCambio }: { activo: boolean; etiqueta: string; onCambio: () => void }) {
+function Interruptor({
+  activo,
+  etiqueta,
+  detalle,
+  onCambio,
+  app = false,
+  urgente = false,
+}: {
+  activo: boolean;
+  etiqueta: string;
+  /** Una línea que explica qué hace (solo en el panel del área con sesión). */
+  detalle?: string;
+  onCambio: () => void;
+  app?: boolean;
+  /** Filtro de búsquedas urgentes: rayo y naranja, el color de las urgentes en toda la app. */
+  urgente?: boolean;
+}) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={activo}
       onClick={onCambio}
-      className={cn("flex w-full items-center justify-between gap-3 rounded text-left", FOCO)}
+      className={cn(
+        "flex w-full items-center justify-between gap-3 rounded text-left",
+        app && "min-h-14 rounded-[14px] px-3 py-2.5 transition-colors hover:bg-white",
+        FOCO,
+      )}
     >
-      <span className="text-[13px] leading-none font-medium">{etiqueta}</span>
+      {app ? (
+        <span className="flex min-w-0 flex-col gap-1">
+          <span className={cn("flex items-center gap-1.5 text-[14px] leading-tight font-semibold", urgente ? "text-naranja-ink" : "text-tinta")}>
+            {urgente && <Icono nombre="rayo" tamano={14} trazo={2} className="flex-none" />}
+            {etiqueta}
+          </span>
+          {detalle && <span className="text-[12.5px] leading-tight text-apagado">{detalle}</span>}
+        </span>
+      ) : (
+        <span className="text-[13px] leading-none font-medium">{etiqueta}</span>
+      )}
       <span
         className={cn(
           "relative inline-block h-5 w-[34px] flex-none rounded-full transition-colors",
-          activo ? "bg-naranja" : "bg-[#CFCCC5]",
+          activo ? (app && !urgente ? "bg-rosa" : "bg-naranja") : "bg-[#CFCCC5]",
         )}
       >
         <span
@@ -374,12 +417,15 @@ function RangoDeBusqueda({
   reinicios,
   habilitado,
   onCambio,
+  app = false,
 }: {
   vigente: number;
   porDefecto: number;
   reinicios: number;
   habilitado: boolean;
   onCambio: (km: number) => void;
+  /** Panel del área con sesión: el valor va en una pastilla a la derecha del título. */
+  app?: boolean;
 }) {
   const [km, setKm] = useState(vigente);
   const [reiniciosVistos, setReiniciosVistos] = useState(reinicios);
@@ -391,12 +437,24 @@ function RangoDeBusqueda({
     if (valor !== vigente) onCambio(valor);
   };
 
+  const valor = km >= RADIO_MAX ? "Toda la zona" : `Hasta ${km} km`;
   return (
-    <div className="mb-4">
-      <div className={cn(ETIQUETA_SECCION, "mb-2.5")}>Rango de búsqueda</div>
-      <label htmlFor="rango-km" className="mb-1.5 block text-[13px] leading-none font-medium text-tinta-2">
-        {km >= RADIO_MAX ? "Toda la zona" : `Hasta ${km} km`}
-      </label>
+    <div className={app ? "" : "mb-4"}>
+      {app ? (
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <label htmlFor="rango-km" className="text-[12px] font-semibold tracking-[.08em] text-apagado uppercase">
+            Distancia
+          </label>
+          <span className="inline-flex h-7 items-center rounded-full bg-rosa-tint px-3 text-[13px] font-semibold text-rosa">{valor}</span>
+        </div>
+      ) : (
+        <>
+          <div className={cn(ETIQUETA_SECCION, "mb-2.5")}>Rango de búsqueda</div>
+          <label htmlFor="rango-km" className="mb-1.5 block text-[13px] leading-none font-medium text-tinta-2">
+            {valor}
+          </label>
+        </>
+      )}
       <input
         id="rango-km"
         type="range"
@@ -409,9 +467,9 @@ function RangoDeBusqueda({
         // Se aplica al soltar (mouse, dedo o teclado), no en cada paso del slider.
         onPointerUp={(e) => confirmar(Number(e.currentTarget.value))}
         onKeyUp={(e) => confirmar(Number(e.currentTarget.value))}
-        className="mb-1.5 w-full accent-rosa disabled:opacity-50"
+        className={cn("mb-1.5 w-full accent-rosa disabled:opacity-50", app && "h-6 cursor-pointer")}
       />
-      <div className="flex justify-between text-[11.5px] leading-none text-sutil">
+      <div className={cn("flex justify-between text-[11.5px] leading-none", app ? "text-apagado" : "text-sutil")}>
         <span>{RADIO_MIN} km</span>
         <span>Toda la zona</span>
       </div>
@@ -514,5 +572,167 @@ function FraseDeBusqueda({
         </div>
       )}
     </section>
+  );
+}
+
+/** Color de cada categoría en el panel: punto, fondo y borde de la opción elegida. */
+const COLOR_CATEGORIA = {
+  educador: { punto: "bg-naranja", activa: "bg-panel-naranja ring-naranja/45" },
+  entrenador: { punto: "bg-ambar", activa: "bg-panel-ambar ring-ambar/50" },
+  guardavidas: { punto: "bg-celeste-anillo", activa: "bg-panel-celeste ring-celeste-anillo/45" },
+} as const;
+
+/**
+ * Panel de filtros del área con sesión (identidad nueva). Mismos filtros y misma URL que el panel del sitio
+ * público: cambia solo cómo se ven. Categorías como lista con su color, distancia con el valor a la vista,
+ * interruptores con una línea que explica qué hacen y un contador de filtros aplicados.
+ */
+function PanelFiltrosApp({
+  filtros,
+  modo,
+  radio,
+  radioPorDefecto,
+  conUbicacion,
+  reinicios,
+  aplicar,
+  limpiar,
+}: {
+  filtros: FiltrosOportunidades;
+  modo: "todas" | "rapidas";
+  radio: number;
+  radioPorDefecto: number;
+  conUbicacion: boolean;
+  reinicios: number;
+  aplicar: (cambios: Partial<Record<keyof FiltrosOportunidades, string | number | null | undefined>>) => void;
+  limpiar: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const activos = Object.entries(filtros).filter(([clave, valor]) => clave !== "vista" && valor !== undefined).length;
+
+  const opcion = (activa: boolean, color: string, punto: React.ReactNode, texto: string, onClick: () => void) => (
+    <button
+      type="button"
+      aria-pressed={activa}
+      onClick={onClick}
+      className={cn(
+        "flex min-h-11 w-full items-center gap-2.5 rounded-[14px] px-3 text-left text-[14px] leading-tight transition-colors",
+        activa ? cn("font-semibold text-tinta ring-[1.5px]", color) : "font-medium text-tinta-2 hover:bg-[#F7F6F2]",
+        FOCO,
+      )}
+    >
+      {punto}
+      <span className="min-w-0 flex-1">{texto}</span>
+      {activa && <Icono nombre="tilde" tamano={15} trazo={2.6} className="flex-none text-tinta" />}
+    </button>
+  );
+
+  return (
+    <aside
+      aria-label="Filtros"
+      className={cn(
+        "w-[272px] flex-none rounded-tarjeta bg-white p-5 shadow-tarjeta",
+        "max-[860px]:w-full",
+        "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:overflow-auto max-[760px]:p-3",
+      )}
+    >
+      {/* En el celular el panel se pliega: este botón lo abre y dice cuántos filtros hay puestos. */}
+      <button
+        type="button"
+        aria-expanded={abierto}
+        aria-controls="panel-filtros-app"
+        onClick={() => setAbierto((v) => !v)}
+        className={cn("hidden min-h-11 w-full items-center gap-2 rounded-[14px] px-2 text-[15px] font-semibold max-[760px]:flex", FOCO)}
+      >
+        <Icono nombre="menu" tamano={18} trazo={2} />
+        Filtros
+        {activos > 0 && (
+          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-navy-900 px-2 text-xs text-white">{activos}</span>
+        )}
+        <Icono nombre="chevron" tamano={16} trazo={2.2} className={cn("ml-auto transition-transform", abierto && "rotate-180")} />
+      </button>
+
+      <div id="panel-filtros-app" className={cn("flex flex-col gap-5 max-[760px]:hidden", abierto && "max-[760px]:mt-3 max-[760px]:flex")}>
+        <div className="flex items-center gap-2 max-[760px]:hidden">
+          <h2 className="font-display m-0 text-[17px] leading-none font-semibold text-navy-900">Filtros</h2>
+          {activos > 0 && (
+            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-navy-900 px-2 text-xs font-semibold text-white">
+              {activos}
+            </span>
+          )}
+          {activos > 0 && (
+            <button
+              type="button"
+              onClick={limpiar}
+              className={cn("ml-auto inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-[13px] font-semibold text-rosa hover:bg-rosa-tint", FOCO)}
+            >
+              <Icono nombre="cerrar" tamano={13} trazo={2.4} />
+              Limpiar
+            </button>
+          )}
+        </div>
+        {activos > 0 && (
+          <button
+            type="button"
+            onClick={limpiar}
+            className={cn("hidden min-h-10 items-center justify-center gap-1 rounded-full bg-rosa-tint text-[13px] font-semibold text-rosa max-[760px]:flex", FOCO)}
+          >
+            Limpiar {activos === 1 ? "el filtro" : `los ${activos} filtros`}
+          </button>
+        )}
+
+        <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
+          <legend className="mb-2 p-0 text-[12px] font-semibold tracking-[.08em] text-apagado uppercase">Categoría</legend>
+          {opcion(
+            !filtros.categoria,
+            "bg-navy-50 ring-navy-700/30",
+            <span aria-hidden className="size-2.5 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)]" />,
+            "Todas",
+            () => aplicar({ categoria: null }),
+          )}
+          {CATEGORIAS.map((c) => (
+            <div key={c}>
+              {opcion(
+                filtros.categoria === c,
+                COLOR_CATEGORIA[c].activa,
+                <span aria-hidden className={cn("size-2.5 flex-none rounded-full", COLOR_CATEGORIA[c].punto)} />,
+                ETIQUETA_FILTRO_CATEGORIA[c],
+                () => aplicar({ categoria: c }),
+              )}
+            </div>
+          ))}
+        </fieldset>
+
+        <div className="h-px bg-linea" />
+
+        <RangoDeBusqueda
+          vigente={Math.min(radio, RADIO_MAX)}
+          porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
+          reinicios={reinicios}
+          habilitado={conUbicacion}
+          onCambio={(km) => aplicar({ radio: km })}
+          app
+        />
+
+        <div className="flex flex-col gap-1 rounded-[18px] bg-[#F7F6F2] p-1.5">
+          {modo === "todas" && (
+            <Interruptor
+              activo={filtros.rapidas === "1"}
+              etiqueta="Solo búsquedas urgentes"
+              detalle="Suplencias rápidas que vencen pronto"
+              onCambio={() => aplicar({ rapidas: filtros.rapidas ? null : "1" })}
+              app
+              urgente
+            />
+          )}
+          <Interruptor
+            activo={filtros.verificadas === "1"}
+            etiqueta="Solo instituciones verificadas"
+            detalle="Revisadas por el equipo de UNIDOAR"
+            onCambio={() => aplicar({ verificadas: filtros.verificadas ? null : "1" })}
+            app
+          />
+        </div>
+      </div>
+    </aside>
   );
 }

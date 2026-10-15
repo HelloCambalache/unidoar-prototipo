@@ -135,7 +135,8 @@ export async function BuscadorOportunidades({
           )
         ) : (
           <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(270px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
-            {ofertas.map((o) => (
+            {/* Las urgentes abiertas (sin postulación) van primero; el resto conserva el orden de la consulta. */}
+            {[...ofertas.filter((o) => o.rapida && !o.postulacion), ...ofertas.filter((o) => !(o.rapida && !o.postulacion))].map((o) => (
               <li key={o.id} className="flex *:w-full">
                 <TarjetaOfertaApp
                   oferta={o}
