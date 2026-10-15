@@ -101,11 +101,9 @@ function TarjetaInstitucionApp({
           <span aria-hidden className={cn("size-2 flex-none rounded-full", abiertas ? "bg-verde" : "bg-[#C9C6C0]")} />
           {etiquetaBusquedasAbiertas(i.busquedasActivas)}
         </span>
-        <span
-          aria-hidden
-          className="inline-flex size-10 flex-none items-center justify-center rounded-xl bg-lienzo text-tinta transition-colors group-hover:bg-navy-900 group-hover:text-white"
-        >
-          <Icono nombre="flecha" tamano={17} trazo={2} />
+        <span className="inline-flex flex-none items-center gap-1 text-[15px] font-semibold text-navy-900 transition-colors group-hover:text-rosa">
+          Ver perfil
+          <Icono nombre="chevron" tamano={15} trazo={2.4} className="-rotate-90 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
     </article>
