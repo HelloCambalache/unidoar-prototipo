@@ -24,9 +24,9 @@ export const metadata: Metadata = { title: "Operación" };
 const MAX_FLOJAS = 6;
 const MAX_EN_RIESGO = 5;
 
-const panel = "rounded-ud border border-borde bg-white p-5";
-const tituloPanel = "m-0 mb-0.5 text-[15px] leading-[1.3] font-semibold";
-const bajadaPanel = "m-0 mb-4 text-xs leading-[1.4] text-sutil";
+const panel = "rounded-tarjeta bg-white p-6 shadow-tarjeta";
+const tituloPanel = "font-display m-0 mb-0.5 text-[17px] leading-[1.3] font-semibold text-navy-900";
+const bajadaPanel = "m-0 mb-4 text-[13px] leading-[1.4] text-apagado";
 
 export default async function OperacionPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   // El layout ya exige rol admin, pero Next puede renderizar una página sin volver a renderizar su layout (navegación parcial): se repite acá.
@@ -40,7 +40,7 @@ export default async function OperacionPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <h1 className="m-0 mb-1 text-[24px] leading-[1.2] font-semibold tracking-[-0.018em] max-[860px]:text-[22px]">Cómo viene la operación</h1>
+      <h1 className="font-display m-0 mb-1 text-[28px] leading-[1.15] font-semibold tracking-[-0.025em] text-navy-900 max-[860px]:text-[24px]">Cómo viene la operación</h1>
       <div className="mb-[18px] flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-[13px] leading-snug text-apagado">
           {m.partidos.length > 0 ? `${listaLegible(m.partidos)} · ` : ""}

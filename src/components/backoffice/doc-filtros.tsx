@@ -47,7 +47,7 @@ export function DocFiltros({
   };
 
   return (
-    <div role="search" aria-busy={pendiente} className="mb-3.5 flex flex-wrap items-center gap-2.5">
+    <div role="search" aria-busy={pendiente} className="mb-4 flex flex-wrap items-center gap-2.5 rounded-tarjeta bg-white p-3 shadow-tarjeta">
       <Input
         type="search"
         value={q}

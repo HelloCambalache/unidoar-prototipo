@@ -15,6 +15,7 @@ import { plural } from "@/lib/busquedas";
 import { crearPlanes } from "@/lib/planes";
 import { listarInstituciones, totalInstituciones } from "@/lib/queries/backoffice-instituciones";
 import { catalogoDePlanes } from "@/lib/queries/planes";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Instituciones · Backoffice" };
 // Datos de contacto y facturación: siempre frescos, nunca cacheados.
@@ -70,16 +71,16 @@ export default async function InstitucionesBackoffice({
               <th>Plan</th>
               <th>Verificación</th>
               <th>Estado</th>
-              <th>Búsquedas activas</th>
-              <th>Postulaciones</th>
-              <th>Contrataciones</th>
+              <th className="text-right">Búsquedas activas</th>
+              <th className="text-right">Postulaciones</th>
+              <th className="text-right">Contrataciones</th>
             </tr>
           </thead>
           <tbody>
             {filas.map((i) => (
               <FilaClicable key={i.id} href={`/backoffice/instituciones/${i.id}`}>
                 <td>
-                  <Link href={`/backoffice/instituciones/${i.id}`} className="font-semibold text-tinta hover:text-naranja">
+                  <Link href={`/backoffice/instituciones/${i.id}`} className="font-display text-[15px] font-semibold text-tinta hover:text-rosa">
                     {i.nombre}
                   </Link>
                   <div className="mt-0.5 text-xs leading-snug text-apagado">
@@ -96,14 +97,16 @@ export default async function InstitucionesBackoffice({
                     {i.pagoVencido && <Insignia tono="ambar">Pago vencido</Insignia>}
                   </div>
                 </td>
-                <td>
+                <td className={cn("text-right font-display font-semibold tabular-nums", i.busquedasActivas === 0 && "text-sutil")}>
                   {i.busquedasActivas}
                   {i.busquedasTotal > i.busquedasActivas && (
-                    <span className="text-xs text-sutil"> de {i.busquedasTotal}</span>
+                    <span className="font-sans text-xs font-normal text-sutil"> de {i.busquedasTotal}</span>
                   )}
                 </td>
-                <td>{i.postulaciones}</td>
-                <td>{i.contrataciones}</td>
+                <td className={cn("text-right font-display font-semibold tabular-nums", i.postulaciones === 0 && "text-sutil")}>{i.postulaciones}</td>
+                <td className={cn("text-right font-display font-semibold tabular-nums", i.contrataciones === 0 ? "text-sutil" : "text-verde")}>
+                  {i.contrataciones}
+                </td>
               </FilaClicable>
             ))}
           </tbody>

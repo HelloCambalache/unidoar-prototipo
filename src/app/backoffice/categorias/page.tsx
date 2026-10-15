@@ -55,7 +55,7 @@ export default async function CategoriasBackoffice({
       <div className="flex flex-wrap items-start gap-5">
         <nav
           aria-label="Categorías de cargo"
-          className="w-[260px] max-w-full flex-none overflow-hidden rounded-ud border border-borde bg-white"
+          className="w-[260px] max-w-full flex-none overflow-hidden rounded-tarjeta border border-linea bg-white"
         >
           <div className="border-b border-borde px-4 py-3.5 text-[11px] leading-none font-semibold tracking-[.06em] text-sutil uppercase">
             Categorías de cargo

@@ -16,7 +16,7 @@ export function FranjaMetricas({
   return (
     <div
       style={{ gridTemplateColumns: `repeat(auto-fit,minmax(${minimo}px,1fr))` }}
-      className={cn("grid overflow-hidden rounded-ud border border-borde bg-white", className)}
+      className={cn("grid overflow-hidden rounded-tarjeta border border-linea bg-white", className)}
     >
       {items.map((m) => (
         <div key={m.etiqueta} className="border-r border-borde px-[18px] py-4 last:border-r-0">

@@ -29,7 +29,7 @@ export function InstFiltros({ valores, catalogo }: { valores: FiltrosInstitucion
   const cambiar = (cambios: Record<string, string>) => aplicar({ ...cambios, pagina: "" });
 
   return (
-    <div role="search" aria-busy={pendiente} className="mb-3.5 flex flex-wrap items-center gap-2.5">
+    <div role="search" aria-busy={pendiente} className="mb-4 flex flex-wrap items-center gap-2.5 rounded-tarjeta bg-white p-3 shadow-tarjeta">
       <Input
         key={`q${reinicio}`}
         type="search"
