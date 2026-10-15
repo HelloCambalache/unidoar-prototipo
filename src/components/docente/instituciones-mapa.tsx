@@ -100,7 +100,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
     <div
       role="region"
       aria-label="Mapa de instituciones"
-      className="relative isolate mb-[18px] h-[540px] overflow-hidden rounded-xl border border-borde bg-app max-[860px]:h-[460px]"
+      className="mapa-suave relative isolate mb-[18px] h-[560px] overflow-hidden rounded-panel bg-lienzo shadow-tarjeta max-[860px]:h-[460px]"
     >
       <div ref={contenedor} className="absolute inset-0" />
       {seleccionada ? (
