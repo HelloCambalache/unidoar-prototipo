@@ -26,6 +26,8 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
   const estadoCrudo = uno(sp.estado);
   const estado: EstadoFiltro = ESTADOS_FILTRO.find((e) => e === estadoCrudo) ?? "todos";
   const publicada = sp.publicada === undefined ? null : Number(uno(sp.publicada));
+  // Publicada en varias sedes a la vez: se creó una búsqueda por sede.
+  const enSedes = Number(uno(sp.sedes));
 
   const [est, filas] = await Promise.all([
     estadisticasInstitucion(institucion.id),
@@ -47,7 +49,9 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
 
       {publicada !== null && Number.isFinite(publicada) && (
         <p role="status" className="mt-3 mb-0 rounded-lg bg-verde-tint px-4 py-3 text-[13.5px] leading-normal text-verde">
-          Tu búsqueda quedó publicada.{" "}
+          {Number.isFinite(enSedes) && enSedes > 1
+            ? `Publicamos tu búsqueda en ${enSedes} sedes (una por sede).`
+            : "Tu búsqueda quedó publicada."}{" "}
           {publicada > 0
             ? `Les avisamos a ${plural(publicada, "profesional que coincide", "profesionales que coinciden")} con tu búsqueda.`
             : "Los profesionales la van a ver cuando entren a buscar trabajo en tu zona."}

@@ -6,7 +6,9 @@ import {
   espejoDePrincipal,
   huellaDeSedes,
   MAX_SEDES,
+  MAX_SEDES_POR_PUBLICACION,
   nombreVisibleDeSede,
+  numerarSedes,
   ordenarSedes,
   puedeQuitarSede,
   puntosDeReferencia,
@@ -14,6 +16,7 @@ import {
   sedeMasCercana,
   sedeParaMedir,
   sedePrincipal,
+  sedesElegidas,
   sedesEntradaSchema,
   validarSedes,
 } from "@/lib/sedes";
@@ -291,5 +294,28 @@ describe("huella de las sedes (detecta que otra persona las cambió mientras tan
 
   it("las sedes sin id (la que se ofrece cuando todavía no hay ninguna guardada) no cuentan", () => {
     assert.equal(huellaDeSedes([{ ...s("x"), id: undefined }], { conCue: false }), huellaDeSedes([], { conCue: false }));
+  });
+
+  it("numera las sedes: la principal es la 1 y después por nombre", () => {
+    const lista = [
+      { nombre: "Pilar", esPrincipal: false },
+      { nombre: "Olivos", esPrincipal: true },
+      { nombre: "Belgrano", esPrincipal: false },
+    ];
+    assert.deepEqual(
+      numerarSedes(lista).map((s) => `${s.numero} ${s.nombre}`),
+      ["1 Olivos", "2 Belgrano", "3 Pilar"],
+    );
+  });
+
+  it("valida las sedes elegidas al publicar en varias", () => {
+    const propias = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    assert.deepEqual(sedesElegidas(["c", "a", "a"], propias), { ok: true, sedes: [{ id: "a" }, { id: "c" }] });
+    assert.equal(sedesElegidas([], propias).ok, false);
+    assert.equal(sedesElegidas(["", ""], propias).ok, false);
+    const ajena = sedesElegidas(["a", "z"], propias);
+    assert.ok(!ajena.ok && /de la lista/.test(ajena.error));
+    const muchas = Array.from({ length: MAX_SEDES_POR_PUBLICACION + 1 }, (_, i) => ({ id: `s${i}` }));
+    assert.equal(sedesElegidas(muchas.map((s) => s.id), muchas).ok, false);
   });
 });

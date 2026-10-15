@@ -134,19 +134,25 @@ export function SedesFormulario({
   return (
     <Tarjeta como="section" id="sedes" className="mt-6 scroll-mt-24 p-[22px]" aria-labelledby="titulo-sedes">
       <form onSubmit={guardar} noValidate>
-        <h2 id="titulo-sedes" className="m-0 mb-1 text-[15px] leading-none font-semibold">
+        <h2 id="titulo-sedes" className="font-display m-0 mb-1 text-[18px] leading-none font-semibold text-navy-900">
           Sedes
         </h2>
         <p className="m-0 mb-4 max-w-[640px] text-[13px] leading-[1.5] text-apagado">
           {admin
             ? "Los lugares donde trabaja esta institución. La sede principal es la que figura como dirección de la institución."
-            : "Cada sede es un lugar donde trabajan tus profesionales. Al publicar una búsqueda elegís en cuál es. La sede principal es la que figura como dirección de tu institución."}
+            : "Cada sede es un lugar donde trabajan tus profesionales. Se numeran solas (la principal es la 1). Al publicar una búsqueda elegís en qué sedes es, una o varias. La sede principal es la que figura como dirección de tu institución."}
         </p>
 
         <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
           {filas.map((f, i) => (
-            <li key={f.clave} className="rounded-lg border border-borde bg-superficie p-4">
+            <li key={f.clave} className="rounded-[18px] border border-linea bg-[#F7F6F2] p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <span className="inline-flex items-center gap-2 font-display text-[15px] font-semibold text-navy-900">
+                  <span aria-hidden className="inline-flex size-7 items-center justify-center rounded-full bg-navy-900 font-sans text-[12.5px] text-white">
+                    {i + 1}
+                  </span>
+                  Sede {i + 1}
+                </span>
                 <label className="flex cursor-pointer items-center gap-2 text-[13px] font-medium text-tinta">
                   <input
                     type="radio"

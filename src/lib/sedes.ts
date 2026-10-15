@@ -38,6 +38,35 @@ export function ordenarSedes<T extends { nombre: string; esPrincipal: boolean }>
   );
 }
 
+/**
+ * Número de cada sede, el que se ve en el editor, al publicar y en los perfiles: la principal es la 1 y el resto sigue el orden de
+ * `ordenarSedes` (por nombre). Es solo de lectura: no se guarda, sale siempre del mismo orden.
+ */
+export function numerarSedes<T extends { nombre: string; esPrincipal: boolean }>(sedes: readonly T[]): (T & { numero: number })[] {
+  return ordenarSedes(sedes).map((s, i) => ({ ...s, numero: i + 1 }));
+}
+
+/** Máximo de sedes en las que se publica una misma búsqueda de una vez (se crea una búsqueda por sede). */
+export const MAX_SEDES_POR_PUBLICACION = 10;
+
+/**
+ * Las sedes elegidas al publicar: sin repetidas, solo de esta institución, en el orden de las sedes. Devuelve el motivo si no se puede
+ * (ninguna, alguna ajena o demasiadas). Pura: la acción la usa con las sedes que leyó de la base.
+ */
+export function sedesElegidas<T extends { id: string }>(
+  elegidas: readonly string[],
+  sedesDeLaInstitucion: readonly T[],
+): { ok: true; sedes: T[] } | { ok: false; error: string } {
+  const pedidas = new Set(elegidas.filter(Boolean));
+  if (pedidas.size === 0) return { ok: false, error: "Elegí al menos una sede." };
+  if (pedidas.size > MAX_SEDES_POR_PUBLICACION) {
+    return { ok: false, error: `Podés publicar en hasta ${MAX_SEDES_POR_PUBLICACION} sedes a la vez.` };
+  }
+  const sedes = sedesDeLaInstitucion.filter((s) => pedidas.has(s.id));
+  if (sedes.length !== pedidas.size) return { ok: false, error: "Elegí sedes de la lista." };
+  return { ok: true, sedes };
+}
+
 /** La sede principal; si por algún motivo no hubiera ninguna marcada, la primera. */
 export function sedePrincipal<T extends { esPrincipal: boolean }>(sedes: readonly T[]): T | null {
   return sedes.find((s) => s.esPrincipal) ?? sedes[0] ?? null;

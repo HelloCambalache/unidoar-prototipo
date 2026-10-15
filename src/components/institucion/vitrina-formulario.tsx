@@ -532,7 +532,15 @@ export function VitrinaFormulario({
             <h2 className="m-0 mb-3 text-sm leading-none font-semibold">Datos de contacto</h2>
             <div className="flex flex-col gap-2.5">
               <p className="m-0 text-[13px] leading-[1.45] text-apagado">
-                La dirección y la zona están en <a href="#sedes">Sedes</a>, al final de la página.
+                {institucionIdAdmin ? (
+                  <>
+                    La dirección y la zona están en <a href="#sedes">Sedes</a>, al final de la página.
+                  </>
+                ) : (
+                  <>
+                    La dirección y la zona están en <a href="/institucion/sedes">Sedes</a>.
+                  </>
+                )}
               </p>
               <Campo etiqueta="Horario de administración" error={errores.horarioAdministracion}>
                 <Input
