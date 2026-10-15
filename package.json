@@ -17,6 +17,7 @@
     "db:rls": "dotenv -e .env.local -- tsx src/db/rls.ts",
     "db:sedes": "dotenv -e .env.local -- tsx src/db/sedes-base.ts",
     "db:planes": "dotenv -e .env.local -- tsx src/db/planes-base.ts",
+    "db:entrevista": "dotenv -e .env.local -- tsx src/db/entrevista-base.ts",
     "db:storage": "dotenv -e .env.local -- tsx src/db/storage.ts",
     "db:setup": "pnpm db:push && pnpm db:rls && pnpm db:storage && pnpm db:seed",
     "db:vincular": "dotenv -e .env.local -- tsx src/db/vincular-cuentas.ts",

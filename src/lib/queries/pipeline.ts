@@ -176,6 +176,8 @@ export async function pipelineDeBusqueda(
             corta: chipEntrevista(p.entrevistaEn, ahora),
             titulo: p.entrevistaTitulo,
             fechaLocal: aFechaHoraAR(p.entrevistaEn),
+            respuesta: p.entrevistaRespuesta ?? null,
+            respuestaMensaje: p.entrevistaRespuestaMensaje ?? null,
           }
         : null,
       examenPreocupacional: p.examenPreocupacionalEn ? { cuando: fechaCorta(p.examenPreocupacionalEn) } : null,

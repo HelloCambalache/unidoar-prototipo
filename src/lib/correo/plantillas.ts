@@ -1,4 +1,5 @@
 import type { Remitente } from "./config";
+import { rutaParaResponder } from "@/lib/entrevista-respuesta";
 
 /*
  * Los mails de la app: qué dice cada uno, para quién es y cómo se arma el HTML y el texto plano. Es todo código puro
@@ -62,6 +63,8 @@ type Contenido = {
   /** Texto de una persona (motivo, mensaje) que se muestra citado, respetando los saltos de línea. */
   cita?: string;
   boton?: { texto: string; ruta: string };
+  /** Botones secundarios (con borde), debajo del principal: p. ej. "No puedo" y "Ver en la plataforma" en la entrevista. */
+  otrosBotones?: { texto: string; ruta: string }[];
   nota?: Parte[];
   /** Por qué recibe el mail, si no alcanza con la frase general de su grupo. */
   motivo?: string;
@@ -241,8 +244,14 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
         ["Cuándo: ", n(d.cuando)],
         ...(d.titulo ? [["Detalle: ", d.titulo]] : []),
       ],
-      boton: { texto: "Ver los detalles", ruta: d.ruta },
-      nota: ["Todos los detalles de la entrevista están en tu postulación."],
+      boton: { texto: "Voy a ir", ruta: rutaParaResponder(d.ruta, "voy") },
+      otrosBotones: [
+        { texto: "No puedo ir", ruta: rutaParaResponder(d.ruta, "no_puedo") },
+        { texto: "Ver en la plataforma", ruta: d.ruta },
+      ],
+      nota: [
+        "Los botones te llevan a tu postulación en UNIDOAR: ahí confirmás con un toque y, si no podés, le contás a la institución qué día te queda bien.",
+      ],
     }),
   },
   M25: {
@@ -518,6 +527,16 @@ export function armarMail<P extends PlantillaId>(id: P, datos: DatosDe[P], conte
         <p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6B706C;">Si el botón no anda, copiá y pegá este enlace en tu navegador:</p>
         <p style="margin:0 0 22px;font-size:12px;line-height:1.5;word-break:break-all;"><a href="${escaparHtml(urlBoton)}" style="color:#16214F;">${escaparHtml(urlBoton)}</a></p>`
       : "";
+  const otros = (c.otrosBotones ?? []).map((b) => ({ texto: b.texto, url: urlInterna(origen, b.ruta) }));
+  const otrosBotones = otros.length
+    ? `        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:-10px 0 22px;"><tr>
+${otros
+  .map(
+    (b) => `          <td style="padding:0 8px 8px 0;"><a href="${escaparHtml(b.url)}" style="display:inline-block;padding:11px 20px;border:1.5px solid #16214F;border-radius:10px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#16214F;text-decoration:none;">${escaparHtml(b.texto)}</a></td>`,
+  )
+  .join("\n")}
+        </tr></table>`
+    : "";
   const nota = c.nota ? `        <p style="margin:0 0 20px;font-size:13px;line-height:1.5;color:#6B706C;">${htmlDe(c.nota)}</p>` : "";
   const baja = urlDeBaja
     ? `<br><a href="${escaparHtml(urlDeBaja)}" style="color:#6B706C;">Dejar de recibir avisos por mail</a> (los de tu cuenta y de facturación te siguen llegando)`
@@ -544,6 +563,7 @@ export function armarMail<P extends PlantillaId>(id: P, datos: DatosDe[P], conte
 ${parrafos}
 ${cita}
 ${boton}
+${otrosBotones}
 ${nota}
       </td></tr>
       <tr><td style="padding:16px 32px 26px;border-top:1px solid #F0EFEA;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#9AA09B;">
@@ -563,6 +583,7 @@ ${nota}
     ...c.parrafos.map((p) => textoDe(p)),
     ...(c.cita ? ["", ...c.cita.split(/\r?\n/).map((l) => `> ${l}`), ""] : []),
     ...(c.boton && urlBoton ? [`${c.boton.texto}: ${urlBoton}`] : []),
+    ...otros.map((b) => `${b.texto}: ${b.url}`),
     ...(c.nota ? ["", textoDe(c.nota)] : []),
     "",
     "--",

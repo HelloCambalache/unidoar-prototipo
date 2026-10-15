@@ -287,6 +287,13 @@ export const postulaciones = pgTable(
     entrevistaEn: timestamp("entrevista_en", { withTimezone: true }),
     entrevistaTitulo: text("entrevista_titulo"),
     /**
+     * La respuesta del profesional a la entrevista que agendó la institución: "voy" o "no_puedo" (con un mensaje opcional, p. ej.
+     * otro día que le quede bien). Se borra cuando la institución cambia la fecha o la quita. Agregadas a mano con `pnpm db:entrevista`.
+     */
+    entrevistaRespuesta: text("entrevista_respuesta").$type<"voy" | "no_puedo">(),
+    entrevistaRespuestaEn: timestamp("entrevista_respuesta_en", { withTimezone: true }),
+    entrevistaRespuestaMensaje: text("entrevista_respuesta_mensaje"),
+    /**
      * La agenda PERSONAL del profesional (un recordatorio propio: "llamar a la directora"). Es aparte de `entrevistaEn`, que es la
      * entrevista que agenda la institución: si compartieran columna, el profesional podría borrarla o la institución verla como suya.
      * Agregadas a mano (alter table … add column).

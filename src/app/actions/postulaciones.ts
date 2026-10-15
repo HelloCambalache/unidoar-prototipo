@@ -19,6 +19,7 @@ import { postulacionMensajeSchema } from "@/lib/catalogo";
 import { correoDePostulantes } from "@/lib/correo/eventos";
 import { archivosDeExamen } from "@/lib/examen-preocupacional";
 import { busquedaAbierta, esId, nombreCompleto } from "@/lib/oportunidades";
+import { avisoDeRespuesta, MAX_MENSAJE_RESPUESTA, motivoParaNoResponder, type RespuestaEntrevista } from "@/lib/entrevista-respuesta";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
@@ -305,4 +306,80 @@ export async function quitarAgendaDocente(postulacionId: string): Promise<Result
 
   revalidatePath("/docente/postulaciones");
   return ok();
+}
+
+/* ───────────────────────────── Respuesta a la entrevista ───────────────────────────── */
+
+const respuestaEntrevistaSchema = z.object({
+  respuesta: z.enum(["voy", "no_puedo"]),
+  mensaje: z
+    .string()
+    .trim()
+    .max(MAX_MENSAJE_RESPUESTA, `Máximo ${MAX_MENSAJE_RESPUESTA} caracteres`)
+    .optional()
+    .transform((v) => v || undefined),
+  /** La fecha de la entrevista que la persona estaba viendo (ISO): si la institución la cambió en el medio, no se responde a ciegas. */
+  para: z.string().min(1),
+});
+
+/**
+ * El profesional responde la entrevista que agendó la institución: "voy" o "no puedo" (con un mensaje opcional, p. ej. otro día).
+ * Se puede cambiar mientras la entrevista no pase. Avisa a todas las cuentas de la institución por la campanita (sin mail).
+ */
+export async function responderEntrevista(
+  postulacionId: string,
+  entrada: { respuesta: RespuestaEntrevista; mensaje?: string; para: string },
+): Promise<Resultado> {
+  const { docente } = await requerirDocente();
+  if (!esId(postulacionId)) return fallo("No encontramos esa postulación.");
+  const datos = parsear(respuestaEntrevistaSchema, entrada);
+  if (!datos.ok) return fallo(datos.campos?.mensaje ?? datos.error, datos.campos);
+  const fila = await postulacionPropia(postulacionId, docente.id);
+  if (!fila) return fallo("No encontramos esa postulación.");
+  const { busqueda, institucion } = fila;
+
+  const destinatarios = await usuariosConAcceso(institucion);
+  const resultado = await transaccion(async (tx) => {
+    // Se relee con la fila bloqueada: la institución pudo cambiar o quitar la entrevista mientras tanto.
+    const [vigente] = await tx
+      .select({ entrevistaEn: postulaciones.entrevistaEn, etapa: postulaciones.etapa })
+      .from(postulaciones)
+      .where(eq(postulaciones.id, postulacionId))
+      .for("update");
+    if (!vigente) return fallo("No encontramos esa postulación.");
+    const motivo = motivoParaNoResponder(vigente.entrevistaEn);
+    if (motivo) return fallo(motivo);
+    if (vigente.entrevistaEn!.toISOString() !== new Date(datos.data.para).toISOString()) {
+      return fallo("La institución cambió la fecha de la entrevista. Mirá la nueva y respondé de nuevo.");
+    }
+    if (vigente.etapa === "descartado" || busqueda.estado === "cerrada") return fallo("Esta postulación ya está cerrada.");
+
+    await tx
+      .update(postulaciones)
+      .set({
+        entrevistaRespuesta: datos.data.respuesta,
+        entrevistaRespuestaEn: new Date(),
+        entrevistaRespuestaMensaje: datos.data.mensaje ?? null,
+      })
+      .where(eq(postulaciones.id, postulacionId));
+    if (destinatarios.length > 0) {
+      const aviso = avisoDeRespuesta(nombreCompleto(docente), busqueda.puesto, datos.data.respuesta, datos.data.mensaje ?? null);
+      await tx.insert(notificaciones).values(
+        destinatarios.map((usuarioId) => ({
+          usuarioId,
+          tipo: "entrevista",
+          titulo: aviso.titulo,
+          texto: aviso.texto,
+          enlace: `/institucion/postulantes?busqueda=${busqueda.id}`,
+        })),
+      );
+    }
+    return ok();
+  });
+
+  if (resultado.ok) {
+    revalidarPostulaciones(busqueda.id);
+    revalidatePath("/institucion/postulantes");
+  }
+  return resultado;
 }

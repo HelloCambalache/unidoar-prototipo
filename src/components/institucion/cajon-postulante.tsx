@@ -297,6 +297,21 @@ function Ficha({
             <div>
               <div className="font-semibold">{p.entrevista.titulo ?? "Entrevista"}</div>
               <div className="mt-0.5">{p.entrevista.texto}</div>
+              <div
+                className={cn(
+                  "mt-1.5 font-semibold",
+                  p.entrevista.respuesta === "voy" ? "text-verde" : p.entrevista.respuesta === "no_puedo" ? "text-[#8F3D28]" : "text-apagado",
+                )}
+              >
+                {p.entrevista.respuesta === "voy"
+                  ? "Confirmó que va ✓"
+                  : p.entrevista.respuesta === "no_puedo"
+                    ? "Avisó que no puede ir: proponele otra fecha"
+                    : "Todavía no respondió"}
+              </div>
+              {p.entrevista.respuesta === "no_puedo" && p.entrevista.respuestaMensaje && (
+                <div className="mt-1 whitespace-pre-line text-tinta-2">«{p.entrevista.respuestaMensaje}»</div>
+              )}
             </div>
             {puedeAgendar && !editando && (
               <div className="flex flex-none gap-3">
