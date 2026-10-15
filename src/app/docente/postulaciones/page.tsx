@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { respuestaDesdeEnlace } from "@/lib/entrevista-respuesta";
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CajonPostulacion } from "@/components/docente/cajon-postulacion";
@@ -20,7 +21,10 @@ export default async function PostulacionesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { docente } = await requerirDocente();
-  const filtros = leerFiltrosPostulaciones(await searchParams);
+  const params = await searchParams;
+  const filtros = leerFiltrosPostulaciones(params);
+  // Botones del mail de la entrevista: "voy" / "no-puedo" solo preseleccionan la respuesta en el cajón.
+  const respuestaSugerida = respuestaDesdeEnlace(params.entrevista);
 
   const [listado, detalle] = await Promise.all([
     postulacionesDelDocente(docente.id, filtros),
@@ -118,7 +122,12 @@ export default async function PostulacionesPage({
       )}
 
       {detalle && (
-        <CajonPostulacion key={detalle.id} detalle={detalle} cerrarHref={hrefPostulaciones(filtros, { abrir: null })} />
+        <CajonPostulacion
+          key={detalle.id}
+          detalle={detalle}
+          cerrarHref={hrefPostulaciones(filtros, { abrir: null })}
+          respuestaSugerida={respuestaSugerida}
+        />
       )}
     </>
   );

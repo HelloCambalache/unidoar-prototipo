@@ -16,6 +16,8 @@ import { Cajon } from "@/components/ui/cajon";
 import { Input, Textarea } from "@/components/ui/campos";
 import { Insignia } from "@/components/ui/insignia";
 import { useToast } from "@/components/ui/toast";
+import { RespuestaEntrevista } from "@/components/docente/respuesta-entrevista";
+import type { RespuestaEntrevista as RespuestaEntrevistaElegida } from "@/lib/entrevista-respuesta";
 import type { DetallePostulacion } from "@/lib/queries/postulaciones";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +27,16 @@ const ETIQUETA = "text-[11px] leading-none font-semibold tracking-[.06em] text-s
  * Cajón de detalle de una postulación (se abre con ?abrir=<id>): puesto, contacto, agenda personal
  * y notas privadas. El estado vive en la base: cada acción revalida la página y el cajón se repinta.
  */
-export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePostulacion; cerrarHref: string }) {
+export function CajonPostulacion({
+  detalle,
+  cerrarHref,
+  respuestaSugerida = null,
+}: {
+  detalle: DetallePostulacion;
+  cerrarHref: string;
+  /** Lo que eligió en el mail de la entrevista (`?entrevista=voy|no-puedo`): solo preselecciona. */
+  respuestaSugerida?: RespuestaEntrevistaElegida | null;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
@@ -176,6 +187,9 @@ export function CajonPostulacion({ detalle, cerrarHref }: { detalle: DetallePost
                 )}
               </div>
             </div>
+            {detalle.agenda.deLaInstitucion && detalle.respuestaEntrevista && (
+              <RespuestaEntrevista postulacionId={detalle.id} datos={detalle.respuestaEntrevista} sugerida={respuestaSugerida} />
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               <a
                 href={detalle.agenda.googleHref}

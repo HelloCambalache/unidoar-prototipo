@@ -44,7 +44,15 @@ export type PostulanteTarjeta = {
   /** ISO, para ordenar por antigüedad en la etapa. */
   etapaDesde: string;
   /** `fechaLocal` es el valor de un datetime-local en hora argentina ("2026-10-15T10:30"), para editar la entrevista. */
-  entrevista: { texto: string; corta: string; titulo: string | null; fechaLocal: string } | null;
+  entrevista: {
+    texto: string;
+    corta: string;
+    titulo: string | null;
+    fechaLocal: string;
+    /** Lo que respondió el profesional ("voy" / "no puedo") y su mensaje, si respondió. */
+    respuesta: "voy" | "no_puedo" | null;
+    respuestaMensaje: string | null;
+  } | null;
   /** Checklist de la etapa "Examen preocupacional": null = todavía no se anotó que lo hizo; `cuando` es la fecha (dd/mm/aaaa). */
   examenPreocupacional: { cuando: string } | null;
   /** Archivos del estudio que guardó la institución (solo el nombre: se abren con /api/examen-preocupacional/<postulación>/<n>). */
@@ -138,7 +146,11 @@ export function etiquetaDias(etapa: EtapaPostulacion, dias: number) {
 
 /** Nota corta de la tarjeta según la etapa ("Entrevista jueves 10:30", "Esperando respuesta"). */
 export function notaDeTarjeta(p: Pick<PostulanteTarjeta, "etapa" | "entrevista" | "examenPreocupacional">) {
-  if (p.etapa === "entrevista" && p.entrevista) return { texto: `Entrevista ${p.entrevista.corta}`, tono: "ambar" as const };
+  if (p.etapa === "entrevista" && p.entrevista) {
+    if (p.entrevista.respuesta === "voy") return { texto: `Entrevista ${p.entrevista.corta} · confirmó ✓`, tono: "verde" as const };
+    if (p.entrevista.respuesta === "no_puedo") return { texto: `No puede ir ${p.entrevista.corta}: reprogramá`, tono: "rosa" as const };
+    return { texto: `Entrevista ${p.entrevista.corta}`, tono: "ambar" as const };
+  }
   if (p.etapa === "oferta") return { texto: "Esperando respuesta", tono: "rosa" as const };
   if (p.etapa === "examen_preocupacional") {
     return p.examenPreocupacional

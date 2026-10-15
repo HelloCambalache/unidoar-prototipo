@@ -61,7 +61,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 | M21 | Suplencia urgente cerca tuyo: {puesto} | Se publica una búsqueda rápida que encaja | Docentes con esa zona y asignatura | En la app | Lanzamiento | Tope de 3 por día por persona; el plazo va en el asunto |
 | M22 | Nueva búsqueda que encaja con tu perfil | Se publica una búsqueda común | Docentes que encajan | En la app | Después | Mejor dentro del resumen semanal (M70) |
 | M23 | Te preseleccionaron para {puesto} | La institución lo mueve a Preseleccionados | Docente | En la app | Pronto | |
-| M24 | Entrevista agendada: {fecha y hora} | La institución la agenda | Docente | En la app | Lanzamiento | Con el día y la hora en el asunto; idealmente con archivo de calendario |
+| M24 | Entrevista agendada: {fecha y hora} | La institución la agenda | Docente | En la app | Lanzamiento | Con el día y la hora en el asunto. Botones "Voy a ir", "No puedo ir" y "Ver en la plataforma": los dos primeros abren la postulación con `?entrevista=voy|no-puedo`, que solo preselecciona (se responde con un toque en la app, con sesión). La respuesta avisa a la institución por campanita, sin mail. Idealmente con archivo de calendario |
 | M25 | Se canceló la entrevista | La institución la cancela | Docente | En la app | Lanzamiento | |
 | M26 | Recibiste una oferta para {puesto} | La institución la envía | Docente | En la app | Lanzamiento | |
 | M27 | ¡Te eligieron para {puesto}! | La institución lo contrata | Docente | En la app | Lanzamiento | |

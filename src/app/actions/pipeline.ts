@@ -354,6 +354,10 @@ export async function agendarEntrevista(
       .set({
         entrevistaEn: instante,
         entrevistaTitulo: datos.data.titulo ?? null,
+        // Fecha nueva: la respuesta del profesional ("voy" / "no puedo") era para la anterior.
+        entrevistaRespuesta: null,
+        entrevistaRespuestaEn: null,
+        entrevistaRespuestaMensaje: null,
         ...(entraAEntrevista ? { etapa: "entrevista" as const, etapaDesde: new Date() } : {}),
       })
       .where(eq(postulaciones.id, postulacion.id));
@@ -395,7 +399,7 @@ export async function quitarEntrevista(postulacionId: string): Promise<Resultado
 
     await tx
       .update(postulaciones)
-      .set({ entrevistaEn: null, entrevistaTitulo: null })
+      .set({ entrevistaEn: null, entrevistaTitulo: null, entrevistaRespuesta: null, entrevistaRespuestaEn: null, entrevistaRespuestaMensaje: null })
       .where(eq(postulaciones.id, postulacion.id));
     await avisar(tx, docente.usuarioId, {
       tipo: "entrevista",

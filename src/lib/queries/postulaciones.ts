@@ -1,4 +1,5 @@
 import "server-only";
+import { motivoParaNoResponder, type RespuestaEntrevista } from "@/lib/entrevista-respuesta";
 import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
@@ -135,6 +136,15 @@ export type DetallePostulacion = {
    * activo: avanzó de etapa y contacta por WhatsApp; cerrado: terminó sin seguir.
    */
   contacto: "pendiente" | "activo" | "cerrado";
+  /** La respuesta a la entrevista que agendó la institución ("voy" / "no puedo"); null si no hay entrevista de la institución. */
+  respuestaEntrevista: {
+    respuesta: RespuestaEntrevista | null;
+    mensaje: string | null;
+    /** La fecha de la entrevista (ISO): viaja con la respuesta para no contestar una que cambió. */
+    para: string;
+    /** Se puede responder (o cambiar la respuesta) mientras la entrevista no pase. */
+    abierta: boolean;
+  } | null;
   /** La entrevista que agendó la institución (solo lectura) o, si no hay, el recordatorio propio del profesional. */
   agenda: { titulo: string; deLaInstitucion: boolean; cuando: string; googleHref: string } | null;
   /** Solo en la etapa "Examen preocupacional": si la institución ya anotó que lo hizo. */
@@ -198,6 +208,14 @@ export async function detallePostulacion(postulacionId: string, docenteId: strin
             detalle: `Postulación a "${b.puesto}" en ${i.nombre}. Agendado desde UNIDOAR.`,
             lugar: lugar.direccion,
           }),
+        }
+      : null,
+    respuestaEntrevista: p.entrevistaEn
+      ? {
+          respuesta: p.entrevistaRespuesta ?? null,
+          mensaje: p.entrevistaRespuestaMensaje ?? null,
+          para: p.entrevistaEn.toISOString(),
+          abierta: motivoParaNoResponder(p.entrevistaEn) === null && p.etapa !== "descartado" && b.estado !== "cerrada",
         }
       : null,
     examenPreocupacional: p.etapa === "examen_preocupacional" ? (p.examenPreocupacionalEn ? "realizado" : "pendiente") : null,

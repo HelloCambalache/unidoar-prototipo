@@ -188,4 +188,14 @@ describe("plantillas de mails", () => {
     const institucion = armarMail("M62", { cuenta: "Colegio Norte", tipo: "institucion", ruta: "/backoffice/instituciones" }, { origen: ORIGEN });
     assert.ok(institucion.texto.includes("(institución)") && !institucion.texto.includes("(institucion)"));
   });
+
+describe("M24 · responder la entrevista desde el mail", () => {
+  it("trae Voy, No puedo y Ver en la plataforma, que solo llevan a la postulación", () => {
+    const mail = armarMail("M24", EJEMPLOS.M24, { origen: ORIGEN });
+    assert.ok(mail.html.includes(`${ORIGEN}/docente/postulaciones?abrir=1&amp;entrevista=voy`));
+    assert.ok(mail.html.includes(`${ORIGEN}/docente/postulaciones?abrir=1&amp;entrevista=no-puedo`));
+    assert.ok(mail.html.includes("Ver en la plataforma"));
+    assert.ok(mail.texto.includes(`No puedo ir: ${ORIGEN}/docente/postulaciones?abrir=1&entrevista=no-puedo`));
+  });
+});
 });
