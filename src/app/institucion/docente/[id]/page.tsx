@@ -66,8 +66,18 @@ function Tilde({ ok, children }: { ok: boolean; children: React.ReactNode }) {
 }
 
 const Titulo = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="m-0 mb-3.5 text-[15px] leading-none font-semibold">{children}</h2>
+  <h2 className="font-display m-0 mb-4 text-[18px] leading-none font-semibold text-navy-900">{children}</h2>
 );
+
+/** Tarjeta blanca de la identidad nueva (radio grande, sin borde). */
+const TARJETA = "rounded-panel border-0 shadow-tarjeta";
+
+/** Panel apenas teñido del encabezado, según la categoría del profesional. */
+const PANEL = {
+  educador: "bg-panel-naranja",
+  entrenador: "bg-panel-ambar",
+  guardavidas: "bg-panel-celeste",
+} as const;
 
 export default async function PerfilDocentePage({ params, searchParams }: Props) {
   const { usuario, institucion } = await requerirInstitucion();
@@ -138,18 +148,24 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
 
       <div className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:items-stretch max-[860px]:gap-4">
         <div className="min-w-0 flex-1 max-[1000px]:basis-full max-[860px]:basis-auto">
-          <Tarjeta como="section" className="mb-4 p-6">
-            <div className="flex gap-[18px]">
-              <Avatar
-                iniciales={iniciales(nombre)}
-                fotoUrl={d.fotoUrl}
-                tamano={72}
-                fondo={info.tint}
-                texto={info.ink}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <h1 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em]">{nombre}</h1>
+          <Tarjeta como="section" className={cn(TARJETA, "mb-5 p-2.5")}>
+            <div className={cn("flex flex-wrap items-center gap-6 rounded-[22px] px-7 py-7 max-[560px]:px-5", PANEL[d.categoria])}>
+              {/* Avatar con el anillo del espectro del logo. */}
+              <span className="inline-flex flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)] p-[3px]">
+                <Avatar
+                  iniciales={iniciales(nombre)}
+                  fotoUrl={d.fotoUrl}
+                  tamano={104}
+                  fondo={info.tint}
+                  texto={info.ink}
+                  className="border-4 border-white"
+                />
+              </span>
+              <div className="min-w-0 flex-[1_1_260px]">
+                <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
+                  <h1 className="font-display m-0 text-[30px] leading-[1.15] font-semibold tracking-[-0.025em] text-tinta max-[560px]:text-[24px]">
+                    {nombre}
+                  </h1>
                   {d.suspendido ? (
                     <Insignia tono="rosa">Perfil suspendido</Insignia>
                   ) : perfil.verificado ? (
@@ -163,20 +179,25 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
                     <Insignia tono="ambar">Verificación pendiente</Insignia>
                   )}
                 </div>
-                <div className="text-sm leading-snug text-apagado">
+                <div className="text-[15px] leading-snug text-tinta-2">
                   {d.subtitulo ?? [info.label, d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ")}
                 </div>
                 {(perfil.estudiante || d.zonas.length > 0) && (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {perfil.estudiante && <Insignia tono="azul">{etiquetaDeEstudiante(perfil.estudiante.porcentaje)}</Insignia>}
                     {d.zonas.map((z) => (
-                      <Insignia key={z}>{z}</Insignia>
+                      <span
+                        key={z}
+                        className="inline-flex h-8 items-center rounded-full border border-linea bg-white px-3 text-[12.5px] font-medium text-tinta-2"
+                      >
+                        {z}
+                      </span>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-            <div className="mt-5 rounded-ud border border-borde bg-superficie px-[18px] py-4">
+            <div className="px-5 pt-5 pb-3">
               <EtiquetaSeccion className="mb-3">Estado de verificación</EtiquetaSeccion>
               <div className="flex flex-wrap gap-x-[26px] gap-y-3 text-[13px] leading-none">
                 <Tilde ok={perfil.verificado}>Identidad (DNI)</Tilde>
@@ -197,7 +218,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             </div>
           </Tarjeta>
 
-          <Tarjeta como="section" className="mb-4 p-[22px]">
+          <Tarjeta como="section" className={cn(TARJETA, "mb-5 p-6")}>
             <Titulo>Resumen profesional</Titulo>
             {d.resumen?.trim() ? (
               <p className="m-0 text-sm leading-[1.6] whitespace-pre-line text-tinta-2">{d.resumen}</p>
@@ -206,7 +227,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             )}
           </Tarjeta>
 
-          <Tarjeta como="section" className="mb-4 p-[22px]">
+          <Tarjeta como="section" className={cn(TARJETA, "mb-5 p-6")}>
             <Titulo>Experiencia</Titulo>
             {d.experiencia.length > 0 ? (
               <ul className="m-0 flex list-none flex-col gap-4 p-0">
@@ -226,8 +247,8 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             )}
           </Tarjeta>
 
-          <div className="mb-4 flex gap-4 max-[860px]:flex-col">
-            <Tarjeta como="section" className="flex-1 p-[22px]">
+          <div className="mb-5 flex gap-5 max-[860px]:flex-col">
+            <Tarjeta como="section" className={cn(TARJETA, "flex-1 p-6")}>
               <Titulo>Formación</Titulo>
               {d.formacion.length > 0 ? (
                 <ul className="m-0 flex list-none flex-col gap-3 p-0">
@@ -242,7 +263,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
                 <p className="m-0 text-sm leading-normal text-apagado">Todavía no cargó su formación.</p>
               )}
             </Tarjeta>
-            <Tarjeta como="section" className="flex-1 p-[22px]">
+            <Tarjeta como="section" className={cn(TARJETA, "flex-1 p-6")}>
               <Titulo>Asignaturas y niveles</Titulo>
               {nivelesYAsignaturas ? (
                 <>
@@ -269,9 +290,9 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             </Tarjeta>
           </div>
 
-          <Tarjeta como="section" className="p-[22px]">
+          <Tarjeta como="section" className={cn(TARJETA, "p-6")}>
             <div className="mb-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-              <h2 className="m-0 text-[15px] leading-none font-semibold">Disponibilidad horaria</h2>
+              <h2 className="font-display m-0 text-[18px] leading-none font-semibold text-navy-900">Disponibilidad horaria</h2>
               {perfil.grillaActualizadaEn && (
                 <span className="text-xs leading-none text-sutil">
                   Declarada por el profesional · actualizada {haceTiempo(perfil.grillaActualizadaEn)}
@@ -286,8 +307,8 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
           </Tarjeta>
         </div>
 
-        <aside className="flex w-[280px] flex-none flex-col gap-4 max-[1000px]:w-full">
-          <Tarjeta como="section" className="p-5">
+        <aside className="flex w-[320px] flex-none flex-col gap-5 max-[1000px]:w-full">
+          <Tarjeta como="section" className={cn(TARJETA, "p-6")}>
             <EtiquetaSeccion className="mb-3">Acciones</EtiquetaSeccion>
             <div className="flex flex-col gap-2.5">
               {d.suspendido ? (
@@ -345,7 +366,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             </dl>
           </Tarjeta>
 
-          <Tarjeta como="section" className="p-5">
+          <Tarjeta como="section" className={cn(TARJETA, "p-6")}>
             <EtiquetaSeccion className="mb-3">En tus búsquedas</EtiquetaSeccion>
             {perfil.enBusquedas.length > 0 ? (
               <ul className="m-0 flex list-none flex-col gap-2.5 p-0">

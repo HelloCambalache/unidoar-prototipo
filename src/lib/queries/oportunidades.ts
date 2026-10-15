@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, desc, eq, gt, inArray, isNull, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   busquedas,
@@ -214,6 +214,8 @@ export type DetalleOferta = {
   /** Otras búsquedas abiertas de la misma institución (hasta 5). */
   otras: { id: string; puesto: string; tipo: string; rapida: boolean }[];
   totalActivas: number;
+  /** Cuántas personas se postularon (sin contar invitaciones) y cuántas en los últimos 3 días. Solo números: nunca quiénes. */
+  postulantes: { total: number; recientes: number };
   /** Activa y, si es rápida, dentro de su plazo: solo así se puede postular. */
   abierta: boolean;
   /** "40 min", "18 hs": cuánto falta para que venza una rápida abierta. */
@@ -235,7 +237,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
   const lugar = lugarDeBusqueda(sede, institucion);
   const cantidadDeSedes = sede ? ((await contarSedes([institucion.id])).get(institucion.id) ?? 0) : 0;
 
-  const [[propia], otras, [conteo]] = await Promise.all([
+  const [[propia], otras, [conteo], [postulantes]] = await Promise.all([
     db
       .select({ id: postulaciones.id, etapa: postulaciones.etapa, origen: postulaciones.origen, examenPreocupacionalEn: postulaciones.examenPreocupacionalEn })
       .from(postulaciones)
@@ -257,6 +259,14 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
       .select({ total: count() })
       .from(busquedas)
       .where(and(eq(busquedas.institucionId, institucion.id), busquedaVigente)),
+    // Solo cuántas personas se postularon (no quiénes): las invitaciones sin respuesta no cuentan.
+    db
+      .select({
+        total: count(),
+        recientes: sql<number>`count(*) filter (where ${postulaciones.creadoEn} > now() - interval '3 days')`.mapWith(Number),
+      })
+      .from(postulaciones)
+      .where(and(eq(postulaciones.busquedaId, busqueda.id), eq(postulaciones.origen, "postulacion"))),
   ]);
 
   const km =
@@ -284,6 +294,7 @@ export async function detalleOferta(busquedaId: string, docente: Docente): Promi
     postulacion: propia ? { id: propia.id, etapa: propia.etapa, origen: propia.origen, examenRealizado: !!propia.examenPreocupacionalEn } : null,
     otras,
     totalActivas: conteo?.total ?? 0,
+    postulantes: { total: postulantes?.total ?? 0, recientes: postulantes?.recientes ?? 0 },
     abierta: busquedaAbierta(busqueda),
     responderEn: busqueda.rapida && busqueda.venceEn ? tiempoRestante(busqueda.venceEn) : null,
   };

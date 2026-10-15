@@ -161,7 +161,7 @@ export function MapaOfertas({
       <div
         role="img"
         aria-label="Mapa con la ubicación de la institución"
-        className="relative isolate h-[220px] overflow-hidden rounded-lg border border-borde bg-app"
+        className="mapa-suave relative isolate h-[300px] overflow-hidden rounded-[22px] bg-lienzo max-[620px]:h-[220px]"
       >
         <div ref={contenedor} className="absolute inset-0" />
       </div>
@@ -172,7 +172,7 @@ export function MapaOfertas({
     <div
       role="region"
       aria-label="Mapa de búsquedas cerca tuyo"
-      className="relative isolate h-[540px] overflow-hidden rounded-xl border border-borde bg-app max-[860px]:h-[460px]"
+      className="mapa-suave relative isolate h-[560px] overflow-hidden rounded-panel bg-lienzo shadow-tarjeta max-[860px]:h-[460px]"
     >
       <div ref={contenedor} className="absolute inset-0" />
       <div className="pointer-events-none absolute top-3.5 right-3.5 z-[500] flex flex-wrap gap-3 rounded-full border border-borde bg-white/93 px-3.5 py-2 max-[620px]:top-2.5 max-[620px]:right-2.5 max-[620px]:gap-[9px] max-[620px]:px-2.5 max-[620px]:py-1.5">

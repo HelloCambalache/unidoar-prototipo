@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { BotonLink } from "@/components/ui/button";
 import { AvisoVerificacion } from "@/components/docente/aviso-verificacion";
+import { BannerBienvenida } from "@/components/docente/banner-bienvenida";
 import { DashboardMetrica } from "@/components/docente/dashboard-metrica";
 import { DashboardPrimeraVez } from "@/components/docente/dashboard-primera-vez";
-import { PublicidadAncha, PublicidadesPareja } from "@/components/docente/dashboard-publicidad";
+import { PublicidadLateral, PublicidadesPareja } from "@/components/docente/dashboard-publicidad";
 import {
   CuadriculaTarjetas,
   ResumenPostulaciones,
@@ -60,16 +60,24 @@ export default async function DashboardDocentePage() {
 
   return (
     <>
-      <EncabezadoPagina titulo={`Buenas, ${docente.nombre}`} bajada={bajada} className="mb-[22px]" />
+      <div className="mb-6 flex flex-wrap gap-5">
+        <BannerBienvenida
+          titulo={`Buenas, ${docente.nombre}`}
+          bajada={bajada}
+          mostrarPerfil={perfil.pendientes.length > 0}
+          className="flex-[3_1_520px]"
+        />
+        <PublicidadLateral className="flex-[2_1_320px]" />
+      </div>
 
       <AvisoVerificacion
         verificacion={docente.verificacion}
         nota={docente.verificacionNota}
         enlacePerfil
-        className="mb-[22px]"
+        className="mb-6"
       />
 
-      <div className="mb-[22px] grid grid-cols-4 gap-3.5 max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
+      <div className="mb-8 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[560px]:grid-cols-1">
         <DashboardMetrica
           tono="azul"
           etiqueta="Búsquedas nuevas"
@@ -141,8 +149,6 @@ export default async function DashboardDocentePage() {
           />
         )}
       </SeccionTablero>
-
-      <PublicidadAncha className="mb-[26px]" />
 
       <SeccionTablero
         titulo="Cursos destacados"

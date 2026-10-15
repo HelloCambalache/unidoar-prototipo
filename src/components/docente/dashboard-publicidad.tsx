@@ -12,7 +12,7 @@ export function PublicidadAncha({ fondo = "azul", className }: { fondo?: "azul" 
   return (
     <div
       style={{ backgroundColor: color }}
-      className={cn("relative flex items-stretch overflow-hidden rounded-xl max-[860px]:flex-col", className)}
+      className={cn("relative flex items-stretch overflow-hidden rounded-[28px] max-[860px]:flex-col", className)}
     >
       <div className="relative z-[1] flex min-w-0 flex-1 flex-wrap items-center justify-between gap-5 px-7 py-[26px]">
         <div className="min-w-0 flex-[1_1_300px]">
@@ -37,6 +37,36 @@ export function PublicidadAncha({ fondo = "azul", className }: { fondo?: "azul" 
         />
       </div>
     </div>
+  );
+}
+
+/** El mismo aviso que `PublicidadAncha`, como tarjeta con foto para ir al lado del banner de bienvenida. */
+export function PublicidadLateral({ className }: { className?: string }) {
+  const foto = "/assets/hero-docente.jpg";
+  return (
+    <aside
+      aria-label="Publicidad"
+      className={cn("relative flex min-h-[240px] flex-col justify-end overflow-hidden rounded-[30px] bg-navy-700", className)}
+    >
+      <div
+        aria-hidden
+        style={{ backgroundImage: `url(${foto})`, backgroundPosition: focoDeFoto(foto) }}
+        className="absolute inset-0 bg-cover bg-no-repeat"
+      />
+      <span
+        aria-hidden
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,33,79,0)_15%,rgba(22,33,79,.94)_75%)]"
+      />
+      <div className="relative flex flex-col gap-2 px-6 pt-10 pb-6">
+        <Insignia className="self-start bg-white/[.18] text-white">Publicidad</Insignia>
+        <div className="font-display text-[19px] leading-[1.25] font-semibold text-white">
+          Mutual Profesional · préstamos y descuentos
+        </div>
+        <div className="text-[13.5px] leading-normal text-white/80">
+          Créditos a sola firma, turismo y farmacia con descuento. Asociarse es gratis.
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -79,7 +109,7 @@ export function PublicidadesPareja({ className }: { className?: string }) {
         <div
           key={a.titulo}
           style={{ backgroundColor: a.fondo }}
-          className="relative flex overflow-hidden rounded-xl max-[980px]:flex-col"
+          className="relative flex overflow-hidden rounded-[28px] max-[980px]:flex-col"
         >
           <div className="relative z-[1] flex min-w-0 flex-1 flex-col px-6 py-[22px]">
             <div className="mb-3 flex items-center gap-[9px]">

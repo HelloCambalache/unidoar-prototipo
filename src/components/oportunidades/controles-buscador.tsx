@@ -35,8 +35,11 @@ export function ControlesBuscador({
   modo,
   publico = false,
   lectura = null,
+  vistaNav,
   children,
 }: {
+  /** Selector Lista/Mapa: va a la derecha, en la fila de Favoritos y Búsqueda rápida. */
+  vistaNav?: React.ReactNode;
   /** Ruta de la pantalla: /docente/oportunidades, /docente/busquedas-rapidas o /buscar-trabajo. */
   base: string;
   filtros: FiltrosOportunidades;
@@ -68,6 +71,8 @@ export function ControlesBuscador({
   };
 
   const hayFiltros = Object.entries(filtros).some(([clave, valor]) => clave !== "vista" && valor !== undefined);
+  // El área con sesión usa la identidad nueva (tarjetas redondeadas, sin borde); el sitio público queda como estaba.
+  const app = !publico;
 
   return (
     <div
@@ -76,7 +81,8 @@ export function ControlesBuscador({
     >
       <div
         className={cn(
-          "w-[250px] flex-none rounded-lg border border-borde bg-white p-[18px]",
+          "w-[250px] flex-none bg-white p-[18px]",
+          app ? "rounded-tarjeta p-5 shadow-tarjeta" : "rounded-lg border border-borde",
           "max-[860px]:w-full",
           "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:overflow-auto max-[760px]:px-4 max-[760px]:py-3.5",
         )}
@@ -152,8 +158,14 @@ export function ControlesBuscador({
       </div>
 
       <div className="min-w-0 flex-1 max-[760px]:w-full">
-        <FraseDeBusqueda base={base} vista={filtros.vista} lectura={lectura} limpiarHref={hrefOportunidades(base, {}, { vista: filtros.vista })} />
-        <div className="mb-5 flex flex-wrap gap-2.5">
+        <FraseDeBusqueda
+          base={base}
+          vista={filtros.vista}
+          lectura={lectura}
+          limpiarHref={hrefOportunidades(base, {}, { vista: filtros.vista })}
+          app={app}
+        />
+        <div className={cn("mb-5 flex flex-wrap gap-2.5", app && "rounded-tarjeta bg-white p-3.5 shadow-tarjeta")}>
           <CampoTexto
             inicial={filtros.q ?? ""}
             reinicios={reinicios}
@@ -230,6 +242,7 @@ export function ControlesBuscador({
               </BotonFiltro>
             )}
           </div>
+          {vistaNav && <div className="ml-auto flex-none">{vistaNav}</div>}
         </div>
         {children}
       </div>
@@ -424,17 +437,25 @@ function FraseDeBusqueda({
   vista,
   lectura,
   limpiarHref,
+  app,
 }: {
   base: string;
   vista: FiltrosOportunidades["vista"];
   lectura: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
   limpiarHref: string;
+  app: boolean;
 }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
   return (
-    <section aria-label="Buscá con IA" className="mb-4 rounded-[10px] border border-borde bg-white px-[18px] py-4">
-      <div className="mb-2.5 flex items-center gap-2 text-navy-700">
+    <section
+      aria-label="Buscá con IA"
+      className={cn(
+        "mb-4 bg-white px-[18px] py-4",
+        app ? "rounded-tarjeta px-5 py-[18px] shadow-tarjeta" : "rounded-[10px] border border-borde",
+      )}
+    >
+      <div className={cn("mb-2.5 flex items-center gap-2", app ? "text-rosa" : "text-navy-700")}>
         <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="flex-none">
           <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
           <path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" />
@@ -462,7 +483,11 @@ function FraseDeBusqueda({
           placeholder="Contanos qué buscás: «suplencia de inglés en primaria, de mañana»"
           className="min-w-[240px] flex-1"
         />
-        <Boton type="submit" disabled={pendiente} className="flex-none">
+        <Boton
+          type="submit"
+          disabled={pendiente}
+          className={cn("flex-none", app && "rounded-full bg-rosa px-7 hover:bg-[#7A0F4D]")}
+        >
           Buscar
         </Boton>
       </form>

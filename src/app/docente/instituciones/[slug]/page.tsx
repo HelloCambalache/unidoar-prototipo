@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { InstitucionCvBoton, InstitucionFavoritoBoton } from "@/components/docente/instituciones-acciones";
@@ -12,10 +11,14 @@ import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
 import { focoDeFoto } from "@/lib/fotos";
 import { perfilInstitucion } from "@/lib/queries/instituciones";
+import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export const metadata: Metadata = { title: "Institución" };
+
+/** Tarjeta blanca de la identidad nueva (radio grande, sin borde). */
+const TARJETA = "rounded-panel border-0 p-6 shadow-tarjeta";
 
 const QUE_VE = [
   { texto: "Tu perfil completo y tu CV", si: true },
@@ -48,68 +51,118 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
     <>
       <Link
         href="/docente/instituciones"
-        className="mb-[18px] inline-flex items-center gap-1 text-[13px] leading-none font-medium text-sutil hover:text-tinta"
+        className="mb-5 inline-flex min-h-10 items-center gap-1.5 self-start rounded-full bg-white pr-4 pl-3 text-sm leading-none font-semibold text-tinta shadow-tarjeta hover:text-rosa"
       >
-        ‹ Instituciones
+        <Icono nombre="flecha" tamano={16} trazo={2} className="rotate-180" />
+        Instituciones
       </Link>
 
-      <div className="flex flex-wrap items-start gap-7">
-        <div className="min-w-[340px] flex-[2] max-[860px]:min-w-0 max-[860px]:basis-full">
-          <section className="mb-4 overflow-hidden rounded-lg border border-borde bg-white">
-            {i.portadaUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- portadas subidas por las instituciones, de tamaños libres
-              <img
-                src={i.portadaUrl}
-                alt={`Foto de ${i.nombre}`}
-                style={{ objectPosition: focoDeFoto(i.portadaUrl) }}
-                className="block aspect-[16/7] w-full object-cover"
-              />
-            ) : (
-              <div aria-hidden className="flex aspect-[16/7] w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <circle cx="8.5" cy="9.5" r="1.6" />
-                  <path d="M4 17l5-5 4 4 3-2 4 4" />
+      <section className="mb-5 rounded-panel bg-white p-2.5 shadow-tarjeta">
+        {i.portadaUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- portadas subidas por las instituciones, de tamaños libres
+          <img
+            src={i.portadaUrl}
+            alt={`Foto de ${i.nombre}`}
+            style={{ objectPosition: focoDeFoto(i.portadaUrl) }}
+            className="block aspect-[16/7] max-h-[340px] w-full rounded-[22px] object-cover"
+          />
+        ) : (
+          <div aria-hidden className="flex aspect-[16/7] max-h-[340px] w-full items-center justify-center rounded-[22px] bg-lienzo text-[#C9C6C0]">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="8.5" cy="9.5" r="1.6" />
+              <path d="M4 17l5-5 4 4 3-2 4 4" />
+            </svg>
+          </div>
+        )}
+        {/* Solo el logo se monta sobre la portada; el nombre queda abajo, sobre blanco. */}
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3 px-5 pb-4">
+          <InstitucionLogo
+            nombre={i.nombre}
+            logoUrl={i.logoUrl}
+            tamano={104}
+            className="relative z-[2] -mt-[52px] rounded-[26px] border-4 border-white bg-white shadow-[0_8px_24px_rgba(4,11,53,.12)]"
+          />
+          <div className="min-w-0 flex-[1_1_260px] pt-4">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="font-display m-0 text-[30px] leading-[1.15] font-semibold tracking-[-0.025em] text-navy-900 max-[560px]:text-[24px]">
+                {i.nombre}
+              </h1>
+              {i.verificada && (
+                <svg role="img" aria-label="Institución verificada" width="22" height="22" viewBox="0 0 24 24" className="flex-none">
+                  <circle cx="12" cy="12" r="10" fill="#16214F" />
+                  <path d="M8 12l3 3 5-6" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </div>
-            )}
-            <div className="relative px-6 py-5">
-              <div className="relative z-[2] -mt-10 mb-3.5">
-                <InstitucionLogo
-                  nombre={i.nombre}
-                  logoUrl={i.logoUrl}
-                  tamano={64}
-                  className="rounded-[10px] border-[3px] border-white shadow-[0_2px_6px_rgba(0,0,0,.15)]"
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="m-0 text-[22px] leading-tight font-semibold">{i.nombre}</h1>
-                {i.verificada && <Insignia tono="verde">Institución verificada</Insignia>}
-              </div>
-              <div className="mt-[3px] text-sm leading-[1.4] text-apagado">
-                {[i.tipo, variasSedes ? `${sedes.length} sedes` : i.zona].filter(Boolean).join(" · ")}
-              </div>
+              )}
             </div>
+            <div className="mt-1 text-[15px] leading-[1.4] text-apagado">
+              {[i.tipo, variasSedes ? `${sedes.length} sedes` : i.zona].filter(Boolean).join(" · ")}
+            </div>
+          </div>
+        </div>
+        {cifras.length > 0 && (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] border-t border-linea px-2 pt-2">
+            {cifras.map((c, n) => (
+              <div key={c.etiqueta} className={cn("px-4 py-3", n > 0 && "min-[561px]:border-l min-[561px]:border-linea")}>
+                <div className="text-[12px] leading-[1.3] text-apagado">{c.etiqueta}</div>
+                <div
+                  className={cn(
+                    "font-display mt-1 font-semibold text-tinta",
+                    c.grande ? "text-[20px] leading-none" : "text-[15px] leading-[1.3]",
+                  )}
+                >
+                  {c.valor}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-wrap items-start gap-5">
+        <div className="flex min-w-[340px] flex-[2] flex-col gap-5 max-[860px]:min-w-0 max-[860px]:basis-full [&>section]:mb-0">
+          <section className="rounded-panel bg-white p-6 shadow-tarjeta">
+            <div className="mb-4 flex items-baseline justify-between gap-3">
+              <h2 className="font-display m-0 text-[18px] leading-[1.3] font-semibold text-navy-900">Búsquedas abiertas</h2>
+              <span className="text-[13px] text-apagado">
+                {busquedas.length === 1 ? "1 activa" : `${busquedas.length} activas`}
+              </span>
+            </div>
+            {busquedas.length === 0 ? (
+              <p className="m-0 text-sm leading-normal text-apagado">
+                Hoy no tiene búsquedas activas. Guardala para enterarte cuando publique una nueva.
+              </p>
+            ) : (
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                {busquedas.map((b) => (
+                  <li key={b.id}>
+                    <Link
+                      href={`/docente/oferta/${b.id}`}
+                      className="group flex items-center gap-3.5 rounded-[18px] bg-[#F7F6F2] p-3.5 text-tinta transition-colors hover:bg-lienzo hover:text-tinta"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="font-display block text-[15px] leading-[1.3] font-semibold">{b.puesto}</span>
+                        <span className="mt-0.5 block text-[13px] leading-[1.3] text-apagado">
+                          {[b.sede, b.tipo, b.turno].filter(Boolean).join(" · ")}
+                        </span>
+                      </span>
+                      {b.rapida && <Insignia tono="naranja">Rápida</Insignia>}
+                      <span
+                        aria-hidden
+                        className="inline-flex size-10 flex-none items-center justify-center rounded-xl bg-white transition-colors group-hover:bg-navy-900 group-hover:text-white"
+                      >
+                        <Icono nombre="flecha" tamano={16} trazo={2} />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
-          {cifras.length > 0 && (
-            <div className="mb-4 overflow-hidden rounded-lg border border-borde bg-white">
-              <div className="-mr-px -mb-px grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-                {cifras.map((c) => (
-                  <div key={c.etiqueta} className="border-r border-b border-borde p-4">
-                    <div className={c.grande ? "text-[22px] leading-none font-bold" : "text-sm leading-[1.3] font-semibold"}>
-                      {c.valor}
-                    </div>
-                    <div className="mt-1 text-xs leading-[1.3] text-apagado">{c.etiqueta}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <Tarjeta como="section" className="mb-4">
-            <EtiquetaSeccion>Sobre la institución</EtiquetaSeccion>
-            <p className="m-0 text-sm leading-[1.6] text-tinta-2">
+          <Tarjeta como="section" className={TARJETA}>
+            <h2 className="font-display m-0 mb-2 text-[18px] font-semibold text-navy-900">Sobre la institución</h2>
+            <p className="m-0 text-[15px] leading-[1.6] text-tinta-2">
               {i.descripcion || "Todavía no cargó una descripción."}
             </p>
           </Tarjeta>
@@ -119,8 +172,8 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           <VitrinaNovedadesLista novedades={novedades} />
 
           {variasSedes && (
-            <Tarjeta como="section" className="mb-4">
-              <EtiquetaSeccion className="mb-2.5">Sedes</EtiquetaSeccion>
+            <Tarjeta como="section" className={TARJETA}>
+              <h2 className="font-display m-0 mb-3 text-[18px] font-semibold text-navy-900">Sedes</h2>
               <ListaDeSedes sedes={sedes} />
               {i.horarioAdministracion && (
                 <div className="mt-3 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
@@ -129,72 +182,46 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           )}
 
           {!variasSedes && (
-          <Tarjeta como="section" className="mb-4">
-            <EtiquetaSeccion className="mb-1.5">Dónde queda</EtiquetaSeccion>
-            <div className="flex h-[120px] items-center justify-center rounded-lg border border-dashed border-[#CFCCC5] bg-[repeating-linear-gradient(45deg,#F5F4F0,#F5F4F0_10px,#EFEEEA_10px,#EFEEEA_20px)] px-3 text-center text-[13px] leading-[1.4] text-sutil">
-              <div>
-                <Icono nombre="ubicacion" tamano={20} trazo={1.8} className="mx-auto mb-1.5" />
-                {i.zona ?? "Zona a confirmar"}
-                <div className="mt-0.5 text-[11px]">
-                  {mapaOsm ? (
-                    <a href={mapaOsm} target="_blank" rel="noopener noreferrer" className="font-medium underline">
-                      Ver en el mapa
-                    </a>
-                  ) : (
-                    "zona declarada"
-                  )}
+            <Tarjeta como="section" className={TARJETA}>
+              <h2 className="font-display m-0 mb-3 text-[18px] font-semibold text-navy-900">Dónde queda</h2>
+              <div className="flex items-center gap-3.5">
+                <span className="inline-flex size-11 flex-none items-center justify-center rounded-[14px] bg-rosa-tint text-rosa">
+                  <Icono nombre="ubicacion" tamano={20} trazo={1.8} />
+                </span>
+                <div className="min-w-0 text-[13.5px] leading-[1.45]">
+                  {i.direccion && <div className="font-display text-[15.5px] font-semibold text-tinta">{i.direccion}</div>}
+                  <div className="text-apagado">{i.zona ?? "Zona a confirmar"}</div>
                 </div>
+                {mapaOsm && (
+                  <a
+                    href={mapaOsm}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto inline-flex min-h-11 flex-none items-center rounded-full border border-linea px-4 text-sm font-semibold text-tinta hover:bg-lienzo hover:text-tinta"
+                  >
+                    Ver en el mapa
+                  </a>
+                )}
               </div>
-            </div>
-            {i.direccion && <div className="mt-2.5 text-[13px] leading-[1.4] text-tinta-2">{i.direccion}</div>}
-            {i.horarioAdministracion && (
-              <div className="mt-1 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
-            )}
-          </Tarjeta>
+              {i.horarioAdministracion && (
+                <div className="mt-3 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
+              )}
+            </Tarjeta>
           )}
-
-          <Tarjeta como="section">
-            <h2 className="m-0 mb-3.5 text-lg leading-[1.3] font-semibold">Búsquedas activas</h2>
-            {busquedas.length === 0 ? (
-              <p className="m-0 text-sm leading-normal text-sutil">
-                Hoy no tiene búsquedas activas. Guardala para enterarte cuando publique una nueva.
-              </p>
-            ) : (
-              <ul className="m-0 flex list-none flex-wrap gap-3.5 p-0">
-                {busquedas.map((b) => (
-                  <li key={b.id} className="flex min-w-[220px] flex-1 flex-col rounded-lg border border-borde p-3.5">
-                    <div className="mb-1 flex items-start justify-between gap-2">
-                      <div className="text-sm leading-[1.3] font-semibold">{b.puesto}</div>
-                      {b.rapida && <Insignia tono="naranja">Rápida</Insignia>}
-                    </div>
-                    <div className="mb-3 flex-1 text-xs leading-[1.3] text-apagado">
-                      {[b.sede, b.tipo, b.turno].filter(Boolean).join(" · ")}
-                    </div>
-                    <BotonLink href={`/docente/oferta/${b.id}`} variante="secundario" tamano="sm" className="self-start">
-                      Ver oferta
-                    </BotonLink>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Tarjeta>
         </div>
 
-        <div className="min-w-[300px] flex-1 max-[860px]:min-w-0 max-[860px]:basis-full">
-          <Tarjeta como="section" className="mb-4 p-[22px]">
-            <h2 className="m-0 mb-4 text-base leading-[1.3] font-semibold">Enviá tu CV a esta institución</h2>
+        <aside className="flex min-w-[300px] flex-1 flex-col gap-5 max-[860px]:min-w-0 max-[860px]:basis-full">
+          <Tarjeta como="section" className={TARJETA}>
+            <h2 className="font-display m-0 mb-4 text-[17px] leading-[1.3] font-semibold text-navy-900">
+              Enviá tu CV a esta institución
+            </h2>
             <InstitucionCvBoton institucionId={i.id} enviado={cvEnviado} />
-            <InstitucionFavoritoBoton
-              institucionId={i.id}
-              favorita={favorita}
-              nombre={i.nombre}
-              className="w-full"
-            />
-            <div className="mt-[18px] border-t border-borde pt-4">
-              <EtiquetaSeccion>Qué va a ver la institución</EtiquetaSeccion>
+            <InstitucionFavoritoBoton institucionId={i.id} favorita={favorita} nombre={i.nombre} className="w-full" />
+            <div className="mt-5 rounded-[18px] bg-[#F7F6F2] px-4 py-4">
+              <EtiquetaSeccion className="text-apagado">Qué va a ver la institución</EtiquetaSeccion>
               <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[13px] leading-[1.4]">
                 {QUE_VE.map((q) => (
-                  <li key={q.texto} className={q.si ? "flex items-start gap-2 text-tinta-2" : "flex items-start gap-2 text-sutil"}>
+                  <li key={q.texto} className={q.si ? "flex items-start gap-2 text-tinta-2" : "flex items-start gap-2 text-apagado"}>
                     <svg
                       width="14"
                       height="14"
@@ -213,13 +240,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
               </ul>
             </div>
           </Tarjeta>
-          <Tarjeta como="section" className="p-[22px] text-center">
-            <div className="mb-1 text-[26px] leading-none font-bold text-navy-700">{busquedas.length}</div>
-            <div className="text-[13px] leading-[1.4] text-apagado">
-              {busquedas.length === 1 ? "búsqueda activa ahora" : "búsquedas activas ahora"}
-            </div>
-          </Tarjeta>
-        </div>
+        </aside>
       </div>
     </>
   );

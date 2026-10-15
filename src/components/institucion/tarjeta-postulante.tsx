@@ -39,7 +39,7 @@ export function TarjetaPostulante({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        "rounded-[10px] border border-borde bg-white p-3.5 transition-opacity",
+        "rounded-[18px] bg-white p-3.5 shadow-tarjeta transition-[opacity,box-shadow] hover:shadow-tarjeta-hover",
         !soloLectura && "cursor-grab active:cursor-grabbing",
         arrastrando && "opacity-40",
       )}
@@ -51,7 +51,7 @@ export function TarjetaPostulante({
           aria-label={`Abrir la ficha de ${p.nombre}`}
           className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md text-left focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
         >
-          <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={32} />
+          <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={40} />
           <span className="min-w-0">
             <span className="block text-sm leading-tight font-semibold [overflow-wrap:anywhere]">{p.nombre}</span>
             <span className="mt-0.5 line-clamp-2 text-xs leading-snug text-apagado">{p.subtitulo}</span>
@@ -62,7 +62,7 @@ export function TarjetaPostulante({
         )}
       </div>
       {p.etapa !== "contratado" && (
-        <div className="mt-2.5 flex items-center justify-between gap-2">
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#F1EFEA] pt-2.5">
           {p.suspendido ? (
             <span className="text-xs font-semibold text-rosa">Perfil suspendido</span>
           ) : p.cv.verificado ? (
@@ -76,7 +76,7 @@ export function TarjetaPostulante({
           <span className="text-xs text-sutil">{etiquetaDias(p.etapa, p.dias)}</span>
         </div>
       )}
-      {nota && <div className={cn("mt-2.5 rounded-[7px] px-2.5 py-2 text-xs leading-snug font-medium", NOTA[nota.tono])}>{nota.texto}</div>}
+      {nota && <div className={cn("mt-2.5 rounded-xl px-2.5 py-2 text-xs leading-snug font-medium", NOTA[nota.tono])}>{nota.texto}</div>}
     </li>
   );
 }
