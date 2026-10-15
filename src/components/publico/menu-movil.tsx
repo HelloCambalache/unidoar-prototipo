@@ -59,7 +59,7 @@ export function MenuMovil({ conSesion }: { conSesion: boolean }) {
           ))}
           <div className="mt-3 flex flex-col gap-3">
             {conSesion ? (
-              <BotonLink href="/inicio" variante="cta" bloque>
+              <BotonLink href="/inicio" variante="cta" bloque className="rounded-full">
                 Ir a mi panel
               </BotonLink>
             ) : (
@@ -67,7 +67,7 @@ export function MenuMovil({ conSesion }: { conSesion: boolean }) {
                 <Link href="/ingresar" className={enlace}>
                   Ingresar
                 </Link>
-                <BotonLink href="/registro" variante="cta" bloque>
+                <BotonLink href="/registro" variante="cta" bloque className="rounded-full">
                   Crear cuenta
                 </BotonLink>
               </>

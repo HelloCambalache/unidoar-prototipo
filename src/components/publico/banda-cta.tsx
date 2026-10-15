@@ -1,6 +1,7 @@
+import { NodosMarca } from "@/components/app/nodos-marca";
 import { cn } from "@/lib/utils";
 
-/** Banda azul de cierre: etiqueta + título a la izquierda y acciones a la derecha. */
+/** Panel azul de cierre (redondeado, con los nodos del logo): etiqueta + título a la izquierda y acciones a la derecha. */
 export function BandaCTA({
   etiqueta,
   titulo,
@@ -15,20 +16,18 @@ export function BandaCTA({
   className?: string;
 }) {
   return (
-    <section
-      className={cn(
-        "flex flex-wrap items-center justify-between gap-10 bg-navy-700 px-10 py-11 max-[560px]:gap-6 max-[560px]:px-6",
-        className,
-      )}
-    >
-      <div className="max-w-[600px]">
-        {etiqueta && <div className="mb-3.5">{etiqueta}</div>}
-        <h2 className="m-0 mb-1.5 text-[28px] leading-[1.2] font-semibold tracking-[-0.02em] text-white max-[560px]:text-2xl">
-          {titulo}
-        </h2>
-        {texto && <p className="m-0 text-sm leading-normal text-white/65">{texto}</p>}
+    <section className={cn("bg-lienzo px-12 py-12 max-[900px]:px-6 max-[560px]:py-8", className)}>
+      <div className="relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-10 overflow-hidden rounded-[32px] bg-navy-900 px-12 py-12 max-[560px]:gap-6 max-[560px]:px-6 max-[560px]:py-9">
+        <NodosMarca className="absolute -top-14 -right-10 w-[260px] opacity-90 max-[700px]:hidden" />
+        <div className="relative max-w-[600px]">
+          {etiqueta && <div className="mb-3.5">{etiqueta}</div>}
+          <h2 className="font-display m-0 mb-1.5 text-[32px] leading-[1.15] font-semibold tracking-[-0.025em] text-white max-[560px]:text-2xl">
+            {titulo}
+          </h2>
+          {texto && <p className="m-0 text-[15px] leading-normal text-white/70">{texto}</p>}
+        </div>
+        <div className="relative flex flex-wrap gap-3 [&>a]:rounded-full">{acciones}</div>
       </div>
-      <div className="flex flex-wrap gap-3">{acciones}</div>
     </section>
   );
 }

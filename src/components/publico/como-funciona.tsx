@@ -84,7 +84,7 @@ export function ComoFunciona() {
           {COLUMNAS.map((col) => (
             <article
               key={col.etiqueta}
-              className="flex flex-col rounded-[20px] bg-navy-700 px-8 py-[34px] shadow-[0_12px_30px_rgba(22,33,79,.18)] max-[560px]:px-6"
+              className="flex flex-col rounded-[30px] bg-navy-700 px-8 py-[34px] shadow-[0_12px_30px_rgba(22,33,79,.18)] max-[560px]:px-6"
             >
               <span
                 style={{ background: col.acento, color: col.sobreAcento }}

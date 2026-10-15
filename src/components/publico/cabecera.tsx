@@ -51,7 +51,7 @@ export async function CabeceraPublica() {
 
       <div className="hidden items-center gap-2.5 min-[761px]:flex">
         {conSesion ? (
-          <BotonLink href="/inicio" variante="cta">
+          <BotonLink href="/inicio" variante="cta" className="rounded-full">
             Ir a mi panel
           </BotonLink>
         ) : (
@@ -59,7 +59,7 @@ export async function CabeceraPublica() {
             <Link href="/ingresar" className={`${ENLACE} px-3 py-2 hover:text-white`}>
               Ingresar
             </Link>
-            <BotonLink href="/registro" variante="cta">
+            <BotonLink href="/registro" variante="cta" className="rounded-full">
               Crear cuenta
             </BotonLink>
           </>
