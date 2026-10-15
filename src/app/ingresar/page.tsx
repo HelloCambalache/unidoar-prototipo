@@ -6,7 +6,12 @@ import { ERRORES_DE_INGRESO, rutaInternaSegura } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
 import { googleHabilitado } from "@/lib/supabase/proveedores";
 
-export const metadata: Metadata = { title: "Ingresá" };
+// Los enlaces a pantallas con sesión (/docente/…, /institucion/…) llegan acá cuando WhatsApp o una red arma la vista previa.
+// No se redefine `openGraph`/`twitter`: así la vista previa usa la del sitio (título de marca, descripción e imagen).
+export const metadata: Metadata = {
+  title: { absolute: "UNIDOAR · Ingresá a tu cuenta" },
+  description: "Entrá a tu cuenta de UNIDOAR para ver búsquedas, postulaciones y profesionales verificados cerca tuyo.",
+};
 
 export default async function PaginaIngresar({
   searchParams,
