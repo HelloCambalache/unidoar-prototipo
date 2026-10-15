@@ -317,6 +317,7 @@ function Interruptor({
   detalle,
   onCambio,
   app = false,
+  urgente = false,
 }: {
   activo: boolean;
   etiqueta: string;
@@ -324,6 +325,8 @@ function Interruptor({
   detalle?: string;
   onCambio: () => void;
   app?: boolean;
+  /** Filtro de búsquedas urgentes: rayo y naranja, el color de las urgentes en toda la app. */
+  urgente?: boolean;
 }) {
   return (
     <button
@@ -339,7 +342,10 @@ function Interruptor({
     >
       {app ? (
         <span className="flex min-w-0 flex-col gap-1">
-          <span className="text-[14px] leading-tight font-semibold text-tinta">{etiqueta}</span>
+          <span className={cn("flex items-center gap-1.5 text-[14px] leading-tight font-semibold", urgente ? "text-naranja-ink" : "text-tinta")}>
+            {urgente && <Icono nombre="rayo" tamano={14} trazo={2} className="flex-none" />}
+            {etiqueta}
+          </span>
           {detalle && <span className="text-[12.5px] leading-tight text-apagado">{detalle}</span>}
         </span>
       ) : (
@@ -348,7 +354,7 @@ function Interruptor({
       <span
         className={cn(
           "relative inline-block h-5 w-[34px] flex-none rounded-full transition-colors",
-          activo ? (app ? "bg-rosa" : "bg-naranja") : "bg-[#CFCCC5]",
+          activo ? (app && !urgente ? "bg-rosa" : "bg-naranja") : "bg-[#CFCCC5]",
         )}
       >
         <span
@@ -711,10 +717,11 @@ function PanelFiltrosApp({
           {modo === "todas" && (
             <Interruptor
               activo={filtros.rapidas === "1"}
-              etiqueta="Solo suplencias"
-              detalle="Reemplazos que se cubren rápido"
+              etiqueta="Solo búsquedas urgentes"
+              detalle="Suplencias rápidas que vencen pronto"
               onCambio={() => aplicar({ rapidas: filtros.rapidas ? null : "1" })}
               app
+              urgente
             />
           )}
           <Interruptor

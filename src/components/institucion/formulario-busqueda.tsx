@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { crearBusqueda, editarBusqueda } from "@/app/actions/busquedas";
+import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
 import { PanelCoincidencias, type Interruptores } from "@/components/institucion/panel-coincidencias";
@@ -10,6 +11,7 @@ import type { CategoriaDocente } from "@/db/schema";
 import { OPCIONES_VENCIMIENTO } from "@/lib/busquedas";
 import { CATEGORIA_INFO, CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { sugerirDescripcion, sugerirPuesto, sugerirRequisitos, type DatosParaRedactar } from "@/lib/redaccion-busqueda";
+import { cn } from "@/lib/utils";
 
 export type ValoresFormulario = {
   puesto: string;
@@ -91,6 +93,10 @@ export function FormularioBusqueda({
     });
 
   const esRapida = v.tipo === "Suplencia rápida";
+  // El tipo al que vuelve la búsqueda si se desmarca "urgente" (el que tenía antes, o Suplencia).
+  const [tipoComun, setTipoComun] = useState<ValoresFormulario["tipo"]>(
+    inicial.tipo === "Suplencia rápida" ? "Suplencia" : inicial.tipo,
+  );
   // Lo que ya completó la institución: de ahí salen las sugerencias de título, descripción y requisitos.
   const paraRedactar: DatosParaRedactar = {
     categoria: v.categoria,
@@ -111,6 +117,44 @@ export function FormularioBusqueda({
       className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:gap-4"
     >
       <div className="flex w-full max-w-[980px] min-w-0 flex-1 flex-col gap-4 rounded-ud border border-borde bg-white p-6 max-[560px]:p-4">
+        {/* Común o urgente: a la vista, arriba de todo. Urgente es el tipo "Suplencia rápida". */}
+        <fieldset className="m-0 grid grid-cols-2 gap-3 border-0 p-0 max-[640px]:grid-cols-1">
+          <legend className="mb-2 p-0 text-[13px] font-semibold text-tinta">¿Qué tipo de búsqueda es?</legend>
+          <button
+            type="button"
+            aria-pressed={!esRapida}
+            onClick={() => esRapida && set("tipo", tipoComun)}
+            className={cn(
+              "flex flex-col items-start gap-1 rounded-[18px] border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+              !esRapida ? "border-navy-700 bg-navy-50" : "border-borde bg-white hover:border-borde-fuerte",
+            )}
+          >
+            <span className="text-[15px] font-semibold text-tinta">Búsqueda común</span>
+            <span className="text-[13px] leading-snug text-apagado">Titular, suplencia, temporada o freelance. Recibe postulaciones hasta que la cierres.</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={esRapida}
+            onClick={() => {
+              if (esRapida) return;
+              setTipoComun(v.tipo);
+              set("tipo", "Suplencia rápida");
+            }}
+            className={cn(
+              "flex flex-col items-start gap-1 rounded-[18px] border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-naranja/40 focus-visible:outline-none",
+              esRapida ? "border-naranja bg-naranja-tint" : "border-borde bg-white hover:border-naranja/60",
+            )}
+          >
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-naranja-ink">
+              <Icono nombre="rayo" tamano={15} trazo={2} />
+              Búsqueda urgente
+            </span>
+            <span className="text-[13px] leading-snug text-apagado">
+              Para cubrir rápido: avisamos al momento a los profesionales que encajan y vence en el plazo que elijas.
+            </span>
+          </button>
+        </fieldset>
+
         <Campo etiqueta="Puesto" requerido error={errores.puesto}>
           <Input
             name="puesto"
@@ -193,15 +237,27 @@ export function FormularioBusqueda({
         </div>
 
         <div className="grid grid-cols-2 gap-4 max-[640px]:grid-cols-1">
-          <Campo etiqueta="Tipo" requerido error={errores.tipo}>
-            <Select name="tipo" value={v.tipo} onChange={(e) => set("tipo", e.target.value as ValoresFormulario["tipo"])}>
-              {TIPOS_BUSQUEDA.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          {esRapida ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold text-tinta">Tipo</span>
+              <input type="hidden" name="tipo" value={v.tipo} />
+              <span className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-naranja-tint px-3.5 text-[14px] font-semibold text-naranja-ink">
+                <Icono nombre="rayo" tamano={15} trazo={2} />
+                Suplencia rápida
+              </span>
+            </div>
+          ) : (
+            <Campo etiqueta="Tipo" requerido error={errores.tipo}>
+              <Select name="tipo" value={v.tipo} onChange={(e) => set("tipo", e.target.value as ValoresFormulario["tipo"])}>
+                {/* La urgente se elige arriba ("Búsqueda urgente"), no acá. */}
+                {TIPOS_BUSQUEDA.filter((t) => t !== "Suplencia rápida").map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+          )}
           <Campo etiqueta="Carga horaria" error={errores.cargaHoraria}>
             <Input
               name="cargaHoraria"

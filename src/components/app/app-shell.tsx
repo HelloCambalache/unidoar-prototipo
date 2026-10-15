@@ -65,6 +65,13 @@ const TEMAS: Record<
   },
 };
 
+/** A dónde lleva el avatar de la barra superior en cada área. */
+const PERFIL: Record<Tema, { href: string; etiqueta: string } | null> = {
+  docente: { href: "/docente/perfil", etiqueta: "Ir a mi perfil" },
+  institucion: { href: "/institucion/vitrina", etiqueta: "Ir al perfil de la institución" },
+  backoffice: null,
+};
+
 export function AppShell({
   tema,
   nombre,
@@ -199,12 +206,25 @@ export function AppShell({
           {notificaciones && (
             <CampanaNotificaciones tema={t} notificaciones={notificaciones} verTodasHref={verTodasHref} />
           )}
-          {/* Avatar con el anillo del espectro del logo. */}
-          <span className="inline-flex size-11 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)] p-[2px]">
-            <span className="inline-flex size-full items-center justify-center rounded-full border-2 border-white bg-navy-900 font-display text-[12px] font-semibold text-white">
-              {iniciales}
+          {/* Avatar con el anillo del espectro del logo: lleva al perfil (en el backoffice no hay perfil propio). */}
+          {PERFIL[tema] ? (
+            <Link
+              href={PERFIL[tema]!.href}
+              aria-label={PERFIL[tema]!.etiqueta}
+              title={PERFIL[tema]!.etiqueta}
+              className="inline-flex size-11 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)] p-[2px] transition-transform hover:scale-105 focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
+            >
+              <span className="inline-flex size-full items-center justify-center rounded-full border-2 border-white bg-navy-900 font-display text-[12px] font-semibold text-white">
+                {iniciales}
+              </span>
+            </Link>
+          ) : (
+            <span className="inline-flex size-11 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)] p-[2px]">
+              <span className="inline-flex size-full items-center justify-center rounded-full border-2 border-white bg-navy-900 font-display text-[12px] font-semibold text-white">
+                {iniciales}
+              </span>
             </span>
-          </span>
+          )}
         </header>
         <main
           className={cn(

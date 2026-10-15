@@ -38,20 +38,25 @@ export function TarjetaOfertaApp({
     <article
       className={cn(
         "group relative flex flex-col rounded-tarjeta bg-white p-2 shadow-tarjeta transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-tarjeta-hover",
-        oferta.rapida && "ring-[1.5px] ring-naranja",
+        oferta.rapida && "ring-2 ring-naranja",
       )}
     >
-      <div className={cn("flex flex-1 flex-col gap-3.5 rounded-[18px] p-[18px]", panel.fondo)}>
+      {oferta.rapida && (
+        <div className="mb-2 flex items-center gap-2 rounded-[16px] bg-naranja px-3.5 py-2.5 text-[13px] leading-none font-semibold text-white">
+          <span aria-hidden className="relative flex size-2 flex-none">
+            <span className="absolute inset-0 animate-ping rounded-full bg-white/80" />
+            <span className="relative size-2 rounded-full bg-white" />
+          </span>
+          <Icono nombre="rayo" tamano={14} trazo={2} className="flex-none" />
+          Búsqueda urgente
+          {oferta.responderEn && <span className="ml-auto font-medium text-white/90">responder en {oferta.responderEn}</span>}
+        </div>
+      )}
+      <div className={cn("flex flex-1 flex-col gap-3.5 rounded-[18px] p-[18px]", oferta.rapida ? "bg-naranja-tint" : panel.fondo)}>
         <div className="flex items-start justify-between gap-3">
-          {oferta.rapida ? (
-            <Insignia tono="naranja" className="bg-naranja text-white">
-              {oferta.responderEn ? `Rápida · responder en ${oferta.responderEn}` : "Rápida"}
-            </Insignia>
-          ) : (
-            <span className={cn("text-[11.5px] leading-none font-semibold tracking-[0.08em] uppercase", panel.texto)}>
-              {CATEGORIA_INFO[oferta.categoria].plural}
-            </span>
-          )}
+          <span className={cn("text-[11.5px] leading-none font-semibold tracking-[0.08em] uppercase", panel.texto)}>
+            {CATEGORIA_INFO[oferta.categoria].plural}
+          </span>
           {/* La estrella va por encima del link estirado. */}
           <span className="relative z-[1] -mt-1.5 -mr-1.5">{estrella}</span>
         </div>
