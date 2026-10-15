@@ -21,12 +21,12 @@ const FOTO_MOSAICO: Record<CategoriaDocente, string> = {
 };
 
 const TILE =
-  "relative overflow-hidden rounded-[18px] bg-navy-700 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none";
+  "relative overflow-hidden rounded-[28px] bg-navy-700 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none";
 
 /** Hero de la landing: titular, accesos por rol y mosaico con las tres categorías. */
 export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, ConteoCategoria> }) {
   return (
-    <section className="relative overflow-hidden bg-superficie px-12 pt-[76px] pb-16 max-[900px]:px-6 max-[900px]:pt-14 max-[900px]:pb-12">
+    <section className="relative overflow-hidden bg-lienzo px-12 pt-[76px] pb-16 max-[900px]:px-6 max-[900px]:pt-14 max-[900px]:pb-12">
       <div aria-hidden className="pub-grid-claro pointer-events-none absolute inset-0 opacity-50" />
       <span
         aria-hidden

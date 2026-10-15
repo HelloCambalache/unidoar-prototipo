@@ -18,8 +18,7 @@ export function TarjetasCategoria({ conteos }: { conteos: Record<CategoriaDocent
           <li key={c} className="grid">
             <Link
               href={pub.ruta}
-              style={{ borderBottomColor: info.color }}
-              className="group relative block h-[520px] overflow-hidden rounded-lg border border-b-4 border-borde bg-white transition-[transform,box-shadow] duration-[250ms] hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_14px_30px_rgba(31,36,33,.22)] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none"
+              className="group relative block h-[520px] overflow-hidden rounded-[30px] bg-white shadow-tarjeta transition-[transform,box-shadow] duration-[250ms] hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(4,11,53,.22)] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none"
             >
               <span
                 aria-hidden
@@ -31,7 +30,8 @@ export function TarjetasCategoria({ conteos }: { conteos: Record<CategoriaDocent
                 className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,30,.05)_0%,rgba(10,14,30,.55)_55%,rgba(10,14,30,.92)_100%)]"
               />
               <span className="relative flex h-full flex-col items-center justify-end p-7 pb-8 text-center text-white">
-                <span className="mb-2 text-[26px] leading-[1.2] font-semibold">{pub.nombre}</span>
+                <span aria-hidden style={{ background: info.color }} className="mb-3.5 h-1 w-10 rounded-full" />
+                <span className="font-display mb-2 text-[28px] leading-[1.15] font-semibold tracking-[-0.02em]">{pub.nombre}</span>
                 <span className="text-base leading-normal">{pub.descripcionTarjeta}</span>
                 {(n.verificados > 0 || n.busquedasActivas > 0) && (
                   <span className="mt-3.5 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[13px] leading-snug font-medium text-white/80">

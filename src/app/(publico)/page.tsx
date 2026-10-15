@@ -63,7 +63,7 @@ export default async function Landing() {
         ]}
       />
 
-      <section className="border-b border-borde bg-superficie px-12 py-14 max-[900px]:px-6">
+      <section className="bg-lienzo px-12 py-16 max-[900px]:px-6">
         <div className="mx-auto max-w-[1200px]">
           <div className="mb-3 flex items-center gap-[9px]">
             <span aria-hidden className="size-2 rounded-full bg-naranja" />
@@ -71,7 +71,7 @@ export default async function Landing() {
               Buscás empleo
             </span>
           </div>
-          <h2 className="mb-2 text-[26px] leading-tight font-semibold tracking-[-0.02em] text-tinta">
+          <h2 className="font-display mb-2 text-[32px] leading-tight font-semibold tracking-[-0.025em] text-navy-900 max-[560px]:text-[26px]">
             Completá tu perfil 100% gratis.
           </h2>
           <p className="mb-7 max-w-[72ch] text-[15px] leading-normal text-apagado">
