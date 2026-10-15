@@ -92,7 +92,7 @@ export function CobroPedidos({ pedidos, catalogo }: { pedidos: PedidoVista[]; ca
 
   return (
     <>
-      <ul className="m-0 flex list-none flex-col overflow-hidden rounded-ud border border-borde bg-white p-0">
+      <ul className="m-0 flex list-none flex-col overflow-hidden rounded-tarjeta border border-linea bg-white p-0">
         {pedidos.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-borde px-[18px] py-3.5 last:border-b-0">
             <div className="min-w-[240px] flex-1">

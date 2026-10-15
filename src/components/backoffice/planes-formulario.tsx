@@ -344,7 +344,7 @@ export function PlanesFormulario({
         </fieldset>
       </Tarjeta>
 
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-ud border border-borde bg-white/95 px-5 py-3.5 shadow-[0_-4px_14px_rgba(31,36,33,.06)] backdrop-blur">
+      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-tarjeta border border-linea bg-white/95 px-5 py-3.5 shadow-[0_-4px_14px_rgba(31,36,33,.06)] backdrop-blur">
         <span className="text-[13.5px] leading-normal text-apagado" aria-live="polite">
           {hayCambios ? `Cambios sin guardar: ${cambios.length}` : "Todo guardado"}
         </span>

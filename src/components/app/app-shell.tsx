@@ -15,6 +15,8 @@ export type NavItem = {
   icono: IconoClave;
   /** Prefijos de ruta que dejan este ítem marcado como activo (además de `href`). */
   tambien?: string[];
+  /** Título de la sección del menú (backoffice). Sin grupos, el menú va bajo "PRINCIPAL". */
+  grupo?: string;
 };
 
 type Tema = "docente" | "institucion" | "backoffice";
@@ -150,9 +152,21 @@ export function AppShell({
           <img src="/assets/unidoar-logo.png" alt="" className="size-9 object-contain" />
           <span className="font-display text-[17px] font-semibold tracking-[0.08em] text-navy-900">UNIDOAR</span>
         </Link>
-        <span className="relative px-3 pb-1.5 text-[11px] font-semibold tracking-[0.12em] text-apagado">PRINCIPAL</span>
         <nav aria-label="Menú principal" className="relative flex flex-col gap-1">
-          {nav.map(itemNav)}
+          {nav.map((i, n) => {
+            const grupo = i.grupo ?? (n === 0 ? "Principal" : undefined);
+            const nuevoGrupo = grupo !== undefined && (n === 0 || nav[n - 1].grupo !== i.grupo);
+            return (
+              <div key={i.href} className="contents">
+                {nuevoGrupo && (
+                  <span className={cn("px-3 pb-1.5 text-[11px] font-semibold tracking-[0.12em] text-apagado uppercase", n > 0 && "mt-3")}>
+                    {grupo}
+                  </span>
+                )}
+                {itemNav(i)}
+              </div>
+            );
+          })}
         </nav>
         <div className="sticky bottom-0 mt-auto flex flex-col gap-1 bg-white pt-3">
           {tarjetaPie}

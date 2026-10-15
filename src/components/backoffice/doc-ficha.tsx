@@ -81,7 +81,7 @@ export function DocMetricas({ ficha }: { ficha: FichaDocenteBo }) {
     { valor: ficha.scoring.total, etiqueta: "Scoring interno" },
   ];
   return (
-    <dl className="m-0 grid overflow-hidden rounded-ud border border-borde bg-white [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
+    <dl className="m-0 grid overflow-hidden rounded-tarjeta border border-linea bg-white [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
       {celdas.map((c) => (
         <div key={c.etiqueta} className="border-r border-borde px-[18px] py-4 last:border-r-0">
           <dd className="m-0 text-[22px] leading-none font-semibold text-navy-700 tabular-nums">{c.valor}</dd>

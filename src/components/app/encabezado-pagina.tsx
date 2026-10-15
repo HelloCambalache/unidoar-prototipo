@@ -23,8 +23,8 @@ export function EncabezadoPagina({
       )}
     >
       <div className="min-w-0">
-        <h1 className="m-0 text-[24px] leading-[1.2] font-semibold tracking-[-0.018em] max-[860px]:text-[22px]">{titulo}</h1>
-        {bajada && <p className="mt-1.5 mb-0 text-sm leading-normal text-apagado">{bajada}</p>}
+        <h1 className="font-display m-0 text-[28px] leading-[1.15] font-semibold tracking-[-0.025em] text-navy-900 max-[860px]:text-[24px]">{titulo}</h1>
+        {bajada && <p className="mt-1.5 mb-0 text-[15px] leading-normal text-apagado">{bajada}</p>}
       </div>
       {acciones && <div className="flex flex-none items-center gap-2.5">{acciones}</div>}
     </div>

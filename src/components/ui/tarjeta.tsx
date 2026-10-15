@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 
-/** Contenedor blanco con borde (radio 8px) usado en toda la app. */
+/** Contenedor blanco con borde suave y el radio de la identidad nueva, usado en toda la app. */
 export function Tarjeta({
   className,
   como: Tag = "div",
   ...props
 }: React.HTMLAttributes<HTMLElement> & { como?: "div" | "section" | "article" | "li" }) {
-  return <Tag className={cn("rounded-ud border border-borde bg-white p-5", className)} {...props} />;
+  return <Tag className={cn("rounded-tarjeta border border-linea bg-white p-5", className)} {...props} />;
 }
 
 /** Etiqueta de sección en mayúsculas chicas ("DETALLE DEL PUESTO"). */

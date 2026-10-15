@@ -165,7 +165,7 @@ export function CatEditor({
   return (
     <>
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-start gap-2.5 rounded-ud border border-borde bg-white px-[18px] py-4">
+        <div className="flex flex-wrap items-start gap-2.5 rounded-tarjeta border border-linea bg-white px-[18px] py-4">
           <Input
             type="search"
             aria-label="Buscar asignatura"

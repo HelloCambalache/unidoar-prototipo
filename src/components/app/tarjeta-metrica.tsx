@@ -32,14 +32,14 @@ export function TarjetaMetrica({
   className?: string;
 }) {
   const t = TONOS[tono];
-  const clases = cn("block rounded-[18px] border border-borde bg-white p-5", className);
+  const clases = cn("block rounded-tarjeta bg-white px-[22px] py-5 shadow-tarjeta", className);
   const contenido = (
     <>
       <div className="mb-3 flex items-center gap-2">
         <span className={cn("size-2 flex-none rounded-full", t.punto)} />
         <span className="text-[12.5px] leading-tight font-semibold text-apagado">{etiqueta}</span>
       </div>
-      <div className={cn("mb-1.5 font-display text-[34px] leading-none font-bold tracking-[-0.03em]", t.valor)}>{valor}</div>
+      <div className={cn("mb-1.5 font-display text-[36px] leading-none font-semibold tracking-[-0.03em]", t.valor)}>{valor}</div>
       {nota && <div className={cn("text-[12.5px] leading-[1.45]", NOTAS[notaTono])}>{nota}</div>}
     </>
   );
