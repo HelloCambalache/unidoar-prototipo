@@ -152,7 +152,10 @@ export default async function PerfilDocentePage() {
 
   return (
     <>
-      <EncabezadoPagina titulo="Mi perfil" />
+      <EncabezadoPagina
+        titulo="Mi perfil"
+        bajada="Es lo que ven las instituciones cuando te buscan o te postulás. Guardá cuando termines."
+      />
       <AvisoVerificacion verificacion={docente.verificacion} nota={docente.verificacionNota} />
       <PerfilFormulario
         inicial={inicial}
