@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { NodosMarca } from "@/components/app/nodos-marca";
 import { BotonFavorito } from "@/components/docente/boton-favorito";
 import { MapaOfertas, type PinOferta } from "@/components/docente/mapa-ofertas";
+import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
-import { TarjetaOferta } from "@/components/oportunidades/tarjeta-oferta";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
 import { hrefOportunidades, RADIO_MAX, type FiltrosOportunidades } from "@/lib/oportunidades";
@@ -76,7 +76,13 @@ export async function BuscadorOportunidades({
 
   return (
     <>
-      <EncabezadoPagina titulo={titulo} bajada={bajada} className="mb-[18px]" />
+      <section className="relative mb-5 overflow-hidden rounded-[30px] bg-navy-900 px-7 py-7 text-white min-[700px]:px-9">
+        <NodosMarca className="absolute -top-10 -right-10 w-[240px] max-[700px]:w-[160px] max-[700px]:opacity-60" />
+        <h1 className="font-display relative m-0 max-w-[620px] text-[30px] leading-[1.12] font-semibold tracking-[-0.025em] text-white max-[700px]:text-[24px]">
+          {titulo}
+        </h1>
+        <p className="relative mt-2 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-[#C9CCE0]">{bajada}</p>
+      </section>
       <ControlesBuscador
         base={base}
         filtros={filtros}
@@ -85,11 +91,8 @@ export async function BuscadorOportunidades({
         conUbicacion={conUbicacion}
         modo={modo}
         lectura={lectura}
-      >
-        <nav
-          aria-label="Vista"
-          className="mb-4 flex w-max max-w-full gap-1.5 rounded-full border border-borde bg-white p-1"
-        >
+        vistaNav={
+        <nav aria-label="Vista" className="flex w-max max-w-full gap-1 rounded-full bg-[#E9E7E1] p-1">
           <EnlaceVista href={hrefOportunidades(base, filtros, { vista: "lista" })} activa={vista === "lista"}>
             <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
               <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
@@ -104,6 +107,8 @@ export async function BuscadorOportunidades({
             Mapa
           </EnlaceVista>
         </nav>
+        }
+      >
 
         {n === 0 ? (
           <EstadoVacio
@@ -129,10 +134,10 @@ export async function BuscadorOportunidades({
             />
           )
         ) : (
-          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(258px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
+          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(270px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
             {ofertas.map((o) => (
               <li key={o.id} className="flex *:w-full">
-                <TarjetaOferta
+                <TarjetaOfertaApp
                   oferta={o}
                   href={`/docente/oferta/${o.id}`}
                   estrella={<BotonFavorito busquedaId={o.id} favorita={o.favorita} puesto={o.puesto} />}
@@ -154,8 +159,8 @@ function EnlaceVista({ href, activa, children }: { href: string; activa: boolean
       scroll={false}
       aria-current={activa ? "true" : undefined}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-[15px] py-[7px] text-[13px] leading-none font-semibold transition-colors",
-        activa ? "bg-navy-700 text-white hover:text-white" : "text-apagado hover:text-tinta",
+        "inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 text-[13px] leading-none font-semibold transition-colors",
+        activa ? "bg-white text-navy-900 shadow-[0_1px_3px_rgba(4,11,53,.12)] hover:text-navy-900" : "text-apagado hover:text-tinta",
       )}
     >
       {children}

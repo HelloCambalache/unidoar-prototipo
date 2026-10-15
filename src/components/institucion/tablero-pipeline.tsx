@@ -172,7 +172,7 @@ export function TableroPipeline({
       )}
 
       {vista === "kanban" ? (
-        <div className="flex gap-3.5 overflow-x-auto pb-1.5">
+        <div className="flex items-start gap-3.5 overflow-x-auto pb-1.5">
           {COLUMNAS.map((col) => {
             const items = filtrados.filter((p) => p.etapa === col.key);
             return (
@@ -196,17 +196,19 @@ export function TableroPipeline({
                   if (id) mover(id, col.key);
                 }}
                 className={cn(
-                  "min-h-[140px] min-w-[200px] flex-1 rounded-[10px] bg-superficie p-3 transition-shadow",
-                  sobre === col.key && "ring-2 ring-navy-700/40",
+                  "min-h-[420px] min-w-[236px] flex-1 rounded-tarjeta bg-[#ECEAE5] p-2.5 transition-shadow",
+                  sobre === col.key && "ring-2 ring-rosa/50",
                 )}
               >
-                <h2 className="m-0 mb-3 flex items-center gap-1.5 text-[13px] leading-none font-semibold text-tinta">
-                  <span className={cn("size-[7px] rounded-full", COLOR_ETAPA[col.key])} />
-                  {col.columna}
-                  <span className="ml-auto font-normal text-sutil">{items.length}</span>
+                <h2 className="font-display m-0 mb-2.5 flex items-center gap-2 px-2 pt-2 text-[14px] leading-none font-semibold text-tinta">
+                  <span className={cn("size-2.5 flex-none rounded-full", COLOR_ETAPA[col.key])} />
+                  <span className="min-w-0">{col.columna}</span>
+                  <span className="ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-white px-2 font-sans text-xs font-semibold">
+                    {items.length}
+                  </span>
                 </h2>
                 {items.length === 0 ? (
-                  <div className="rounded-[10px] border-[1.5px] border-dashed border-borde px-2 py-4 text-center text-xs leading-normal text-sutil">
+                  <div className="rounded-[18px] border-[1.5px] border-dashed border-[#CFCBC3] px-3 py-5 text-center text-xs leading-normal text-apagado">
                     {COLUMNA_VACIA[col.key]}
                   </div>
                 ) : (
@@ -258,7 +260,7 @@ export function TableroPipeline({
                     onClick={() => setAbiertoId(p.id)}
                     className="flex items-center gap-2.5 rounded-md text-left font-semibold focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
                   >
-                    <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={28} />
+                    <Avatar iniciales={p.iniciales} fotoUrl={p.fotoUrl} tamano={36} />
                     {p.nombre}
                   </button>
                 </td>

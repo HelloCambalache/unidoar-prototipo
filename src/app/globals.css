@@ -38,6 +38,23 @@
   --color-backoffice: #1f2421;
   --color-sidebar: #33363b;
 
+  /* Identidad visual de la app (áreas con sesión; la landing no los usa). Ver el lienzo "Identidad visual del dashboard". */
+  --color-lienzo: #f4f3ef; /* fondo de las áreas con sesión */
+  --color-linea: #e7e5e0; /* bordes suaves de tarjetas y barras */
+  --color-rosa-suave: #f3d3e4; /* tramo vacío de las barras de progreso */
+  --color-panel-naranja: #faf4f1; /* panel de tarjeta, categoría Docentes */
+  --color-panel-ambar: #faf6ee; /* panel de tarjeta, categoría Entrenadores */
+  --color-panel-celeste: #f1f7f8; /* panel de tarjeta, categoría Guardavidas */
+  --color-naranja-texto: #a1402a;
+  --color-ambar-texto: #94570f;
+  --color-celeste-texto: #156677;
+  --color-celeste-anillo: #1c8ba3;
+
+  --radius-tarjeta: 24px;
+  --radius-panel: 28px;
+  --shadow-tarjeta: 0 1px 2px rgba(4, 11, 53, 0.05);
+  --shadow-tarjeta-hover: 0 1px 2px rgba(4, 11, 53, 0.06), 0 12px 32px rgba(4, 11, 53, 0.1);
+
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-sora), var(--font-inter), system-ui, sans-serif;
 
@@ -96,6 +113,28 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Mapas del área con sesión: la capa de OpenStreetMap apagada a un gris cálido para que resalten los pines de marca.
+   Solo cambia cómo se pintan las teselas (las mismas de siempre); los controles se redondean como el resto de la app. */
+.mapa-suave .leaflet-tile-pane {
+  filter: grayscale(0.9) sepia(0.12) contrast(0.9) brightness(1.05);
+}
+.mapa-suave .leaflet-control-zoom {
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 14px rgba(4, 11, 53, 0.12) !important;
+}
+.mapa-suave .leaflet-control-zoom a {
+  width: 40px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  color: var(--color-tinta) !important;
+}
+.mapa-suave .leaflet-control-attribution {
+  border-radius: 999px 0 0 0;
+  background: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Firma de Cambalache Studio ("Construido con ♥ por…", componente FirmaCambalache). Sobre fondo oscuro cambian solo el

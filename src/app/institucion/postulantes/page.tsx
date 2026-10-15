@@ -9,7 +9,7 @@ import { SelectorBusqueda } from "@/components/institucion/selector-busqueda";
 import { TableroPipeline } from "@/components/institucion/tablero-pipeline";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
-import { esUuid, plural } from "@/lib/busquedas";
+import { esUuid } from "@/lib/busquedas";
 import { busquedaPorDefecto, opcionesDeBusqueda, pipelineDeBusqueda } from "@/lib/queries/pipeline";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { cn } from "@/lib/utils";
@@ -58,8 +58,8 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
 
   const enlaceVista = (activa: boolean) =>
     cn(
-      "flex items-center gap-1.5 rounded-md px-[13px] py-[7px] text-[13px] leading-none font-semibold transition-colors",
-      activa ? "bg-white text-navy-700 shadow-[0_1px_3px_rgba(31,36,33,.12)]" : "text-apagado hover:text-tinta",
+      "flex min-h-9 items-center gap-1.5 rounded-full px-4 text-[13px] leading-none font-semibold transition-colors",
+      activa ? "bg-white text-navy-900 shadow-[0_1px_3px_rgba(4,11,53,.12)] hover:text-navy-900" : "text-apagado hover:text-tinta",
     );
 
   const barra = (
@@ -81,7 +81,7 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
       <BotonLink href={`/institucion/publicar?editar=${busqueda.id}`} variante="secundario" tamano="sm">
         ✎ Editar búsqueda
       </BotonLink>
-      <div role="group" aria-label="Vista" className="ml-auto flex flex-none gap-0.5 rounded-lg bg-[#F0EFEA] p-[3px]">
+      <div role="group" aria-label="Vista" className="ml-auto flex flex-none gap-1 rounded-full bg-[#E9E7E1] p-1">
         <Link href={base} aria-current={vista === "kanban" ? "page" : undefined} className={enlaceVista(vista === "kanban")}>
           <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="3" width="7" height="18" rx="1.5" />
@@ -121,17 +121,25 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
         </span>
       </nav>
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-3">
-        <h1 className="m-0 text-[24px] leading-[1.2] font-semibold tracking-[-0.018em] max-[860px]:text-[22px]">{busqueda.puesto}</h1>
-        <EstadoBusqueda b={{ estado: busqueda.estado, rapida: busqueda.rapida, plazo: null }} />
-        <span className="text-sm leading-none text-apagado">
-          {plural(busqueda.postulantes, "postulante", "postulantes")} · publicada {busqueda.publicada}
-          {sedeDeLaBusqueda && ` · ${sedeDeLaBusqueda}`}
-        </span>
-      </div>
-
-      {opciones.length > 1 && (
-        <div className="mb-3.5">
+      <section className="mb-5 flex flex-col gap-3.5 rounded-panel bg-white px-6 py-5 shadow-tarjeta">
+        <span className="text-[11.5px] leading-none font-semibold tracking-[0.1em] text-apagado">POSTULANTES</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-display m-0 text-[28px] leading-[1.15] font-semibold tracking-[-0.025em] text-navy-900 max-[860px]:text-[22px]">
+            {busqueda.puesto}
+          </h1>
+          <EstadoBusqueda b={{ estado: busqueda.estado, rapida: busqueda.rapida, plazo: null }} />
+        </div>
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <span className="flex items-baseline gap-1.5">
+            <span className="font-display text-[24px] leading-none font-semibold text-navy-900">{busqueda.postulantes}</span>
+            <span className="text-sm text-apagado">{busqueda.postulantes === 1 ? "postulante" : "postulantes"}</span>
+          </span>
+          <span className="text-sm leading-none text-apagado">
+            Publicada {busqueda.publicada}
+            {sedeDeLaBusqueda && ` · ${sedeDeLaBusqueda}`}
+          </span>
+        </div>
+        {opciones.length > 1 && (
           <SelectorBusqueda
             opciones={opciones}
             actual={busqueda.id}
@@ -139,8 +147,8 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
             sedes={sedes.map((s) => ({ id: s.id, nombre: s.nombre }))}
             sedeFiltro={sedeFiltro}
           />
-        </div>
-      )}
+        )}
+      </section>
 
       <TableroPipeline busqueda={busqueda} postulantes={postulantes} vista={vista} barra={barra} />
     </>
