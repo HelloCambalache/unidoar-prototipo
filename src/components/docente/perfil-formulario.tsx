@@ -23,13 +23,34 @@ type TonoInsignia = "neutro" | "azul" | "verde" | "rosa" | "naranja" | "ambar";
 
 const RADIOS = [5, 10, 15, 20, 30, 50, 100];
 
-/** Campo "de lectura que se edita": sin borde hasta que se pasa el mouse o se enfoca (como el prototipo). */
-const EN_LINEA =
-  "w-full rounded-md border border-transparent bg-transparent px-1.5 py-0.5 text-tinta transition-colors placeholder:text-sutil hover:border-borde focus:border-navy-700 focus:bg-white focus:ring-[3px] focus:ring-navy-700/20 focus:outline-none";
 
-const TITULO_SECCION = "m-0 text-[15px] leading-none font-semibold";
-const ACCION_TEXTO =
-  "cursor-pointer rounded text-[13px] leading-none font-medium text-navy-700 hover:underline focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none";
+const TITULO_SECCION = "font-display m-0 text-[18px] leading-tight font-semibold text-navy-900";
+/** Botón "Agregar" de las listas (experiencia, formación). */
+const ACCION_AGREGAR =
+  "inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-linea bg-white px-3.5 text-[13px] leading-none font-semibold text-tinta transition-colors hover:bg-lienzo focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none";
+/** Tarjeta de sección de la identidad nueva; `scroll-mt` para que los enlaces del índice no queden debajo de la barra. */
+const SECCION = "scroll-mt-6 rounded-panel border-0 p-6 shadow-tarjeta";
+const QUITAR =
+  "cursor-pointer rounded-full px-2 py-1 text-xs font-semibold text-apagado hover:bg-lienzo hover:text-tinta focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none";
+
+/** Secciones del formulario: el índice de la columna lateral y los pendientes de "Completá tu perfil" llevan acá. */
+const SECCIONES = [
+  { id: "datos", texto: "Tus datos" },
+  { id: "documentacion", texto: "Verificación" },
+  { id: "contacto", texto: "Contacto y trabajo" },
+  { id: "resumen", texto: "Resumen" },
+  { id: "experiencia", texto: "Experiencia" },
+  { id: "formacion", texto: "Formación" },
+  { id: "asignaturas", texto: "Asignaturas y niveles" },
+  { id: "disponibilidad", texto: "Disponibilidad" },
+  { id: "cv", texto: "CV" },
+];
+
+const ESTADO_DOC: Record<EstadoDocumento, { texto: string; clase: string }> = {
+  verificado: { texto: "Verificado", clase: "bg-verde-tint text-verde" },
+  revision: { texto: "En revisión", clase: "bg-[#FDF1C7] text-[#7A5900]" },
+  sin: { texto: "Sin cargar", clase: "bg-white text-apagado border border-linea" },
+};
 
 type Props = {
   inicial: DatosPerfil;
@@ -59,7 +80,7 @@ const DETALLE_CONDUCTA: Record<EstadoDocumento, string> = {
   sin: "Es optativo. Sumarlo da más confianza a las instituciones que lo piden.",
 };
 
-/** Una fila de documentación: ícono según el estado, qué es, en qué está y los botones para cargarlo. */
+/** Una fila de documentación: ícono y estado, qué es, en qué está y los botones para cargarlo. */
 function FilaDocumento({
   id,
   estado,
@@ -77,24 +98,27 @@ function FilaDocumento({
   error?: string;
   children?: ReactNode;
 }) {
+  const e = ESTADO_DOC[estado];
   return (
-    <div id={id} className="mt-3.5 flex scroll-mt-24 flex-wrap items-center gap-3.5 rounded-lg border border-borde bg-white px-[18px] py-4">
+    <div id={id} className="flex scroll-mt-6 flex-wrap items-center gap-3.5 rounded-[18px] bg-[#F7F6F2] px-4 py-3.5">
       <span
         aria-hidden
         className={cn(
-          "inline-flex size-[34px] flex-none items-center justify-center rounded-lg",
-          estado === "verificado" ? "bg-verde-tint text-verde" : "bg-[#F0EFEA] text-apagado",
+          "inline-flex size-10 flex-none items-center justify-center rounded-[12px]",
+          estado === "verificado" ? "bg-verde-tint text-verde" : "bg-white text-apagado",
         )}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
           <path d="M14 3v5h5" />
           <path d="M9.5 14.5l1.8 1.8 3.2-3.6" />
         </svg>
       </span>
-      <div className="min-w-[220px] flex-1">
-        <div className="mb-[3px] flex items-center gap-1.5 text-sm leading-[1.3] font-semibold">
-          {titulo} {optativo && <Insignia className="text-apagado">Optativo</Insignia>}
+      <div className="min-w-[200px] flex-1">
+        <div className="mb-1 flex flex-wrap items-center gap-2 text-[14.5px] leading-[1.3] font-semibold">
+          {titulo}
+          <span className={cn("inline-flex h-6 items-center rounded-full px-2.5 text-[11.5px] font-semibold", e.clase)}>{e.texto}</span>
+          {optativo && <span className="text-[12px] font-medium text-apagado">Optativo</span>}
         </div>
         <div className="text-[13px] leading-[1.45] text-apagado">{detalle}</div>
         {error && (
@@ -103,7 +127,7 @@ function FilaDocumento({
           </p>
         )}
       </div>
-      {children}
+      {children && <div className="flex flex-none flex-wrap gap-2">{children}</div>}
     </div>
   );
 }
@@ -129,6 +153,17 @@ export function PerfilFormulario({
   const toast = useToast();
   const [d, setD] = useState<DatosPerfil>(inicial);
   const [estado, accion, pendiente] = useActionState<Resultado | null, FormData>(actualizarPerfilDocente, null);
+
+  // Lo último que se guardó, para avisar si hay cambios sin guardar. Se toma al mandar el formulario y se confirma si sale bien.
+  const [guardado, setGuardado] = useState(() => JSON.stringify(inicial));
+  const [enviado, setEnviado] = useState<string | null>(null);
+  // Cuando llega un resultado nuevo y salió bien, lo enviado pasa a ser lo guardado (ajuste durante el render, sin efecto).
+  const [estadoVisto, setEstadoVisto] = useState(estado);
+  if (estado !== estadoVisto) {
+    setEstadoVisto(estado);
+    if (estado?.ok && enviado) setGuardado(enviado);
+  }
+  const sinGuardar = JSON.stringify(d) !== guardado;
 
   useEffect(() => {
     if (!estado) return;
@@ -156,14 +191,14 @@ export function PerfilFormulario({
     );
 
   return (
-    <form action={accion}>
+    <form action={accion} onSubmit={() => setEnviado(JSON.stringify(d))}>
       <input type="hidden" name="datos" value={JSON.stringify(d)} />
 
       <div className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:gap-4">
-        <div className="min-w-0 flex-1 max-[860px]:w-full">
-          {/* Identidad: foto, nombre, zonas y verificación */}
-          <Tarjeta como="section" className="mb-4 p-6">
-            <div className="flex gap-[18px] max-[560px]:flex-col">
+        <div className="flex min-w-0 flex-1 flex-col gap-5 max-[860px]:w-full">
+          {/* Tus datos: foto, nombre, título y zonas */}
+          <Tarjeta como="section" id="datos" className={cn(SECCION, "p-2.5")}>
+            <div className="flex gap-6 rounded-[22px] bg-[#F7F6F2] px-6 py-6 max-[560px]:flex-col max-[560px]:px-4">
               <SubirArchivo
                 bucket="publico"
                 carpeta="fotos"
@@ -173,29 +208,36 @@ export function PerfilFormulario({
                 variante="circulo"
                 valorInicial={inicial.fotoUrl}
                 onCambio={(v) => set("fotoUrl", v)}
-                className="w-[104px] flex-none"
+                className="w-[112px] flex-none"
               />
-              <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
                 {identidadFija ? (
-                  <>
+                  <div>
                     {/* Con el DNI verificado el nombre es el del documento: se muestra fijo y solo lo corrige el equipo. */}
                     <div className="mb-1 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                      <h2 className="m-0 text-xl leading-[1.2] font-semibold [overflow-wrap:anywhere]">{`${inicial.nombre} ${inicial.apellido}`.trim()}</h2>
+                      <h2 className="font-display m-0 text-[26px] leading-[1.15] font-semibold tracking-[-0.02em] [overflow-wrap:anywhere]">
+                        {`${inicial.nombre} ${inicial.apellido}`.trim()}
+                      </h2>
                       <Insignia tono={insignia.tono} className="flex-none">
                         {insignia.texto}
                       </Insignia>
                     </div>
-                    <p className="m-0 mb-2 text-xs leading-normal text-apagado">
+                    <p className="m-0 text-xs leading-normal text-apagado">
                       Tu nombre ya está verificado con tu DNI, por eso no se puede cambiar. Si hay un error,{" "}
                       <Link href="/contacto" className="font-medium">
                         escribinos desde Contacto
                       </Link>
                       .
                     </p>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <div className="mb-2 grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
+                    <div className="flex items-center gap-2">
+                      <Insignia tono={insignia.tono} className="flex-none">
+                        {insignia.texto}
+                      </Insignia>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
                       <Campo etiqueta="Nombre" error={error("nombre")}>
                         <Input
                           autoComplete="given-name"
@@ -215,19 +257,17 @@ export function PerfilFormulario({
                         />
                       </Campo>
                     </div>
-                    <Insignia tono={insignia.tono} className="mb-2 flex-none">
-                      {insignia.texto}
-                    </Insignia>
                   </>
                 )}
-                <input
-                  aria-label="Subtítulo de tu perfil"
-                  placeholder="Ej. Profesora de Ed. Física · 12 años de experiencia"
-                  value={d.subtitulo}
-                  onChange={(e) => set("subtitulo", e.target.value)}
-                  className={cn(EN_LINEA, "text-sm leading-[1.4] text-apagado")}
-                />
-                <div className="mt-2.5">
+                <Campo etiqueta="Título de tu perfil" ayuda="Es lo primero que leen las instituciones debajo de tu nombre.">
+                  <Input
+                    placeholder="Ej. Profesora de Ed. Física · 12 años de experiencia"
+                    value={d.subtitulo}
+                    onChange={(e) => set("subtitulo", e.target.value)}
+                  />
+                </Campo>
+                <div>
+                  <div className="mb-2 text-[13px] font-semibold text-tinta">Zonas donde trabajás</div>
                   <PerfilEtiquetas
                     items={d.zonas}
                     onCambiar={(z) => set("zonas", z)}
@@ -245,11 +285,17 @@ export function PerfilFormulario({
                 </div>
               </div>
             </div>
+          </Tarjeta>
 
+          {/* Verificación y documentación */}
+          <Tarjeta como="section" id="documentacion" className={cn(SECCION, "flex flex-col gap-3")}>
+            <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className={TITULO_SECCION}>Verificación y documentación</h2>
+              <span className="text-[13px] text-apagado">Solo lo ve el equipo de UNIDOAR</span>
+            </div>
             {verificacion}
 
             <FilaDocumento
-              id="documentacion"
               estado={documentacion.dni.estado}
               titulo="Identidad (DNI)"
               detalle={documentacion.dni.detalle}
@@ -282,8 +328,8 @@ export function PerfilFormulario({
             </FilaDocumento>
 
             {documentacion.estudiosEditables && (
-              <div className="mt-3.5 rounded-lg border border-borde bg-white px-[18px] py-4">
-                <div className="mb-3 text-sm leading-[1.3] font-semibold">Tus estudios</div>
+              <div className="rounded-[18px] border border-linea px-4 py-4">
+                <div className="mb-3 text-[14.5px] leading-[1.3] font-semibold">Tus estudios</div>
                 <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
                   <Campo etiqueta="Situación" error={error("situacionEstudio")}>
                     <Select
@@ -359,7 +405,13 @@ export function PerfilFormulario({
               </FilaDocumento>
             )}
 
-            <FilaDocumento estado={conductaEstado} titulo="Certificado de buena conducta" optativo detalle={DETALLE_CONDUCTA[conductaEstado]} error={error("conducta")}>
+            <FilaDocumento
+              estado={conductaEstado}
+              titulo="Certificado de buena conducta"
+              optativo
+              detalle={DETALLE_CONDUCTA[conductaEstado]}
+              error={error("conducta")}
+            >
               <SubirArchivo
                 bucket="privado"
                 carpeta="documentos"
@@ -374,8 +426,8 @@ export function PerfilFormulario({
           </Tarjeta>
 
           {/* Datos de contacto y de trabajo */}
-          <Tarjeta como="section" className="mb-4 p-[22px]">
-            <h2 className={cn(TITULO_SECCION, "mb-3.5")}>Contacto y trabajo</h2>
+          <Tarjeta como="section" id="contacto" className={SECCION}>
+            <h2 className={cn(TITULO_SECCION, "mb-4")}>Contacto y trabajo</h2>
             <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
               <Campo etiqueta="Teléfono o WhatsApp" error={error("telefono")} ayuda="Solo lo ven las instituciones a las que te postulás o les mandás tu CV.">
                 <Input type="tel" autoComplete="tel" value={d.telefono} onChange={(e) => set("telefono", e.target.value)} />
@@ -405,15 +457,19 @@ export function PerfilFormulario({
             </div>
           </Tarjeta>
 
-          <Tarjeta como="section" className="mb-4 p-[22px]">
-            <h2 className={cn(TITULO_SECCION, "mb-3")}>Resumen profesional</h2>
+          <Tarjeta como="section" id="resumen" className={SECCION}>
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className={TITULO_SECCION}>Resumen profesional</h2>
+              <span className="text-xs text-apagado">{d.resumen.length} / 1500</span>
+            </div>
             <Textarea
               aria-label="Resumen profesional"
               aria-invalid={!!error("resumen")}
+              placeholder="Contá en pocas líneas cómo trabajás, con qué grupos y qué te interesa."
               value={d.resumen}
               onChange={(e) => set("resumen", e.target.value)}
               maxLength={1500}
-              className="min-h-[90px] text-sm leading-[1.6]"
+              className="min-h-[110px] text-sm leading-[1.6]"
             />
             {error("resumen") && (
               <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
@@ -422,52 +478,54 @@ export function PerfilFormulario({
             )}
           </Tarjeta>
 
-          <Tarjeta como="section" className="mb-4 p-[22px]">
-            <div className="mb-4 flex items-center justify-between">
+          <Tarjeta como="section" id="experiencia" className={SECCION}>
+            <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className={TITULO_SECCION}>Experiencia</h2>
               <button
                 type="button"
                 onClick={() => set("experiencia", [...d.experiencia, { titulo: "", fechas: "", desc: "" }])}
-                className={ACCION_TEXTO}
+                className={ACCION_AGREGAR}
               >
-                + agregar
+                <Icono nombre="mas" tamano={14} trazo={2.2} />
+                Agregar
               </button>
             </div>
             {d.experiencia.length === 0 ? (
-              <p className="m-0 text-[13px] leading-normal text-apagado">
+              <p className="m-0 rounded-[18px] border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
                 Sumá tus trabajos anteriores: es lo primero que lee una institución.
               </p>
             ) : (
-              <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {d.experiencia.map((e, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span aria-hidden className="mt-2 size-[9px] flex-none rounded-full bg-navy-700" />
-                    <div className="min-w-0 flex-1">
-                      <input
-                        aria-label={`Puesto de la experiencia ${i + 1}`}
-                        placeholder="Título del puesto"
-                        value={e.titulo}
-                        onChange={(ev) => actualizarExperiencia(i, "titulo", ev.target.value)}
-                        className={cn(EN_LINEA, "-ml-1.5 mb-0.5 text-sm leading-[1.3] font-semibold")}
-                      />
-                      <input
-                        aria-label={`Fechas de la experiencia ${i + 1}`}
-                        placeholder="Fechas, ej. 2021 – actualidad"
-                        value={e.fechas}
-                        onChange={(ev) => actualizarExperiencia(i, "fechas", ev.target.value)}
-                        className={cn(EN_LINEA, "-ml-1.5 mb-1 text-xs leading-[1.4] text-sutil")}
-                      />
+                  <li key={i} className="flex gap-3 rounded-[18px] bg-[#F7F6F2] p-4">
+                    <span aria-hidden className={cn("mt-2 size-2.5 flex-none rounded-full", i === 0 ? "bg-rosa" : "bg-[#C9C6C0]")} />
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <div className="grid grid-cols-[2fr_1fr] gap-2 max-[560px]:grid-cols-1">
+                        <Input
+                          aria-label={`Puesto de la experiencia ${i + 1}`}
+                          placeholder="Título del puesto"
+                          value={e.titulo}
+                          onChange={(ev) => actualizarExperiencia(i, "titulo", ev.target.value)}
+                          className="font-semibold"
+                        />
+                        <Input
+                          aria-label={`Fechas de la experiencia ${i + 1}`}
+                          placeholder="Ej. 2021 – actualidad"
+                          value={e.fechas}
+                          onChange={(ev) => actualizarExperiencia(i, "fechas", ev.target.value)}
+                        />
+                      </div>
                       <Textarea
                         aria-label={`Descripción de la experiencia ${i + 1}`}
                         placeholder="Qué hacías, con qué grupos…"
                         value={e.desc}
                         onChange={(ev) => actualizarExperiencia(i, "desc", ev.target.value)}
-                        className="min-h-[44px] text-[13px] leading-normal"
+                        className="min-h-[60px] text-[13px] leading-normal"
                       />
                       <button
                         type="button"
                         onClick={() => set("experiencia", d.experiencia.filter((_, j) => j !== i))}
-                        className="mt-1 cursor-pointer rounded text-xs font-medium text-sutil hover:text-tinta hover:underline"
+                        className={cn(QUITAR, "self-end")}
                       >
                         Quitar
                       </button>
@@ -483,42 +541,44 @@ export function PerfilFormulario({
             )}
           </Tarjeta>
 
-          <div className="mb-4 flex gap-4 max-[860px]:flex-col">
-            <Tarjeta como="section" className="flex-1 p-[22px]">
-              <div className="mb-3.5 flex items-center justify-between">
+          <div className="flex gap-5 max-[860px]:flex-col">
+            <Tarjeta como="section" id="formacion" className={cn(SECCION, "flex-1")}>
+              <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className={TITULO_SECCION}>Formación</h2>
                 <button
                   type="button"
                   onClick={() => set("formacion", [...d.formacion, { titulo: "", detalle: "" }])}
-                  className={ACCION_TEXTO}
+                  className={ACCION_AGREGAR}
                 >
-                  + agregar
+                  <Icono nombre="mas" tamano={14} trazo={2.2} />
+                  Agregar
                 </button>
               </div>
               {d.formacion.length === 0 ? (
-                <p className="m-0 text-[13px] leading-normal text-apagado">Títulos, profesorados y certificaciones.</p>
+                <p className="m-0 rounded-[18px] border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
+                  Títulos, profesorados y certificaciones.
+                </p>
               ) : (
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                   {d.formacion.map((f, i) => (
-                    <li key={i}>
-                      <input
+                    <li key={i} className="flex flex-col gap-2 rounded-[18px] bg-[#F7F6F2] p-3.5">
+                      <Input
                         aria-label={`Título de la formación ${i + 1}`}
                         placeholder="Título de la formación"
                         value={f.titulo}
                         onChange={(ev) => actualizarFormacion(i, "titulo", ev.target.value)}
-                        className="mb-1 w-full rounded-md border border-borde bg-[#FAFAF8] px-2 py-1.5 text-[13px] leading-[1.3] font-semibold text-tinta transition-colors placeholder:text-sutil hover:border-sutil focus:border-navy-700 focus:bg-white focus:outline-none"
+                        className="font-semibold"
                       />
-                      <input
+                      <Input
                         aria-label={`Detalle de la formación ${i + 1}`}
                         placeholder="Institución y año"
                         value={f.detalle}
                         onChange={(ev) => actualizarFormacion(i, "detalle", ev.target.value)}
-                        className="w-full rounded-md border border-borde bg-[#FAFAF8] px-2 py-1.5 text-xs leading-[1.4] text-apagado transition-colors placeholder:text-sutil hover:border-sutil focus:border-navy-700 focus:bg-white focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => set("formacion", d.formacion.filter((_, j) => j !== i))}
-                        className="mt-1 cursor-pointer rounded text-xs font-medium text-sutil hover:text-tinta hover:underline"
+                        className={cn(QUITAR, "self-end")}
                       >
                         Quitar
                       </button>
@@ -528,10 +588,10 @@ export function PerfilFormulario({
               )}
             </Tarjeta>
 
-            <Tarjeta como="section" className="flex-1 p-[22px]">
-              <h2 className={cn(TITULO_SECCION, "mb-3.5")}>Asignaturas y niveles</h2>
-              <div className="mb-2 text-[11px] leading-none font-semibold tracking-[.06em] text-sutil uppercase">Asignaturas</div>
-              <div className="mb-4">
+            <Tarjeta como="section" id="asignaturas" className={cn(SECCION, "flex-1")}>
+              <h2 className={cn(TITULO_SECCION, "mb-4")}>Asignaturas y niveles</h2>
+              <div className="mb-2 text-[13px] font-semibold text-tinta">Asignaturas</div>
+              <div className="mb-5">
                 <PerfilEtiquetas
                   items={d.asignaturas}
                   onCambiar={(a) => set("asignaturas", a)}
@@ -541,8 +601,8 @@ export function PerfilFormulario({
                   max={25}
                 />
               </div>
-              <div className="mb-2 text-[11px] leading-none font-semibold tracking-[.06em] text-sutil uppercase">Niveles</div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="mb-2 text-[13px] font-semibold text-tinta">Niveles</div>
+              <div className="flex flex-wrap gap-2">
                 {niveles.map((n) => {
                   const marcado = d.niveles.includes(n);
                   return (
@@ -552,10 +612,11 @@ export function PerfilFormulario({
                       aria-pressed={marcado}
                       onClick={() => set("niveles", marcado ? d.niveles.filter((x) => x !== n) : [...d.niveles, n])}
                       className={cn(
-                        "inline-flex cursor-pointer items-center rounded-full px-2.5 py-[5px] text-xs leading-none font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
-                        marcado ? "bg-navy-50 text-navy-700" : "bg-[#F0EFEA] text-apagado hover:bg-[#E6E4DD]",
+                        "inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-[13px] leading-none font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+                        marcado ? "bg-navy-900 text-white" : "border border-linea bg-white text-tinta-2 hover:bg-lienzo",
                       )}
                     >
+                      {marcado && <Icono nombre="tilde" tamano={12} trazo={2.6} />}
                       {n}
                     </button>
                   );
@@ -566,70 +627,110 @@ export function PerfilFormulario({
 
           {cursosHechos}
 
-          <Tarjeta como="section" className="p-[22px]">
-            <div className="mb-3.5 flex flex-wrap items-center justify-between gap-1.5">
+          <Tarjeta como="section" id="disponibilidad" className={SECCION}>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-1.5">
               <h2 className={TITULO_SECCION}>Disponibilidad horaria</h2>
-              <span className="text-xs leading-none text-sutil">Marcá tu disponibilidad horaria</span>
+              <span className="text-[13px] leading-none text-apagado">Tocá los turnos en los que podés trabajar</span>
             </div>
             <PerfilDisponibilidad grilla={d.grilla} onCambiar={(g) => set("grilla", g)} />
           </Tarjeta>
         </div>
 
-        <aside className="flex w-[280px] flex-none flex-col gap-4 max-[1000px]:w-full">
+        <aside className="flex w-[300px] flex-none flex-col gap-5 max-[1000px]:w-full">
           {lateral}
-          {compartir}
-          <details open className="group rounded-lg border border-borde bg-white">
-            <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg px-4 py-3.5 text-[15px] leading-none font-semibold focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-              CV
-              <Icono nombre="chevron" className="text-apagado transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="border-t border-borde p-4">
-              <p className="m-0 mb-3 text-[13px] leading-normal text-apagado">
-                Armamos tu CV con los datos de tu perfil: experiencia, formación, asignaturas y cursos. Se genera con lo
-                último que guardaste.
-              </p>
-              <BotonLink href="/docente/perfil/cv?imprimir=1" target="_blank" rel="noopener" variante="secundario" bloque>
-                Descargar CV en PDF
-              </BotonLink>
-              <div className="mt-4 border-t border-[#F0EFEA] pt-4">
-                <SubirArchivo
-                  bucket="privado"
-                  carpeta="cv"
-                  nombre="cvUrl"
-                  etiqueta="Tu propio CV (PDF)"
-                  titulo="Subí tu CV en PDF"
-                  variante="zona"
-                  valorInicial={inicial.cvUrl}
-                  onCambio={(v) => set("cvUrl", v)}
-                />
-                {cvEnlace && d.cvUrl === inicial.cvUrl && (
+
+          <nav aria-label="Secciones de tu perfil" className="rounded-panel bg-white p-3 shadow-tarjeta max-[1000px]:hidden">
+            <div className="px-3 pt-2 pb-2 text-[12px] font-semibold tracking-[.08em] text-apagado uppercase">En esta página</div>
+            <ul className="m-0 flex list-none flex-col p-0">
+              {SECCIONES.map((s) => (
+                <li key={s.id}>
                   <a
-                    href={cvEnlace}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2.5 inline-block text-[13px] font-medium text-navy-700 hover:underline"
+                    href={`#${s.id}`}
+                    className="flex min-h-10 items-center rounded-[12px] px-3 text-[14px] font-medium text-tinta-2 hover:bg-lienzo hover:text-tinta"
                   >
-                    Ver el CV que subiste
+                    {s.texto}
                   </a>
-                )}
-                {error("cvUrl") && (
-                  <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
-                    {error("cvUrl")}
-                  </p>
-                )}
-              </div>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {compartir}
+
+          <section id="cv" className="scroll-mt-6 rounded-panel bg-white p-5 shadow-tarjeta">
+            <h2 className="font-display m-0 mb-2 text-[17px] font-semibold text-navy-900">CV</h2>
+            <p className="m-0 mb-3.5 text-[13px] leading-normal text-apagado">
+              Armamos tu CV con los datos de tu perfil: experiencia, formación, asignaturas y cursos. Se genera con lo último que
+              guardaste.
+            </p>
+            <BotonLink
+              href="/docente/perfil/cv?imprimir=1"
+              target="_blank"
+              rel="noopener"
+              variante="secundario"
+              bloque
+              className="rounded-full"
+            >
+              Descargar CV en PDF
+            </BotonLink>
+            <div className="mt-4 border-t border-linea pt-4">
+              <SubirArchivo
+                bucket="privado"
+                carpeta="cv"
+                nombre="cvUrl"
+                etiqueta="Tu propio CV (PDF)"
+                titulo="Subí tu CV en PDF"
+                variante="zona"
+                valorInicial={inicial.cvUrl}
+                onCambio={(v) => set("cvUrl", v)}
+              />
+              {cvEnlace && d.cvUrl === inicial.cvUrl && (
+                <a
+                  href={cvEnlace}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2.5 inline-block text-[13px] font-medium text-navy-700 hover:underline"
+                >
+                  Ver el CV que subiste
+                </a>
+              )}
+              {error("cvUrl") && (
+                <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
+                  {error("cvUrl")}
+                </p>
+              )}
             </div>
-          </details>
+          </section>
         </aside>
       </div>
 
-      <div className="mt-[22px] flex items-center justify-end gap-3.5 border-t border-borde pt-[18px] max-[860px]:flex-col max-[860px]:items-stretch">
-        <span className="text-[13px] leading-snug text-apagado max-[860px]:text-center">
-          Los cambios se ven en las instituciones que te buscan.
-        </span>
-        <Boton type="submit" tamano="lg" disabled={pendiente} aria-busy={pendiente} className="min-w-[200px]">
-          {pendiente ? "Guardando…" : "Guardar"}
-        </Boton>
+      {/* Barra de guardado: queda pegada abajo mientras se edita y avisa si hay cambios sin guardar. */}
+      <div className="sticky bottom-0 z-20 mt-6 pb-3">
+        <div
+          className={cn(
+            "flex items-center justify-end gap-3.5 rounded-[22px] bg-white px-5 py-3 shadow-[0_-1px_0_rgba(4,11,53,.04),0_10px_30px_rgba(4,11,53,.14)] max-[560px]:flex-col max-[560px]:items-stretch",
+          )}
+        >
+          <span
+            role="status"
+            className={cn(
+              "flex items-center gap-2 text-[13.5px] leading-snug max-[560px]:justify-center",
+              sinGuardar ? "font-semibold text-tinta" : "text-apagado",
+            )}
+          >
+            {sinGuardar && <span aria-hidden className="size-2 flex-none rounded-full bg-naranja" />}
+            {sinGuardar ? "Tenés cambios sin guardar" : "Los cambios se ven en las instituciones que te buscan."}
+          </span>
+          <Boton
+            type="submit"
+            tamano="lg"
+            disabled={pendiente}
+            aria-busy={pendiente}
+            className="min-w-[200px] rounded-full bg-rosa hover:bg-[#7A0F4D]"
+          >
+            {pendiente ? "Guardando…" : "Guardar cambios"}
+          </Boton>
+        </div>
       </div>
     </form>
   );

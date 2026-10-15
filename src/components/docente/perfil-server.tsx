@@ -2,7 +2,8 @@ import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
-import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { Tarjeta } from "@/components/ui/tarjeta";
+import { AnilloMatch } from "@/components/app/anillo-match";
 import { certificadoDe } from "@/components/docente/curso-historial";
 import { etiquetaFechas } from "@/lib/fechas-curso";
 import type { pendientesDePerfil } from "@/lib/perfil";
@@ -28,35 +29,54 @@ export type DocumentacionPerfil = {
 export type RequisitoVerificacion = { clave: string; nombre: string; opcional?: boolean; estado: EstadoDocumento };
 
 const PUNTO: Record<EstadoDocumento, { clase: string; texto: string }> = {
-  verificado: { clase: "bg-verde text-white", texto: "verificado" },
-  revision: { clase: "bg-[#FDF1C7] text-[#7A5900]", texto: "en revisión" },
-  sin: { clase: "bg-[#F0EFEA] text-sutil", texto: "sin cargar" },
+  verificado: { clase: "bg-verde text-white", texto: "Verificado" },
+  revision: { clase: "bg-[#FDF1C7] text-[#7A5900]", texto: "En revisión" },
+  sin: { clase: "bg-white text-apagado border border-linea", texto: "Sin cargar" },
 };
 
+/** Resumen de la verificación: cada requisito con su estado, como pasos. */
 export function PerfilVerificacion({ requisitos }: { requisitos: RequisitoVerificacion[] }) {
+  const listos = requisitos.filter((r) => !r.opcional && r.estado === "verificado").length;
+  const obligatorios = requisitos.filter((r) => !r.opcional).length;
   return (
-    <div className="mt-5 rounded-lg border border-borde bg-[#FAFAF8] px-[18px] py-4">
-      <EtiquetaSeccion className="mb-3">Estado de verificación</EtiquetaSeccion>
-      <ul className="m-0 flex list-none flex-wrap gap-x-[26px] gap-y-2.5 p-0 text-[13px] leading-none">
+    <div className="mb-1 flex flex-col gap-3">
+      <div
+        role="progressbar"
+        aria-label="Requisitos de verificación cumplidos"
+        aria-valuemin={0}
+        aria-valuemax={obligatorios}
+        aria-valuenow={listos}
+        className="flex gap-1.5"
+      >
+        {requisitos
+          .filter((r) => !r.opcional)
+          .map((r) => (
+            <span
+              key={r.clave}
+              className={cn(
+                "h-1.5 flex-1 rounded-full",
+                r.estado === "verificado" ? "bg-verde" : r.estado === "revision" ? "bg-[#F2C94C]" : "bg-linea",
+              )}
+            />
+          ))}
+      </div>
+      <ul className="m-0 flex list-none flex-wrap gap-2 p-0 text-[13px] leading-none">
         {requisitos.map((r) => {
           const p = PUNTO[r.estado];
           return (
-            <li key={r.clave} className="flex items-center gap-2">
-              <span
-                aria-hidden
-                className={cn("inline-flex size-[18px] flex-none items-center justify-center rounded-full text-[11px] font-bold", p.clase)}
-              >
+            <li key={r.clave} className="inline-flex min-h-8 items-center gap-2 rounded-full bg-[#F7F6F2] py-1 pr-3 pl-1">
+              <span aria-hidden className={cn("inline-flex size-6 flex-none items-center justify-center rounded-full text-[11px] font-bold", p.clase)}>
                 {r.estado === "verificado" ? (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                     <path d="M20 6L9 17l-5-5" />
                   </svg>
                 ) : r.estado === "revision" ? (
                   "…"
                 ) : null}
               </span>
-              <span>
+              <span className="font-medium text-tinta">
                 {r.nombre}
-                {r.opcional && <span className="text-sutil"> (optativo)</span>}
+                {r.opcional && <span className="font-normal text-apagado"> · optativo</span>}
                 <span className="sr-only">: {p.texto}</span>
               </span>
             </li>
@@ -67,39 +87,62 @@ export function PerfilVerificacion({ requisitos }: { requisitos: RequisitoVerifi
   );
 }
 
-/** Aside: porcentaje de perfil completo y lo que falta. */
+/** A qué sección del formulario lleva cada cosa que falta. */
+const SECCION_DE: Record<string, string> = {
+  foto: "datos",
+  zonas: "datos",
+  telefono: "contacto",
+  resumen: "resumen",
+  experiencia: "experiencia",
+  formacion: "formacion",
+  asignaturas: "asignaturas",
+  niveles: "asignaturas",
+  disponibilidad: "disponibilidad",
+  cv: "cv",
+  verificacion: "documentacion",
+};
+
+/** Aside: porcentaje de perfil completo y lo que falta, cada cosa con un enlace a su sección. */
 export function PerfilCompletitud({ perfil }: { perfil: ReturnType<typeof pendientesDePerfil> }) {
   const { pendientes, porcentaje } = perfil;
   const completo = pendientes.length === 0;
-  const tono = completo ? { fondo: "bg-verde-tint", texto: "text-verde", pista: "bg-verde/15", barra: "bg-verde" } : { fondo: "bg-rosa-tint", texto: "text-rosa", pista: "bg-rosa/15", barra: "bg-rosa" };
   return (
-    <section className={cn("rounded-lg p-4", tono.fondo)}>
-      <div className="mb-2 flex justify-between">
-        <span className={cn("text-[13px] leading-none font-semibold", tono.texto)}>
-          {completo ? "Tu perfil está completo" : "Completá tu perfil"}
-        </span>
-        <span className={cn("text-xs leading-none font-semibold", tono.texto)}>{porcentaje}%</span>
+    <section className="rounded-panel bg-white p-5 shadow-tarjeta">
+      <div className="mb-4 flex items-center gap-4">
+        <AnilloMatch
+          porcentaje={porcentaje}
+          tamano={72}
+          color={completo ? "var(--color-verde)" : "var(--color-rosa)"}
+          fondo={completo ? "var(--color-verde-tint)" : "var(--color-rosa-tint)"}
+        />
+        <div className="min-w-0">
+          <h2 className="font-display m-0 text-[17px] leading-tight font-semibold text-navy-900">
+            {completo ? "Tu perfil está completo" : "Completá tu perfil"}
+          </h2>
+          <p className="m-0 mt-1 text-[12.5px] leading-snug text-apagado">
+            {completo
+              ? "Con DNI y título verificados entrás en las búsquedas que piden “solo verificados”."
+              : pendientes.length === 1
+                ? "Te falta una cosa."
+                : `Te faltan ${pendientes.length} cosas.`}
+          </p>
+        </div>
       </div>
-      <div
-        role="progressbar"
-        aria-label="Perfil completo"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={porcentaje}
-        className={cn("mb-2.5 h-1.5 overflow-hidden rounded-full", tono.pista)}
-      >
-        <div className={cn("h-1.5", tono.barra)} style={{ width: `${porcentaje}%` }} />
-      </div>
-      {completo ? (
-        <p className={cn("m-0 text-[13px] leading-normal", tono.texto)}>
-          Con DNI y título verificados entrás en las búsquedas que piden “solo verificados”.
-        </p>
-      ) : (
-        <ul className={cn("m-0 list-disc pl-[18px] text-[13px] leading-normal", tono.texto)}>
-          {pendientes.slice(0, 5).map((p) => (
-            <li key={p.clave}>{p.etiqueta}</li>
+      {!completo && (
+        <ul className="m-0 flex list-none flex-col gap-1 p-0">
+          {pendientes.slice(0, 6).map((p) => (
+            <li key={p.clave}>
+              <a
+                href={`#${SECCION_DE[p.clave] ?? "datos"}`}
+                className="group flex min-h-10 items-center gap-2.5 rounded-[12px] px-2.5 text-[13.5px] leading-snug font-medium text-tinta hover:bg-rosa-tint hover:text-rosa"
+              >
+                <span aria-hidden className="size-4 flex-none rounded-full border-[1.5px] border-dashed border-[#C9C6C0] group-hover:border-rosa" />
+                <span className="min-w-0 flex-1">{p.etiqueta}</span>
+                <span aria-hidden className="text-apagado group-hover:text-rosa">›</span>
+              </a>
+            </li>
           ))}
-          {pendientes.length > 5 && <li>y {pendientes.length - 5} más</li>}
+          {pendientes.length > 6 && <li className="px-2.5 pt-1 text-[12.5px] text-apagado">y {pendientes.length - 6} más</li>}
         </ul>
       )}
     </section>
@@ -109,9 +152,9 @@ export function PerfilCompletitud({ perfil }: { perfil: ReturnType<typeof pendie
 /** "Cursos hechos en UNIDOAR": las inscripciones del docente, tal como las ven las instituciones. */
 export function PerfilCursosHechos({ cursos }: { cursos: CursoHistorial[] }) {
   return (
-    <Tarjeta como="section" className="mb-4 p-[22px]">
+    <Tarjeta como="section" className="rounded-panel border-0 p-6 shadow-tarjeta">
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-1.5">
-        <h2 className="m-0 text-[15px] leading-none font-semibold">Cursos hechos en UNIDOAR</h2>
+        <h2 className="font-display m-0 text-[18px] leading-tight font-semibold text-navy-900">Cursos hechos en UNIDOAR</h2>
         <Link href="/docente/cursos?vista=historial" className="text-[13px] leading-none font-medium text-navy-700 hover:underline">
           Ver todos
         </Link>
@@ -130,7 +173,7 @@ export function PerfilCursosHechos({ cursos }: { cursos: CursoHistorial[] }) {
             const cert = certificadoDe(c);
             const hecho = c.estado === "completado";
             return (
-              <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-borde px-3.5 py-3">
+              <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-[18px] bg-[#F7F6F2] px-4 py-3">
                 <span
                   aria-hidden
                   className={cn(
