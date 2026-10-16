@@ -10,7 +10,7 @@ import { CATEGORIAS_PUBLICAS } from "./categorias";
 import { ENLACES_PRINCIPALES } from "./navegacion";
 
 /**
- * Hamburguesa de la cabecera pública (por debajo de 760px). Va dentro del <header>, que es
+ * Hamburguesa de la cabecera pública (por debajo de 1100px). Va dentro del <header>, que es
  * `relative`: el panel se despliega justo debajo ocupando todo el ancho.
  */
 export function MenuMovil({ conSesion }: { conSesion: boolean }) {
@@ -37,7 +37,7 @@ export function MenuMovil({ conSesion }: { conSesion: boolean }) {
         aria-expanded={abierto}
         aria-controls="menu-movil-publico"
         onClick={() => setAbiertoEn(abierto ? null : pathname)}
-        className="inline-flex size-11 items-center justify-center rounded-md text-white hover:text-celeste focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste min-[761px]:hidden"
+        className="inline-flex size-11 items-center justify-center rounded-md text-white hover:text-celeste focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste min-[1101px]:hidden"
       >
         <Icono nombre={abierto ? "cerrar" : "menu"} tamano={24} trazo={2} />
       </button>
@@ -45,7 +45,7 @@ export function MenuMovil({ conSesion }: { conSesion: boolean }) {
         <nav
           id="menu-movil-publico"
           aria-label="Menú principal"
-          className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-t border-white/10 bg-navy-900 px-6 pt-3 pb-6 shadow-[0_16px_30px_rgba(2,4,45,.4)] min-[761px]:hidden"
+          className="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-t border-white/10 bg-navy-900 px-6 pt-3 pb-6 shadow-[0_16px_30px_rgba(2,4,45,.4)] min-[1101px]:hidden"
         >
           {CATEGORIAS.map((c) => (
             <Link key={c} href={CATEGORIAS_PUBLICAS[c].ruta} className={enlace}>

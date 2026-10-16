@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BotonLink } from "@/components/ui/button";
+import { LogoMarca } from "@/components/ui/logo-marca";
 import { CATEGORIAS } from "@/lib/catalogo";
 import { CATEGORIAS_PUBLICAS, estiloCategoria } from "./categorias";
 import { MenuMovil } from "./menu-movil";
@@ -7,24 +8,23 @@ import { ENLACES_PRINCIPALES } from "./navegacion";
 import { sesionPublica } from "./sesion";
 
 const ENLACE =
-  "rounded-md text-sm font-medium text-white/75 transition-colors hover:text-celeste focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste";
+  "rounded-md text-sm font-medium whitespace-nowrap text-white/75 transition-colors hover:text-celeste focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste";
 
 /** Cabecera del sitio público: navegación, categorías en desplegable y acceso según haya sesión o no. */
 export async function CabeceraPublica() {
   const conSesion = (await sesionPublica()).rol !== null;
 
   return (
-    <header className="relative z-40 flex h-[72px] items-center justify-between bg-navy-900 px-12 max-[760px]:px-6">
+    <header className="relative z-40 flex h-[72px] items-center justify-between bg-navy-900 px-12 max-[1100px]:px-6">
       <Link
         href="/"
         aria-label="UNIDOAR, ir al inicio"
         className="flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- logo fijo, el ancho depende de la proporción */}
-        <img src="/assets/unidoar-logo-horizontal.png" alt="UNIDOAR" className="h-14 w-auto object-contain max-[560px]:h-10" />
+        <LogoMarca />
       </Link>
 
-      <nav aria-label="Principal" className="hidden items-center gap-7 min-[761px]:flex">
+      <nav aria-label="Principal" className="hidden items-center gap-5 min-[1101px]:flex min-[1280px]:gap-7">
         <div className="group relative -mb-3.5 pb-3.5">
           <Link href="/categorias" className={ENLACE}>
             Buscá profesionales
@@ -49,7 +49,7 @@ export async function CabeceraPublica() {
         ))}
       </nav>
 
-      <div className="hidden items-center gap-2.5 min-[761px]:flex">
+      <div className="hidden items-center gap-2.5 min-[1101px]:flex">
         {conSesion ? (
           <BotonLink href="/inicio" variante="cta" className="rounded-full">
             Ir a mi panel

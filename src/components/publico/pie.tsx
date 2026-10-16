@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FirmaCambalache } from "@/components/ui/firma-cambalache";
+import { LogoMarca } from "@/components/ui/logo-marca";
 import { CATEGORIAS } from "@/lib/catalogo";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
 
@@ -19,8 +20,7 @@ export function PiePublico() {
       <div className="mx-auto mb-9 grid max-w-[1200px] grid-cols-[1.4fr_1fr_1fr_1fr] gap-8 max-[760px]:grid-cols-2 max-[460px]:grid-cols-1">
         <div>
           <Link href="/" aria-label="UNIDOAR, ir al inicio" className="mb-3.5 inline-block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-celeste">
-            {/* eslint-disable-next-line @next/next/no-img-element -- logo fijo, el ancho depende de la proporción */}
-            <img src="/assets/unidoar-logo-horizontal.png" alt="UNIDOAR" className="h-[34px] w-auto object-contain" />
+            <LogoMarca tamano="sm" />
           </Link>
           <p className="m-0 max-w-[26ch] text-[13px] leading-[1.6] text-white/55">
             Red y conexión educativa: profesionales verificados de tu zona, sin comisión por contratación.

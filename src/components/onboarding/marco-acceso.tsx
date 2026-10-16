@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NodosMarca } from "@/components/app/nodos-marca";
+import { LogoMarca } from "@/components/ui/logo-marca";
 import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
 
@@ -40,10 +41,8 @@ export function PanelDeFoto({
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,.25),rgba(4,11,53,.88))]" />
       <NodosMarca className="absolute -top-10 -right-12 w-[280px] opacity-80 max-[860px]:hidden" />
-      <Link href="/" className="relative z-[1] m-10 flex items-center gap-2.5 self-start max-[860px]:m-6">
-        {/* eslint-disable-next-line @next/next/no-img-element -- isotipo fijo */}
-        <img src="/assets/unidoar-logo.png" alt="" className="size-10 object-contain" />
-        <span className="font-display text-[18px] font-semibold tracking-[0.08em] text-white">UNIDOAR</span>
+      <Link href="/" className="relative z-[1] m-10 self-start max-[860px]:m-6">
+        <LogoMarca />
       </Link>
       <div className="relative z-[1] p-12 text-white max-[860px]:px-6 max-[860px]:pt-0 max-[860px]:pb-7">
         <div className="font-display mb-3 max-w-[18ch] text-[40px] leading-[1.08] font-semibold tracking-[-0.025em] max-[860px]:text-[26px]">
