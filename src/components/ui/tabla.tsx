@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
  */
 export function Tabla({ className, children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto overflow-y-hidden rounded-tarjeta bg-white px-2 pb-1 shadow-tarjeta">
+    // `relative`: sin un contenedor posicionado, un texto `sr-only` de la tabla (p. ej. el de la columna de acciones) queda fuera
+    // del recorte del scroll y ensancha toda la página en el celular.
+    <div className="relative overflow-x-auto overflow-y-hidden rounded-tarjeta bg-white px-2 pb-1 shadow-tarjeta">
       <table
         className={cn(
           "w-full min-w-[540px] border-collapse text-sm text-tinta",
