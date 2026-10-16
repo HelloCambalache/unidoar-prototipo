@@ -147,7 +147,7 @@ export function FormularioRegistro({
         <div>
           <Casilla name="aceptaTerminos" required className="mt-1.5">
             Acepto los{" "}
-            <Link href="/terminos" target="_blank" className={esDocente ? "font-semibold text-naranja" : "font-semibold text-navy-700"}>
+            <Link href="/terminos" target="_blank" className="font-semibold text-navy-700 hover:text-naranja">
               términos y condiciones
             </Link>{" "}
             de UNIDOAR.
@@ -161,19 +161,13 @@ export function FormularioRegistro({
 
         <p className="m-0 text-xs leading-normal text-sutil">
           Así cuidamos tus datos:{" "}
-          <Link href="/privacidad" target="_blank" className="font-semibold text-naranja">
+          <Link href="/privacidad" target="_blank" className="font-semibold text-navy-700 hover:text-naranja">
             política de privacidad
           </Link>
           .
         </p>
         <AlertaError>{errorGeneral}</AlertaError>
-        <Boton
-          type="submit"
-          variante={esDocente ? "cta" : "primario"}
-          bloque
-          disabled={pendiente}
-          className="min-h-12 text-base"
-        >
+        <Boton type="submit" bloque disabled={pendiente} className="min-h-12 text-base">
           {pendiente ? "Un segundo…" : "Continuar"}
         </Boton>
       </div>

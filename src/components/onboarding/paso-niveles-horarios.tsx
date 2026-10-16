@@ -83,7 +83,7 @@ export function PasoNivelesHorarios({
       </SeccionPaso>
 
       <AlertaError className="mb-3.5">{estado && !estado.ok && Object.keys(campos).length === 0 ? estado.error : undefined}</AlertaError>
-      <Boton type="submit" variante="cta" bloque disabled={pendiente} className="min-h-12 text-base">
+      <Boton type="submit" bloque disabled={pendiente} className="min-h-12 text-base">
         {pendiente ? "Guardando…" : "Continuar"}
       </Boton>
       <div className="mt-3.5">

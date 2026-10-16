@@ -52,7 +52,7 @@ export function PasoCv({
             Lo subo después
           </Link>
         </div>
-        <Boton type="submit" variante="cta" disabled={pendiente}>
+        <Boton type="submit" disabled={pendiente}>
           {pendiente ? "Guardando…" : "Continuar"}
         </Boton>
       </div>

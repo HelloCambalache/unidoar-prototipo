@@ -1,15 +1,15 @@
-import Image from "next/image";
 import Link from "next/link";
 import { BarraProgreso } from "@/components/onboarding/barra-progreso";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
-import { focoDeFoto } from "@/lib/fotos";
+import { PanelDeFoto } from "@/components/onboarding/marco-acceso";
 import { PORTADA_ONBOARDING, type PasoMarco, type RolAlta } from "@/lib/onboarding";
 
 /**
- * Marco del alta: foto a la izquierda con la bajada de la marca, a la derecha el encabezado
- * (paso + "Guardar y salir"), la barra de progreso y el formulario. En ≤ 900 px la foto pasa
- * arriba con 190 px de alto. Con `formId`, "Guardar y salir" envía ese formulario (`destino=salir`)
- * para guardar lo escrito antes de salir; sin él es un link al inicio.
+ * Marco del alta (pasos 2 en adelante), con la misma identidad que el ingreso (`MarcoAcceso`): a la izquierda la foto del
+ * paso con la bajada de la marca, que queda a la vista mientras se desplaza el formulario; a la derecha una tarjeta blanca con
+ * el encabezado (paso + "Guardar y salir"), la barra de progreso y el formulario. En ≤ 860 px la foto pasa arriba. Con
+ * `formId`, "Guardar y salir" envía ese formulario (`destino=salir`) para guardar lo escrito antes de salir; sin él es un link
+ * al inicio.
  */
 export function MarcoOnboarding({
   rol,
@@ -23,31 +23,20 @@ export function MarcoOnboarding({
   children: React.ReactNode;
 }) {
   const portada = PORTADA_ONBOARDING[rol];
-  const claseSalir = "text-xs leading-none font-medium text-sutil transition-colors hover:text-tinta";
+  const claseSalir =
+    "inline-flex min-h-9 flex-none items-center rounded-full bg-lienzo px-4 text-[13px] leading-none font-semibold text-tinta-2 transition-colors hover:bg-linea hover:text-tinta";
 
   return (
-    <div className="flex min-h-screen max-[900px]:flex-col">
-      <div className="relative flex min-w-0 flex-1 flex-col justify-end max-[900px]:h-[190px] max-[900px]:flex-none">
-        <Image
-          src={paso.fondo}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 900px) 100vw, 50vw"
-          style={{ objectPosition: focoDeFoto(paso.fondo) }}
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,33,79,.15),rgba(22,33,79,.8))]" />
-        <div className="relative z-[1] p-12 text-white max-[640px]:p-6">
-          <div className="mb-2.5 font-display text-[26px] leading-[1.25] font-bold tracking-[-0.02em] max-[900px]:text-xl">
-            {portada.titulo}
-          </div>
-          <div className="max-w-[34ch] text-[15px] leading-normal text-white/80 max-[900px]:hidden">{portada.bajada}</div>
-        </div>
-      </div>
+    <div className="flex min-h-screen gap-4 bg-lienzo p-4 max-[860px]:flex-col max-[860px]:gap-0 max-[860px]:p-0">
+      <PanelDeFoto
+        foto={paso.fondo}
+        titulo={portada.titulo}
+        bajada={portada.bajada}
+        className="sticky top-4 h-[calc(100dvh-2rem)] self-start max-[860px]:relative max-[860px]:top-auto max-[860px]:self-auto"
+      />
 
-      <div className="flex min-w-[380px] max-w-[720px] flex-1 flex-col bg-app max-[900px]:max-w-none max-[900px]:min-w-0">
-        <div className="flex items-center justify-between gap-3 border-b border-borde px-10 py-5 max-[640px]:px-6">
+      <div className="flex min-w-[380px] max-w-[720px] flex-1 flex-col overflow-hidden rounded-[32px] bg-white shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:shadow-none">
+        <div className="flex items-center justify-between gap-3 px-10 py-5 max-[640px]:px-6">
           <span className="text-[13px] leading-none font-semibold text-tinta">{paso.etiqueta}</span>
           {formId ? (
             <BotonEnvio plano campo="destino" valor="salir" formId={formId} className={claseSalir}>
@@ -60,7 +49,7 @@ export function MarcoOnboarding({
           )}
         </div>
         <BarraProgreso progreso={paso.progreso} rol={rol} />
-        <main className="flex flex-1 flex-col overflow-auto p-10 max-[640px]:p-6">
+        <main className="flex flex-1 flex-col p-10 max-[640px]:p-6">
           <div className="my-auto">{children}</div>
         </main>
       </div>

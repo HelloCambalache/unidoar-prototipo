@@ -54,35 +54,38 @@ export function PasoCategoria({
       <input type="hidden" name="destino" defaultValue="continuar" />
       {/* Sin título ni bajada a la vista; el encabezado queda solo para lectores de pantalla. */}
       <h1 className="sr-only">Elegí tu categoría</h1>
-      <div role="radiogroup" aria-label="Categoría" className="mb-6 grid grid-cols-3 gap-2.5 max-[760px]:grid-cols-1">
-        {CATEGORIAS.map((c) => {
-          const seleccionada = categoria === c;
-          return (
-            <label
-              key={c}
-              className={cn(
-                tarjeta,
-                "flex flex-col gap-2.5 p-4 max-[760px]:flex-row max-[760px]:items-center max-[760px]:gap-3.5",
-                seleccionada ? "border-navy-700" : "border-borde",
-              )}
-            >
-              <input type="radio" name="categoria" value={c} checked={seleccionada} onChange={() => elegirCategoria(c)} className="sr-only" />
-              <span
-                aria-hidden
+      {/* Las columnas dependen del ancho del formulario (no de la pantalla): en una columna angosta "Entrenador/a / Instructor/a" se partía en tres renglones. */}
+      <div className="@container mb-6">
+        <div role="radiogroup" aria-label="Categoría" className="grid grid-cols-1 gap-2.5 @min-[520px]:grid-cols-3">
+          {CATEGORIAS.map((c) => {
+            const seleccionada = categoria === c;
+            return (
+              <label
+                key={c}
                 className={cn(
-                  "inline-flex size-6 flex-none items-center justify-center rounded-full text-xs leading-none font-bold",
-                  seleccionada ? "bg-navy-700 text-white" : "border border-borde bg-[#F0EFEA]",
+                  tarjeta,
+                  "flex flex-row items-center gap-3.5 p-4 @min-[520px]:flex-col @min-[520px]:items-stretch @min-[520px]:gap-2.5",
+                  seleccionada ? "border-navy-700" : "border-borde",
                 )}
               >
-                {seleccionada ? "✓" : ""}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="mb-[3px] block text-base leading-snug font-semibold text-tinta">{CATEGORIA_ALTA[c].label}</span>
-                <span className="block text-[13px] leading-[1.45] text-apagado">{CATEGORIA_ALTA[c].desc}</span>
-              </span>
-            </label>
-          );
-        })}
+                <input type="radio" name="categoria" value={c} checked={seleccionada} onChange={() => elegirCategoria(c)} className="sr-only" />
+                <span
+                  aria-hidden
+                  className={cn(
+                    "inline-flex size-6 flex-none items-center justify-center rounded-full text-xs leading-none font-bold",
+                    seleccionada ? "bg-navy-700 text-white" : "border border-borde bg-[#F0EFEA]",
+                  )}
+                >
+                  {seleccionada ? "✓" : ""}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="mb-[3px] block text-base leading-snug font-semibold text-tinta">{CATEGORIA_ALTA[c].label}</span>
+                  <span className="block text-[13px] leading-[1.45] text-apagado">{CATEGORIA_ALTA[c].desc}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </div>
       {campos.categoria && (
         <p role="alert" className="-mt-3.5 mb-4 text-xs text-[#b91c1c]">
@@ -174,7 +177,7 @@ export function PasoCategoria({
       )}
 
       <AlertaError className="mb-3.5">{estado && !estado.ok && Object.keys(campos).length === 0 ? estado.error : undefined}</AlertaError>
-      <Boton type="submit" variante="cta" bloque disabled={pendiente} className="min-h-12 text-base">
+      <Boton type="submit" bloque disabled={pendiente} className="min-h-12 text-base">
         {pendiente ? "Guardando…" : "Continuar"}
       </Boton>
     </form>

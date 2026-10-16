@@ -2,8 +2,58 @@ import Image from "next/image";
 import Link from "next/link";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { focoDeFoto } from "@/lib/fotos";
+import { cn } from "@/lib/utils";
 
 const FOTO_ACCESO = "/assets/aula-secundaria.jpg";
+
+/**
+ * La foto de la izquierda de las pantallas de acceso y del alta: foto con overlay azul, el isotipo, los nodos de la marca y
+ * el título con su bajada, redondeada sobre el fondo cálido. En ≤ 860 px pasa arriba, a todo el ancho y sin redondear.
+ * `className` suma cómo se ubica en cada marco (p. ej. fija mientras se desplaza el formulario del alta).
+ */
+export function PanelDeFoto({
+  foto,
+  titulo,
+  bajada,
+  className,
+}: {
+  foto: string;
+  titulo: string;
+  bajada: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-[32px] max-[860px]:h-[240px] max-[860px]:flex-none max-[860px]:rounded-none",
+        className,
+      )}
+    >
+      <Image
+        src={foto}
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 860px) 100vw, 50vw"
+        style={{ objectPosition: focoDeFoto(foto) }}
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,.25),rgba(4,11,53,.88))]" />
+      <NodosMarca className="absolute -top-10 -right-12 w-[280px] opacity-80 max-[860px]:hidden" />
+      <Link href="/" className="relative z-[1] m-10 flex items-center gap-2.5 self-start max-[860px]:m-6">
+        {/* eslint-disable-next-line @next/next/no-img-element -- isotipo fijo */}
+        <img src="/assets/unidoar-logo.png" alt="" className="size-10 object-contain" />
+        <span className="font-display text-[18px] font-semibold tracking-[0.08em] text-white">UNIDOAR</span>
+      </Link>
+      <div className="relative z-[1] p-12 text-white max-[860px]:px-6 max-[860px]:pt-0 max-[860px]:pb-7">
+        <div className="font-display mb-3 max-w-[18ch] text-[40px] leading-[1.08] font-semibold tracking-[-0.025em] max-[860px]:text-[26px]">
+          {titulo}
+        </div>
+        <div className="max-w-[38ch] text-[16px] leading-normal text-white/80 max-[860px]:text-[14px]">{bajada}</div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Pantalla partida de /registro, /ingresar, el paso 1 del alta (crear la cuenta) y sus variantes: foto con overlay azul y
@@ -28,30 +78,7 @@ export function MarcoAcceso({
 }) {
   return (
     <div className="flex min-h-screen gap-4 bg-lienzo p-4 max-[860px]:flex-col max-[860px]:gap-0 max-[860px]:p-0">
-      <div className="relative flex min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-[32px] max-[860px]:h-[240px] max-[860px]:flex-none max-[860px]:rounded-none">
-        <Image
-          src={foto}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 860px) 100vw, 50vw"
-          style={{ objectPosition: focoDeFoto(foto) }}
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,.25),rgba(4,11,53,.88))]" />
-        <NodosMarca className="absolute -top-10 -right-12 w-[280px] opacity-80 max-[860px]:hidden" />
-        <Link href="/" className="relative z-[1] m-10 flex items-center gap-2.5 self-start max-[860px]:m-6">
-          {/* eslint-disable-next-line @next/next/no-img-element -- isotipo fijo */}
-          <img src="/assets/unidoar-logo.png" alt="" className="size-10 object-contain" />
-          <span className="font-display text-[18px] font-semibold tracking-[0.08em] text-white">UNIDOAR</span>
-        </Link>
-        <div className="relative z-[1] p-12 text-white max-[860px]:px-6 max-[860px]:pt-0 max-[860px]:pb-7">
-          <div className="font-display mb-3 max-w-[18ch] text-[40px] leading-[1.08] font-semibold tracking-[-0.025em] max-[860px]:text-[26px]">
-            {titulo}
-          </div>
-          <div className="max-w-[38ch] text-[16px] leading-normal text-white/80 max-[860px]:text-[14px]">{bajada}</div>
-        </div>
-      </div>
+      <PanelDeFoto foto={foto} titulo={titulo} bajada={bajada} />
 
       <main className="relative flex min-w-[360px] max-w-[540px] flex-1 flex-col justify-center rounded-[32px] bg-white px-14 py-12 shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:px-6 max-[860px]:py-9 max-[860px]:shadow-none">
         <div className="relative z-[1] mx-auto flex w-full max-w-[400px] flex-col">

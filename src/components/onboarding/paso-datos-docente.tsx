@@ -143,7 +143,7 @@ export function PasoDatosDocente({
           <BotonEnvio campo="destino" valor="borrador" variante="secundario" disabled={pendiente}>
             Guardar borrador
           </BotonEnvio>
-          <Boton type="submit" variante="cta" disabled={pendiente}>
+          <Boton type="submit" disabled={pendiente}>
             {pendiente ? "Guardando…" : "Continuar"}
           </Boton>
         </div>

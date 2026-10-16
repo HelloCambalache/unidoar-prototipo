@@ -192,7 +192,7 @@ export function PasoDocumentacion({
           <BotonEnvio campo="destino" valor="luego" variante="secundario" disabled={pendiente} className="flex-[1_1_auto]">
             Lo subo después
           </BotonEnvio>
-          <Boton type="submit" variante="cta" disabled={pendiente} className="flex-[1_1_auto]">
+          <Boton type="submit" disabled={pendiente} className="flex-[1_1_auto]">
             {pendiente ? "Guardando…" : "Terminar y buscar trabajo"}
           </Boton>
         </div>
