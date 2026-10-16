@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
-import { TarjetaOferta } from "@/components/oportunidades/tarjeta-oferta";
+import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
 import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { Paginacion } from "@/components/publico/paginacion";
 import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
@@ -103,7 +103,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
                 const { href, etiqueta } = destino(sesion, o);
                 return (
                   <li key={o.id} className="flex *:w-full">
-                    <TarjetaOferta
+                    <TarjetaOfertaApp
                       oferta={o}
                       href={href}
                       etiqueta={etiqueta}

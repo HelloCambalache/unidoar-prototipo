@@ -23,8 +23,8 @@ const FOCO = "focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visi
 /**
  * Filtros del buscador de trabajo (panel lateral + barra superior). Cada cambio actualiza la URL,
  * así el listado, el mapa y el link compartido siempre coinciden. El listado va como `children`
- * (se renderiza en el servidor). Es el mismo panel del docente y del sitio público; con `publico`
- * se ocultan el rango de distancia y los favoritos, que necesitan una cuenta.
+ * (se renderiza en el servidor). Es el mismo panel, con la misma identidad, en el área del profesional y en el
+ * sitio público; con `publico` se ocultan el rango de distancia y los favoritos, que necesitan una cuenta.
  */
 export function ControlesBuscador({
   base,
@@ -57,7 +57,6 @@ export function ControlesBuscador({
 }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
-  const [panelAbierto, setPanelAbierto] = useState(false);
   // Texto y slider guardan su propio valor mientras se escribe/arrastra; al limpiar se les avisa con este contador.
   const [reinicios, setReinicios] = useState(0);
 
@@ -70,105 +69,22 @@ export function ControlesBuscador({
     empezar(() => router.replace(hrefOportunidades(base, {}, { vista: filtros.vista }), { scroll: false }));
   };
 
-  const hayFiltros = Object.entries(filtros).some(([clave, valor]) => clave !== "vista" && valor !== undefined);
-  // El área con sesión usa la identidad nueva (tarjetas redondeadas, sin borde); el sitio público queda como estaba.
-  const app = !publico;
-
   return (
     <div
       aria-busy={pendiente}
       className="flex items-start gap-6 max-[860px]:flex-col max-[860px]:items-stretch max-[860px]:gap-4"
     >
-      {app ? (
-        <PanelFiltrosApp
-          filtros={filtros}
-          modo={modo}
-          radio={radio}
-          radioPorDefecto={radioPorDefecto}
-          conUbicacion={conUbicacion}
-          reinicios={reinicios}
-          aplicar={aplicar}
-          limpiar={limpiar}
-        />
-      ) : (
-      <div
-        className={cn(
-          "w-[250px] flex-none bg-white p-[18px]",
-          app ? "rounded-tarjeta p-5 shadow-tarjeta" : "rounded-lg border border-borde",
-          "max-[860px]:w-full",
-          "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:overflow-auto max-[760px]:px-4 max-[760px]:py-3.5",
-        )}
-      >
-        <button
-          type="button"
-          aria-expanded={panelAbierto}
-          aria-controls="panel-filtros"
-          onClick={() => setPanelAbierto((v) => !v)}
-          className={cn("hidden w-full items-center justify-between gap-2 text-sm font-semibold max-[760px]:flex", FOCO)}
-        >
-          Filtros
-          <Icono nombre="chevron" tamano={14} trazo={2.2} className={cn("transition-transform", panelAbierto && "rotate-180")} />
-        </button>
-        <div id="panel-filtros" className={cn("max-[760px]:hidden", panelAbierto && "max-[760px]:mt-3.5 max-[760px]:block")}>
-          <div className="mb-4 flex items-center justify-between max-[760px]:justify-end">
-            <span className="text-sm leading-none font-semibold max-[760px]:hidden">Filtros</span>
-            <button
-              type="button"
-              onClick={limpiar}
-              disabled={!hayFiltros}
-              className={cn("rounded text-xs leading-none font-medium text-naranja disabled:cursor-default disabled:opacity-40", FOCO)}
-            >
-              Limpiar
-            </button>
-          </div>
-
-          <div className="mb-[18px] flex flex-col gap-2">
-            <span className={ETIQUETA_SECCION}>Categoría</span>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <Pastilla activa={!filtros.categoria} onClick={() => aplicar({ categoria: null })}>
-                Todas
-              </Pastilla>
-              {CATEGORIAS.map((c) => (
-                <Pastilla key={c} activa={filtros.categoria === c} onClick={() => aplicar({ categoria: c })}>
-                  {ETIQUETA_FILTRO_CATEGORIA[c]}
-                </Pastilla>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-4 h-px bg-borde" />
-
-          {!publico && (
-            <>
-              <RangoDeBusqueda
-                vigente={Math.min(radio, RADIO_MAX)}
-                porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
-                reinicios={reinicios}
-                habilitado={conUbicacion}
-                onCambio={(km) => aplicar({ radio: km })}
-              />
-
-              <div className="mb-4 h-px bg-borde" />
-            </>
-          )}
-
-          <div className="flex flex-col gap-3.5">
-            {modo === "todas" && (
-              <Interruptor
-                activo={filtros.rapidas === "1"}
-                etiqueta="Sólo suplencias"
-                onCambio={() => aplicar({ rapidas: filtros.rapidas ? null : "1" })}
-              />
-            )}
-            <Interruptor
-              activo={filtros.verificadas === "1"}
-              etiqueta="Solo instituciones verificadas"
-              onCambio={() => aplicar({ verificadas: filtros.verificadas ? null : "1" })}
-            />
-          </div>
-        </div>
-      </div>
-      )}
+      <PanelFiltrosApp
+        filtros={filtros}
+        modo={modo}
+        radio={radio}
+        radioPorDefecto={radioPorDefecto}
+        conUbicacion={conUbicacion}
+        publico={publico}
+        reinicios={reinicios}
+        aplicar={aplicar}
+        limpiar={limpiar}
+      />
 
       <div className="min-w-0 flex-1 max-[760px]:w-full">
         <FraseDeBusqueda
@@ -176,9 +92,8 @@ export function ControlesBuscador({
           vista={filtros.vista}
           lectura={lectura}
           limpiarHref={hrefOportunidades(base, {}, { vista: filtros.vista })}
-          app={app}
         />
-        <div className={cn("mb-5 flex flex-wrap gap-2.5", app && "rounded-tarjeta bg-white p-3.5 shadow-tarjeta")}>
+        <div className="mb-5 flex flex-wrap gap-2.5 rounded-tarjeta bg-white p-3.5 shadow-tarjeta">
           <CampoTexto
             inicial={filtros.q ?? ""}
             reinicios={reinicios}
@@ -260,23 +175,6 @@ export function ControlesBuscador({
         {children}
       </div>
     </div>
-  );
-}
-
-function Pastilla({ activa, onClick, children }: { activa: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={activa}
-      onClick={onClick}
-      className={cn(
-        "rounded-full px-3 py-1.5 text-xs leading-none font-semibold transition-colors",
-        activa ? "bg-navy-700 text-white" : "bg-[#F0EFEA] text-apagado hover:text-tinta",
-        FOCO,
-      )}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -495,25 +393,17 @@ function FraseDeBusqueda({
   vista,
   lectura,
   limpiarHref,
-  app,
 }: {
   base: string;
   vista: FiltrosOportunidades["vista"];
   lectura: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
   limpiarHref: string;
-  app: boolean;
 }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
   return (
-    <section
-      aria-label="Buscá con IA"
-      className={cn(
-        "mb-4 bg-white px-[18px] py-4",
-        app ? "rounded-tarjeta px-5 py-[18px] shadow-tarjeta" : "rounded-[10px] border border-borde",
-      )}
-    >
-      <div className={cn("mb-2.5 flex items-center gap-2", app ? "text-rosa" : "text-navy-700")}>
+    <section aria-label="Buscá con IA" className="mb-4 rounded-tarjeta bg-white px-5 py-[18px] shadow-tarjeta">
+      <div className="mb-2.5 flex items-center gap-2 text-rosa">
         <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="flex-none">
           <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
           <path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" />
@@ -541,11 +431,7 @@ function FraseDeBusqueda({
           placeholder="Contanos qué buscás: «suplencia de inglés en primaria, de mañana»"
           className="min-w-[240px] flex-1"
         />
-        <Boton
-          type="submit"
-          disabled={pendiente}
-          className={cn("flex-none", app && "rounded-full bg-rosa px-7 hover:bg-[#7A0F4D]")}
-        >
+        <Boton type="submit" disabled={pendiente} className="flex-none rounded-full bg-rosa px-7 hover:bg-[#7A0F4D]">
           Buscar
         </Boton>
       </form>
@@ -583,9 +469,9 @@ const COLOR_CATEGORIA = {
 } as const;
 
 /**
- * Panel de filtros del área con sesión (identidad nueva). Mismos filtros y misma URL que el panel del sitio
- * público: cambia solo cómo se ven. Categorías como lista con su color, distancia con el valor a la vista,
- * interruptores con una línea que explica qué hacen y un contador de filtros aplicados.
+ * Panel de filtros (identidad nueva), el mismo en el área del profesional y en el sitio público. Categorías como
+ * lista con su color, distancia con el valor a la vista, interruptores con una línea que explica qué hacen y un
+ * contador de filtros aplicados. En el sitio público (`publico`) no está la distancia: necesita la zona del perfil.
  */
 function PanelFiltrosApp({
   filtros,
@@ -593,6 +479,7 @@ function PanelFiltrosApp({
   radio,
   radioPorDefecto,
   conUbicacion,
+  publico,
   reinicios,
   aplicar,
   limpiar,
@@ -602,6 +489,7 @@ function PanelFiltrosApp({
   radio: number;
   radioPorDefecto: number;
   conUbicacion: boolean;
+  publico: boolean;
   reinicios: number;
   aplicar: (cambios: Partial<Record<keyof FiltrosOportunidades, string | number | null | undefined>>) => void;
   limpiar: () => void;
@@ -704,14 +592,16 @@ function PanelFiltrosApp({
 
         <div className="h-px bg-linea" />
 
-        <RangoDeBusqueda
-          vigente={Math.min(radio, RADIO_MAX)}
-          porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
-          reinicios={reinicios}
-          habilitado={conUbicacion}
-          onCambio={(km) => aplicar({ radio: km })}
-          app
-        />
+        {!publico && (
+          <RangoDeBusqueda
+            vigente={Math.min(radio, RADIO_MAX)}
+            porDefecto={Math.min(radioPorDefecto, RADIO_MAX)}
+            reinicios={reinicios}
+            habilitado={conUbicacion}
+            onCambio={(km) => aplicar({ radio: km })}
+            app
+          />
+        )}
 
         <div className="flex flex-col gap-1 rounded-[18px] bg-[#F7F6F2] p-1.5">
           {modo === "todas" && (

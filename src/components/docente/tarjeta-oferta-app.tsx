@@ -16,18 +16,20 @@ const PANEL: Record<CategoriaDocente, { fondo: string; texto: string }> = {
 };
 
 /**
- * Tarjeta de una búsqueda en "Buscar trabajo" y "Búsquedas rápidas" del área del profesional (identidad nueva).
- * Mismos datos y mismo comportamiento que `TarjetaOferta` (la del sitio público, que no cambia): link "estirado"
- * sobre el título y la estrella por encima.
+ * Tarjeta de una búsqueda en "Buscar trabajo" y "Búsquedas rápidas" del área del profesional y en las búsquedas
+ * abiertas del sitio público (identidad nueva): link "estirado" sobre el título y la estrella por encima.
  */
 export function TarjetaOfertaApp({
   oferta,
   href,
   estrella,
+  etiqueta,
 }: {
   oferta: OfertaListada;
   href: string;
   estrella?: React.ReactNode;
+  /** Texto del pie. Por defecto "Ver oferta" ("Ver y postularme" en una urgente a la que todavía no se postuló). */
+  etiqueta?: string;
 }) {
   const km = kmLegible(oferta.km);
   const panel = PANEL[oferta.categoria];
@@ -92,7 +94,7 @@ export function TarjetaOfertaApp({
       <div className="flex items-center gap-3 px-3.5 pt-3.5 pb-2">
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="font-display text-[15px] leading-tight font-semibold text-tinta">
-            {destacada ? "Ver y postularme" : "Ver oferta"}
+            {etiqueta ?? (destacada ? "Ver y postularme" : "Ver oferta")}
           </span>
           <span className="truncate text-[12.5px] leading-tight text-apagado">{lugar || "Zona a confirmar"}</span>
         </span>
