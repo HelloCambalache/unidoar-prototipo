@@ -90,35 +90,60 @@ export default async function PostulacionesPage({
           />
         )
       ) : (
-        <Tabla>
-          <thead>
-            <tr>
-              <th>Puesto</th>
-              <th>Institución</th>
-              <th>Estado</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            {listado.filas.map((f) => {
-              const href = hrefPostulaciones(filtros, { abrir: f.id });
-              return (
-                <FilaClicable key={f.id} href={href}>
-                  <td className="font-semibold">
-                    <Link href={href} scroll={false} className="text-tinta hover:text-tinta">
-                      {f.puesto}
-                    </Link>
-                  </td>
-                  <td>{f.institucion}</td>
-                  <td>
-                    <Insignia tono={f.estado.tono}>{f.estado.texto}</Insignia>
-                  </td>
-                  <td className="whitespace-nowrap text-apagado">{f.cuando}</td>
-                </FilaClicable>
-              );
-            })}
-          </tbody>
-        </Tabla>
+        <>
+          {/* Desde 640 px, la tabla; en el celular, una tarjeta por postulación: la tabla se desplazaba de costado y cortaba el estado. */}
+          <div className="max-[640px]:hidden">
+            <Tabla>
+              <thead>
+                <tr>
+                  <th>Puesto</th>
+                  <th>Institución</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listado.filas.map((f) => {
+                  const href = hrefPostulaciones(filtros, { abrir: f.id });
+                  return (
+                    <FilaClicable key={f.id} href={href}>
+                      <td className="font-semibold">
+                        <Link href={href} scroll={false} className="text-tinta hover:text-tinta">
+                          {f.puesto}
+                        </Link>
+                      </td>
+                      <td>{f.institucion}</td>
+                      <td>
+                        <Insignia tono={f.estado.tono}>{f.estado.texto}</Insignia>
+                      </td>
+                      <td className="whitespace-nowrap text-apagado">{f.cuando}</td>
+                    </FilaClicable>
+                  );
+                })}
+              </tbody>
+            </Tabla>
+          </div>
+          <ul className="m-0 hidden list-none flex-col gap-3 p-0 max-[640px]:flex">
+            {listado.filas.map((f) => (
+              <li key={f.id} className="relative rounded-tarjeta bg-white p-[18px] shadow-tarjeta">
+                <h2 className="font-display m-0 text-[17px] leading-[1.25] font-semibold tracking-[-0.01em]">
+                  <Link
+                    href={hrefPostulaciones(filtros, { abrir: f.id })}
+                    scroll={false}
+                    className="text-tinta outline-none after:absolute after:inset-0 after:rounded-tarjeta hover:text-tinta focus-visible:after:ring-[3px] focus-visible:after:ring-navy-700/30"
+                  >
+                    {f.puesto}
+                  </Link>
+                </h2>
+                <p className="m-0 mt-1 text-[13.5px] leading-snug text-tinta-2">{f.institucion}</p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                  <Insignia tono={f.estado.tono}>{f.estado.texto}</Insignia>
+                  <span className="text-[12.5px] text-apagado">{f.cuando}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {detalle && (
