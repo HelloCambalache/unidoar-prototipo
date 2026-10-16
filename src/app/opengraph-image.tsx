@@ -48,6 +48,10 @@ export default async function Image() {
     sora(`UNIDOAR${titulo}`),
     fuenteDeGoogle("Inter", 500, `${bajada}${CATEGORIAS.map((c) => c.texto).join("")}`),
   ]);
+  const fuentes = [
+    ...(inter ? [{ name: "Inter", data: inter, weight: 500 as const, style: "normal" as const }] : []),
+    ...(fuente ? [{ name: "Sora", data: fuente, weight: 700 as const, style: "normal" as const }] : []),
+  ];
 
   return new ImageResponse(
     (
@@ -97,10 +101,9 @@ export default async function Image() {
     ),
     {
       ...size,
-      fonts: [
-        ...(inter ? [{ name: "Inter", data: inter, weight: 500 as const, style: "normal" as const }] : []),
-        ...(fuente ? [{ name: "Sora", data: fuente, weight: 700 as const, style: "normal" as const }] : []),
-      ],
+      // Sin ninguna fuente bajada hay que NO pasar `fonts`: con una lista vacía ImageResponse no usa la suya por defecto y falla
+      // con "No fonts are loaded" (500).
+      fonts: fuentes.length > 0 ? fuentes : undefined,
     },
   );
 }
