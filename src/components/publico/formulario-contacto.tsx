@@ -69,7 +69,7 @@ export function FormularioContacto() {
         </label>
       </div>
 
-      <Boton type="submit" variante="cta" tamano="lg" disabled={enviando} className="self-start">
+      <Boton type="submit" tamano="lg" disabled={enviando} className="self-start">
         {enviando ? "Enviando…" : "Enviar mensaje"}
       </Boton>
 

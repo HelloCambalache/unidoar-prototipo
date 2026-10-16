@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NodosMarca } from "@/components/app/nodos-marca";
 import { BandaCTA } from "@/components/publico/banda-cta";
 import { BotonLink } from "@/components/ui/button";
 
@@ -47,47 +48,59 @@ const FUNDADORES: Fundador[] = [
   },
 ];
 
+/** Las iniciales de un nombre completo: la primera letra de la primera y de la última palabra ("Ariel Gómez" → "AG"). */
+function iniciales(nombre: string) {
+  const palabras = nombre.trim().split(/\s+/);
+  const primera = palabras[0]?.[0] ?? "";
+  const ultima = palabras.length > 1 ? (palabras[palabras.length - 1]?.[0] ?? "") : "";
+  return `${primera}${ultima}`.toUpperCase();
+}
+
 export default function QuienesSomos() {
   return (
     <>
-      <section className="bg-[linear-gradient(180deg,#16214F_0%,#1B2A5E_100%)] px-12 pt-[72px] pb-[64px] text-center text-white max-[560px]:px-6 max-[560px]:pt-12 max-[560px]:pb-12">
-        <span className="inline-block rounded-full bg-celeste/18 px-2.5 py-[5px] text-xs leading-none font-semibold text-celeste">
-          Nosotros · Equipo UNIDOAR
-        </span>
-        <h1 className="mx-auto mt-3.5 mb-4 max-w-[24ch] text-[40px] leading-[1.15] font-semibold tracking-[-0.025em] text-balance max-[560px]:text-[30px]">
-          Quiénes impulsan UNIDOAR
-        </h1>
-        <p className="mx-auto max-w-[680px] text-[17px] leading-[1.65] text-white/75">
-          Somos un equipo con una trayectoria de vida dedicada a la educación y el deporte. Unimos esa experiencia con la
-          tecnología para que las instituciones y los profesionales se conecten de forma simple, directa y transparente.
-        </p>
-      </section>
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-12 pt-10 max-[900px]:px-6 max-[560px]:gap-8 max-[560px]:pt-6">
+        <section className="relative overflow-hidden rounded-[32px] bg-navy-900 px-12 py-14 text-white max-[560px]:px-6 max-[560px]:py-10">
+          <NodosMarca className="absolute -top-12 -right-10 w-[300px] opacity-90 max-[760px]:w-[180px] max-[760px]:opacity-60" />
+          <span className="relative inline-block rounded-full bg-celeste/18 px-2.5 py-[5px] text-xs leading-none font-semibold text-celeste">
+            Nosotros · Equipo UNIDOAR
+          </span>
+          <h1 className="font-display relative mt-3.5 mb-4 max-w-[20ch] text-[44px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance max-[560px]:text-[32px]">
+            Quiénes impulsan UNIDOAR
+          </h1>
+          <p className="relative m-0 max-w-[60ch] text-[17px] leading-[1.65] text-white/75">
+            Somos un equipo con una trayectoria de vida dedicada a la educación y el deporte. Unimos esa experiencia con la
+            tecnología para que las instituciones y los profesionales se conecten de forma simple, directa y transparente.
+          </p>
+        </section>
 
-      <section className="mx-auto w-full max-w-[1000px] px-12 py-16 max-[560px]:px-6 max-[560px]:py-12">
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-12 gap-y-4 max-[860px]:grid-cols-1">
-          <h2 className="m-0 text-[26px] leading-[1.25] font-semibold tracking-[-0.02em] text-tinta">Cómo trabajamos</h2>
-          <div className="flex flex-col gap-[18px] text-[16px] leading-[1.75] text-tinta-2">
-            <p className="m-0">
-              Combinamos el conocimiento profundo del campo institucional con una app pensada por profesionales que
-              vienen del sector.{" "}
-              <strong className="font-semibold text-tinta">
-                No nos limitamos a publicar avisos: diseñamos una herramienta ágil
-              </strong>{" "}
-              para lograr el match exacto entre lo que necesita una institución y el talento que un profesional puede
-              aportar.
-            </p>
-            <p className="m-0">
-              Creemos en un modelo verdaderamente federal y abierto, donde colegios, clubes, gimnasios, natatorios y
-              profesionales de cada rincón del país se conectan de forma simple y transparente, al alcance de la mano.
-            </p>
+        <section className="rounded-tarjeta bg-white p-10 shadow-tarjeta max-[560px]:p-6">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-12 gap-y-4 max-[860px]:grid-cols-1">
+            <h2 className="font-display m-0 text-[28px] leading-[1.2] font-semibold tracking-[-0.02em] text-tinta">Cómo trabajamos</h2>
+            <div className="flex flex-col gap-[18px] text-[16px] leading-[1.75] text-tinta-2">
+              <p className="m-0">
+                Combinamos el conocimiento profundo del campo institucional con una app pensada por profesionales que
+                vienen del sector.{" "}
+                <strong className="font-semibold text-tinta">
+                  No nos limitamos a publicar avisos: diseñamos una herramienta ágil
+                </strong>{" "}
+                para lograr el match exacto entre lo que necesita una institución y el talento que un profesional puede
+                aportar.
+              </p>
+              <p className="m-0">
+                Creemos en un modelo verdaderamente federal y abierto, donde colegios, clubes, gimnasios, natatorios y
+                profesionales de cada rincón del país se conectan de forma simple y transparente, al alcance de la mano.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section aria-labelledby="fundadores" className="bg-app px-12 py-16 max-[560px]:px-6 max-[560px]:py-12">
-        <div className="mx-auto w-full max-w-[1160px]">
-          <div className="mx-auto mb-10 max-w-[640px] text-center">
-            <h2 id="fundadores" className="m-0 mb-2.5 text-[28px] leading-[1.25] font-semibold tracking-[-0.02em] text-tinta">
+        <section aria-labelledby="fundadores">
+          <div className="mx-auto mb-8 max-w-[640px] text-center">
+            <h2
+              id="fundadores"
+              className="font-display m-0 mb-2.5 text-[30px] leading-[1.2] font-semibold tracking-[-0.02em] text-tinta"
+            >
               Nuestros fundadores
             </h2>
             <p className="m-0 text-base leading-[1.6] text-apagado">
@@ -100,13 +113,25 @@ export default function QuienesSomos() {
             {FUNDADORES.map((f) => (
               <li
                 key={f.nombre}
-                className="flex flex-col rounded-ud border border-borde border-t-4 border-t-navy-700 bg-white p-7 max-[560px]:p-5 min-[1001px]:row-span-3 min-[1001px]:grid min-[1001px]:grid-rows-subgrid"
+                className="flex flex-col rounded-tarjeta bg-white p-8 shadow-tarjeta max-[560px]:p-6 min-[1001px]:row-span-3 min-[1001px]:grid min-[1001px]:grid-rows-subgrid"
               >
-                <div className="mb-4">
-                  <span className="mb-2 block text-xs leading-none font-semibold tracking-[.09em] text-naranja uppercase">Cofundador</span>
-                  <h3 className="m-0 text-[22px] leading-[1.2] font-semibold tracking-[-0.015em] text-tinta">{f.nombre}</h3>
+                <div className="mb-5 flex items-start gap-3.5">
+                  <span
+                    aria-hidden
+                    className="font-display inline-flex size-12 flex-none items-center justify-center rounded-full bg-navy-50 text-[17px] font-semibold text-navy-700"
+                  >
+                    {iniciales(f.nombre)}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="mb-1.5 block text-xs leading-none font-semibold tracking-[.09em] text-naranja uppercase">
+                      Cofundador
+                    </span>
+                    <h3 className="font-display m-0 text-[21px] leading-[1.2] font-semibold tracking-[-0.015em] text-tinta">
+                      {f.nombre}
+                    </h3>
+                  </div>
                 </div>
-                <p className="m-0 mb-5 rounded-lg bg-superficie px-4 py-3 text-[13.5px] leading-[1.55] text-tinta-2">
+                <p className="m-0 mb-5 rounded-[18px] bg-lienzo px-4 py-3.5 text-[13.5px] leading-[1.55] text-tinta-2">
                   <span className="mb-1 block text-[11px] leading-none font-semibold tracking-[.09em] text-apagado uppercase">Enfoque</span>
                   {f.enfoque}
                 </p>
@@ -120,8 +145,8 @@ export default function QuienesSomos() {
               </li>
             ))}
           </ul>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <BandaCTA
         etiqueta={
