@@ -7,7 +7,12 @@ import type { Usuario } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
-import { aplicarResolucionConMotivo, aplicarVerificacion, aplicarVerificacionDeTitulo } from "@/lib/backoffice-docentes-escrituras";
+import {
+  aplicarReapertura,
+  aplicarResolucionConMotivo,
+  aplicarVerificacion,
+  aplicarVerificacionDeTitulo,
+} from "@/lib/backoffice-docentes-escrituras";
 import { esUuid } from "@/lib/busquedas";
 import { borrarArchivos, borrarDocumentosSueltos } from "@/lib/queries/archivos";
 
@@ -136,4 +141,36 @@ export async function pedirCorreccion(docenteId: string, entrada: { motivo: stri
 export async function rechazarDocente(docenteId: string, entrada: { motivo: string }): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
   return resolverConMotivo(admin, docenteId, entrada, "rechazado");
+}
+
+const mensajeSchema = z.object({
+  mensaje: z
+    .string()
+    .trim()
+    .max(500, "El mensaje puede tener hasta 500 caracteres.")
+    .optional()
+    .transform((v) => v || undefined),
+});
+
+/**
+ * Reabre la revisión de un perfil rechazado: pasa a «Corrección pedida» (con el mensaje, opcional, para la persona) y puede
+ * volver a subir su documentación. Es la vuelta de un rechazo, que de otro modo no tiene salida.
+ */
+export async function reabrirRevision(docenteId: string, entrada: { mensaje?: string } = {}): Promise<Resultado> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(docenteId)) return fallo(NO_ENCONTRADO);
+  const datos = parsear(mensajeSchema, entrada);
+  if (!datos.ok) return fallo(datos.campos?.mensaje ?? datos.error, datos.campos);
+
+  const resultado = await transaccion(async (tx): Promise<Resultado> => {
+    const r = await aplicarReapertura(tx, docenteId, datos.data.mensaje);
+    if (!r.ok) return r;
+    await registrarAuditoria(
+      { usuarioId: admin.id, accion: "docente.reabrir_revision", entidad: "docente", entidadId: docenteId, detalle: r.data },
+      tx,
+    );
+    return ok();
+  });
+  if (resultado.ok) revalidarVerificacion(docenteId);
+  return resultado;
 }

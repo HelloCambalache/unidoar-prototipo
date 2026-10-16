@@ -17,6 +17,18 @@ export const VERIFICACION_BO: Record<
   rechazado: { etiqueta: "Rechazado", tono: "rosa" },
 };
 
+/**
+ * Un perfil rechazado queda cerrado (la persona no puede cambiar nada y, como su cuenta existe, tampoco puede registrarse de
+ * nuevo): el equipo lo puede reabrir. Los demás estados ya están en la cola o ya se resolvieron.
+ */
+export const puedeReabrirRevision = (verificacion: EstadoVerificacionDocente) => verificacion === "rechazado";
+
+/**
+ * Lo que se le dice a la persona al reabrir su revisión cuando el equipo no escribe un mensaje propio. Va después de
+ * «reabrió tu revisión:» en el aviso, y como «lo que tenés que corregir» en el mail y en la ficha: por eso no repite que se reabrió.
+ */
+export const MENSAJE_REAPERTURA = "Subí de nuevo la documentación que haga falta (por ejemplo, las dos fotos del DNI) y la revisamos.";
+
 /** Opciones del filtro "Verificación" del listado. `suspendido` filtra por el estado de la cuenta, no por la verificación. */
 export const FILTROS_VERIFICACION = [
   { valor: "verificado", etiqueta: "Verificado" },

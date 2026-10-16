@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { reenviarConfirmacion } from "@/app/actions/auth";
-import { Boton } from "@/components/ui/button";
+import { Boton, BotonLink } from "@/components/ui/button";
 import { AlertaAviso, AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 import type { RolAlta } from "@/lib/onboarding";
 
@@ -43,17 +43,28 @@ export function ConfirmarMail({ email, rol, onOtroEmail }: { email: string; rol:
         }
         className="mb-0"
       />
-      <p className="m-0 text-[13px] leading-normal text-apagado">
-        ¿Ya tenías una cuenta con este email? Entonces no te mandamos otro mail:{" "}
-        <Link href="/ingresar" className="font-semibold text-navy-700 hover:text-naranja">
-          ingresá
-        </Link>{" "}
-        o{" "}
-        <Link href="/ingresar/recuperar" className="font-semibold text-navy-700 hover:text-naranja">
-          recuperá tu contraseña
-        </Link>
-        .
-      </p>
+      {/* Neutral a propósito: es lo mismo para un email nuevo que para uno que ya tiene cuenta (no revela quién está registrado). */}
+      <div role="note" className="flex flex-col gap-3 rounded-caja border border-borde bg-superficie px-4 py-3.5">
+        <p className="m-0 text-[13.5px] leading-normal text-tinta-2">
+          <b className="font-semibold text-tinta">¿Ya te habías registrado con este email?</b> Entonces no te mandamos otro mail:
+          ingresá con tu contraseña o recuperala.
+        </p>
+        <div className="flex flex-wrap gap-2.5">
+          <BotonLink href="/ingresar" tamano="sm">
+            Ingresar
+          </BotonLink>
+          <BotonLink href="/ingresar/recuperar" tamano="sm" variante="secundario">
+            Recuperar mi contraseña
+          </BotonLink>
+        </div>
+        <p className="m-0 text-[12.5px] leading-normal text-apagado">
+          Si el equipo ya había revisado tu perfil y querés volver a presentarlo, escribinos desde{" "}
+          <Link href="/contacto" className="font-semibold text-navy-700 hover:text-naranja">
+            Contacto
+          </Link>
+          .
+        </p>
+      </div>
       <ReenviarConfirmacion rol={rol} email={email} />
       <button
         type="button"

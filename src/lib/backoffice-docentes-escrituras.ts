@@ -2,7 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { docenteDetalle, docentes } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
-import { VERIFICACION_BO } from "@/lib/backoffice-docentes";
+import { MENSAJE_REAPERTURA, puedeReabrirRevision, VERIFICACION_BO } from "@/lib/backoffice-docentes";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { esEstudiante } from "@/lib/estudiantes";
 import { sinArchivosDeDni } from "@/lib/perfil-docente";
@@ -192,6 +192,46 @@ export async function aplicarResolucionConMotivo(
     motivo,
   });
   return ok({ estadoAnterior: docente.verificacion, motivo });
+}
+
+/**
+ * Reabre la revisión de un perfil rechazado: pasa a «Corrección pedida» con un mensaje para la persona (el que escribió el
+ * equipo o `MENSAJE_REAPERTURA`). Desde ahí puede volver a subir su documentación desde Mi perfil y, al guardar, vuelve a la
+ * cola. Solo sirve con la verificación rechazada: es la salida de un estado que de otro modo no tiene vuelta (la persona no
+ * puede editar nada y, como su cuenta existe, tampoco registrarse de nuevo).
+ */
+export async function aplicarReapertura(tx: Ejecutor, docenteId: string, mensaje?: string): Promise<Resultado<Detalle>> {
+  const [d] = await tx
+    .select({
+      id: docentes.id,
+      usuarioId: docentes.usuarioId,
+      nombre: docentes.nombre,
+      verificacion: docentes.verificacion,
+      onboardingCompleto: docentes.onboardingCompleto,
+    })
+    .from(docentes)
+    .where(eq(docentes.id, docenteId))
+    .limit(1)
+    .for("update");
+  if (!d) return fallo(NO_ENCONTRADO);
+  if (!d.onboardingCompleto) return fallo("Este profesional todavía no terminó el alta.");
+  if (!puedeReabrirRevision(d.verificacion)) {
+    return fallo(`Este perfil figura como «${VERIFICACION_BO[d.verificacion].etiqueta}»: solo se reabre uno rechazado. Actualizá la pantalla.`);
+  }
+
+  const texto = mensaje?.trim() || MENSAJE_REAPERTURA;
+  await tx
+    .update(docentes)
+    .set({ verificacion: "correccion", verificacionNota: texto, verificacionRevisadaEn: new Date() })
+    .where(eq(docentes.id, d.id));
+  await avisar(tx, d.usuarioId, {
+    tipo: "verificacion",
+    titulo: AVISO_DE,
+    texto: `reabrió tu revisión: ${texto}`,
+    enlace: "/docente/perfil#documentacion",
+  });
+  await encolarParaUsuarios(tx, d.usuarioId ? [d.usuarioId] : [], "M12", { nombre: d.nombre, motivo: texto });
+  return ok({ estadoAnterior: d.verificacion, mensaje: texto });
 }
 
 /** Bloquea el acceso (`docentes.suspendido`; el bloqueo en sí lo hace requerirDocente) y avisa con el motivo. */

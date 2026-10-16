@@ -41,7 +41,7 @@ nuestro código con la API de Resend.
 |---|---|---|---|---|---|---|
 | M10 | Recibimos tu documentación | Al terminar el alta con documentos | Docente | App | En la app | Pronto |
 | M11 | Tu perfil está verificado | El equipo lo verifica | Docente | App | En la app | Lanzamiento |
-| M12 | Necesitamos que corrijas tu documentación (con el motivo) | El equipo pide una corrección | Docente | App | En la app | Lanzamiento |
+| M12 | Necesitamos que corrijas tu documentación (con el motivo) | El equipo pide una corrección, o reabre la revisión de un perfil rechazado (botón "Reabrir la revisión" de su ficha; el motivo es el mensaje del equipo) | Docente | App | En la app | Lanzamiento |
 | M13 | No pudimos verificar tu perfil (con el motivo) | El equipo lo rechaza | Docente | App | En la app | Lanzamiento |
 | M14 | Tu institución fue verificada / se quitó la verificación | El equipo cambia el sello | Institución (dueño y equipo) | App | En la app | Pronto |
 | M15 | Tu cuenta fue suspendida (motivo y cómo regularizar) | El equipo suspende | Docente, institución | App | En la app | Lanzamiento |

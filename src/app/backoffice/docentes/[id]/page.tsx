@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocAccionesCuenta } from "@/components/backoffice/doc-acciones-cuenta";
 import { DocProcesarBaja } from "@/components/backoffice/doc-procesar-baja";
+import { DocReabrirRevision } from "@/components/backoffice/doc-reabrir-revision";
 import {
   DocCabecera,
   DocContacto,
@@ -16,7 +17,7 @@ import { BotonVolver } from "@/components/institucion/boton-volver";
 import { botonClases } from "@/components/ui/button";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { requerirUsuario } from "@/lib/auth";
-import { enlaceWhatsApp } from "@/lib/backoffice-docentes";
+import { enlaceWhatsApp, puedeReabrirRevision } from "@/lib/backoffice-docentes";
 import { esUuid } from "@/lib/busquedas";
 import { resumenParaBaja } from "@/lib/queries/baja-docente";
 import { fichaDocenteBo } from "@/lib/queries/backoffice-docentes";
@@ -83,6 +84,7 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
                 {d.telefono ? "El teléfono cargado no alcanza para armar el enlace de WhatsApp." : "No cargó un teléfono: no hay a dónde escribirle."}
               </p>
             )}
+            {puedeReabrirRevision(d.verificacion) && d.usuarioId && <DocReabrirRevision docenteId={d.id} nombre={nombre} />}
             <DocAccionesCuenta docenteId={d.id} nombre={nombre} suspendido={d.suspendido} tieneCuenta={!!d.usuarioId} />
             {resumenDeBaja && ficha.emailCuenta && (
               <DocProcesarBaja
