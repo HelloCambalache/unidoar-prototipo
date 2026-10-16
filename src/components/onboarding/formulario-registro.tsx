@@ -8,7 +8,7 @@ import { Campo, Casilla, Input } from "@/components/ui/campos";
 import { InputContrasena } from "@/components/ui/input-contrasena";
 import { BotonGoogle } from "@/components/onboarding/boton-google";
 import { ConfirmarMail } from "@/components/onboarding/confirmar-mail";
-import { AlertaError, EnlaceVolver, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
+import { AlertaError, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
 import { PRIMER_PASO_PROTEGIDO, type EstadoAuth } from "@/lib/acceso";
 import type { RolAlta } from "@/lib/onboarding";
 
@@ -178,16 +178,16 @@ export function FormularioRegistro({
         </Boton>
       </div>
 
-      <div className="mt-3.5 flex items-center justify-between gap-3">
-        {/* Vuelve al inicio, no al selector de cuenta: quien entró como institución no tiene que ver "Soy profesional" (ni al revés). */}
-        {invitacion ? <span /> : <EnlaceVolver href="/">‹ Volver al inicio</EnlaceVolver>}
-        <span className="text-[13px] text-apagado">
-          ¿Ya tenés cuenta?{" "}
-          <Link href={`/ingresar?next=${encodeURIComponent(PRIMER_PASO_PROTEGIDO[rol])}`} className="font-semibold text-navy-700">
-            Ingresá
-          </Link>
-        </span>
-      </div>
+      {/* El "Volver al inicio" lo pone el marco (MarcoAcceso): vuelve al inicio, no al selector de cuenta, para que quien entró como institución no vea "Soy profesional" (ni al revés). */}
+      <p className="mt-[22px] mb-0 text-[13px] leading-snug text-apagado">
+        ¿Ya tenés cuenta?{" "}
+        <Link
+          href={`/ingresar?next=${encodeURIComponent(PRIMER_PASO_PROTEGIDO[rol])}`}
+          className="font-semibold text-navy-700 hover:text-naranja"
+        >
+          Ingresá
+        </Link>
+      </p>
     </form>
   );
 }

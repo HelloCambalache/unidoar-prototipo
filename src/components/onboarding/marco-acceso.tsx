@@ -6,18 +6,22 @@ import { focoDeFoto } from "@/lib/fotos";
 const FOTO_ACCESO = "/assets/aula-secundaria.jpg";
 
 /**
- * Pantalla partida de /registro, /ingresar y sus variantes: foto con overlay azul y el isotipo a la izquierda,
- * formulario en una tarjeta blanca a la derecha, los dos redondeados sobre el fondo cálido. En ≤ 860 px la foto pasa arriba.
+ * Pantalla partida de /registro, /ingresar, el paso 1 del alta (crear la cuenta) y sus variantes: foto con overlay azul y
+ * el isotipo a la izquierda, formulario en una tarjeta blanca a la derecha, los dos redondeados sobre el fondo cálido.
+ * En ≤ 860 px la foto pasa arriba.
  */
 export function MarcoAcceso({
   titulo = "Profesionales verificados y sin vueltas.",
   bajada = "Identidad y títulos confirmados antes de que los veas.",
+  foto = FOTO_ACCESO,
   volverHref = "/",
   volverTexto = "‹ Volver al inicio",
   children,
 }: {
   titulo?: string;
   bajada?: string;
+  /** Foto de la izquierda (`/assets/…`): el alta de cada rol usa la suya. */
+  foto?: string;
   volverHref?: string;
   volverTexto?: string;
   children: React.ReactNode;
@@ -26,12 +30,12 @@ export function MarcoAcceso({
     <div className="flex min-h-screen gap-4 bg-lienzo p-4 max-[860px]:flex-col max-[860px]:gap-0 max-[860px]:p-0">
       <div className="relative flex min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-[32px] max-[860px]:h-[240px] max-[860px]:flex-none max-[860px]:rounded-none">
         <Image
-          src={FOTO_ACCESO}
+          src={foto}
           alt=""
           fill
           priority
           sizes="(max-width: 860px) 100vw, 50vw"
-          style={{ objectPosition: focoDeFoto(FOTO_ACCESO) }}
+          style={{ objectPosition: focoDeFoto(foto) }}
           className="object-cover"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,11,53,.25),rgba(4,11,53,.88))]" />
