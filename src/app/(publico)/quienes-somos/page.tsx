@@ -60,7 +60,7 @@ export default function QuienesSomos() {
   return (
     <>
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-12 pt-10 max-[900px]:px-6 max-[560px]:gap-8 max-[560px]:pt-6">
-        <section className="relative overflow-hidden rounded-[32px] bg-navy-900 px-12 py-14 text-white max-[560px]:px-6 max-[560px]:py-10">
+        <section className="relative overflow-hidden rounded-marco bg-navy-900 px-12 py-14 text-white max-[560px]:px-6 max-[560px]:py-10">
           <NodosMarca className="absolute -top-12 -right-10 w-[300px] opacity-90 max-[760px]:w-[180px] max-[760px]:opacity-60" />
           <span className="relative inline-block rounded-full bg-celeste/18 px-2.5 py-[5px] text-xs leading-none font-semibold text-celeste">
             Nosotros · Equipo UNIDOAR
@@ -131,7 +131,7 @@ export default function QuienesSomos() {
                     </h3>
                   </div>
                 </div>
-                <p className="m-0 mb-5 rounded-[18px] bg-lienzo px-4 py-3.5 text-[13.5px] leading-[1.55] text-tinta-2">
+                <p className="m-0 mb-5 rounded-interno bg-lienzo px-4 py-3.5 text-[13.5px] leading-[1.55] text-tinta-2">
                   <span className="mb-1 block text-[11px] leading-none font-semibold tracking-[.09em] text-apagado uppercase">Enfoque</span>
                   {f.enfoque}
                 </p>

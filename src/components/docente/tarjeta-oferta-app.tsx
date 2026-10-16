@@ -44,7 +44,7 @@ export function TarjetaOfertaApp({
       )}
     >
       {oferta.rapida && (
-        <div className="mb-2 flex items-center gap-2 rounded-[16px] bg-naranja px-3.5 py-2.5 text-[13px] leading-none font-semibold text-white">
+        <div className="mb-2 flex items-center gap-2 rounded-interno bg-naranja px-3.5 py-2.5 text-[13px] leading-none font-semibold text-white">
           <span aria-hidden className="relative flex size-2 flex-none">
             <span className="absolute inset-0 animate-ping rounded-full bg-white/80" />
             <span className="relative size-2 rounded-full bg-white" />
@@ -54,7 +54,7 @@ export function TarjetaOfertaApp({
           {oferta.responderEn && <span className="ml-auto font-medium text-white/90">responder en {oferta.responderEn}</span>}
         </div>
       )}
-      <div className={cn("flex flex-1 flex-col gap-3.5 rounded-[18px] p-[18px]", oferta.rapida ? "bg-naranja-tint" : panel.fondo)}>
+      <div className={cn("flex flex-1 flex-col gap-3.5 rounded-interno p-[18px]", oferta.rapida ? "bg-naranja-tint" : panel.fondo)}>
         <div className="flex items-start justify-between gap-3">
           <span className={cn("text-[11.5px] leading-none font-semibold tracking-[0.08em] uppercase", panel.texto)}>
             {CATEGORIA_INFO[oferta.categoria].plural}

@@ -100,7 +100,7 @@ function FilaDocumento({
 }) {
   const e = ESTADO_DOC[estado];
   return (
-    <div id={id} className="flex scroll-mt-6 flex-wrap items-center gap-3.5 rounded-[18px] bg-[#F7F6F2] px-4 py-3.5">
+    <div id={id} className="flex scroll-mt-6 flex-wrap items-center gap-3.5 rounded-interno bg-[#F7F6F2] px-4 py-3.5">
       <span
         aria-hidden
         className={cn(
@@ -198,7 +198,7 @@ export function PerfilFormulario({
         <div className="flex min-w-0 flex-1 flex-col gap-5 max-[860px]:w-full">
           {/* Tus datos: foto, nombre, título y zonas */}
           <Tarjeta como="section" id="datos" className={cn(SECCION, "p-2.5")}>
-            <div className="flex gap-6 rounded-[22px] bg-[#F7F6F2] px-6 py-6 max-[560px]:flex-col max-[560px]:px-4">
+            <div className="flex gap-6 rounded-interno bg-[#F7F6F2] px-6 py-6 max-[560px]:flex-col max-[560px]:px-4">
               <SubirArchivo
                 bucket="publico"
                 carpeta="fotos"
@@ -328,7 +328,7 @@ export function PerfilFormulario({
             </FilaDocumento>
 
             {documentacion.estudiosEditables && (
-              <div className="rounded-[18px] border border-linea px-4 py-4">
+              <div className="rounded-interno border border-linea px-4 py-4">
                 <div className="mb-3 text-[14.5px] leading-[1.3] font-semibold">Tus estudios</div>
                 <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
                   <Campo etiqueta="Situación" error={error("situacionEstudio")}>
@@ -491,13 +491,13 @@ export function PerfilFormulario({
               </button>
             </div>
             {d.experiencia.length === 0 ? (
-              <p className="m-0 rounded-[18px] border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
+              <p className="m-0 rounded-interno border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
                 Sumá tus trabajos anteriores: es lo primero que lee una institución.
               </p>
             ) : (
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {d.experiencia.map((e, i) => (
-                  <li key={i} className="flex gap-3 rounded-[18px] bg-[#F7F6F2] p-4">
+                  <li key={i} className="flex gap-3 rounded-interno bg-[#F7F6F2] p-4">
                     <span aria-hidden className={cn("mt-2 size-2.5 flex-none rounded-full", i === 0 ? "bg-rosa" : "bg-[#C9C6C0]")} />
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="grid grid-cols-[2fr_1fr] gap-2 max-[560px]:grid-cols-1">
@@ -555,13 +555,13 @@ export function PerfilFormulario({
                 </button>
               </div>
               {d.formacion.length === 0 ? (
-                <p className="m-0 rounded-[18px] border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
+                <p className="m-0 rounded-interno border border-dashed border-[#CFCBC3] px-4 py-5 text-center text-[13px] leading-normal text-apagado">
                   Títulos, profesorados y certificaciones.
                 </p>
               ) : (
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                   {d.formacion.map((f, i) => (
-                    <li key={i} className="flex flex-col gap-2 rounded-[18px] bg-[#F7F6F2] p-3.5">
+                    <li key={i} className="flex flex-col gap-2 rounded-interno bg-[#F7F6F2] p-3.5">
                       <Input
                         aria-label={`Título de la formación ${i + 1}`}
                         placeholder="Título de la formación"
@@ -708,7 +708,7 @@ export function PerfilFormulario({
       <div className="sticky bottom-0 z-20 mt-6 pb-3">
         <div
           className={cn(
-            "flex items-center justify-end gap-3.5 rounded-[22px] bg-white px-5 py-3 shadow-[0_-1px_0_rgba(4,11,53,.04),0_10px_30px_rgba(4,11,53,.14)] max-[560px]:flex-col max-[560px]:items-stretch",
+            "flex items-center justify-end gap-3.5 rounded-interno bg-white px-5 py-3 shadow-[0_-1px_0_rgba(4,11,53,.04),0_10px_30px_rgba(4,11,53,.14)] max-[560px]:flex-col max-[560px]:items-stretch",
           )}
         >
           <span

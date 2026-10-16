@@ -86,7 +86,7 @@ export function InstPlan({
               <label
                 key={clave}
                 className={cn(
-                  "cursor-pointer rounded-lg border p-[14px_16px] transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30",
+                  "cursor-pointer rounded-caja border p-[14px_16px] transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30",
                   elegido === clave ? "border-navy-700 bg-navy-50/50" : "border-borde hover:border-borde-fuerte",
                 )}
               >

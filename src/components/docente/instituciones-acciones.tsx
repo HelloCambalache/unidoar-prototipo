@@ -114,7 +114,7 @@ export function InstitucionCvBoton({ institucionId, enviado }: { institucionId: 
 
   if (confirmando) {
     return (
-      <div className="mb-2 flex flex-col gap-2 rounded-lg border border-borde bg-superficie p-3">
+      <div className="mb-2 flex flex-col gap-2 rounded-caja border border-borde bg-superficie p-3">
         <p className="m-0 text-[13px] leading-normal text-tinta-2">
           Al enviar tu CV, esta institución va a poder ver tu <b className="font-semibold">teléfono y tu email</b>. No se puede deshacer.
         </p>

@@ -1,5 +1,11 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// Conoce los radios de la escala (ver globals.css): sin esto no los reconoce como radios y, si un componente trae
+// `rounded-tarjeta` y quien lo usa pasa `rounded-panel`, quedan los dos y gana el que el CSS emite último.
+const twMerge = extendTailwindMerge({
+  extend: { theme: { radius: ["marco", "panel", "tarjeta", "interno", "caja"] } },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

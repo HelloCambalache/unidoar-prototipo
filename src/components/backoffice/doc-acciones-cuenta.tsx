@@ -72,7 +72,7 @@ export function DocAccionesCuenta({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-borde bg-superficie p-3.5" aria-busy={pendiente}>
+    <div className="flex flex-col gap-3 rounded-caja border border-borde bg-superficie p-3.5" aria-busy={pendiente}>
       <p className="m-0 text-[13px] leading-normal text-tinta-2">
         {suspendido
           ? `${nombre} va a poder volver a entrar a su cuenta.`

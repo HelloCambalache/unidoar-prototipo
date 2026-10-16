@@ -64,10 +64,10 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
             src={i.portadaUrl}
             alt={`Foto de ${i.nombre}`}
             style={{ objectPosition: focoDeFoto(i.portadaUrl) }}
-            className="block aspect-[16/7] max-h-[340px] w-full rounded-[22px] object-cover"
+            className="block aspect-[16/7] max-h-[340px] w-full rounded-interno object-cover"
           />
         ) : (
-          <div aria-hidden className="flex aspect-[16/7] max-h-[340px] w-full items-center justify-center rounded-[22px] bg-lienzo text-[#C9C6C0]">
+          <div aria-hidden className="flex aspect-[16/7] max-h-[340px] w-full items-center justify-center rounded-interno bg-lienzo text-[#C9C6C0]">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <circle cx="8.5" cy="9.5" r="1.6" />
@@ -81,7 +81,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
             nombre={i.nombre}
             logoUrl={i.logoUrl}
             tamano={104}
-            className="relative z-[2] -mt-[52px] rounded-[26px] border-4 border-white bg-white shadow-[0_8px_24px_rgba(4,11,53,.12)]"
+            className="relative z-[2] -mt-[52px] rounded-panel border-4 border-white bg-white shadow-[0_8px_24px_rgba(4,11,53,.12)]"
           />
           <div className="min-w-0 flex-[1_1_260px] pt-4">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -138,7 +138,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
                   <li key={b.id}>
                     <Link
                       href={`/docente/oferta/${b.id}`}
-                      className="group flex items-center gap-3.5 rounded-[18px] bg-[#F7F6F2] p-3.5 text-tinta transition-colors hover:bg-lienzo hover:text-tinta"
+                      className="group flex items-center gap-3.5 rounded-interno bg-[#F7F6F2] p-3.5 text-tinta transition-colors hover:bg-lienzo hover:text-tinta"
                     >
                       <span className="min-w-0 flex-1">
                         <span className="font-display block text-[15px] leading-[1.3] font-semibold">{b.puesto}</span>
@@ -185,7 +185,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
             <Tarjeta como="section" className={TARJETA}>
               <h2 className="font-display m-0 mb-3 text-[18px] font-semibold text-navy-900">Dónde queda</h2>
               <div className="flex items-center gap-3.5">
-                <span className="inline-flex size-11 flex-none items-center justify-center rounded-[14px] bg-rosa-tint text-rosa">
+                <span className="inline-flex size-11 flex-none items-center justify-center rounded-caja bg-rosa-tint text-rosa">
                   <Icono nombre="ubicacion" tamano={20} trazo={1.8} />
                 </span>
                 <div className="min-w-0 text-[13.5px] leading-[1.45]">
@@ -217,7 +217,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
             </h2>
             <InstitucionCvBoton institucionId={i.id} enviado={cvEnviado} />
             <InstitucionFavoritoBoton institucionId={i.id} favorita={favorita} nombre={i.nombre} className="w-full" />
-            <div className="mt-5 rounded-[18px] bg-[#F7F6F2] px-4 py-4">
+            <div className="mt-5 rounded-interno bg-[#F7F6F2] px-4 py-4">
               <EtiquetaSeccion className="text-apagado">Qué va a ver la institución</EtiquetaSeccion>
               <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[13px] leading-[1.4]">
                 {QUE_VE.map((q) => (

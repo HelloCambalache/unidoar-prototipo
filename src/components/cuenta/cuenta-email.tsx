@@ -65,7 +65,7 @@ export function CuentaEmail({ email, tieneContrasena }: { email: string; tieneCo
             </p>
           )}
           {estado?.ok && (
-            <p role="status" className="m-0 rounded-lg bg-verde-tint px-3.5 py-2.5 text-[13px] leading-snug text-verde">
+            <p role="status" className="m-0 rounded-caja bg-verde-tint px-3.5 py-2.5 text-[13px] leading-snug text-verde">
               Te mandamos un enlace a <b className="font-semibold">{estado.data.nuevo}</b>. Abrilo para confirmar el cambio; hasta
               entonces seguís ingresando con {email}. Si no lo ves, fijate en spam.
             </p>

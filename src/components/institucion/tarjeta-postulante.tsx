@@ -39,7 +39,7 @@ export function TarjetaPostulante({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        "rounded-[18px] bg-white p-3.5 shadow-tarjeta transition-[opacity,box-shadow] hover:shadow-tarjeta-hover",
+        "rounded-interno bg-white p-3.5 shadow-tarjeta transition-[opacity,box-shadow] hover:shadow-tarjeta-hover",
         !soloLectura && "cursor-grab active:cursor-grabbing",
         arrastrando && "opacity-40",
       )}

@@ -34,7 +34,7 @@ export function CursoInscripto({
         : { texto: "Al terminar el curso", clase: "text-apagado" };
 
   return (
-    <li className="flex flex-wrap items-center gap-3.5 rounded-[10px] border border-borde bg-white px-[18px] py-4">
+    <li className="flex flex-wrap items-center gap-3.5 rounded-tarjeta border border-linea bg-white px-[18px] py-4">
       <div className="min-w-0 flex-[1_1_240px]">
         <div className="mb-1.5 flex items-center gap-2.5">
           <Avatar iniciales={i.iniciales} fotoUrl={i.fotoUrl} tamano={32} />

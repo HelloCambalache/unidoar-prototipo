@@ -161,7 +161,7 @@ export function MapaOfertas({
       <div
         role="img"
         aria-label="Mapa con la ubicación de la institución"
-        className="mapa-suave relative isolate h-[300px] overflow-hidden rounded-[22px] bg-lienzo max-[620px]:h-[220px]"
+        className="mapa-suave relative isolate h-[300px] overflow-hidden rounded-interno bg-lienzo max-[620px]:h-[220px]"
       >
         <div ref={contenedor} className="absolute inset-0" />
       </div>
@@ -196,7 +196,7 @@ export function MapaOfertas({
       {seleccionada ? (
         <div
           className={cn(
-            "absolute right-3.5 bottom-3.5 left-3.5 z-[500] flex flex-wrap items-center gap-3.5 rounded-[10px] border border-borde bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(31,36,33,.18)] max-[860px]:p-3",
+            "absolute right-3.5 bottom-3.5 left-3.5 z-[500] flex flex-wrap items-center gap-3.5 rounded-interno border border-borde bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(31,36,33,.18)] max-[860px]:p-3",
           )}
         >
           <LogoInstitucion nombre={seleccionada.institucion} logoUrl={seleccionada.logoUrl} tamano={38} />
@@ -216,7 +216,7 @@ export function MapaOfertas({
           </div>
         </div>
       ) : (
-        <div className="pointer-events-none absolute right-3.5 bottom-3.5 left-3.5 z-[500] rounded-lg bg-white/90 p-[9px] text-center text-[12.5px] leading-[1.4] font-medium text-apagado">
+        <div className="pointer-events-none absolute right-3.5 bottom-3.5 left-3.5 z-[500] rounded-caja bg-white/90 p-[9px] text-center text-[12.5px] leading-[1.4] font-medium text-apagado">
           Tocá un punto para ver la búsqueda
         </div>
       )}

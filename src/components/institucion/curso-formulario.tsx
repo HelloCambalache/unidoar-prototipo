@@ -141,7 +141,7 @@ export function CursoFormulario({
         />
       </Campo>
 
-      <div className="rounded-ud border border-borde bg-white px-[18px] py-4">
+      <div className="rounded-tarjeta border border-linea bg-white px-[18px] py-4">
         <input type="hidden" name="certifica" value={v.certifica ? "on" : ""} />
         <button
           type="button"

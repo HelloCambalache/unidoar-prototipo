@@ -69,7 +69,7 @@ export function PasoDatosDocente({
         Completá tus datos. Los campos con * son obligatorios para que podamos verificarte.
       </p>
 
-      <fieldset className="m-0 mb-4 min-w-0 rounded-lg border border-borde p-[18px]">
+      <fieldset className="m-0 mb-4 min-w-0 rounded-interno border border-borde p-[18px]">
         <legend className="px-0 text-[13px] leading-none font-semibold">Datos personales</legend>
         <div className="mt-3.5 flex flex-col gap-3">
           <div className="flex gap-3.5 max-[640px]:flex-col">
@@ -125,7 +125,7 @@ export function PasoDatosDocente({
         </datalist>
       </fieldset>
 
-      <fieldset className="m-0 mb-4 min-w-0 rounded-lg border border-borde p-[18px]">
+      <fieldset className="m-0 mb-4 min-w-0 rounded-interno border border-borde p-[18px]">
         <legend className="px-0 text-[13px] leading-none font-semibold">Dónde trabajás</legend>
         <p className="mt-2.5 mb-3.5 text-[13px] leading-normal text-apagado">
           Con las zonas calculamos a cuántos kilómetros estás de cada institución.

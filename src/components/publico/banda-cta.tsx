@@ -17,7 +17,7 @@ export function BandaCTA({
 }) {
   return (
     <section className={cn("bg-lienzo px-12 py-12 max-[900px]:px-6 max-[560px]:py-8", className)}>
-      <div className="relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-10 overflow-hidden rounded-[32px] bg-navy-900 px-12 py-12 max-[560px]:gap-6 max-[560px]:px-6 max-[560px]:py-9">
+      <div className="relative mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-10 overflow-hidden rounded-marco bg-navy-900 px-12 py-12 max-[560px]:gap-6 max-[560px]:px-6 max-[560px]:py-9">
         <NodosMarca className="absolute -top-14 -right-10 w-[260px] opacity-90 max-[700px]:hidden" />
         <div className="relative max-w-[600px]">
           {etiqueta && <div className="mb-3.5">{etiqueta}</div>}

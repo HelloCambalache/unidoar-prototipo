@@ -96,7 +96,7 @@ export default async function PerfilInstitucion({ params }: Props) {
             </Tarjeta>
 
             {datos.length > 0 && (
-              <dl className="m-0 mb-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-px overflow-hidden rounded-ud border border-borde bg-borde">
+              <dl className="m-0 mb-4 grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-px overflow-hidden rounded-interno border border-borde bg-borde">
                 {datos.map((d) => (
                   <div key={d.etiqueta} className="flex flex-col-reverse justify-end bg-white p-4">
                     <dt className="mt-1 text-xs leading-[1.3] text-apagado">{d.etiqueta}</dt>
@@ -169,7 +169,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                   {inst.busquedas.map((b) => {
                     const accion = accionPostular(sesion, b.id);
                     return (
-                      <li key={b.id} className="flex flex-col rounded-lg border border-borde p-3.5">
+                      <li key={b.id} className="flex flex-col rounded-interno border border-borde p-3.5">
                         <div className="mb-1 flex items-start justify-between gap-2">
                           <h3 className="m-0 text-sm leading-[1.3] font-semibold text-tinta">{b.puesto}</h3>
                           {b.rapida && (

@@ -100,7 +100,7 @@ export default async function PerfilCompartidoPage({ params }: Props) {
               </div>
             </div>
             {verificado && (
-              <div className="mt-5 rounded-ud border border-borde bg-superficie px-[18px] py-4">
+              <div className="mt-5 rounded-interno border border-borde bg-superficie px-[18px] py-4">
                 <EtiquetaSeccion className="mb-3">Verificado por UNIDOAR</EtiquetaSeccion>
                 <div className="flex flex-wrap gap-x-[26px] gap-y-3 text-[13px] leading-none">
                   <Tilde ok>Identidad (DNI)</Tilde>

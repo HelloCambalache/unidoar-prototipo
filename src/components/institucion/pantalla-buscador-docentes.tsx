@@ -107,7 +107,7 @@ export async function PantallaBuscadorDocentes({
         <EncabezadoPagina titulo={titulo} bajada={bajada} className="mb-3.5" />
 
         {contexto && (
-          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-ud border border-navy-100 bg-navy-50 px-4 py-3 text-[13px] leading-snug text-navy-700">
+          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-caja border border-navy-100 bg-navy-50 px-4 py-3 text-[13px] leading-snug text-navy-700">
             <span>
               Ordenados según lo que pide tu búsqueda <b className="font-semibold">{contexto.puesto}</b>.
             </span>

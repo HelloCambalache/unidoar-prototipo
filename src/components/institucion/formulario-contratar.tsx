@@ -35,7 +35,7 @@ export function FormularioContratar({
         <Input type="date" name="inicio" value={inicio} onChange={(e) => setInicio(e.target.value)} />
       </Campo>
       {faltaExamen && (
-        <div className="flex flex-col gap-2 rounded-lg bg-[#FDE9D8] px-3.5 py-3 text-[13.5px] leading-snug text-[#9A4A12]">
+        <div className="flex flex-col gap-2 rounded-caja bg-[#FDE9D8] px-3.5 py-3 text-[13.5px] leading-snug text-[#9A4A12]">
           <p className="m-0 font-semibold">Todavía no anotaste que hizo el examen preocupacional.</p>
           <Casilla name="sinExamen" checked={sinExamen} onChange={(e) => setSinExamen(e.target.checked)}>
             Contratarla igual, sin el examen.

@@ -17,7 +17,7 @@ function Cifra({ etiqueta, valor, color, separada }: { etiqueta: string; valor: 
 
 function TarjetaFormacion({ resumen, variante }: { resumen: Resumen; variante: "lista" | "historial" }) {
   return (
-    <section className="rounded-[10px] border border-borde bg-white p-5">
+    <section className="rounded-tarjeta border border-linea bg-white p-5">
       <EtiquetaSeccion className="mb-3.5">Tu formación</EtiquetaSeccion>
       <div className="flex flex-col gap-3">
         <Cifra etiqueta="Cursos completados" valor={resumen.completados} color="text-verde" />
@@ -34,7 +34,7 @@ function TarjetaFormacion({ resumen, variante }: { resumen: Resumen; variante: "
 
 function TarjetaSumanEnPerfil() {
   return (
-    <section className="rounded-[10px] border border-borde bg-white p-[18px]">
+    <section className="rounded-tarjeta border border-linea bg-white p-[18px]">
       <div className="mb-1.5 text-[13px] leading-[1.3] font-semibold">Los cursos suman en tu perfil</div>
       <p className="m-0 mb-3 text-[13px] leading-normal text-apagado">
         Las instituciones ven tus certificaciones cuando revisan tu perfil.
@@ -65,7 +65,7 @@ export function CursoLateral({
       {variante === "lista" && destacado && (
         <Link
           href={`/docente/cursos?curso=${destacado.id}`}
-          className="block rounded-[10px] bg-rosa-tint p-[18px] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
+          className="block rounded-tarjeta bg-rosa-tint p-[18px] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
         >
           <div className="mb-2.5 text-[11px] leading-none font-semibold tracking-[.06em] text-rosa uppercase">Curso destacado</div>
           <div className="mb-1 text-[15px] leading-[1.3] font-semibold text-rosa">{destacado.titulo}</div>
@@ -78,7 +78,7 @@ export function CursoLateral({
         </Link>
       )}
       {variante === "historial" && enCurso && (
-        <section className="rounded-[10px] bg-rosa-tint p-[18px]">
+        <section className="rounded-tarjeta bg-rosa-tint p-[18px]">
           <div className="mb-2.5 text-[11px] leading-none font-semibold tracking-[.06em] text-rosa uppercase">Seguí donde dejaste</div>
           <div className="mb-1 text-[15px] leading-[1.3] font-semibold text-rosa">{enCurso.titulo}</div>
           <div className="mb-3 text-[12.5px] leading-[1.4] text-rosa">

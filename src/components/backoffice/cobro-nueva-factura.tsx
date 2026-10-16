@@ -133,7 +133,7 @@ export function CobroNuevaFactura({
             </Select>
           </Campo>
         </div>
-        <p className="m-0 mb-4 rounded-lg bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
+        <p className="m-0 mb-4 rounded-caja bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
           Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido, sedes))}</b>
           {P.planDe(planElegido).porSede && ` (${sedes} ${sedes === 1 ? "sede" : "sedes"} × ${pesos(P.planDe(planElegido).precio)})`}
         </p>

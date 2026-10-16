@@ -51,7 +51,7 @@ export function CursoBorrar({
   };
 
   return (
-    <section aria-labelledby="borrar-curso" className="mt-8 max-w-[900px] rounded-ud border border-borde bg-white p-[18px]">
+    <section aria-labelledby="borrar-curso" className="mt-8 max-w-[900px] rounded-tarjeta border border-linea bg-white p-[18px]">
       <h2 id="borrar-curso" className="m-0 mb-1 text-sm leading-[1.3] font-semibold">
         Borrar este curso
       </h2>

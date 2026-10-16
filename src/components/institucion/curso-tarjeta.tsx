@@ -9,7 +9,7 @@ import type { CursoDeInstitucion } from "@/lib/queries/cursos-institucion";
 /** Una fila del listado "Mis cursos": foto, datos del curso y, al costado, cuántos se anotaron y las acciones. */
 export function CursoTarjeta({ c }: { c: CursoDeInstitucion }) {
   return (
-    <article className="flex gap-4 rounded-ud border border-borde bg-white p-[18px] max-[860px]:flex-wrap">
+    <article className="flex gap-4 rounded-tarjeta border border-linea bg-white p-[18px] max-[860px]:flex-wrap">
       {c.fotoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- fotos subidas por la institución, de tamaños libres
         <img

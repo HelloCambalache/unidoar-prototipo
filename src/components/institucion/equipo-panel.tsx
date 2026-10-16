@@ -20,7 +20,7 @@ const NOTA_CON_MAIL =
   "Le mandamos un mail con la invitación. La persona lo abre, crea su acceso con ese mismo email y queda directo en tu equipo. Después te damos el enlace por si querés pasárselo vos.";
 
 /** Caja gris con texto chico (descripción del rol, avisos). */
-const CAJA = "rounded-lg border border-borde bg-superficie px-3.5 py-3 text-[12.5px] leading-normal text-apagado";
+const CAJA = "rounded-caja border border-borde bg-superficie px-3.5 py-3 text-[12.5px] leading-normal text-apagado";
 
 /** Enlace de la invitación para copiar, con los pasos que tiene que seguir la persona invitada. */
 function EnlaceInvitacion({ url, email }: { url: string; email: string }) {

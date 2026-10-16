@@ -130,7 +130,7 @@ export function FormularioBusqueda({
       action={formAction}
       className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:gap-4"
     >
-      <div className="flex w-full max-w-[980px] min-w-0 flex-1 flex-col gap-4 rounded-ud border border-borde bg-white p-6 max-[560px]:p-4">
+      <div className="flex w-full max-w-[980px] min-w-0 flex-1 flex-col gap-4 rounded-tarjeta border border-linea bg-white p-6 max-[560px]:p-4">
         {/* Común o urgente: a la vista, arriba de todo. Urgente es el tipo "Suplencia rápida". */}
         <fieldset className="m-0 grid grid-cols-2 gap-3 border-0 p-0 max-[640px]:grid-cols-1">
           <legend className="mb-2 p-0 text-[13px] font-semibold text-tinta">¿Qué tipo de búsqueda es?</legend>
@@ -139,7 +139,7 @@ export function FormularioBusqueda({
             aria-pressed={!esRapida}
             onClick={() => esRapida && set("tipo", tipoComun)}
             className={cn(
-              "flex flex-col items-start gap-1 rounded-[18px] border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+              "flex flex-col items-start gap-1 rounded-interno border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
               !esRapida ? "border-navy-700 bg-navy-50" : "border-borde bg-white hover:border-borde-fuerte",
             )}
           >
@@ -155,7 +155,7 @@ export function FormularioBusqueda({
               set("tipo", "Suplencia rápida");
             }}
             className={cn(
-              "flex flex-col items-start gap-1 rounded-[18px] border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-naranja/40 focus-visible:outline-none",
+              "flex flex-col items-start gap-1 rounded-interno border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-naranja/40 focus-visible:outline-none",
               esRapida ? "border-naranja bg-naranja-tint" : "border-borde bg-white hover:border-naranja/60",
             )}
           >
@@ -338,7 +338,7 @@ export function FormularioBusqueda({
                   <label
                     key={s.id}
                     className={cn(
-                      "flex cursor-pointer items-start gap-3 rounded-[16px] border-[1.5px] p-3.5 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30",
+                      "flex cursor-pointer items-start gap-3 rounded-interno border-[1.5px] p-3.5 transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30",
                       marcada ? "border-navy-700 bg-navy-50" : "border-borde bg-white hover:border-borde-fuerte",
                     )}
                   >

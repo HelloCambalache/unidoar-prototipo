@@ -135,7 +135,7 @@ export default async function OperacionPage({ searchParams }: { searchParams: Pr
           {flojas.length > MAX_FLOJAS && (
             <p className="m-0 mt-2 text-xs leading-normal text-sutil">y {flojas.length - MAX_FLOJAS} más con pocos postulantes.</p>
           )}
-          <div className="mt-3.5 rounded-lg bg-[#F5F5F1] px-3.5 py-3 text-[13px] leading-normal text-apagado">
+          <div className="mt-3.5 rounded-caja bg-[#F5F5F1] px-3.5 py-3 text-[13px] leading-normal text-apagado">
             {enRiesgo.length > 0 ? (
               <>
                 Instituciones en riesgo de no renovar:{" "}

@@ -104,7 +104,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
     >
       <div ref={contenedor} className="absolute inset-0" />
       {seleccionada ? (
-        <div className="absolute right-3.5 bottom-3.5 left-3.5 z-[500] flex flex-wrap items-center gap-3.5 rounded-[10px] border border-borde bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(31,36,33,.18)] max-[860px]:p-3">
+        <div className="absolute right-3.5 bottom-3.5 left-3.5 z-[500] flex flex-wrap items-center gap-3.5 rounded-interno border border-borde bg-white px-4 py-3.5 shadow-[0_10px_28px_rgba(31,36,33,.18)] max-[860px]:p-3">
           <InstitucionLogo nombre={seleccionada.nombre} logoUrl={seleccionada.logoUrl} tamano={38} />
           <div className="min-w-0 flex-[1_1_200px]">
             <div className="text-[15px] leading-[1.3] font-semibold">{seleccionada.nombre}</div>
@@ -129,7 +129,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
           </div>
         </div>
       ) : (
-        <div className="pointer-events-none absolute right-3.5 bottom-3.5 left-3.5 z-[500] rounded-lg bg-white/90 p-[9px] text-center text-[12.5px] leading-[1.4] font-medium text-apagado">
+        <div className="pointer-events-none absolute right-3.5 bottom-3.5 left-3.5 z-[500] rounded-caja bg-white/90 p-[9px] text-center text-[12.5px] leading-[1.4] font-medium text-apagado">
           {pines.length > 0 ? "Tocá un punto para ver la institución" : "Ninguna institución con ubicación para mostrar"}
         </div>
       )}

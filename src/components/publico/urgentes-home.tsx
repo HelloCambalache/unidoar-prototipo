@@ -6,7 +6,7 @@ import { RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-busqueda";
 import { ListaUrgentes } from "./lista-urgentes";
 import type { SesionPublica } from "./sesion";
 
-const TILE_DATO = "flex flex-col justify-center rounded-[24px] border p-[22px]";
+const TILE_DATO = "flex flex-col justify-center rounded-tarjeta border p-[22px]";
 const CIFRA = "font-display text-[34px] leading-none font-bold tracking-[-0.03em]";
 
 /**
@@ -45,7 +45,7 @@ export function UrgentesHome({
         </p>
 
         <div className="grid auto-rows-[150px] grid-cols-4 gap-3.5 max-[900px]:grid-cols-2 max-[560px]:grid-cols-1">
-          <div className="relative col-span-2 row-span-2 flex flex-col justify-between overflow-hidden rounded-[28px] bg-naranja p-7 max-[560px]:col-span-1">
+          <div className="relative col-span-2 row-span-2 flex flex-col justify-between overflow-hidden rounded-panel bg-naranja p-7 max-[560px]:col-span-1">
             <span
               aria-hidden
               style={{ backgroundPosition: focoDeFoto("/assets/urgente-pizarron.jpg") }}
@@ -91,7 +91,7 @@ export function UrgentesHome({
 
           <Link
             href="/educadores"
-            className="relative col-span-2 overflow-hidden rounded-[28px] bg-navy-700 transition-transform duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none max-[560px]:col-span-1"
+            className="relative col-span-2 overflow-hidden rounded-panel bg-navy-700 transition-transform duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none max-[560px]:col-span-1"
           >
             <span
               aria-hidden

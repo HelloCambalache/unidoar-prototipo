@@ -57,7 +57,7 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
 
       <div
         className={cn(
-          "mx-[22px] mb-4 rounded-lg px-3.5 py-2.5 text-[13px] leading-normal",
+          "mx-[22px] mb-4 rounded-caja px-3.5 py-2.5 text-[13px] leading-normal",
           item.faltantes.length > 0 ? "bg-[#FEF1DF] text-[#8A4B07]" : "bg-verde-tint text-verde",
         )}
       >
@@ -86,7 +86,7 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
             </Dato>
           </dl>
           {item.verificacion === "correccion" && item.nota && (
-            <div className="mt-4 rounded-lg bg-[#FEF1DF] px-3.5 py-2.5 text-[13px] leading-normal text-[#8A4B07]">
+            <div className="mt-4 rounded-caja bg-[#FEF1DF] px-3.5 py-2.5 text-[13px] leading-normal text-[#8A4B07]">
               <b className="font-semibold">Corrección que se pidió:</b> {item.nota}
             </div>
           )}

@@ -69,7 +69,7 @@ export function SelectorAsignaturas({
         <EstadoVacio
           titulo="Todavía no elegiste ninguna"
           texto="Elegí un rubro y después la asignatura."
-          className="mb-[26px] rounded-[10px] border-[#CFCCC5] px-5 py-5"
+          className="mb-[26px] rounded-interno border-[#CFCCC5] px-5 py-5"
         />
       ) : (
         <ul className={cn("m-0 mb-[26px] flex list-none flex-wrap gap-2 p-0")}>

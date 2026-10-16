@@ -153,7 +153,7 @@ export function CobroPagoEfectivo({
             <Input value={nota} maxLength={120} onChange={(e) => setNota(e.target.value)} aria-invalid={!!errores.nota || undefined} />
           </Campo>
         </div>
-        {aviso && <p className={`m-0 mb-4 rounded-lg px-3.5 py-2.5 text-[13px] leading-normal ${aviso.clase}`}>{aviso.texto}</p>}
+        {aviso && <p className={`m-0 mb-4 rounded-caja px-3.5 py-2.5 text-[13px] leading-normal ${aviso.clase}`}>{aviso.texto}</p>}
         <Casilla checked={avisar} onChange={(e) => setAvisar(e.target.checked)} className="mb-4">
           Avisarle a la institución que registramos su pago
         </Casilla>

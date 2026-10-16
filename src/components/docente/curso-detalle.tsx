@@ -9,7 +9,7 @@ import type { CursoVista } from "@/lib/queries/cursos";
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div className="rounded-lg border border-borde bg-white p-4">
+    <div className="rounded-tarjeta border border-linea bg-white p-4">
       <div className="mb-1.5 text-[11px] leading-none font-semibold tracking-[.05em] text-sutil uppercase">{etiqueta}</div>
       <div className="text-[15px] leading-[1.3] font-semibold">{valor}</div>
     </div>

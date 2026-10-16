@@ -60,7 +60,7 @@ export default async function Planes() {
 
       <section className="mx-auto w-full max-w-[1400px] flex-1 px-12 pb-16 max-[560px]:px-5">
         <div className="flex flex-wrap items-stretch gap-6">
-          <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
+          <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-caja border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
             <span
               aria-hidden
               className="pointer-events-none absolute -top-[70px] -left-[60px] size-[220px] rounded-full bg-[radial-gradient(circle,rgba(151,18,95,.16),transparent_70%)]"
@@ -107,7 +107,7 @@ export default async function Planes() {
           <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} url={`${origen}/planes`} catalogo={catalogo} />
 
           {hayCupos && (
-            <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-[14px] border border-navy-700/10 bg-celeste px-8 py-9 text-navy-700 max-[560px]:px-6">
+            <article className="relative flex min-w-[300px] flex-1 flex-col overflow-hidden rounded-caja border border-navy-700/10 bg-celeste px-8 py-9 text-navy-700 max-[560px]:px-6">
               <span
                 aria-hidden
                 className="pointer-events-none absolute -top-[70px] -right-[60px] size-[230px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.7),transparent_70%)]"

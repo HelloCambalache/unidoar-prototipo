@@ -103,7 +103,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
           </Tarjeta>
 
           {deBaja && i.bajaEn && (
-            <div role="status" className="rounded-ud border border-borde bg-[#F1F0EC] px-[18px] py-3.5 text-[13.5px] leading-normal text-tinta-2">
+            <div role="status" className="rounded-caja border border-borde bg-[#F1F0EC] px-[18px] py-3.5 text-[13.5px] leading-normal text-tinta-2">
               <b className="font-semibold">Dada de baja el {fechaCorta(i.bajaEn)}.</b> Se borraron su equipo, sus búsquedas, los cursos, los
               contactos y el perfil público. Queda solo el registro fiscal (nombre, CUIT, domicilio) y las facturas, que se conservan por
               obligación legal. No se puede reactivar: si vuelve, se crea una cuenta nueva.
@@ -111,7 +111,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
           )}
 
           {i.suspendida && !deBaja && (
-            <div role="status" className="rounded-ud border border-[#EBCFC5] bg-[#F6E6E0] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8F3D28]">
+            <div role="status" className="rounded-caja border border-[#EBCFC5] bg-[#F6E6E0] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8F3D28]">
               <b className="font-semibold">Cuenta suspendida.</b>{" "}
               {ficha.motivoSuspension ? (
                 <>
@@ -127,7 +127,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
           )}
 
           {ficha.bajaSolicitadaEn && !deBaja && (
-            <div role="status" className="rounded-ud border border-[#EBD9A8] bg-[#FBF2D8] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#7A5A0B]">
+            <div role="status" className="rounded-caja border border-[#EBD9A8] bg-[#FBF2D8] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#7A5A0B]">
               <b className="font-semibold">Pidió la baja de la cuenta</b> el {fechaCorta(ficha.bajaSolicitadaEn)}.{" "}
               {ficha.emailPropietario ? <>Hay que escribirle a {ficha.emailPropietario} para confirmarla, </> : <>Hay que contactarla para confirmarla, </>}
               cancelar la suscripción y despublicar sus búsquedas. Hasta entonces la cuenta sigue funcionando igual.

@@ -32,7 +32,7 @@ export default async function InstitucionLayout({ children }: { children: React.
       nav={NAV}
       navPie={NAV_PIE}
       tarjetaPie={
-        <div className="rounded-lg border border-borde bg-superficie px-3 py-3.5">
+        <div className="rounded-caja border border-borde bg-superficie px-3 py-3.5">
           <div className="mb-[5px] text-[13px] leading-tight font-semibold">{plan.label}</div>
           <div className="text-xs leading-normal text-apagado">{plan.resumen}</div>
         </div>

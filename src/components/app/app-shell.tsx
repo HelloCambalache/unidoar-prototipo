@@ -124,7 +124,7 @@ export function AppShell({
       href={i.href}
       aria-current={esActivo(i) ? "page" : undefined}
       className={cn(
-        "flex min-h-[44px] items-center gap-3 rounded-[14px] px-3 text-[14.5px] transition-colors",
+        "flex min-h-[44px] items-center gap-3 rounded-caja px-3 text-[14.5px] transition-colors",
         esActivo(i) ? t.activo : "font-medium text-tinta-2 hover:bg-lienzo hover:text-tinta",
       )}
     >
@@ -140,8 +140,8 @@ export function AppShell({
       )}
       <aside
         className={cn(
-          "relative flex w-[248px] flex-none flex-col gap-1 overflow-y-auto overflow-x-hidden bg-white px-3.5 pt-5 pb-4 min-[861px]:rounded-[28px] min-[861px]:border min-[861px]:border-linea",
-          "max-[860px]:fixed max-[860px]:top-0 max-[860px]:bottom-0 max-[860px]:left-0 max-[860px]:z-[45] max-[860px]:rounded-r-[28px] max-[860px]:shadow-[4px_0_24px_rgba(4,11,53,.18)] max-[860px]:transition-transform max-[860px]:duration-200",
+          "relative flex w-[248px] flex-none flex-col gap-1 overflow-y-auto overflow-x-hidden bg-white px-3.5 pt-5 pb-4 min-[861px]:rounded-panel min-[861px]:border min-[861px]:border-linea",
+          "max-[860px]:fixed max-[860px]:top-0 max-[860px]:bottom-0 max-[860px]:left-0 max-[860px]:z-[45] max-[860px]:rounded-r-panel max-[860px]:shadow-[4px_0_24px_rgba(4,11,53,.18)] max-[860px]:transition-transform max-[860px]:duration-200",
           menuAbierto ? "max-[860px]:translate-x-0" : "max-[860px]:-translate-x-full",
         )}
       >
@@ -178,7 +178,7 @@ export function AppShell({
             type="button"
             onClick={cerrarSesion}
             className={cn(
-              "flex min-h-[44px] w-full items-center gap-3 rounded-[14px] px-3 text-left text-[14px] font-medium text-apagado transition-colors",
+              "flex min-h-[44px] w-full items-center gap-3 rounded-caja px-3 text-left text-[14px] font-medium text-apagado transition-colors",
               t.salirHover,
             )}
           >
@@ -189,7 +189,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <header className="flex min-h-[64px] flex-none items-center gap-3 bg-white px-3.5 py-2.5 min-[861px]:rounded-[22px] min-[861px]:border min-[861px]:border-linea min-[861px]:px-5 max-[860px]:border-b max-[860px]:border-linea">
+        <header className="flex min-h-[64px] flex-none items-center gap-3 bg-white px-3.5 py-2.5 min-[861px]:rounded-interno min-[861px]:border min-[861px]:border-linea min-[861px]:px-5 max-[860px]:border-b max-[860px]:border-linea">
           <button
             type="button"
             aria-label="Abrir menú"

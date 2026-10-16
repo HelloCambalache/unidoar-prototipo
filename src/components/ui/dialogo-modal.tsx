@@ -45,7 +45,7 @@ export function DialogoModal({
       }}
       style={{ width: ancho }}
       className={cn(
-        "m-auto max-h-[92vh] max-w-[92vw] overflow-y-auto rounded-[10px] border-0 bg-white p-0 text-tinta shadow-[0_20px_50px_rgba(0,0,0,.3)] backdrop:bg-navy-700/40",
+        "m-auto max-h-[92vh] max-w-[92vw] overflow-y-auto rounded-tarjeta border-0 bg-white p-0 text-tinta shadow-[0_20px_50px_rgba(0,0,0,.3)] backdrop:bg-navy-700/40",
         className,
       )}
     >

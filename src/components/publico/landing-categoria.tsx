@@ -20,7 +20,7 @@ import { FilaEstadisticas } from "./fila-estadisticas";
 import { ListaUrgentes } from "./lista-urgentes";
 import { sesionPublica } from "./sesion";
 
-const TILE_DATO = "flex flex-col justify-center rounded-[18px] border p-[22px]";
+const TILE_DATO = "flex flex-col justify-center rounded-interno border p-[22px]";
 const CIFRA = "font-display text-[32px] leading-none font-bold tracking-[-0.03em]";
 
 /** Landing de una categoría (/educadores, /entrenadores, /guardavidas): mismo molde, distinto color y copy. */
@@ -116,7 +116,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
           aria-label="Perfiles verificados"
           className="absolute top-1/2 right-10 z-[2] w-[380px] -translate-y-1/2 max-[900px]:relative max-[900px]:top-auto max-[900px]:right-auto max-[900px]:mt-[26px] max-[900px]:w-auto max-[900px]:translate-y-0"
         >
-          <div className="rounded-lg border border-borde bg-superficie p-5 shadow-[0_6px_26px_rgba(31,36,33,.07)]">
+          <div className="rounded-tarjeta border border-linea bg-superficie p-5 shadow-[0_6px_26px_rgba(31,36,33,.07)]">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-[9px] text-[13px] leading-none font-semibold text-navy-700">
                 <Icono nombre="buscar" tamano={15} trazo={1.9} />
@@ -209,7 +209,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
           <div className="grid auto-rows-[150px] grid-cols-4 gap-3.5 max-[900px]:grid-cols-2 max-[560px]:grid-cols-1">
             <div
               style={{ background: info.color, color: pub.sobreAcento.texto }}
-              className="relative col-span-2 row-span-2 flex flex-col justify-between overflow-hidden rounded-[18px] p-7 max-[560px]:col-span-1"
+              className="relative col-span-2 row-span-2 flex flex-col justify-between overflow-hidden rounded-interno p-7 max-[560px]:col-span-1"
             >
               <span
                 aria-hidden

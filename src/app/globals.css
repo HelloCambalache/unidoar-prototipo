@@ -50,15 +50,19 @@
   --color-celeste-texto: #156677;
   --color-celeste-anillo: #1c8ba3;
 
-  --radius-tarjeta: 24px;
-  --radius-panel: 28px;
+  /* Escala de esquinas: marco > panel > tarjeta > interno > caja. Los botones y los campos usan rounded-xl (12 px) y los detalles
+     chicos (etiquetas, menús) 8 px; todo contenedor usa uno de estos cinco. */
+  --radius-marco: 32px; /* banners, marcos de pantalla partida, bandas de cierre */
+  --radius-panel: 28px; /* paneles grandes de detalle */
+  --radius-tarjeta: 24px; /* tarjetas */
+  --radius-interno: 18px; /* paneles y recuadros dentro de una tarjeta, recuadros punteados */
+  --radius-caja: 14px; /* avisos, opciones y cajas chicas */
   --shadow-tarjeta: 0 1px 2px rgba(4, 11, 53, 0.05);
   --shadow-tarjeta-hover: 0 1px 2px rgba(4, 11, 53, 0.06), 0 12px 32px rgba(4, 11, 53, 0.1);
 
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-sora), var(--font-inter), system-ui, sans-serif;
 
-  --radius-ud: 8px;
   --shadow-dropdown: 0 12px 30px rgba(31, 36, 33, 0.18);
   --shadow-cta-foto: 0 4px 10px rgba(0, 0, 0, 0.15);
 

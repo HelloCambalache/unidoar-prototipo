@@ -145,7 +145,7 @@ export function SedesFormulario({
 
         <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
           {filas.map((f, i) => (
-            <li key={f.clave} className="rounded-[18px] border border-linea bg-[#F7F6F2] p-4">
+            <li key={f.clave} className="rounded-interno border border-linea bg-[#F7F6F2] p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <span className="inline-flex items-center gap-2 font-display text-[15px] font-semibold text-navy-900">
                   <span aria-hidden className="inline-flex size-7 items-center justify-center rounded-full bg-navy-900 font-sans text-[12.5px] text-white">

@@ -11,7 +11,7 @@ const hrefPerfil = (id: string, busquedaId?: string) =>
 /** Columna "Docentes recomendados para vos" del dashboard. */
 export function RecomendadosLateral({ docentes }: { docentes: DocenteRecomendado[] }) {
   return (
-    <section aria-label="Profesionales recomendados" className="w-[300px] flex-none rounded-ud border border-borde bg-white p-5 max-[760px]:w-full">
+    <section aria-label="Profesionales recomendados" className="w-[300px] flex-none rounded-tarjeta border border-linea bg-white p-5 max-[760px]:w-full">
       <h2 className="m-0 mb-1 text-[15px] leading-tight font-semibold">Profesionales recomendados para vos</h2>
       <p className="m-0 mb-4 text-[13px] leading-snug text-apagado">De tu zona y de tus búsquedas abiertas</p>
       {docentes.length === 0 ? (
@@ -66,7 +66,7 @@ export function GrillaCercanos({ docentes }: { docentes: DocenteRecomendado[] })
       {docentes.map((d) => {
         const info = CATEGORIA_INFO[d.categoria];
         return (
-          <li key={d.id} className="flex flex-col overflow-hidden rounded-[14px] border border-borde bg-white transition-[transform,box-shadow] duration-150 hover:-translate-y-[3px] hover:shadow-[0_14px_32px_rgba(31,36,33,.12)]">
+          <li key={d.id} className="flex flex-col overflow-hidden rounded-caja border border-borde bg-white transition-[transform,box-shadow] duration-150 hover:-translate-y-[3px] hover:shadow-[0_14px_32px_rgba(31,36,33,.12)]">
             {d.fotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- fotos de perfil de tamaño desconocido
               <img src={d.fotoUrl} alt="" style={{ objectPosition: focoDeFoto(d.fotoUrl) }} className="h-[104px] w-full object-cover" />

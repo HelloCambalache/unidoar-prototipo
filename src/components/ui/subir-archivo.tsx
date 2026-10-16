@@ -351,7 +351,7 @@ export function SubirArchivo(props: Props) {
         {etiqueta && <span className="text-xs font-semibold text-apagado">{etiqueta}</span>}
         {input}
         {hayArchivo ? (
-          <div className="flex items-center gap-3 rounded-[10px] border border-borde bg-white px-5 py-[18px]">
+          <div className="flex items-center gap-3 rounded-interno border border-borde bg-white px-5 py-[18px]">
             <span className="inline-flex size-[34px] flex-none items-center justify-center rounded-lg bg-[#F0EFEA] text-apagado">
               <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                 <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" />
@@ -386,7 +386,7 @@ export function SubirArchivo(props: Props) {
               void procesar(e.dataTransfer.files?.[0]);
             }}
             className={cn(
-              "rounded-[10px] border-[1.5px] border-dashed border-[#CFCCC5] px-5 py-9 text-center transition-colors",
+              "rounded-interno border-[1.5px] border-dashed border-[#CFCCC5] px-5 py-9 text-center transition-colors",
               "focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
               disponible ? "cursor-pointer hover:border-navy-700 hover:bg-superficie" : "cursor-not-allowed opacity-60",
               arrastrando && "border-navy-700 bg-superficie",
@@ -408,7 +408,7 @@ export function SubirArchivo(props: Props) {
   }
 
   // circulo | banner
-  const forma = variante === "circulo" ? "size-[72px] rounded-full" : "h-[120px] w-full rounded-[10px]";
+  const forma = variante === "circulo" ? "size-[72px] rounded-full" : "h-[120px] w-full rounded-interno";
   return (
     <div className={cn("flex flex-col gap-1.5", variante === "circulo" ? "items-start" : "items-stretch", className)}>
       {etiqueta && <span className="text-xs font-semibold text-apagado">{etiqueta}</span>}

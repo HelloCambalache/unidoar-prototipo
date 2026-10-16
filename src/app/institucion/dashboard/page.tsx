@@ -110,7 +110,7 @@ export default async function DashboardInstitucion() {
       </div>
 
       <div className="mb-5 flex flex-wrap items-start gap-5">
-        <section aria-label="Búsquedas activas" className="min-w-[340px] flex-1 rounded-ud border border-borde bg-white p-[22px] max-[560px]:min-w-0 max-[560px]:p-4">
+        <section aria-label="Búsquedas activas" className="min-w-[340px] flex-1 rounded-tarjeta border border-linea bg-white p-[22px] max-[560px]:min-w-0 max-[560px]:p-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="m-0 text-[15px] leading-none font-semibold">Búsquedas activas</h2>
             <Link href="/institucion/busquedas" className="text-[13px] leading-none font-medium">
@@ -154,7 +154,7 @@ export default async function DashboardInstitucion() {
       {perfil.porcentaje < 100 && (
         <section
           aria-label="Perfil de la institución"
-          className="flex flex-wrap items-center justify-between gap-5 rounded-ud border border-borde bg-white p-[22px]"
+          className="flex flex-wrap items-center justify-between gap-5 rounded-tarjeta border border-linea bg-white p-[22px]"
         >
           <div className="min-w-[280px] flex-1 max-[560px]:min-w-0">
             <h2 className="m-0 mb-1.5 text-base leading-snug font-semibold">

@@ -23,7 +23,7 @@ const MAX_NOMBRES = 8;
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div className="rounded-ud border border-borde bg-white p-4">
+    <div className="rounded-tarjeta border border-linea bg-white p-4">
       <div className="mb-1.5 text-[11px] leading-none font-semibold tracking-[.05em] text-sutil uppercase">{etiqueta}</div>
       <div className="text-[15px] leading-[1.3] font-semibold">{valor}</div>
     </div>
@@ -53,7 +53,7 @@ export default async function FichaCurso({
     <>
       <CursoMigas actual={c.titulo} />
       {avisoTexto && (
-        <p role="status" className="mb-4 max-w-[1180px] rounded-lg bg-verde-tint px-3.5 py-2.5 text-[13px] leading-normal text-verde">
+        <p role="status" className="mb-4 max-w-[1180px] rounded-caja bg-verde-tint px-3.5 py-2.5 text-[13px] leading-normal text-verde">
           {avisoTexto}
         </p>
       )}
@@ -116,7 +116,7 @@ export default async function FichaCurso({
           {c.descripcion || "Todavía no cargaste una descripción para este curso."}
         </p>
 
-        <section aria-labelledby="inscriptos-curso" className="max-w-[420px] rounded-ud border border-borde bg-white p-5">
+        <section aria-labelledby="inscriptos-curso" className="max-w-[420px] rounded-tarjeta border border-linea bg-white p-5">
           <h2 id="inscriptos-curso" className="m-0 mb-3 text-[15px] leading-none font-semibold">
             {etiquetaInscriptos(inscriptos.length)}
           </h2>

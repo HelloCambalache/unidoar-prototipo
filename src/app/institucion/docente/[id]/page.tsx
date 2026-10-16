@@ -149,7 +149,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
       <div className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:items-stretch max-[860px]:gap-4">
         <div className="min-w-0 flex-1 max-[1000px]:basis-full max-[860px]:basis-auto">
           <Tarjeta como="section" className={cn(TARJETA, "mb-5 p-2.5")}>
-            <div className={cn("flex flex-wrap items-center gap-6 rounded-[22px] px-7 py-7 max-[560px]:px-5", PANEL[d.categoria])}>
+            <div className={cn("flex flex-wrap items-center gap-6 rounded-interno px-7 py-7 max-[560px]:px-5", PANEL[d.categoria])}>
               {/* Avatar con el anillo del espectro del logo. */}
               <span className="inline-flex flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)] p-[3px]">
                 <Avatar

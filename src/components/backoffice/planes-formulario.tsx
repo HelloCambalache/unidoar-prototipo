@@ -251,7 +251,7 @@ export function PlanesFormulario({
   return (
     <>
       {errorDelServidor && (
-        <div role="alert" className="mb-5 rounded-ud border border-[#F2C4C4] bg-[#FDECEC] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A1F1F]">
+        <div role="alert" className="mb-5 rounded-caja border border-[#F2C4C4] bg-[#FDECEC] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A1F1F]">
           {errorDelServidor.error}
           {Object.keys(errorDelServidor.campos).length === 0 && (
             <>

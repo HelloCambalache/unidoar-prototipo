@@ -18,7 +18,7 @@ export function TarjetasCategoria({ conteos }: { conteos: Record<CategoriaDocent
           <li key={c} className="grid">
             <Link
               href={pub.ruta}
-              className="group relative block h-[520px] overflow-hidden rounded-[30px] bg-white shadow-tarjeta transition-[transform,box-shadow] duration-[250ms] hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(4,11,53,.22)] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none"
+              className="group relative block h-[520px] overflow-hidden rounded-marco bg-white shadow-tarjeta transition-[transform,box-shadow] duration-[250ms] hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(4,11,53,.22)] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none"
             >
               <span
                 aria-hidden

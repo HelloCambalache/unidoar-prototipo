@@ -25,7 +25,7 @@ export default async function PlanesBackoffice() {
         bajada="Lo que cobra UNIDOAR a las instituciones. Lo que guardes acá cambia la página de aranceles, el plan de cada cuenta y las facturas que se creen de ahora en más."
       />
 
-      <div role="note" className="mb-6 rounded-ud border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
+      <div role="note" className="mb-6 rounded-caja border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
         <b className="font-semibold">Las facturas ya emitidas no cambian:</b> cada una guarda el monto con el que se creó. Un precio nuevo se cobra desde la próxima factura de cada institución.
       </div>
 

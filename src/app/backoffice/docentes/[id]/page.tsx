@@ -79,7 +79,7 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
                 Contactar por WhatsApp
               </a>
             ) : (
-              <p className="m-0 rounded-lg bg-[#F0EFEA] px-3.5 py-2.5 text-[13px] leading-normal text-apagado">
+              <p className="m-0 rounded-caja bg-[#F0EFEA] px-3.5 py-2.5 text-[13px] leading-normal text-apagado">
                 {d.telefono ? "El teléfono cargado no alcanza para armar el enlace de WhatsApp." : "No cargó un teléfono: no hay a dónde escribirle."}
               </p>
             )}

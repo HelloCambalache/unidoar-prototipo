@@ -160,7 +160,7 @@ export function TableroPipeline({
       </div>
 
       {soloLectura ? (
-        <p className="mt-2 mb-5 rounded-lg bg-verde-tint px-3.5 py-2.5 text-[13px] leading-normal text-verde">
+        <p className="mt-2 mb-5 rounded-caja bg-verde-tint px-3.5 py-2.5 text-[13px] leading-normal text-verde">
           Esta búsqueda está cerrada: podés ver a los postulantes y sus fichas, pero no moverlos. Reabrila para seguir el proceso.
         </p>
       ) : (
@@ -208,7 +208,7 @@ export function TableroPipeline({
                   </span>
                 </h2>
                 {items.length === 0 ? (
-                  <div className="rounded-[18px] border-[1.5px] border-dashed border-[#CFCBC3] px-3 py-5 text-center text-xs leading-normal text-apagado">
+                  <div className="rounded-interno border-[1.5px] border-dashed border-[#CFCBC3] px-3 py-5 text-center text-xs leading-normal text-apagado">
                     {COLUMNA_VACIA[col.key]}
                   </div>
                 ) : (

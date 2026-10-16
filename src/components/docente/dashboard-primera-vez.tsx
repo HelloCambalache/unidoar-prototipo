@@ -89,7 +89,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
 
   return (
     <>
-      <div className="relative mb-[26px] flex items-stretch overflow-hidden rounded-[18px] bg-navy-700 max-[900px]:flex-col">
+      <div className="relative mb-[26px] flex items-stretch overflow-hidden rounded-interno bg-navy-700 max-[900px]:flex-col">
         <span
           aria-hidden
           style={{ backgroundImage: "radial-gradient(circle,rgba(151,18,95,.52),transparent 70%)" }}
@@ -168,7 +168,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
                 key={p.clave}
                 href={p.href}
                 style={{ backgroundColor: p.fondo, color: p.tinta }}
-                className="flex flex-col rounded-[22px] p-[22px] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(31,36,33,.16)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
+                className="flex flex-col rounded-interno p-[22px] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(31,36,33,.16)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
               >
                 <div className="mb-[18px] flex items-start justify-between gap-3">
                   <span className="rounded-full bg-white/[.72] px-[13px] py-1.5 text-[11.5px] leading-none font-semibold tracking-[.05em] uppercase">
@@ -190,7 +190,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
                 <span
                   aria-hidden
                   style={{ backgroundImage: `url(${p.foto})`, backgroundPosition: focoDeFoto(p.foto) }}
-                  className="h-[104px] rounded-[14px] bg-cover bg-no-repeat"
+                  className="h-[104px] rounded-caja bg-cover bg-no-repeat"
                 />
               </Link>
             ))}
@@ -199,7 +199,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
       )}
 
       <div className="mb-7 flex flex-wrap items-stretch gap-[18px] max-[860px]:flex-col max-[860px]:gap-4">
-        <div className="relative flex min-w-[280px] flex-[1_1_340px] flex-col justify-center overflow-hidden rounded-[14px] bg-navy-700 px-[26px] py-6 max-[860px]:min-w-0">
+        <div className="relative flex min-w-[280px] flex-[1_1_340px] flex-col justify-center overflow-hidden rounded-caja bg-navy-700 px-[26px] py-6 max-[860px]:min-w-0">
           <span
             aria-hidden
             style={{ backgroundImage: "radial-gradient(circle,rgba(151,18,95,.42),transparent 70%)" }}
@@ -228,7 +228,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
         <Link
           href="/docente/busquedas-rapidas"
           style={{ backgroundImage: "url(/assets/urgente-pizarron.jpg)", backgroundPosition: focoDeFoto("/assets/urgente-pizarron.jpg") }}
-          className="relative flex min-h-[200px] max-w-[440px] min-w-[280px] flex-[1_1_380px] items-end self-stretch overflow-hidden rounded-[14px] bg-cover bg-no-repeat max-[860px]:aspect-video max-[860px]:min-h-0 max-[860px]:w-full max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:flex-none"
+          className="relative flex min-h-[200px] max-w-[440px] min-w-[280px] flex-[1_1_380px] items-end self-stretch overflow-hidden rounded-caja bg-cover bg-no-repeat max-[860px]:aspect-video max-[860px]:min-h-0 max-[860px]:w-full max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:flex-none"
         >
           <span
             aria-hidden
@@ -272,11 +272,11 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
           />
         )}
       </SeccionTablero>
-      <div className="mt-3.5 mb-7 rounded-[10px] bg-[#FBE3F0] px-4 py-3.5 text-[13px] leading-normal text-[#7A1B4E]">
+      <div className="mt-3.5 mb-7 rounded-caja bg-[#FBE3F0] px-4 py-3.5 text-[13px] leading-normal text-[#7A1B4E]">
         A medida que completés el perfil y marques tu disponibilidad, estas recomendaciones se van afinando.
       </div>
 
-      <PublicidadAncha fondo="noche" className="rounded-[14px]" />
+      <PublicidadAncha fondo="noche" className="rounded-caja" />
     </>
   );
 }

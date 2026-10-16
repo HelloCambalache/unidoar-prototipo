@@ -82,7 +82,7 @@ export function DashboardPrimeraVez({
 
   return (
     <>
-      <section className="relative mb-[26px] flex items-stretch overflow-hidden rounded-[18px] bg-navy-700 max-[900px]:flex-col">
+      <section className="relative mb-[26px] flex items-stretch overflow-hidden rounded-interno bg-navy-700 max-[900px]:flex-col">
         <span
           aria-hidden
           className="pointer-events-none absolute -top-[120px] -left-[60px] size-[380px] rounded-full bg-[radial-gradient(circle,rgba(221,85,63,.42),transparent_70%)]"
@@ -144,7 +144,7 @@ export function DashboardPrimeraVez({
             <Link
               href={p.href}
               className={cn(
-                "flex w-full flex-col rounded-[22px] p-[22px] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(31,36,33,.16)] focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+                "flex w-full flex-col rounded-interno p-[22px] transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(31,36,33,.16)] focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
                 p.fondo,
                 p.tinta,
               )}
@@ -163,7 +163,7 @@ export function DashboardPrimeraVez({
               <span className="mb-2 font-display text-[21px] leading-tight font-bold tracking-[-0.02em]">{p.titulo}</span>
               <span className="mb-[18px] flex-1 text-[13.5px] leading-[1.55]">{p.texto}</span>
               {/* eslint-disable-next-line @next/next/no-img-element -- imagen decorativa a ancho completo */}
-              <img src={p.imagen} alt="" style={{ objectPosition: focoDeFoto(p.imagen) }} className="h-[104px] w-full rounded-[14px] object-cover" />
+              <img src={p.imagen} alt="" style={{ objectPosition: focoDeFoto(p.imagen) }} className="h-[104px] w-full rounded-caja object-cover" />
             </Link>
           </li>
         ))}
@@ -185,7 +185,7 @@ export function DashboardPrimeraVez({
       {cercanos.length > 0 ? (
         <GrillaCercanos docentes={cercanos} />
       ) : (
-        <p className="m-0 rounded-ud border border-dashed border-borde-fuerte bg-white/60 px-6 py-8 text-center text-[13.5px] text-apagado">
+        <p className="m-0 rounded-tarjeta border border-dashed border-borde-fuerte bg-white/60 px-6 py-8 text-center text-[13.5px] text-apagado">
           Todavía no hay profesionales verificados en tu zona. Publicá tu búsqueda y los avisamos apenas aparezcan.
         </p>
       )}

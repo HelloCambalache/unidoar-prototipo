@@ -21,7 +21,7 @@ export function CursoFoto({
         src={url}
         alt=""
         style={{ ...estilo, objectPosition: focoDeFoto(url) }}
-        className={cn("block w-full object-cover", redondeada && "rounded-[10px]", className)}
+        className={cn("block w-full object-cover", redondeada && "rounded-interno", className)}
       />
     );
   }
@@ -29,7 +29,7 @@ export function CursoFoto({
     <div
       aria-hidden
       style={estilo}
-      className={cn("flex w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]", redondeada && "rounded-[10px]", className)}
+      className={cn("flex w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]", redondeada && "rounded-interno", className)}
     >
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <rect x="3" y="4" width="18" height="16" rx="2" />

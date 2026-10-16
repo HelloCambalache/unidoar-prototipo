@@ -12,7 +12,7 @@ export function PublicidadAncha({ fondo = "azul", className }: { fondo?: "azul" 
   return (
     <div
       style={{ backgroundColor: color }}
-      className={cn("relative flex items-stretch overflow-hidden rounded-[28px] max-[860px]:flex-col", className)}
+      className={cn("relative flex items-stretch overflow-hidden rounded-panel max-[860px]:flex-col", className)}
     >
       <div className="relative z-[1] flex min-w-0 flex-1 flex-wrap items-center justify-between gap-5 px-7 py-[26px]">
         <div className="min-w-0 flex-[1_1_300px]">
@@ -46,7 +46,7 @@ export function PublicidadLateral({ className }: { className?: string }) {
   return (
     <aside
       aria-label="Publicidad"
-      className={cn("relative flex min-h-[240px] flex-col justify-end overflow-hidden rounded-[30px] bg-navy-700", className)}
+      className={cn("relative flex min-h-[240px] flex-col justify-end overflow-hidden rounded-marco bg-navy-700", className)}
     >
       <div
         aria-hidden
@@ -109,7 +109,7 @@ export function PublicidadesPareja({ className }: { className?: string }) {
         <div
           key={a.titulo}
           style={{ backgroundColor: a.fondo }}
-          className="relative flex overflow-hidden rounded-[28px] max-[980px]:flex-col"
+          className="relative flex overflow-hidden rounded-panel max-[980px]:flex-col"
         >
           <div className="relative z-[1] flex min-w-0 flex-1 flex-col px-6 py-[22px]">
             <div className="mb-3 flex items-center gap-[9px]">

@@ -35,7 +35,7 @@ export function CursoTarjeta({ c }: { c: CursoVista }) {
   return (
     <Link
       href={`/docente/cursos?curso=${c.id}`}
-      className="flex flex-col overflow-hidden rounded-[10px] border border-borde bg-white transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(31,36,33,.1)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
+      className="flex flex-col overflow-hidden rounded-tarjeta border border-linea bg-white transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(31,36,33,.1)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
     >
       <div className="relative">
         <CursoFoto url={c.fotoUrl} altura={150} />
@@ -101,9 +101,9 @@ export function CursoAgenda({ cursos }: { cursos: CursoVista[] }) {
     <li key={c.id}>
       <Link
         href={`/docente/cursos?curso=${c.id}`}
-        className="flex flex-wrap items-center gap-3.5 rounded-[10px] border border-borde bg-white px-4 py-3.5 transition-shadow duration-200 hover:shadow-[0_6px_16px_rgba(31,36,33,.09)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
+        className="flex flex-wrap items-center gap-3.5 rounded-tarjeta border border-linea bg-white px-4 py-3.5 transition-shadow duration-200 hover:shadow-[0_6px_16px_rgba(31,36,33,.09)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
       >
-        <span className="font-display inline-flex size-11 flex-none items-center justify-center rounded-[10px] bg-[#F0EFEA] text-[17px] leading-none font-bold text-navy-700">
+        <span className="font-display inline-flex size-11 flex-none items-center justify-center rounded-caja bg-[#F0EFEA] text-[17px] leading-none font-bold text-navy-700">
           {dia}
         </span>
         <div className="min-w-0 flex-[1_1_220px]">

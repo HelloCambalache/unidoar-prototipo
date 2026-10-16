@@ -177,13 +177,13 @@ function ImportarFormulario({ onCerrar }: { onCerrar: () => void }) {
       </Campo>
 
       {error && (
-        <p role="alert" className="m-0 rounded-lg bg-rosa-tint px-3.5 py-3 text-[13px] leading-normal text-rosa">
+        <p role="alert" className="m-0 rounded-caja bg-rosa-tint px-3.5 py-3 text-[13px] leading-normal text-rosa">
           {error}
         </p>
       )}
 
       {v && (
-        <div className="flex flex-col gap-3 rounded-lg border border-borde bg-superficie px-3.5 py-3 text-[13px] leading-normal">
+        <div className="flex flex-col gap-3 rounded-caja border border-borde bg-superficie px-3.5 py-3 text-[13px] leading-normal">
           <p className="m-0 font-semibold text-tinta">
             {plural(v.validas.length, "contacto listo", "contactos listos")} para importar
             {v.errores.length > 0 && <span className="font-normal text-apagado"> · {plural(v.errores.length, "fila con error", "filas con errores")} (se saltean)</span>}

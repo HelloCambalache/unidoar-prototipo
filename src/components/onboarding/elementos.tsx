@@ -47,7 +47,7 @@ export function SeccionPaso({
 export function AlertaError({ children, className }: { children?: React.ReactNode; className?: string }) {
   if (!children) return null;
   return (
-    <p role="alert" className={cn("rounded-lg bg-[#fee2e2] px-3.5 py-2.5 text-[13px] leading-snug text-[#991b1b]", className)}>
+    <p role="alert" className={cn("rounded-caja bg-[#fee2e2] px-3.5 py-2.5 text-[13px] leading-snug text-[#991b1b]", className)}>
       {children}
     </p>
   );
@@ -56,7 +56,7 @@ export function AlertaError({ children, className }: { children?: React.ReactNod
 export function AlertaAviso({ children, className }: { children?: React.ReactNode; className?: string }) {
   if (!children) return null;
   return (
-    <p role="status" className={cn("rounded-lg bg-verde-tint px-3.5 py-2.5 text-[13px] leading-snug text-verde", className)}>
+    <p role="status" className={cn("rounded-caja bg-verde-tint px-3.5 py-2.5 text-[13px] leading-snug text-verde", className)}>
       {children}
     </p>
   );

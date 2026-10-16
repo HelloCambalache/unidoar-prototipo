@@ -73,7 +73,7 @@ export function PanelFiltrosDocentes({
     <section
       aria-label="Filtros"
       className={cn(
-        "w-[250px] flex-none rounded-ud border border-borde bg-white p-[18px] transition-opacity",
+        "w-[250px] flex-none rounded-tarjeta border border-linea bg-white p-[18px] transition-opacity",
         "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:w-full max-[760px]:overflow-auto max-[760px]:px-4 max-[760px]:py-3.5",
         pendiente && "opacity-70",
       )}

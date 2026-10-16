@@ -307,7 +307,7 @@ export function VitrinaFormulario({
       <div className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:gap-4">
         <div className="min-w-0 flex-1 max-[860px]:w-full">
           {/* Métricas */}
-          <div className="mb-4 grid grid-cols-4 gap-px overflow-hidden rounded-ud border border-borde bg-borde max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
+          <div className="mb-4 grid grid-cols-4 gap-px overflow-hidden rounded-interno border border-borde bg-borde max-[760px]:grid-cols-2 max-[700px]:grid-cols-1">
             <div className="bg-white px-[18px] py-4">
               <input
                 type="number"
@@ -440,7 +440,7 @@ export function VitrinaFormulario({
                 : "Cursos cortos o certificaciones que ofrecés. Los profesionales los ven cuando entran a tu vitrina."}
             </p>
             {cursos.length === 0 ? (
-              <div className="rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-6 text-center">
+              <div className="rounded-interno border-[1.5px] border-dashed border-borde-fuerte px-5 py-6 text-center">
                 <p className="m-0 mb-3 text-[13.5px] leading-normal text-apagado">{admin ? "Todavía no cargó cursos." : "Todavía no cargaste cursos."}</p>
                 {!admin && (
                   <BotonLink href="/institucion/cursos/nuevo" variante="secundario" tamano="sm">
@@ -451,7 +451,7 @@ export function VitrinaFormulario({
             ) : (
               <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
                 {cursos.map((c) => (
-                  <li key={c.id} className="flex gap-3.5 rounded-lg border border-borde p-3.5 max-[860px]:flex-wrap">
+                  <li key={c.id} className="flex gap-3.5 rounded-caja border border-borde p-3.5 max-[860px]:flex-wrap">
                     {c.fotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element -- foto del curso, origen y tamaño libres
                       <img

@@ -34,7 +34,7 @@ export function CursoHistorialLista({ cursos }: { cursos: CursoHistorial[] }) {
         const estado = ESTADO[c.estado];
         const cert = certificadoDe(c);
         return (
-          <li key={c.id} className="rounded-[10px] border border-borde bg-white px-[18px] py-4">
+          <li key={c.id} className="rounded-tarjeta border border-linea bg-white px-[18px] py-4">
             <div className="mb-2.5 flex flex-wrap items-center gap-3">
               <div className="min-w-[180px] flex-1">
                 <div className="mb-[3px] flex flex-wrap items-center gap-2">

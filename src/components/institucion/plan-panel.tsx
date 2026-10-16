@@ -60,7 +60,7 @@ export function PlanPanel({
 
   return (
     <>
-      <div className="flex max-w-[980px] items-center justify-between gap-4 rounded-ud bg-navy-700 p-6 text-white max-[860px]:flex-col max-[860px]:items-start">
+      <div className="flex max-w-[980px] items-center justify-between gap-4 rounded-tarjeta bg-navy-700 p-6 text-white max-[860px]:flex-col max-[860px]:items-start">
         <div>
           <div className="mb-2.5">
             <Insignia className="bg-white/[.14] text-navy-100">{actual.label}</Insignia>
@@ -92,7 +92,7 @@ export function PlanPanel({
       </div>
 
       {vencidas > 0 && (
-        <p role="status" className="mt-4 mb-0 max-w-[980px] rounded-lg bg-naranja-tint px-3.5 py-2.5 text-[13px] leading-normal text-naranja-ink">
+        <p role="status" className="mt-4 mb-0 max-w-[980px] rounded-caja bg-naranja-tint px-3.5 py-2.5 text-[13px] leading-normal text-naranja-ink">
           {vencidas === 1 ? "Tenés 1 factura vencida." : `Tenés ${vencidas} facturas vencidas.`} Revisá el detalle en el historial de
           facturación.
         </p>
@@ -101,7 +101,7 @@ export function PlanPanel({
       {solicitud && (
         <div
           role="status"
-          className="mt-4 flex max-w-[980px] flex-wrap items-center justify-between gap-3 rounded-ud border border-verde-borde bg-verde-tint px-[18px] py-4"
+          className="mt-4 flex max-w-[980px] flex-wrap items-center justify-between gap-3 rounded-caja border border-verde-borde bg-verde-tint px-[18px] py-4"
         >
           <div className="min-w-0 flex-[1_1_320px]">
             <div className="mb-1 text-sm leading-[1.3] font-semibold text-verde">
@@ -133,7 +133,7 @@ export function PlanPanel({
               <div
                 key={clave}
                 className={cn(
-                  "min-w-[220px] flex-1 rounded-ud bg-white p-5",
+                  "min-w-[220px] flex-1 rounded-tarjeta bg-white p-5",
                   esActual ? "border-2 border-navy-700" : "border border-borde",
                 )}
               >

@@ -69,7 +69,7 @@ export default function Terminos() {
         ))}
       </div>
 
-      <nav aria-label="Índice de los términos" className="my-9 rounded-ud border border-borde bg-superficie px-5 py-4">
+      <nav aria-label="Índice de los términos" className="my-9 rounded-interno border border-borde bg-superficie px-5 py-4">
         <h2 className="m-0 mb-2.5 text-xs leading-none font-semibold tracking-[.09em] text-apagado uppercase">Índice</h2>
         <ol className="m-0 grid list-none grid-cols-2 gap-x-6 gap-y-1.5 p-0 text-sm leading-snug max-[560px]:grid-cols-1">
           {SECCIONES_TERMINOS.map((s) => (

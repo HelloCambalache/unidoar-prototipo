@@ -78,13 +78,13 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex min-w-[340px] flex-[2] flex-col gap-5 max-[560px]:min-w-0 max-[560px]:basis-full">
           {cierre && (
-            <div role="status" className="rounded-[18px] bg-naranja-tint px-4 py-3 text-[13.5px] leading-normal font-medium text-naranja-ink">
+            <div role="status" className="rounded-interno bg-naranja-tint px-4 py-3 text-[13.5px] leading-normal font-medium text-naranja-ink">
               {cierre}
             </div>
           )}
 
           <article className="rounded-panel bg-white p-2.5 shadow-tarjeta">
-            <div className={cn("flex flex-col gap-4 rounded-[22px] px-7 py-7 max-[560px]:px-5", panel.fondo)}>
+            <div className={cn("flex flex-col gap-4 rounded-interno px-7 py-7 max-[560px]:px-5", panel.fondo)}>
               <div className="flex flex-wrap items-center gap-2">
                 {busqueda.rapida && detalle.abierta ? (
                   <Insignia tono="naranja" className="bg-naranja text-white">
@@ -131,7 +131,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
           </article>
 
           {invitada && (
-            <div className="rounded-[18px] bg-naranja-tint px-4 py-3 text-[13.5px] leading-normal text-naranja-ink">
+            <div className="rounded-interno bg-naranja-tint px-4 py-3 text-[13.5px] leading-normal text-naranja-ink">
               {institucion.nombre} te invitó a esta búsqueda.
             </div>
           )}
@@ -166,7 +166,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               {(busqueda.requisitos.length > 0 || busqueda.beneficios.length > 0) && (
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
                   {busqueda.requisitos.length > 0 && (
-                    <div className="rounded-[20px] bg-[#F7F6F2] px-5 py-[18px]">
+                    <div className="rounded-interno bg-[#F7F6F2] px-5 py-[18px]">
                       <EtiquetaSeccion className="mb-3 text-apagado">Requisitos</EtiquetaSeccion>
                       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                         {busqueda.requisitos.map((r) => (
@@ -178,7 +178,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
                     </div>
                   )}
                   {busqueda.beneficios.length > 0 && (
-                    <div className="rounded-[20px] bg-[#F7F6F2] px-5 py-[18px]">
+                    <div className="rounded-interno bg-[#F7F6F2] px-5 py-[18px]">
                       <EtiquetaSeccion className="mb-3 text-apagado">Qué ofrece</EtiquetaSeccion>
                       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
                         {busqueda.beneficios.map((b) => (
@@ -218,7 +218,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
                 />
               )}
               <div className="flex items-center gap-3.5 px-3.5 pt-4 pb-2.5">
-                <span className="inline-flex size-11 flex-none items-center justify-center rounded-[14px] bg-rosa-tint text-rosa">
+                <span className="inline-flex size-11 flex-none items-center justify-center rounded-caja bg-rosa-tint text-rosa">
                   <Icono nombre="ubicacion" tamano={20} trazo={1.8} />
                 </span>
                 <span className="min-w-0 text-[13.5px] leading-[1.45] text-tinta-2">
@@ -283,7 +283,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
 
           <div className="rounded-panel bg-white p-6 shadow-tarjeta">
             <div className="mb-3 flex items-center gap-3">
-              <LogoInstitucion nombre={institucion.nombre} logoUrl={institucion.logoUrl} tamano={48} className="rounded-[14px]" />
+              <LogoInstitucion nombre={institucion.nombre} logoUrl={institucion.logoUrl} tamano={48} className="rounded-caja" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="font-display text-[15.5px] leading-[1.3] font-semibold">{institucion.nombre}</span>
@@ -310,7 +310,7 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
                   <li key={o.id}>
                     <Link
                       href={`/docente/oferta/${o.id}`}
-                      className="flex min-h-11 items-center justify-between gap-2 rounded-[14px] bg-[#F7F6F2] px-3.5 text-[13.5px] leading-snug text-tinta hover:bg-lienzo hover:text-tinta"
+                      className="flex min-h-11 items-center justify-between gap-2 rounded-caja bg-[#F7F6F2] px-3.5 text-[13.5px] leading-snug text-tinta hover:bg-lienzo hover:text-tinta"
                     >
                       <span className="min-w-0 truncate">{o.puesto}</span>
                       <span className="flex-none rounded-full border border-linea bg-white px-2.5 py-1 text-[11.5px] font-semibold text-tinta-2">

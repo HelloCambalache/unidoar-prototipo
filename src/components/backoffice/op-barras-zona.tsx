@@ -52,7 +52,7 @@ export function OpBarrasZona({ zonas, sinZona }: { zonas: ZonaOperacion[]; sinZo
 
       <div
         className={cn(
-          "mt-3.5 rounded-lg px-3.5 py-3 text-[13px] leading-normal",
+          "mt-3.5 rounded-caja px-3.5 py-3 text-[13px] leading-normal",
           faltantes.length > 0 ? "bg-naranja-tint text-naranja-ink" : "bg-verde-tint text-verde",
         )}
       >

@@ -74,12 +74,12 @@ export function FormularioContacto() {
       </Boton>
 
       {estado.ok && (
-        <div role="status" className="rounded-lg bg-verde-tint px-4 py-3 text-[13px] leading-snug font-medium text-verde">
+        <div role="status" className="rounded-caja bg-verde-tint px-4 py-3 text-[13px] leading-snug font-medium text-verde">
           Gracias, recibimos tu mensaje. Te contestamos a la brevedad.
         </div>
       )}
       {!estado.ok && estado.error && (
-        <div role="alert" className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] leading-snug font-medium text-[#b91c1c]">
+        <div role="alert" className="rounded-caja bg-[#FEE2E2] px-4 py-3 text-[13px] leading-snug font-medium text-[#b91c1c]">
           {estado.error}
         </div>
       )}

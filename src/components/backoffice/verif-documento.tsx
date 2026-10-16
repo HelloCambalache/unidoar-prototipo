@@ -23,7 +23,7 @@ export function VerifDocumento({ d }: { d: DocumentoBo }) {
   );
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-borde bg-white p-2.5">
+    <li className="flex items-center gap-3 rounded-caja border border-borde bg-white p-2.5">
       {d.url && d.esImagen ? (
         <a href={d.url} target="_blank" rel="noopener noreferrer" aria-label={abrir} className="flex-none">
           {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada con URL firmada que vence: no pasa por el optimizador */}

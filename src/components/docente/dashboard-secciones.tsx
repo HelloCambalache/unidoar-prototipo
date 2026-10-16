@@ -79,7 +79,7 @@ export function TarjetaOfertaRecomendada({ o }: { o: TarjetaOferta }) {
   const lugar = [o.zona, kmLegible(o.km)].filter(Boolean).join(" · ");
   return (
     <Link href={`/docente/oferta/${o.id}`} className={cn(TARJETA_ENLACE, "p-2")}>
-      <div className="flex flex-1 flex-col gap-4 rounded-[18px] bg-lienzo p-[18px]">
+      <div className="flex flex-1 flex-col gap-4 rounded-interno bg-lienzo p-[18px]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-2">
             <InstitucionLogo nombre={o.institucion} logoUrl={o.logoUrl} />
@@ -132,7 +132,7 @@ export function TarjetaInstitucionDestacada({ i }: { i: TarjetaInstitucionDestac
 export function TarjetaCursoDestacado({ c }: { c: TarjetaCursoDestacado }) {
   return (
     <Link href={`/docente/cursos?curso=${c.id}`} className={cn(TARJETA_ENLACE, "p-2")}>
-      <div className="relative overflow-hidden rounded-[18px]">
+      <div className="relative overflow-hidden rounded-interno">
         <CursoFoto url={c.fotoUrl} altura={128} />
         <Insignia tono={c.modalidad === "Online" ? "azul" : "neutro"} className="absolute top-2.5 left-2.5">
           {c.modalidad}

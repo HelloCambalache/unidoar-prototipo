@@ -29,7 +29,7 @@ export async function CabeceraPublica() {
           <Link href="/categorias" className={ENLACE}>
             Buscá profesionales
           </Link>
-          <div className="invisible absolute top-full left-1/2 z-50 min-w-[190px] -translate-x-1/2 rounded-[10px] border border-borde bg-white p-2 opacity-0 shadow-dropdown transition-opacity duration-150 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+          <div className="invisible absolute top-full left-1/2 z-50 min-w-[190px] -translate-x-1/2 rounded-tarjeta border border-linea bg-white p-2 opacity-0 shadow-dropdown transition-opacity duration-150 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
             {CATEGORIAS.map((c) => (
               <Link
                 key={c}

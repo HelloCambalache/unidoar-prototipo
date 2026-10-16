@@ -31,7 +31,7 @@ export function TarjetaInstitucion({
 }) {
   if (app) return <TarjetaInstitucionApp i={i} href={href} estrella={estrella} />;
   return (
-    <article className="flex flex-col rounded-lg border border-borde bg-white p-[18px]">
+    <article className="flex flex-col rounded-tarjeta border border-linea bg-white p-[18px]">
       <div className="mb-2.5 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <LogoInstitucion nombre={i.nombre} logoUrl={i.logoUrl} tamano={40} />

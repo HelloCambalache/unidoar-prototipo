@@ -234,7 +234,7 @@ function Interruptor({
       onClick={onCambio}
       className={cn(
         "flex w-full items-center justify-between gap-3 rounded text-left",
-        app && "min-h-14 rounded-[14px] px-3 py-2.5 transition-colors hover:bg-white",
+        app && "min-h-14 rounded-caja px-3 py-2.5 transition-colors hover:bg-white",
         FOCO,
       )}
     >
@@ -503,7 +503,7 @@ function PanelFiltrosApp({
       aria-pressed={activa}
       onClick={onClick}
       className={cn(
-        "flex min-h-11 w-full items-center gap-2.5 rounded-[14px] px-3 text-left text-[14px] leading-tight transition-colors",
+        "flex min-h-11 w-full items-center gap-2.5 rounded-caja px-3 text-left text-[14px] leading-tight transition-colors",
         activa ? cn("font-semibold text-tinta ring-[1.5px]", color) : "font-medium text-tinta-2 hover:bg-[#F7F6F2]",
         FOCO,
       )}
@@ -529,7 +529,7 @@ function PanelFiltrosApp({
         aria-expanded={abierto}
         aria-controls="panel-filtros-app"
         onClick={() => setAbierto((v) => !v)}
-        className={cn("hidden min-h-11 w-full items-center gap-2 rounded-[14px] px-2 text-[15px] font-semibold max-[760px]:flex", FOCO)}
+        className={cn("hidden min-h-11 w-full items-center gap-2 rounded-caja px-2 text-[15px] font-semibold max-[760px]:flex", FOCO)}
       >
         <Icono nombre="menu" tamano={18} trazo={2} />
         Filtros
@@ -603,7 +603,7 @@ function PanelFiltrosApp({
           />
         )}
 
-        <div className="flex flex-col gap-1 rounded-[18px] bg-[#F7F6F2] p-1.5">
+        <div className="flex flex-col gap-1 rounded-interno bg-[#F7F6F2] p-1.5">
           {modo === "todas" && (
             <Interruptor
               activo={filtros.rapidas === "1"}

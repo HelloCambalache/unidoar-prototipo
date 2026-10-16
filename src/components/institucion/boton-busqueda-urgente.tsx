@@ -13,7 +13,7 @@ export function BotonBusquedaUrgente() {
   return (
     <section
       aria-labelledby="busqueda-urgente-titulo"
-      className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-ud border border-[#F0C3BE] bg-[#FDECEA] p-5 max-[620px]:flex-col max-[620px]:items-stretch"
+      className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-tarjeta border border-[#F0C3BE] bg-[#FDECEA] p-5 max-[620px]:flex-col max-[620px]:items-stretch"
     >
       <div className="min-w-0 flex-1">
         <h2 id="busqueda-urgente-titulo" className="m-0 mb-1 text-base leading-[1.3] font-semibold text-[#8E1B14]">

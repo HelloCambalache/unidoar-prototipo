@@ -15,7 +15,7 @@ const TONO_CATEGORIA = { educador: "naranja", entrenador: "ambar", guardavidas: 
 export function TarjetaBusqueda({ busqueda: b, accion }: { busqueda: BusquedaPublica; accion: AccionPostular | null }) {
   const vence = b.rapida ? venceEnLegible(b.venceEn) : null;
   return (
-    <Tarjeta como="article" className="flex flex-col rounded-[10px] p-[18px]">
+    <Tarjeta como="article" className="flex flex-col p-[18px]">
       <div className="mb-3 flex gap-[11px]">
         <LogoInstitucion nombre={b.institucion.nombre} logoUrl={b.institucion.logoUrl} />
         <div className="min-w-0">

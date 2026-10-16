@@ -202,7 +202,7 @@ function Ficha({
       </div>
 
       {/* Acciones */}
-      <section aria-label="Acciones" className="flex flex-col gap-2.5 rounded-ud border border-borde p-4">
+      <section aria-label="Acciones" className="flex flex-col gap-2.5 rounded-interno border border-borde p-4">
         {!soloLectura && (
           <Campo etiqueta="Mover a etapa">
             <Select
@@ -285,7 +285,7 @@ function Ficha({
       {p.mensaje && (
         <section>
           <EtiquetaSeccion>Mensaje de la postulación</EtiquetaSeccion>
-          <p className="m-0 rounded-lg bg-superficie px-3.5 py-3 text-[13.5px] leading-normal whitespace-pre-wrap text-tinta-2">{p.mensaje}</p>
+          <p className="m-0 rounded-caja bg-superficie px-3.5 py-3 text-[13.5px] leading-normal whitespace-pre-wrap text-tinta-2">{p.mensaje}</p>
         </section>
       )}
 
@@ -293,7 +293,7 @@ function Ficha({
       <section>
         <EtiquetaSeccion>Entrevista</EtiquetaSeccion>
         {p.entrevista && (
-          <div className="mb-3 flex items-start justify-between gap-3 rounded-lg bg-naranja-tint px-3.5 py-3 text-[13px] text-naranja-ink">
+          <div className="mb-3 flex items-start justify-between gap-3 rounded-caja bg-naranja-tint px-3.5 py-3 text-[13px] text-naranja-ink">
             <div>
               <div className="font-semibold">{p.entrevista.titulo ?? "Entrevista"}</div>
               <div className="mt-0.5">{p.entrevista.texto}</div>
@@ -354,7 +354,7 @@ function Ficha({
           <EtiquetaSeccion>Para ingresar a trabajar</EtiquetaSeccion>
           <label
             className={cn(
-              "flex items-start gap-2.5 rounded-lg border border-borde px-3.5 py-3 text-[13.5px] leading-snug",
+              "flex items-start gap-2.5 rounded-caja border border-borde px-3.5 py-3 text-[13.5px] leading-snug",
               puedeMarcarExamen ? "cursor-pointer" : "cursor-default",
               examenHecho && "bg-[#E4F3EA]",
             )}
@@ -385,7 +385,7 @@ function Ficha({
               {p.examenArchivos.length > 0 && (
                 <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
                   {p.examenArchivos.map((a, i) => (
-                    <li key={`${i}-${a.nombre}`} className="flex items-center gap-2.5 rounded-lg border border-borde px-3 py-2 text-[13px]">
+                    <li key={`${i}-${a.nombre}`} className="flex items-center gap-2.5 rounded-caja border border-borde px-3 py-2 text-[13px]">
                       <span className="min-w-0 flex-1 truncate font-medium" title={a.nombre}>
                         {a.nombre}
                       </span>
@@ -504,7 +504,7 @@ function Ficha({
         {p.notas.length > 0 && (
           <ul className="mb-3 flex list-none flex-col gap-2 p-0">
             {p.notas.map((n) => (
-              <li key={n.id} className="rounded-lg bg-superficie px-3.5 py-3">
+              <li key={n.id} className="rounded-caja bg-superficie px-3.5 py-3">
                 <p className="m-0 text-[13px] leading-normal whitespace-pre-wrap text-tinta">{n.texto}</p>
                 <div className="mt-1.5 flex items-center justify-between text-[11.5px] text-sutil">
                   <span>
@@ -544,7 +544,7 @@ function Ficha({
 
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <div className="min-w-0 rounded-lg border border-borde bg-superficie px-3.5 py-3">
+    <div className="min-w-0 rounded-caja border border-borde bg-superficie px-3.5 py-3">
       <div className="mb-1 text-[11px] leading-none font-semibold tracking-[.05em] text-sutil uppercase">{etiqueta}</div>
       <div className="text-[13.5px] leading-tight font-semibold text-tinta">{valor}</div>
     </div>

@@ -146,7 +146,7 @@ export function PasoCategoria({
         </div>
       )}
 
-      <div className="mb-[22px] rounded-[10px] bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
+      <div className="mb-[22px] rounded-caja bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
         {estudio === "estudiante" ? (
           <>
             No te pedimos título: alcanza con el <b className="font-semibold text-tinta">DNI</b> y la{" "}

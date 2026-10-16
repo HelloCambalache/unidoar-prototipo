@@ -173,7 +173,7 @@ export function PerfilCursosHechos({ cursos }: { cursos: CursoHistorial[] }) {
             const cert = certificadoDe(c);
             const hecho = c.estado === "completado";
             return (
-              <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-[18px] bg-[#F7F6F2] px-4 py-3">
+              <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-interno bg-[#F7F6F2] px-4 py-3">
                 <span
                   aria-hidden
                   className={cn(

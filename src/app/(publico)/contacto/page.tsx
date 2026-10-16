@@ -29,7 +29,7 @@ const TRAZO = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLi
 export default function Contacto() {
   return (
     <div className="mx-auto w-full max-w-[1100px] flex-1 px-12 pt-10 pb-14 max-[900px]:px-6 max-[560px]:pt-6 max-[560px]:pb-10">
-      <section className="relative mb-6 overflow-hidden rounded-[32px] bg-navy-900 px-12 py-12 text-white max-[560px]:px-6 max-[560px]:py-9">
+      <section className="relative mb-6 overflow-hidden rounded-marco bg-navy-900 px-12 py-12 text-white max-[560px]:px-6 max-[560px]:py-9">
         <NodosMarca className="absolute -top-10 -right-8 w-[260px] opacity-90 max-[700px]:w-[170px] max-[700px]:opacity-60" />
         <h1 className="font-display relative m-0 mb-2.5 text-[40px] leading-[1.1] font-semibold tracking-[-0.025em] max-[560px]:text-[30px]">
           Contacto

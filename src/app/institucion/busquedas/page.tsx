@@ -48,7 +48,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
       />
 
       {publicada !== null && Number.isFinite(publicada) && (
-        <p role="status" className="mt-3 mb-0 rounded-lg bg-verde-tint px-4 py-3 text-[13.5px] leading-normal text-verde">
+        <p role="status" className="mt-3 mb-0 rounded-caja bg-verde-tint px-4 py-3 text-[13.5px] leading-normal text-verde">
           {Number.isFinite(enSedes) && enSedes > 1
             ? `Publicamos tu búsqueda en ${enSedes} sedes (una por sede).`
             : "Tu búsqueda quedó publicada."}{" "}

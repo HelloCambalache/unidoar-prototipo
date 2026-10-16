@@ -67,7 +67,7 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
 
       <dl className="m-0 mb-5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
         {stats.map((s) => (
-          <div key={s.etiqueta} className="rounded-ud border border-borde bg-white px-[18px] py-4">
+          <div key={s.etiqueta} className="rounded-tarjeta border border-linea bg-white px-[18px] py-4">
             <dt className="mb-2 text-xs leading-snug font-medium text-apagado">{s.etiqueta}</dt>
             <dd className="m-0 text-2xl leading-none font-semibold text-navy-700">{s.valor}</dd>
           </div>

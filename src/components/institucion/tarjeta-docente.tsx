@@ -48,7 +48,7 @@ export function TarjetaDocente({
     <article
       style={{ "--cat": info.color } as React.CSSProperties}
       className={cn(
-        "flex h-full flex-col rounded-ud border bg-white p-[18px] transition-[border-color,box-shadow] duration-150",
+        "flex h-full flex-col rounded-tarjeta border bg-white p-[18px] transition-[border-color,box-shadow] duration-150",
         "hover:shadow-[0_6px_18px_rgba(31,36,33,.10)]",
         d.urgente
           ? "border-[1.5px] border-naranja"

@@ -19,7 +19,7 @@ export function ListaNotificaciones({ notificaciones }: { notificaciones: Notifi
       {notificaciones.map((n) => {
         const estilo = estiloNotificacion(n.tipo, n.titulo);
         const clases = cn(
-          "flex w-full items-start gap-[11px] rounded-ud border border-borde p-3.5 text-left transition-colors",
+          "flex w-full items-start gap-[11px] rounded-caja border border-borde p-3.5 text-left transition-colors",
           n.leida ? "bg-white" : "bg-superficie",
           (n.enlace || !n.leida) && "hover:bg-[#F0EFEA]",
           "focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",

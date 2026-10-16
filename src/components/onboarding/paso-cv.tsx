@@ -40,7 +40,7 @@ export function PasoCv({
           disponible={almacenamientoDisponible}
         />
       </div>
-      <p className="m-0 mb-[22px] rounded-[10px] bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
+      <p className="m-0 mb-[22px] rounded-caja bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
         Por ahora no leemos el archivo automáticamente: tu experiencia, tu formación y el resumen del perfil los completás vos
         desde <b className="font-semibold text-tinta">Mi perfil</b>.
       </p>

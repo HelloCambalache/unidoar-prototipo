@@ -11,7 +11,7 @@ export function FormularioBajaAvisos({ usuarioId, firma, children }: { usuarioId
 
   if (estado?.ok) {
     return (
-      <div role="status" className="rounded-lg bg-verde-tint px-4 py-4 text-sm leading-normal text-verde">
+      <div role="status" className="rounded-caja bg-verde-tint px-4 py-4 text-sm leading-normal text-verde">
         <p className="m-0 font-semibold">Listo: no te vamos a mandar más avisos por mail.</p>
         <p className="m-0 mt-1.5 text-tinta-2">
           Seguís viéndolos en la campanita de UNIDOAR. Si más adelante querés recibirlos de nuevo, activalos desde «Mi cuenta» (
@@ -33,7 +33,7 @@ export function FormularioBajaAvisos({ usuarioId, firma, children }: { usuarioId
         {pendiente ? "Guardando…" : "Dejar de recibir avisos por mail"}
       </Boton>
       {estado && !estado.ok && estado.error && (
-        <p role="alert" className="m-0 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] leading-snug font-medium text-[#b91c1c]">
+        <p role="alert" className="m-0 rounded-caja bg-[#FEE2E2] px-4 py-3 text-[13px] leading-snug font-medium text-[#b91c1c]">
           {estado.error}
         </p>
       )}

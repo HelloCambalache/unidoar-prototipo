@@ -25,7 +25,7 @@ function Fila({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-borde px-4 py-3.5 max-[640px]:flex-wrap">
+    <div className="flex items-center gap-3 rounded-caja border border-borde px-4 py-3.5 max-[640px]:flex-wrap">
       <span
         className={cn(
           "inline-flex size-[30px] flex-none items-center justify-center rounded-[7px]",

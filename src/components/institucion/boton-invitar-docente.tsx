@@ -110,7 +110,7 @@ export function BotonInvitarDocente({
           {opciones.map((o) => (
             <li
               key={o.id}
-              className="flex items-center justify-between gap-3 rounded-ud border border-borde px-3.5 py-3"
+              className="flex items-center justify-between gap-3 rounded-caja border border-borde px-3.5 py-3"
             >
               <div className="min-w-0">
                 <div className="text-sm leading-tight font-semibold">{o.puesto}</div>

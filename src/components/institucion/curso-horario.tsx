@@ -27,7 +27,7 @@ export function CursoHorario({
 
   if (filas.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-borde-fuerte px-4 py-3.5 text-[13px] leading-normal text-apagado">
+      <div className="rounded-caja border border-dashed border-borde-fuerte px-4 py-3.5 text-[13px] leading-normal text-apagado">
         Elegí la fecha de inicio y la de finalización: los días del curso se cargan solos y después ponés el horario de cada uno.
         {horarioGuardado && (
           <div className="mt-2 text-tinta-2">
@@ -40,7 +40,7 @@ export function CursoHorario({
 
   return (
     <div>
-      <div className="overflow-hidden rounded-lg border border-borde bg-white">
+      <div className="overflow-hidden rounded-interno border border-borde bg-white">
         {filas.map((n) => {
           const d = dias[n]!;
           const nombre = nombreDia(n);

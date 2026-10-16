@@ -51,7 +51,7 @@ export function BarraBuscadorDocentes({
 
   return (
     <>
-      <section aria-label="Buscá con IA" className="mb-4 rounded-[10px] border border-borde bg-white px-[18px] py-4">
+      <section aria-label="Buscá con IA" className="mb-4 rounded-tarjeta border border-linea bg-white px-[18px] py-4">
         <div className="mb-2.5 flex items-center gap-2 text-navy-700">
           <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="flex-none">
             <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />

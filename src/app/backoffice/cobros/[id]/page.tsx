@@ -109,7 +109,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
           </Tarjeta>
 
           {d.pedidosPendientes.length > 0 && (
-            <div role="status" className="rounded-ud border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
+            <div role="status" className="rounded-caja border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
               <b className="font-semibold">Tiene un pedido de cambio de plan sin atender:</b>{" "}
               {d.pedidosPendientes.map((p) => `pasar al ${P.nombreDePlan(p.planSolicitado)} (${haceTiempo(p.creadoEn, ahora)})`).join(", ")}.{" "}
               <Link href="/backoffice/cobros#pedidos" className="font-semibold text-[#8A4B07] underline">

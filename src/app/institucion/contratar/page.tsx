@@ -44,12 +44,12 @@ export default async function Contratar({ searchParams }: { searchParams: Promis
             <div className="mt-0.5 text-[13px] leading-snug text-apagado">{detalle || busqueda.puesto}</div>
           </div>
         </div>
-        <section className="rounded-ud border border-borde bg-white p-[22px]">
+        <section className="rounded-tarjeta border border-linea bg-white p-[22px]">
           <h2 className="m-0 mb-1 text-[15px] leading-none font-semibold">Marcar como contratada</h2>
           <p className="m-0 mb-3.5 text-[13px] leading-normal text-apagado">Para el puesto «{busqueda.puesto}».</p>
           {impedimento ? (
             <div className="flex flex-col gap-3.5">
-              <p role="status" className="m-0 rounded-lg bg-superficie px-3.5 py-3 text-[13.5px] leading-normal text-tinta-2">
+              <p role="status" className="m-0 rounded-caja bg-superficie px-3.5 py-3 text-[13.5px] leading-normal text-tinta-2">
                 {impedimento}
               </p>
               <BotonLink href={volver} variante="secundario" bloque>

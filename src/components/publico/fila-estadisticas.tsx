@@ -16,11 +16,11 @@ export function FilaEstadisticas({ items }: { items: Estadistica[] }) {
         {items.map((i) => (
           <li
             key={i.etiqueta}
-            className="flex items-center gap-4 rounded-tarjeta bg-white px-5 py-5 shadow-tarjeta max-[480px]:gap-3 max-[480px]:rounded-[20px] max-[480px]:px-3.5 max-[480px]:py-3.5"
+            className="flex items-center gap-4 rounded-tarjeta bg-white px-5 py-5 shadow-tarjeta max-[480px]:gap-3 max-[480px]:rounded-interno max-[480px]:px-3.5 max-[480px]:py-3.5"
           >
             <div
               style={{ background: `${i.color}1a`, color: i.color }}
-              className="flex size-12 flex-none items-center justify-center rounded-[14px] max-[480px]:size-9 max-[480px]:rounded-[11px]"
+              className="flex size-12 flex-none items-center justify-center rounded-caja max-[480px]:size-9 max-[480px]:rounded-[11px]"
             >
               <Icono nombre={i.icono} tamano={20} trazo={2} className="max-[480px]:size-4" />
             </div>

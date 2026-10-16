@@ -26,7 +26,7 @@ export function PanelDeFoto({
   return (
     <div
       className={cn(
-        "relative flex min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-[32px] max-[860px]:h-[240px] max-[860px]:flex-none max-[860px]:rounded-none",
+        "relative flex min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-marco max-[860px]:h-[240px] max-[860px]:flex-none max-[860px]:rounded-none",
         className,
       )}
     >
@@ -79,7 +79,7 @@ export function MarcoAcceso({
     <div className="flex min-h-screen gap-4 bg-lienzo p-4 max-[860px]:flex-col max-[860px]:gap-0 max-[860px]:p-0">
       <PanelDeFoto foto={foto} titulo={titulo} bajada={bajada} />
 
-      <main className="relative flex min-w-[360px] max-w-[540px] flex-1 flex-col justify-center rounded-[32px] bg-white px-14 py-12 shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:px-6 max-[860px]:py-9 max-[860px]:shadow-none">
+      <main className="relative flex min-w-[360px] max-w-[540px] flex-1 flex-col justify-center rounded-marco bg-white px-14 py-12 shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:px-6 max-[860px]:py-9 max-[860px]:shadow-none">
         <div className="relative z-[1] mx-auto flex w-full max-w-[400px] flex-col">
           <Link
             href={volverHref}

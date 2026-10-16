@@ -54,7 +54,7 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
   };
 
   return (
-    <article className="relative flex min-w-[320px] flex-[1.15] flex-col overflow-hidden rounded-[14px] bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
+    <article className="relative flex min-w-[320px] flex-[1.15] flex-col overflow-hidden rounded-caja bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
       <span
         aria-hidden
         className="pointer-events-none absolute -top-[60px] -right-[50px] size-[200px] rounded-full bg-[radial-gradient(circle,rgba(245,147,50,.3),transparent_70%)]"
@@ -106,7 +106,7 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
         ))}
       </ul>
 
-      <div className="relative mt-5 rounded-lg bg-white/8 px-4 py-3.5">
+      <div className="relative mt-5 rounded-caja bg-white/8 px-4 py-3.5">
         <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
           {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
         </span>
@@ -118,7 +118,7 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
         </p>
       </div>
 
-      <div className="relative mt-3 rounded-lg bg-white/8 px-4 py-3.5">
+      <div className="relative mt-3 rounded-caja bg-white/8 px-4 py-3.5">
         <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
           {meses(mesesQueSePagan - mesesConReferido)} más
         </span>

@@ -74,7 +74,7 @@ export function PanelCoincidencias({
   return (
     <div className="flex w-[280px] flex-none flex-col gap-4 max-[1000px]:w-full">
       <div
-        className={cn("rounded-ud bg-navy-700 p-5 text-white transition-opacity", pendiente && "opacity-70")}
+        className={cn("rounded-tarjeta bg-navy-700 p-5 text-white transition-opacity", pendiente && "opacity-70")}
         aria-busy={pendiente}
       >
         <div className="mb-3.5 flex items-center gap-1.5 text-[11px] leading-none font-semibold tracking-[.06em] text-navy-100 uppercase">
@@ -133,7 +133,7 @@ export function PanelCoincidencias({
       </div>
 
       {resumen && (
-        <div className="rounded-ud border border-borde bg-white p-[18px]">
+        <div className="rounded-tarjeta border border-linea bg-white p-[18px]">
           <div className="mb-3 text-sm leading-none font-semibold">Cómo cambia el número</div>
           <div className="flex flex-col gap-[9px] text-[13px] leading-tight">
             {resumen.escenarios.zona !== null && (

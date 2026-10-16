@@ -18,7 +18,7 @@ export function BannerBienvenida({
   return (
     <section
       className={cn(
-        "relative flex min-h-[240px] flex-col justify-center gap-3 overflow-hidden rounded-[30px] bg-navy-900 px-7 py-8 text-white min-[700px]:px-10",
+        "relative flex min-h-[240px] flex-col justify-center gap-3 overflow-hidden rounded-marco bg-navy-900 px-7 py-8 text-white min-[700px]:px-10",
         className,
       )}
     >

@@ -21,7 +21,7 @@ const FOTO_MOSAICO: Record<CategoriaDocente, string> = {
 };
 
 const TILE =
-  "relative overflow-hidden rounded-[28px] bg-navy-700 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none";
+  "relative overflow-hidden rounded-panel bg-navy-700 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-[3px] focus-visible:ring-[3px] focus-visible:ring-navy-700/40 focus-visible:outline-none";
 
 /** Hero de la landing: titular, accesos por rol y mosaico con las tres categorías. */
 export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, ConteoCategoria> }) {

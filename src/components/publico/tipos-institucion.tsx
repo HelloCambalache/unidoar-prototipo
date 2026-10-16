@@ -163,7 +163,7 @@ function Tarjeta({ tipo, oculta }: { tipo: (typeof TIPOS)[number]; oculta?: bool
         href={tipo.href}
         tabIndex={oculta ? -1 : undefined}
         className={cn(
-          "flex h-full w-[358px] flex-col rounded-[26px] border p-6 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(31,36,33,.14)] focus-visible:ring-[3px] focus-visible:ring-white/70 focus-visible:outline-none max-[560px]:w-[270px]",
+          "flex h-full w-[358px] flex-col rounded-panel border p-6 transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(31,36,33,.14)] focus-visible:ring-[3px] focus-visible:ring-white/70 focus-visible:outline-none max-[560px]:w-[270px]",
           e.tarjeta,
         )}
       >

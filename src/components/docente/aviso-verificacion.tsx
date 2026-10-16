@@ -28,7 +28,7 @@ export function AvisoVerificacion({
     <section
       aria-labelledby="aviso-verificacion"
       className={cn(
-        "mb-5 rounded-ud border px-5 py-4",
+        "mb-5 rounded-caja border px-5 py-4",
         rechazado ? "border-rosa/25 bg-rosa-tint text-rosa" : "border-[#F6DDB6] bg-[#FEF1DF] text-[#8A4B07]",
         className,
       )}

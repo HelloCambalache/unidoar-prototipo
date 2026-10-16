@@ -52,13 +52,13 @@ export function CarruselTestimonios({
       <div className="relative mx-auto max-w-[640px]">
         <div
           aria-hidden
-          className="absolute top-4 right-[26px] -bottom-4 left-[26px] rounded-[28px] bg-white opacity-45 shadow-tarjeta"
+          className="absolute top-4 right-[26px] -bottom-4 left-[26px] rounded-panel bg-white opacity-45 shadow-tarjeta"
         />
         <div
           aria-hidden
-          className="absolute top-2 right-[13px] -bottom-2 left-[13px] rounded-[28px] bg-white opacity-75 shadow-tarjeta"
+          className="absolute top-2 right-[13px] -bottom-2 left-[13px] rounded-panel bg-white opacity-75 shadow-tarjeta"
         />
-        <div className="relative rounded-[28px] bg-white px-[46px] pt-[42px] pb-[30px] text-center shadow-[0_16px_38px_rgba(31,36,33,.10)] max-[560px]:px-6">
+        <div className="relative rounded-panel bg-white px-[46px] pt-[42px] pb-[30px] text-center shadow-[0_16px_38px_rgba(31,36,33,.10)] max-[560px]:px-6">
           <span
             aria-hidden
             style={{ background: colorAcento, color: colorSobreAcento, boxShadow: `0 6px 14px ${colorAcento}59` }}

@@ -330,7 +330,7 @@ export function CatEditor({
                   )}
                 </p>
                 {dialogo.ultimaDelRubro && (
-                  <p className="m-0 mb-3 rounded-lg bg-[#FEF1DF] px-3 py-2 text-[13px] leading-normal text-[#8A4B07]">
+                  <p className="m-0 mb-3 rounded-caja bg-[#FEF1DF] px-3 py-2 text-[13px] leading-normal text-[#8A4B07]">
                     Es la última de «{dialogo.rubro}»: el rubro también se elimina.
                   </p>
                 )}

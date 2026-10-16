@@ -64,7 +64,7 @@ export function VitrinaNovedades({
       )}
 
       {novedades.length === 0 ? (
-        <p className="m-0 rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-8 text-center text-[13.5px] leading-normal text-apagado">
+        <p className="m-0 rounded-interno border-[1.5px] border-dashed border-borde-fuerte px-5 py-8 text-center text-[13.5px] leading-normal text-apagado">
           Todavía no publicaste novedades. Contá cuándo abre una inscripción, qué obra terminaron o qué cargos van a necesitar.
         </p>
       ) : (

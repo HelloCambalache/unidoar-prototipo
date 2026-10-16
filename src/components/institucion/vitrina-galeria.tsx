@@ -67,7 +67,7 @@ export function VitrinaGaleria({
       )}
 
       {fotos.length === 0 ? (
-        <p className="m-0 rounded-[10px] border-[1.5px] border-dashed border-borde-fuerte px-5 py-8 text-center text-[13.5px] leading-normal text-apagado">
+        <p className="m-0 rounded-interno border-[1.5px] border-dashed border-borde-fuerte px-5 py-8 text-center text-[13.5px] leading-normal text-apagado">
           Todavía no cargaste fotos. Mostrales a los profesionales el patio, las aulas, el natatorio, la biblioteca…
         </p>
       ) : (

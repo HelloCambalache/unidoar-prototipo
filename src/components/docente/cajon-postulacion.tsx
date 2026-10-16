@@ -106,14 +106,14 @@ export function CajonPostulacion({
       <div className="mb-5 text-xs leading-[1.4] text-sutil">{detalle.envio}</div>
 
       {detalle.examenPreocupacional && detalle.estado.activa && (
-        <p className="m-0 mb-5 rounded-lg bg-[#FDE9D8] px-3.5 py-3 text-[13px] leading-normal text-[#9A4A12]">
+        <p className="m-0 mb-5 rounded-caja bg-[#FDE9D8] px-3.5 py-3 text-[13px] leading-normal text-[#9A4A12]">
           {detalle.examenPreocupacional === "realizado"
             ? `${detalle.institucion.nombre} ya anotó que hiciste el examen preocupacional. Falta que te confirmen el ingreso.`
             : `Para ingresar a trabajar necesitás hacerte el examen preocupacional. Coordiná con ${detalle.institucion.nombre} cómo y dónde.`}
         </p>
       )}
 
-      <section className="mb-5 rounded-lg border border-borde p-3.5">
+      <section className="mb-5 rounded-interno border border-borde p-3.5">
         <div className={cn(ETIQUETA, "mb-2.5")}>Detalle del puesto</div>
         <div className="mb-2.5 flex flex-col gap-1.5 text-[13px] leading-[1.4] text-tinta-2">
           {detalle.zona && (
@@ -145,7 +145,7 @@ export function CajonPostulacion({
       {detalle.invitada && detalle.contacto !== "cerrado" ? (
         // La institución la invitó pero ella todavía no aceptó: no ve su teléfono ni su email, así que no puede escribirle (aunque la
         // haya avanzado de etapa: hasta aceptar, la promesa de "te escribe por WhatsApp" no se cumple).
-        <div className="rounded-lg bg-[#FDE9D8] p-3.5 text-[13px] leading-normal text-[#7A4A12]">
+        <div className="rounded-caja bg-[#FDE9D8] p-3.5 text-[13px] leading-normal text-[#7A4A12]">
           {detalle.institucion.nombre} te invitó, pero todavía no ve tu teléfono ni tu email. Aceptá la invitación para postularte: así puede
           escribirte.
           <BotonLink variante="cta" bloque className="mt-3" href={`/docente/oferta/${detalle.busquedaId}`}>
@@ -153,7 +153,7 @@ export function CajonPostulacion({
           </BotonLink>
         </div>
       ) : detalle.contacto === "activo" ? (
-        <div className="flex items-start gap-3 rounded-[10px] border border-[#B9E3CE] bg-verde-tint p-3.5">
+        <div className="flex items-start gap-3 rounded-caja border border-[#B9E3CE] bg-verde-tint p-3.5">
           <svg aria-hidden width="20" height="20" viewBox="0 0 24 24" fill="#1E7A4C" className="flex-none">
             <path d="M12 2a10 10 0 00-8.6 15.1L2 22l5.1-1.3A10 10 0 1012 2zm5.6 14.3c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.3-5.1-4.5-.1-.2-1.2-1.6-1.2-3 0-1.4.7-2.1 1-2.4.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.2.1.4 0 .6-.3.6-.6.8-.8 1.1-.2.2-.4.4-.2.8.6 1.1 1.3 1.8 2.2 2.4.9.6 1.4.8 1.7.6.3-.2.6-.6.9-.9.2-.3.5-.2.8-.1.3.1 1.7.8 2 .9.3.2.5.2.6.4.1.2.1.7-.2 1.4z" />
           </svg>
@@ -176,7 +176,7 @@ export function CajonPostulacion({
       <section className="mt-[22px] border-t border-borde pt-[18px]">
         <div className={cn(ETIQUETA, "mb-2.5")}>Agendar</div>
         {detalle.agenda ? (
-          <div className="mb-3 rounded-lg border border-[#B9E3CE] bg-verde-tint p-3.5">
+          <div className="mb-3 rounded-caja border border-[#B9E3CE] bg-verde-tint p-3.5">
             <div className="flex items-start gap-[9px]">
               <Icono nombre="calendario" tamano={16} trazo={1.8} className="mt-0.5 text-verde" />
               <div className="min-w-0 flex-1">
@@ -256,7 +256,7 @@ export function CajonPostulacion({
         {detalle.notas.length > 0 && (
           <ul className="m-0 mb-3 flex list-none flex-col gap-2 p-0">
             {detalle.notas.map((n) => (
-              <li key={n.id} className="rounded-lg border border-borde bg-superficie px-[13px] py-[11px]">
+              <li key={n.id} className="rounded-caja border border-borde bg-superficie px-[13px] py-[11px]">
                 <div className="flex items-start justify-between gap-2.5">
                   <span className="min-w-0 flex-1 text-[13px] leading-normal break-words whitespace-pre-line text-tinta-2">
                     {n.texto}
@@ -297,7 +297,7 @@ export function CajonPostulacion({
       {detalle.puedeRetirar && (
         <section className="mt-[22px] border-t border-borde pt-[18px]">
           {confirmandoRetiro ? (
-            <div className="rounded-lg border border-[#F0C4BD] bg-[#FEF2F0] p-3.5">
+            <div className="rounded-caja border border-[#F0C4BD] bg-[#FEF2F0] p-3.5">
               <p className="m-0 mb-3 text-[13px] leading-normal text-tinta-2">
                 ¿Retirar tu postulación? Vamos a avisarle a {detalle.institucion.nombre} y se borran tus notas de esta
                 postulación.
