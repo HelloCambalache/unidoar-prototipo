@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { busquedaSchema, CATEGORIAS, NIVELES, TURNOS } from "@/lib/catalogo";
+import { busquedaSchema, CATEGORIAS, TURNOS } from "@/lib/catalogo";
 
 /*
  * Reglas de dominio de las búsquedas que comparten el formulario (cliente), las server
@@ -42,7 +42,7 @@ export const OPCIONES_VENCIMIENTO = [
 
 /** busquedaSchema (catalogo.ts) más lo que el formulario también carga. */
 export const busquedaFormularioSchema = busquedaSchema.extend({
-  nivel: vacioAUndefined(z.enum(NIVELES).optional()),
+  nivel: vacioAUndefined(z.string().trim().max(60, "Máximo 60 caracteres").optional()),
   turno: vacioAUndefined(z.enum(TURNOS).optional()),
   requisitos: lista,
   beneficios: lista,
@@ -124,7 +124,7 @@ const textoLibre = (max: number) =>
 export const filtrosCoincidenciaSchema = z.object({
   categoria: z.enum(CATEGORIAS),
   disciplina: textoLibre(100),
-  nivel: vacioAUndefined(z.enum(NIVELES).optional()),
+  nivel: vacioAUndefined(z.string().trim().max(60, "Máximo 60 caracteres").optional()),
   turno: vacioAUndefined(z.enum(TURNOS).optional()),
   zona: textoLibre(160),
   /** Incluir partidos linderos (zonas cercanas a las de la institución). */

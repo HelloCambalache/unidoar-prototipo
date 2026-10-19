@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, isNull, notInArray, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import { auditoria, busquedas, facturas, institucionMiembros, instituciones, usuarios } from "@/db/schema";
 import {
@@ -10,6 +10,8 @@ import { estadoEfectivo, hoyAR } from "@/lib/cobros";
 import { bajaSolicitadaEn } from "@/lib/queries/cuenta";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import type { SedeVista } from "@/lib/sedes";
+import { TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { OTRO, tiposFijos } from "@/lib/otro";
 import { contiene } from "@/lib/sql-texto";
 
 /*
@@ -73,7 +75,8 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
       )!,
     );
   }
-  if (f.tipo) condiciones.push(eq(instituciones.tipo, f.tipo));
+  // "Otro" junta lo que no es ninguno de los tipos de la lista (los escritos a mano incluidos).
+  if (f.tipo) condiciones.push(f.tipo === OTRO ? notInArray(instituciones.tipo, tiposFijos(TIPOS_INSTITUCION)) : eq(instituciones.tipo, f.tipo));
   if (f.plan) condiciones.push(eq(instituciones.plan, f.plan));
   if (f.verificacion) condiciones.push(eq(instituciones.verificada, f.verificacion === "si"));
   if (f.estado === "activa") condiciones.push(eq(instituciones.suspendida, false));

@@ -8,6 +8,7 @@ import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { OTRO, opcionYTexto } from "@/lib/otro";
 import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboarding";
 
 /**
@@ -29,7 +30,11 @@ export function FormularioInstitucion({
   provincias: string[];
 }) {
   const [estado, accion, pendiente] = useActionState(crearInstitucion, null);
-  const [tipo, setTipo] = useState<string>(inicial.tipo || TIPOS_INSTITUCION[0]);
+  // Si ya había guardado algo escrito a mano ("Academia de danza"), el desplegable queda en "Otro" y el texto en "¿Cuál?".
+  const inicialTipo = opcionYTexto(inicial.tipo, TIPOS_INSTITUCION);
+  const inicialRol = opcionYTexto(inicial.contactoRol, ROLES_CONTACTO);
+  const [tipo, setTipo] = useState<string>(inicialTipo.opcion || TIPOS_INSTITUCION[0]);
+  const [rol, setRol] = useState<string>(inicialRol.opcion || ROLES_CONTACTO[0]);
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
   const v = (campo: string) => valorDe(estado, inicial, campo);
   const conCue = TIPOS_CON_CUE.includes(tipo);
@@ -69,13 +74,26 @@ export function FormularioInstitucion({
           </Campo>
         </div>
 
+        {tipo === OTRO && (
+          <Campo etiqueta="¿Cuál es el tipo de institución?" error={campos.tipoOtro}>
+            <Input
+              name="tipoOtro"
+              required
+              maxLength={60}
+              placeholder="Ej. Academia de danza"
+              defaultValue={v("tipoOtro") || inicialTipo.texto}
+              aria-invalid={Boolean(campos.tipoOtro)}
+            />
+          </Campo>
+        )}
+
         <Campo etiqueta="Nombre de contacto" error={campos.contactoNombre}>
           <Input name="contactoNombre" autoComplete="name" placeholder="Ej. Marina Gómez" required defaultValue={v("contactoNombre")} aria-invalid={Boolean(campos.contactoNombre)} />
         </Campo>
 
         <div className="flex gap-3.5 max-[640px]:flex-col">
           <Campo etiqueta="Rol en la institución" className="flex-1" error={campos.contactoRol}>
-            <Select name="contactoRol" defaultValue={v("contactoRol") || ROLES_CONTACTO[0]} aria-invalid={Boolean(campos.contactoRol)}>
+            <Select name="contactoRol" value={rol} onChange={(e) => setRol(e.target.value)} aria-invalid={Boolean(campos.contactoRol)}>
               {ROLES_CONTACTO.map((r) => (
                 <option key={r}>{r}</option>
               ))}
@@ -85,6 +103,19 @@ export function FormularioInstitucion({
             <Input name="telefono" type="tel" autoComplete="tel" placeholder="11 5555 5555" required defaultValue={v("telefono")} aria-invalid={Boolean(campos.telefono)} />
           </Campo>
         </div>
+
+        {rol === OTRO && (
+          <Campo etiqueta="¿Cuál es tu rol en la institución?" error={campos.contactoRolOtro}>
+            <Input
+              name="contactoRolOtro"
+              required
+              maxLength={60}
+              placeholder="Ej. Secretaria, Preceptor/a, Dueño/a"
+              defaultValue={v("contactoRolOtro") || inicialRol.texto}
+              aria-invalid={Boolean(campos.contactoRolOtro)}
+            />
+          </Campo>
+        )}
 
         <div className="flex gap-3.5 max-[640px]:flex-col">
           <Campo etiqueta="CUIT / CUIL de la institución" className="flex-1" error={campos.cuit}>

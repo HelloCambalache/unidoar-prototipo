@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { crearBusqueda, editarBusqueda } from "@/app/actions/busquedas";
+import { OTRO, opcionYTexto } from "@/lib/otro";
 import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
@@ -17,7 +18,7 @@ export type ValoresFormulario = {
   puesto: string;
   categoria: CategoriaDocente;
   disciplina: string;
-  nivel: (typeof NIVELES)[number] | "";
+  nivel: string;
   tipo: (typeof TIPOS_BUSQUEDA)[number];
   cargaHoraria: string;
   turno: (typeof TURNOS)[number] | "";
@@ -75,6 +76,12 @@ export function FormularioBusqueda({
       : { sel: OTRA, otra: inicial.disciplina },
   );
   const disciplinaFinal = disciplina.sel === OTRA ? disciplina.otra.trim() : disciplina.sel;
+  // El nivel es una lista con "Otro": al elegirlo se escribe cuál (una búsqueda vieja con un nivel fuera de la lista también cae acá).
+  const [nivel, setNivel] = useState(() => {
+    const x = opcionYTexto(inicial.nivel, NIVELES);
+    return { sel: x.opcion, otro: x.texto };
+  });
+  const nivelFinal = nivel.sel === OTRO ? nivel.otro.trim() : nivel.sel;
 
   const [venceEnHoras, setVenceEnHoras] = useState(plazoActual ? "" : "24");
   const [interruptores, setInterruptores] = useState<Interruptores>({
@@ -115,7 +122,7 @@ export function FormularioBusqueda({
   const paraRedactar: DatosParaRedactar = {
     categoria: v.categoria,
     disciplina: disciplinaFinal,
-    nivel: v.nivel,
+    nivel: nivelFinal,
     tipo: v.tipo,
     cargaHoraria: v.cargaHoraria,
     turno: v.turno,
@@ -238,16 +245,30 @@ export function FormularioBusqueda({
               </Campo>
             )}
           </div>
-          <Campo etiqueta="Nivel" error={errores.nivel}>
-            <Select name="nivel" value={v.nivel} onChange={(e) => set("nivel", e.target.value as ValoresFormulario["nivel"])}>
-              <option value="">Sin especificar</option>
-              {NIVELES.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </Select>
-          </Campo>
+          <div className="flex flex-col gap-2">
+            <Campo etiqueta="Nivel" error={errores.nivel}>
+              <Select value={nivel.sel} onChange={(e) => setNivel((n) => ({ ...n, sel: e.target.value }))}>
+                <option value="">Sin especificar</option>
+                {NIVELES.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </Campo>
+            <input type="hidden" name="nivel" value={nivelFinal} />
+            {nivel.sel === OTRO && (
+              <Campo etiqueta="¿Cuál?" requerido>
+                <Input
+                  value={nivel.otro}
+                  onChange={(e) => setNivel((n) => ({ ...n, otro: e.target.value }))}
+                  maxLength={60}
+                  placeholder="Escribí el nivel"
+                  required
+                />
+              </Campo>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 max-[640px]:grid-cols-1">
@@ -401,12 +422,14 @@ export function FormularioBusqueda({
         </Campo>
         )}
 
-        <Campo etiqueta="Descripción" error={errores.descripcion}>
+        <Campo etiqueta="Descripción" requerido error={errores.descripcion}>
           <Textarea
             name="descripcion"
             value={v.descripcion}
             onChange={(e) => set("descripcion", e.target.value)}
             maxLength={2000}
+            required
+            aria-invalid={!!errores.descripcion}
             className="min-h-[100px]"
             placeholder="Contá en qué consiste el cargo: grupos, horarios, responsabilidades…"
           />
@@ -467,7 +490,7 @@ export function FormularioBusqueda({
         criterios={{
           categoria: v.categoria,
           disciplina: disciplinaFinal || undefined,
-          nivel: v.nivel || undefined,
+          nivel: nivelFinal || undefined,
           turno: v.turno || undefined,
           zona: v.zona.trim() || undefined,
         }}

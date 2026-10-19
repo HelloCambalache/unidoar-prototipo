@@ -4,7 +4,7 @@ import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { FormularioBusqueda, type ValoresFormulario } from "@/components/institucion/formulario-busqueda";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid, tipoDeFormulario } from "@/lib/busquedas";
-import { NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
+import { TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { plazoLegible } from "@/lib/fechas";
 import { asignaturasPorCategoria, busquedaPropia } from "@/lib/queries/busquedas";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
@@ -42,7 +42,7 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
         puesto: existente.puesto,
         categoria: existente.categoria,
         disciplina: existente.disciplina,
-        nivel: opcion(NIVELES, existente.nivel),
+        nivel: existente.nivel ?? "",
         tipo: opcion(TIPOS_BUSQUEDA, tipoDeFormulario(existente)) || "Titular",
         cargaHoraria: existente.cargaHoraria ?? "",
         turno: opcion(TURNOS, existente.turno),

@@ -159,9 +159,12 @@ const cuitOpcional = z
 export const institucionDatosSchema = z.object({
   nombre: texto(2, 120),
   tipo: z.enum(TIPOS_INSTITUCION),
+  /** Lo que escribe quien elige "Otro" (ver `valorElegido`, src/lib/otro.ts). */
+  tipoOtro: textoOpcional(60),
   fundada: z.coerce.number().int().min(1800).max(new Date().getFullYear()).optional().or(z.literal("").transform(() => undefined)),
   contactoNombre: texto(2, 120),
   contactoRol: z.enum(ROLES_CONTACTO),
+  contactoRolOtro: textoOpcional(60),
   telefono: texto(6, 40),
   cuit: cuitOpcional,
   cue: textoOpcional(20),
@@ -184,7 +187,8 @@ export const busquedaSchema = z.object({
   puesto: texto(3, 120),
   categoria: z.enum(CATEGORIAS),
   disciplina: texto(2, 100),
-  nivel: z.enum(NIVELES).optional(),
+  // Un nivel de la lista o, con "Otro", el que escribió la institución.
+  nivel: z.string().trim().max(60).optional(),
   tipo: z.enum(TIPOS_BUSQUEDA),
   cargaHoraria: textoOpcional(80),
   turno: z.enum(TURNOS).optional(),
@@ -194,7 +198,8 @@ export const busquedaSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   zona: textoOpcional(160),
-  descripcion: textoOpcional(2000),
+  // Obligatoria: una búsqueda sin descripción no le dice nada a quien la lee. El mínimo evita que pase una sola letra.
+  descripcion: z.string().trim().min(10, "Contá en qué consiste el cargo (al menos unas palabras)").max(2000),
 });
 export type BusquedaInput = z.infer<typeof busquedaSchema>;
 

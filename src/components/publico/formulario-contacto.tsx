@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { enviarContacto } from "@/app/actions/contacto";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
@@ -13,6 +13,7 @@ export function FormularioContacto() {
   const [estado, accion, enviando] = useActionState(enviarContacto, INICIAL);
   const campos = estado.campos ?? {};
   const v = estado.valores;
+  const [rol, setRol] = useState<string>(v?.rol || ROLES_CONSULTA[0]);
 
   return (
     <form action={accion} noValidate className="flex flex-col gap-4">
@@ -40,7 +41,7 @@ export function FormularioContacto() {
         />
       </Campo>
       <Campo etiqueta="Sos…" requerido error={campos.rol}>
-        <Select name="rol" defaultValue={v?.rol || ROLES_CONSULTA[0]} aria-invalid={!!campos.rol}>
+        <Select name="rol" value={rol} onChange={(e) => setRol(e.target.value)} aria-invalid={!!campos.rol}>
           {ROLES_CONSULTA.map((r) => (
             <option key={r} value={r}>
               {r}
@@ -48,6 +49,11 @@ export function FormularioContacto() {
           ))}
         </Select>
       </Campo>
+      {rol === "Otro" && (
+        <Campo etiqueta="¿Cuál? (opcional)" error={campos.rolOtro}>
+          <Input name="rolOtro" placeholder="Ej. Soy de una editorial" defaultValue={v?.rolOtro} aria-invalid={!!campos.rolOtro} maxLength={60} />
+        </Campo>
+      )}
       <Campo etiqueta="Mensaje" requerido error={campos.mensaje}>
         <Textarea
           name="mensaje"

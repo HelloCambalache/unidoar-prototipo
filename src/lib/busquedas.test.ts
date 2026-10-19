@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { busquedaSchema } from "./catalogo";
 import { avisoDeBusquedasSinPostulaciones, plural } from "./busquedas";
 
 describe("aviso de búsquedas que no reciben postulaciones", () => {
@@ -27,5 +28,27 @@ describe("plural", () => {
     assert.equal(plural(1, "postulante", "postulantes"), "1 postulante");
     assert.equal(plural(0, "postulante", "postulantes"), "0 postulantes");
     assert.equal(plural(5, "postulante", "postulantes"), "5 postulantes");
+  });
+});
+
+describe("la descripción de una búsqueda es obligatoria", () => {
+  const base = { puesto: "Profe de Matemática", categoria: "educador", disciplina: "Matemática", tipo: "Titular" };
+
+  it("sin descripción, o con solo espacios, no pasa", () => {
+    assert.equal(busquedaSchema.safeParse({ ...base }).success, false);
+    assert.equal(busquedaSchema.safeParse({ ...base, descripcion: "" }).success, false);
+    assert.equal(busquedaSchema.safeParse({ ...base, descripcion: "         " }).success, false);
+  });
+
+  it("una sola palabra suelta tampoco: pide contar en qué consiste el cargo", () => {
+    const r = busquedaSchema.safeParse({ ...base, descripcion: "Mate" });
+    assert.equal(r.success, false);
+    assert.match(r.error?.issues[0]?.message ?? "", /Contá en qué consiste/);
+  });
+
+  it("con una descripción real pasa y se recorta", () => {
+    const r = busquedaSchema.safeParse({ ...base, descripcion: "  Dos cursos de 4° año, turno mañana.  " });
+    assert.equal(r.success, true);
+    assert.equal(r.data?.descripcion, "Dos cursos de 4° año, turno mañana.");
   });
 });

@@ -16,6 +16,7 @@ import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
 import { institucionComoMiembro } from "@/lib/queries/equipo";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
+import { valorElegido } from "@/lib/otro";
 import {
   CATEGORIA_ALTA,
   OBLIGATORIOS_DATOS_DOCENTE,
@@ -140,6 +141,15 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   const r = parsear(institucionDatosSchema, formData);
   if (!r.ok) return conError(formData, r.error, r.campos);
   const d = r.data;
+  // "Otro" en el tipo o en el rol: se guarda lo que escribió la persona, y tiene que haber escrito algo.
+  const tipo = valorElegido(d.tipo, d.tipoOtro);
+  const contactoRol = valorElegido(d.contactoRol, d.contactoRolOtro);
+  if (!tipo || !contactoRol) {
+    return conError(formData, "Revisá los campos marcados.", {
+      ...(!tipo && { tipoOtro: "Escribí cuál es el tipo de institución" }),
+      ...(!contactoRol && { contactoRolOtro: "Escribí cuál es tu rol" }),
+    });
+  }
   // Los términos se aceptan al crear la cuenta (paso 1) y ahí queda la constancia. Una cuenta que no la tiene (se creó antes de
   // ese cambio) los acepta en este paso, y el servidor lo exige: no alcanza con que el formulario lo pida.
   if (!usuario.terminosAceptadosEn) {
@@ -163,10 +173,10 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   const P = await planes();
   const datos = {
     nombre: d.nombre,
-    tipo: d.tipo,
+    tipo,
     fundada: orNull(d.fundada),
     contactoNombre: d.contactoNombre,
-    contactoRol: d.contactoRol,
+    contactoRol,
     telefono: d.telefono,
     cuit: orNull(d.cuit),
     // El código CUE es solo de los establecimientos educativos.

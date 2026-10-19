@@ -16,6 +16,7 @@ import { SubirArchivo } from "@/components/ui/subir-archivo";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { OTRO, opcionYTexto, valorAlEscribirOtro } from "@/lib/otro";
 import { focoDeFoto } from "@/lib/fotos";
 import type { BusquedaAbierta, CursoVitrina, DatosFormularioVitrina, VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
 import { cn } from "@/lib/utils";
@@ -98,11 +99,9 @@ export function VitrinaFormulario({
     });
   };
 
-  // Los vocabularios cerrados incluyen lo que la cuenta ya tenía guardado, aunque no esté en la lista.
-  const tipos: string[] = [...TIPOS_INSTITUCION];
-  if (d.tipo && !tipos.includes(d.tipo)) tipos.push(d.tipo);
-  const rolesContacto: string[] = [...ROLES_CONTACTO];
-  if (d.contactoRol && !rolesContacto.includes(d.contactoRol)) rolesContacto.push(d.contactoRol);
+  // Tipo y rol: listas que terminan en "Otro", con un "¿Cuál?" para lo que no está. `d.tipo` y `d.contactoRol` guardan siempre el valor final.
+  const tipoElegido = opcionYTexto(d.tipo, TIPOS_INSTITUCION);
+  const rolElegido = opcionYTexto(d.contactoRol, ROLES_CONTACTO);
 
   const guardar = (e: React.FormEvent) => {
     e.preventDefault();
@@ -271,16 +270,27 @@ export function VitrinaFormulario({
                   <Select
                     aria-label="Tipo de institución"
                     aria-invalid={Boolean(errores.tipo)}
-                    value={d.tipo}
+                    value={tipoElegido.opcion}
                     onChange={(e) => set("tipo", e.target.value)}
                     className="rounded-md border-transparent bg-transparent px-1.5 py-0.5 pr-8 text-[13px] text-apagado hover:border-borde"
                   >
-                    {tipos.map((t) => (
+                    {TIPOS_INSTITUCION.map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
                     ))}
                   </Select>
+                  {tipoElegido.opcion === OTRO && (
+                    <Input
+                      aria-label="¿Cuál es el tipo de institución?"
+                      aria-invalid={Boolean(errores.tipo)}
+                      value={tipoElegido.texto}
+                      onChange={(e) => set("tipo", valorAlEscribirOtro(e.target.value))}
+                      maxLength={60}
+                      placeholder="¿Cuál? Ej. Academia de danza"
+                      className="mt-1 py-1.5 text-[13px]"
+                    />
+                  )}
                   <MensajeError>{errores.tipo}</MensajeError>
                 </div>
                 <div className="flex min-w-[160px] flex-1 flex-col">
@@ -388,15 +398,26 @@ export function VitrinaFormulario({
                 />
               </Campo>
               <Campo etiqueta="Rol en la institución" error={errores.contactoRol}>
-                <Select value={d.contactoRol} onChange={(e) => set("contactoRol", e.target.value)} aria-invalid={Boolean(errores.contactoRol)}>
+                <Select value={rolElegido.opcion} onChange={(e) => set("contactoRol", e.target.value)} aria-invalid={Boolean(errores.contactoRol)}>
                   {!d.contactoRol && <option value="">Elegí un rol</option>}
-                  {rolesContacto.map((r) => (
+                  {ROLES_CONTACTO.map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
                   ))}
                 </Select>
               </Campo>
+              {rolElegido.opcion === OTRO && (
+                <Campo etiqueta="¿Cuál es el rol?">
+                  <Input
+                    value={rolElegido.texto}
+                    onChange={(e) => set("contactoRol", valorAlEscribirOtro(e.target.value))}
+                    maxLength={60}
+                    placeholder="Ej. Secretaria, Preceptor/a, Dueño/a"
+                    aria-invalid={Boolean(errores.contactoRol)}
+                  />
+                </Campo>
+              )}
             </div>
             <div className="mt-3.5 flex flex-col gap-3.5">
               <Campo etiqueta="Misión" error={errores.mision}>

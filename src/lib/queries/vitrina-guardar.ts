@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import type { Institucion } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { quitados } from "@/lib/archivos";
-import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { OTRO } from "@/lib/otro";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { fotosDeInstitucion, guardarVitrina, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { esUrlPublicaPropia } from "@/lib/subidas";
@@ -32,13 +32,9 @@ export async function guardarVitrinaDeInstitucion(
   const d = r.data;
 
   const campos: Record<string, string> = {};
-  // El tipo y el rol de contacto son vocabularios cerrados; se tolera el valor que ya tenía guardado (cuentas viejas).
-  if (d.tipo !== institucion.tipo && !(TIPOS_INSTITUCION as readonly string[]).includes(d.tipo)) {
-    campos.tipo = "Elegí un tipo de la lista.";
-  }
-  if (d.contactoRol !== institucion.contactoRol && !(ROLES_CONTACTO as readonly string[]).includes(d.contactoRol)) {
-    campos.contactoRol = "Elegí un rol de la lista.";
-  }
+  // Quien elige "Otro" tiene que decir cuál (el formulario guarda lo que escribió, no la palabra). Se tolera el "Otro" que la cuenta ya tenía.
+  if (d.tipo === OTRO && institucion.tipo !== OTRO) campos.tipo = "Escribí cuál es el tipo de institución.";
+  if (d.contactoRol === OTRO && institucion.contactoRol !== OTRO) campos.contactoRol = "Escribí cuál es el rol.";
   // Imágenes: la que ya estaba guardada o una que subió esta misma cuenta.
   if (d.logoUrl && d.logoUrl !== institucion.logoUrl && !esUrlPublicaPropia(d.logoUrl, quienSube)) {
     campos.logoUrl = "Ese archivo no es válido. Subí el logo de nuevo.";

@@ -11,10 +11,12 @@ export const contactoSchema = z.object({
     .max(254, "Es demasiado largo")
     .pipe(z.email("Escribí un email válido")),
   rol: z.enum(ROLES_CONSULTA, { error: "Elegí una opción" }),
+  /** Lo que escribe quien elige "Otro" (opcional: igual cuenta su consulta en el mensaje). */
+  rolOtro: z.string().trim().max(60, "Máximo 60 caracteres").optional(),
   mensaje: z.string().trim().min(10, "Contanos un poco más (mínimo 10 caracteres)").max(2000, "Máximo 2.000 caracteres"),
 });
 
-export type ValoresContacto = { nombre: string; email: string; rol: string; mensaje: string };
+export type ValoresContacto = { nombre: string; email: string; rol: string; rolOtro?: string; mensaje: string };
 
 /** Estado que devuelve la acción de contacto a `useActionState`. */
 export type EstadoContacto = {

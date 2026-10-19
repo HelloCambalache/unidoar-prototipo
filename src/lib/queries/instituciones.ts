@@ -4,6 +4,8 @@ import { getDb } from "@/db";
 import { busquedas, cvEnviados, favoritos, institucionMiembros, instituciones, zonas } from "@/db/schema";
 import { sedesDeInstituciones, sedesDeInstitucion } from "@/lib/queries/sedes";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
+import { TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { esDelTipo } from "@/lib/otro";
 import { normalizar } from "@/lib/coincidencia";
 import { distanciaKm } from "@/lib/geo";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
@@ -88,7 +90,7 @@ export async function catalogoInstituciones(usuarioId: string | null, filtros: F
   return filas
     .filter((i) => usuarioId !== null || i.verificada || i.busquedasActivas > 0)
     .filter((i) => !q || normalizar(i.nombre).includes(q))
-    .filter((i) => !filtros.tipo || i.tipo === filtros.tipo)
+    .filter((i) => esDelTipo(i.tipo, filtros.tipo ?? "", TIPOS_INSTITUCION))
     .filter((i) => !zonaFiltro || enZona(i))
     .filter((i) => !(usuarioId && filtros.soloFavoritas) || favoritas.has(i.id))
     .map(

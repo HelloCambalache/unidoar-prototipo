@@ -26,11 +26,16 @@ export async function enviarContacto(_previo: EstadoContacto, formData: FormData
     nombre: texto(formData.get("nombre")),
     email: texto(formData.get("email")),
     rol: texto(formData.get("rol")),
+    rolOtro: texto(formData.get("rolOtro")),
     mensaje: texto(formData.get("mensaje")),
   };
 
   const r = parsear(contactoSchema, formData);
   if (!r.ok) return { ok: false, error: r.error, campos: r.campos, valores };
+
+  // Con "Otro" y un texto, el equipo lee "Otro: Secretaria de un colegio" en lugar de solo "Otro".
+  const { rolOtro, ...datos } = r.data;
+  const rol = datos.rol === "Otro" && rolOtro ? `Otro: ${rolOtro}` : datos.rol;
 
   try {
     const db = getDb();
@@ -50,8 +55,8 @@ export async function enviarContacto(_previo: EstadoContacto, formData: FormData
     }
     // El mensaje y el mail al equipo se guardan juntos: si uno falla, no queda el otro.
     await transaccion(async (tx) => {
-      await tx.insert(mensajesContacto).values(r.data);
-      await encolarParaEquipo(tx, "M60", { nombre: r.data.nombre, email: r.data.email, rol: r.data.rol, mensaje: r.data.mensaje });
+      await tx.insert(mensajesContacto).values({ ...datos, rol });
+      await encolarParaEquipo(tx, "M60", { nombre: datos.nombre, email: datos.email, rol, mensaje: datos.mensaje });
     });
   } catch (e) {
     console.error("No se pudo guardar el mensaje de contacto", e);
