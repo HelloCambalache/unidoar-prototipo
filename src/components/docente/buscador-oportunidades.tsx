@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
-import { NodosMarca } from "@/components/app/nodos-marca";
 import { BotonFavorito } from "@/components/docente/boton-favorito";
 import { MapaOfertas, type PinOferta } from "@/components/docente/mapa-ofertas";
 import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
+import { BannerBuscador } from "@/components/oportunidades/banner-buscador";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
-import { hrefOportunidades, RADIO_MAX, type FiltrosOportunidades } from "@/lib/oportunidades";
+import { hrefOportunidades, RADIO_MAX, urgentesPrimero, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { listarOportunidades } from "@/lib/queries/oportunidades";
 import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
 import { cn } from "@/lib/utils";
@@ -76,13 +76,7 @@ export async function BuscadorOportunidades({
 
   return (
     <>
-      <section className="relative mb-5 overflow-hidden rounded-marco bg-navy-900 px-7 py-7 text-white min-[700px]:px-9">
-        <NodosMarca className="absolute -top-10 -right-10 w-[240px] max-[700px]:w-[160px] max-[700px]:opacity-60" />
-        <h1 className="font-display relative m-0 max-w-[620px] text-[30px] leading-[1.12] font-semibold tracking-[-0.025em] text-white max-[700px]:text-[24px]">
-          {titulo}
-        </h1>
-        <p className="relative mt-2 mb-0 max-w-[620px] text-[15px] leading-[1.55] text-[#C9CCE0]">{bajada}</p>
-      </section>
+      <BannerBuscador titulo={titulo} bajada={bajada} />
       <ControlesBuscador
         base={base}
         filtros={filtros}
@@ -136,7 +130,7 @@ export async function BuscadorOportunidades({
         ) : (
           <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(270px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
             {/* Las urgentes abiertas (sin postulación) van primero; el resto conserva el orden de la consulta. */}
-            {[...ofertas.filter((o) => o.rapida && !o.postulacion), ...ofertas.filter((o) => !(o.rapida && !o.postulacion))].map((o) => (
+            {urgentesPrimero(ofertas).map((o) => (
               <li key={o.id} className="flex *:w-full">
                 <TarjetaOfertaApp
                   oferta={o}

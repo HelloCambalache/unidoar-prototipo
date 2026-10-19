@@ -122,3 +122,12 @@ export function esId(valor: unknown): valor is string {
 export function nombreCompleto(d: { nombre: string; apellido: string }) {
   return `${d.nombre} ${d.apellido}`.trim();
 }
+
+/**
+ * Las búsquedas urgentes abiertas (rápidas y a las que la persona todavía no se postuló) van primero; el resto conserva el
+ * orden que ya traía. Lo usan Buscar trabajo de adentro y el público, para que se vean igual.
+ */
+export function urgentesPrimero<T extends { rapida: boolean; postulacion: unknown }>(ofertas: T[]): T[] {
+  const esUrgente = (o: T) => o.rapida && !o.postulacion;
+  return [...ofertas.filter(esUrgente), ...ofertas.filter((o) => !esUrgente(o))];
+}

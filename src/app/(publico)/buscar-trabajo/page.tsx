@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { BannerBuscador } from "@/components/oportunidades/banner-buscador";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
 import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
-import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { Paginacion } from "@/components/publico/paginacion";
 import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
-import { RADIO_MAX } from "@/lib/oportunidades";
-import { plural } from "@/lib/publico";
+import { RADIO_MAX, urgentesPrimero } from "@/lib/oportunidades";
+import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunidades";
 import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
 
@@ -46,25 +46,33 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
   const total = ofertas.length;
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const pagina = Math.min(pedida, paginas);
-  const visibles = ofertas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  // Las urgentes abiertas van primero, igual que en Buscar trabajo de adentro (antes de paginar).
+  const visibles = urgentesPrimero(ofertas).slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
   const filtrando = Object.values(filtros).some((v) => v !== undefined);
 
   return (
-    <div className="flex-1 bg-app px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
+    <div className="flex-1 px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
       <div className="mx-auto max-w-[1320px]">
-        <h1 className="mb-1.5 font-display text-[34px] leading-[1.2] font-bold tracking-[-0.02em] text-tinta max-[560px]:text-[28px]">
-          Búsquedas abiertas
-        </h1>
-        <p className="mb-[22px] text-[15px] leading-normal text-apagado">
-          Todo lo que las instituciones están buscando ahora mismo. Mirá sin cuenta; para postularte necesitás una.
-        </p>
-
-        {!sesion.rol && (
-          <MuroCuenta
-            titulo="Creá tu cuenta para postularte"
-            bajada="Gratis para profesionales. Te lleva dos minutos y después te postulás con un clic."
-          />
-        )}
+        <BannerBuscador
+          titulo="Búsquedas abiertas"
+          bajada="Todo lo que las instituciones están buscando ahora mismo. Mirá sin cuenta; para postularte necesitás una."
+          acciones={
+            sesion.rol ? undefined : (
+              <>
+                <BotonLink
+                  href="/ingresar"
+                  variante="secundario"
+                  className="border-white/35 bg-transparent text-white hover:border-white/60 hover:bg-white/10 hover:text-white"
+                >
+                  Ya tengo cuenta
+                </BotonLink>
+                <BotonLink href={RUTA_REGISTRO_DOCENTE} variante="cta">
+                  Crear cuenta gratis
+                </BotonLink>
+              </>
+            )
+          }
+        />
 
         <ControlesBuscador
           base={BASE}
@@ -98,7 +106,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
               }
             />
           ) : (
-            <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(258px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
+            <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(270px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
               {visibles.map((o) => {
                 const { href, etiqueta } = destino(sesion, o);
                 return (
