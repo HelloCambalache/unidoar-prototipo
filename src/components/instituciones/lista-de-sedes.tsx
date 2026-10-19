@@ -1,19 +1,22 @@
 import type { SedePublica } from "@/lib/sedes";
+import { MapaDeSedes } from "./mapa-de-sedes";
 
-/** Enlace al mapa de una sede: por coordenadas si las tiene y, si no, por el texto de la dirección. */
+/** Enlace al mapa de una sede que no se pudo ubicar (las ubicadas están en el mapa de arriba): por el texto de la dirección. */
 function enlaceAlMapa(s: SedePublica) {
-  if (s.lat != null && s.lng != null) return `https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=16/${s.lat}/${s.lng}`;
+  if (s.lat != null && s.lng != null) return null;
   const texto = [s.direccion, s.zona].filter(Boolean).join(", ");
   return texto ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(texto)}` : null;
 }
 
 /**
- * Las sedes de una institución con más de una (en la vitrina pública y en la del profesional): nombre, dirección, zona y un enlace al
- * mapa de cada una. Con una sola sede las páginas siguen mostrando su "Dónde queda" de siempre.
+ * Las sedes de una institución con más de una (en la vitrina pública y en la del profesional): un mapa con todas y, debajo, nombre,
+ * dirección y zona de cada una. Con una sola sede las páginas siguen mostrando su "Dónde queda" de siempre.
  */
 export function ListaDeSedes({ sedes }: { sedes: SedePublica[] }) {
   return (
-    <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
+    <>
+      <MapaDeSedes sedes={sedes} className="mb-4" />
+      <ul className="m-0 flex list-none flex-col gap-3.5 p-0">
       {sedes.map((s, n) => {
         const mapa = enlaceAlMapa(s);
         return (
@@ -47,6 +50,7 @@ export function ListaDeSedes({ sedes }: { sedes: SedePublica[] }) {
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </>
   );
 }

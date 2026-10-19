@@ -77,8 +77,8 @@ export function TarjetaDocente({
           texto={info.ink}
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-[5px] text-sm leading-tight font-semibold">
-            <Link href={perfilHref} className="min-w-0 truncate text-tinta hover:text-navy-700 hover:underline">
+          <div className="flex flex-wrap items-center gap-x-[5px] gap-y-1 text-sm leading-tight font-semibold">
+            <Link href={perfilHref} className="min-w-0 break-words text-tinta hover:text-navy-700 hover:underline">
               {nombreCompleto}
             </Link>
             {d.verificado ? (
@@ -118,8 +118,9 @@ export function TarjetaDocente({
         </div>
       )}
 
-      <div className="mt-auto flex gap-2 max-[1100px]:flex-wrap">
-        <BotonLink href={perfilHref} variante="secundario" tamano="sm" className="flex-1">
+      {/* Los botones se acomodan según el ancho de la tarjeta (no el de la ventana): si no entran en una fila, pasan a dos. */}
+      <div className="mt-auto flex flex-wrap gap-2">
+        <BotonLink href={perfilHref} variante="secundario" tamano="sm" className="flex-[1_1_96px]">
           Ver perfil
         </BotonLink>
         <BotonInvitarDocente
@@ -127,7 +128,7 @@ export function TarjetaDocente({
           nombre={nombreCompleto}
           opciones={opcionesDeInvitacion(activas, d.relaciones)}
           contextoId={contextoId}
-          className="flex-1"
+          className="flex-[2_1_150px] py-2 leading-tight whitespace-normal"
         />
       </div>
     </article>

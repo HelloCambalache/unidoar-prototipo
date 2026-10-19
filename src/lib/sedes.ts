@@ -109,6 +109,10 @@ export const aSedePublica = (s: Pick<SedeVista, "nombre" | "direccion" | "zona" 
   lng: s.lng,
 });
 
+/** Las sedes que se pueden poner en un mapa: las que tienen coordenadas. */
+export const sedesConUbicacion = <T extends { lat: number | null; lng: number | null }>(sedes: readonly T[]) =>
+  sedes.filter((s) => s.lat != null && s.lng != null);
+
 /** Un lugar desde el cual se miden distancias a los profesionales (siempre con coordenadas). */
 export type PuntoDeReferencia = { nombre: string; lat: number; lng: number };
 

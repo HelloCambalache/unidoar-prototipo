@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icono } from "@/components/icons";
 import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
+import { MapaDeSedes } from "@/components/instituciones/mapa-de-sedes";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Imagen } from "@/components/publico/imagen";
 import { LogoInstitucion } from "@/components/publico/logo-institucion";
@@ -11,6 +12,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { focoDeFoto } from "@/lib/fotos";
+import { sedesConUbicacion } from "@/lib/sedes";
 import { num, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { institucionPublica } from "@/lib/queries/publico";
 
@@ -144,14 +146,18 @@ export default async function PerfilInstitucion({ params }: Props) {
                   <Icono nombre="ubicacion" tamano={16} className="mt-0.5 text-apagado" />
                   <span>{ubicacion}</span>
                 </div>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ubicacion)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2.5 inline-block text-[13px] font-semibold text-navy-700 underline hover:text-naranja"
-                >
-                  Ver en el mapa
-                </a>
+                {sedesConUbicacion(inst.sedes).length > 0 ? (
+                  <MapaDeSedes sedes={inst.sedes} className="mt-3.5" />
+                ) : (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ubicacion)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2.5 inline-block text-[13px] font-semibold text-navy-700 underline hover:text-naranja"
+                  >
+                    Ver en el mapa
+                  </a>
+                )}
                 {inst.horarioAdministracion && (
                   <div className="mt-2.5 text-[13px] leading-snug text-apagado">
                     {`Horario de administración: ${inst.horarioAdministracion}`}

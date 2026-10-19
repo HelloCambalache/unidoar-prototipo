@@ -6,11 +6,13 @@ import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { InstitucionCvBoton, InstitucionFavoritoBoton } from "@/components/docente/instituciones-acciones";
 import { InstitucionLogo } from "@/components/docente/instituciones-logo";
 import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
+import { MapaDeSedes } from "@/components/instituciones/mapa-de-sedes";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
 import { focoDeFoto } from "@/lib/fotos";
 import { perfilInstitucion } from "@/lib/queries/instituciones";
+import { sedesConUbicacion } from "@/lib/sedes";
 import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -42,10 +44,8 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
   if (i.docentesPlanta != null) cifras.push({ valor: String(i.docentesPlanta), etiqueta: "profesionales en planta", grande: true });
   if (i.fundada != null) cifras.push({ valor: String(i.fundada), etiqueta: "fundación", grande: true });
 
-  const mapaOsm =
-    i.lat != null && i.lng != null
-      ? `https://www.openstreetmap.org/?mlat=${i.lat}&mlon=${i.lng}#map=15/${i.lat}/${i.lng}`
-      : null;
+  // Con una sola sede el mapa muestra su pin; sin ubicación en la sede, el de la ficha de la institución.
+  const sedesParaElMapa = sedesConUbicacion(sedes).length > 0 ? sedes : i.lat != null && i.lng != null ? [{ nombre: i.nombre, direccion: i.direccion, zona: i.zona, lat: i.lat, lng: i.lng }] : [];
 
   return (
     <>
@@ -192,17 +192,8 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
                   {i.direccion && <div className="font-display text-[15.5px] font-semibold text-tinta">{i.direccion}</div>}
                   <div className="text-apagado">{i.zona ?? "Zona a confirmar"}</div>
                 </div>
-                {mapaOsm && (
-                  <a
-                    href={mapaOsm}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-auto inline-flex min-h-11 flex-none items-center rounded-full border border-linea px-4 text-sm font-semibold text-tinta hover:bg-lienzo hover:text-tinta"
-                  >
-                    Ver en el mapa
-                  </a>
-                )}
               </div>
+              <MapaDeSedes sedes={sedesParaElMapa} className="mt-3.5" />
               {i.horarioAdministracion && (
                 <div className="mt-3 text-[13px] leading-[1.4] text-apagado">{`Horario de administración: ${i.horarioAdministracion}`}</div>
               )}
