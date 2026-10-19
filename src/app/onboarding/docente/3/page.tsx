@@ -3,7 +3,7 @@ import { AlertaError } from "@/components/onboarding/elementos";
 import { MarcoOnboarding } from "@/components/onboarding/marco-onboarding";
 import { PasoDatosDocente } from "@/components/onboarding/paso-datos-docente";
 import { docenteEnAlta } from "@/lib/alta";
-import { ID_FORMULARIO_ONBOARDING, PASOS_DOCENTE } from "@/lib/onboarding";
+import { ID_FORMULARIO_ONBOARDING, limitesDeNacimiento, PASOS_DOCENTE } from "@/lib/onboarding";
 import { detalleDeDocente, opcionesDeUbicacion, zonasConocidas } from "@/lib/queries/onboarding";
 
 export const metadata: Metadata = { title: "Tu perfil" };
@@ -34,6 +34,7 @@ export default async function PasoDocente3({ searchParams }: { searchParams: Pro
           partido: detalle?.partido ?? undefined,
           provincia: detalle?.provincia ?? undefined,
         }}
+        limitesNacimiento={limitesDeNacimiento()}
         zonasIniciales={docente.zonas}
         zonasSugeridas={zonas.map((z) => z.nombre)}
         partidos={partidos}

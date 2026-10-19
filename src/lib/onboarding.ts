@@ -248,6 +248,24 @@ export const categoriaDocenteSchema = z.object({
   estudio: z.enum(["recibido", "estudiante"], { error: "Contanos si ya te recibiste" }),
 });
 
+/** Edades que acepta el alta del profesional (el servidor las exige; el formulario las usa para acotar el calendario). */
+export const EDAD_MINIMA = 16;
+export const EDAD_MAXIMA = 100;
+
+/**
+ * La fecha más antigua y la más reciente que se pueden elegir como nacimiento ("AAAA-MM-DD"). El campo de fecha del navegador
+ * abre el calendario en el día de hoy si no tiene valor; con un `max` de hace 16 años abre ahí, que es mucho más cerca de una
+ * fecha de nacimiento. Se arma en el servidor y se pasa al formulario, para que no cambie entre el servidor y el navegador.
+ */
+export function limitesDeNacimiento(hoy = new Date()) {
+  const haceAnios = (n: number) => {
+    const d = new Date(hoy);
+    d.setFullYear(d.getFullYear() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  return { min: haceAnios(EDAD_MAXIMA), max: haceAnios(EDAD_MINIMA) };
+}
+
 const fechaNacimiento = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
@@ -255,7 +273,7 @@ const fechaNacimiento = z
     const t = Date.parse(`${f}T00:00:00Z`);
     if (Number.isNaN(t)) return false;
     const anios = (Date.now() - t) / (365.25 * 24 * 3600 * 1000);
-    return anios >= 16 && anios <= 100;
+    return anios >= EDAD_MINIMA && anios <= EDAD_MAXIMA;
   }, "Revisá la fecha de nacimiento");
 
 const telefono = texto(6, 40, "Dejanos un teléfono o WhatsApp");

@@ -32,12 +32,15 @@ function contarCompletos(v: (campo: string) => string) {
  */
 export function PasoDatosDocente({
   inicial,
+  limitesNacimiento,
   zonasIniciales,
   zonasSugeridas,
   partidos,
   provincias,
 }: {
   inicial: DatosForm;
+  /** Fechas entre las que cae un nacimiento válido: el calendario abre cerca del máximo en lugar de en hoy. */
+  limitesNacimiento: { min: string; max: string };
   zonasIniciales: string[];
   zonasSugeridas: string[];
   partidos: string[];
@@ -74,7 +77,15 @@ export function PasoDatosDocente({
         <div className="mt-3.5 flex flex-col gap-3">
           <div className="flex gap-3.5 max-[640px]:flex-col">
             <Campo etiqueta="Fecha de nacimiento" className="flex-1" error={campos.fechaNacimiento}>
-              <Input name="fechaNacimiento" type="date" autoComplete="bday" defaultValue={v("fechaNacimiento")} aria-invalid={Boolean(campos.fechaNacimiento)} />
+              <Input
+                name="fechaNacimiento"
+                type="date"
+                autoComplete="bday"
+                min={limitesNacimiento.min}
+                max={limitesNacimiento.max}
+                defaultValue={v("fechaNacimiento")}
+                aria-invalid={Boolean(campos.fechaNacimiento)}
+              />
             </Campo>
             <Campo etiqueta="DNI" requerido className="flex-1" error={campos.dni}>
               <Input
