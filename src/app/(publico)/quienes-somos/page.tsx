@@ -59,7 +59,7 @@ function iniciales(nombre: string) {
 export default function QuienesSomos() {
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-12 pt-10 max-[900px]:px-6 max-[560px]:gap-8 max-[560px]:pt-6">
+      <div className="mx-auto flex w-full max-w-[1296px] flex-col gap-10 px-12 pt-10 max-[900px]:px-6 max-[560px]:gap-8 max-[560px]:pt-6">
         <section className="relative overflow-hidden rounded-marco bg-navy-900 px-12 py-14 text-white max-[560px]:px-6 max-[560px]:py-10">
           <NodosMarca className="absolute -top-12 -right-10 w-[300px] opacity-90 max-[760px]:w-[180px] max-[760px]:opacity-60" />
           <span className="relative inline-block rounded-full bg-celeste/18 px-2.5 py-[5px] text-xs leading-none font-semibold text-celeste">

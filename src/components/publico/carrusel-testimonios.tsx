@@ -17,6 +17,7 @@ export function CarruselTestimonios({
   colorAcento,
   colorSobreAcento,
   colorNombre,
+  className,
 }: {
   testimonios: Testimonio[];
   /** Fondo del globo de comillas y del punto activo. */
@@ -24,6 +25,8 @@ export function CarruselTestimonios({
   colorSobreAcento: string;
   /** Color del nombre (el de la categoría, oscurecido si hace falta para que contraste). */
   colorNombre: string;
+  /** Ajusta la franja que lo envuelve (las landings de categoría la dejan sin fondo, igual que el resto de la página). */
+  className?: string;
 }) {
   const [indice, setIndice] = useState(0);
   const [pausado, setPausado] = useState(false);
@@ -43,7 +46,7 @@ export function CarruselTestimonios({
     <section
       aria-roledescription="carrusel"
       aria-label="Testimonios"
-      className="border-b border-borde bg-superficie px-10 py-[60px] max-[560px]:px-4"
+      className={cn("border-b border-borde bg-superficie px-10 py-[60px] max-[560px]:px-4", className)}
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocus={() => setPausado(true)}

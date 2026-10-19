@@ -65,7 +65,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
   return (
     <div style={estiloCategoria(categoria)}>
       {/* 1296 = los 1200 de contenido de la banda final + sus 48 px de borde a cada lado: todo queda alineado. */}
-      <div className="mx-auto flex w-full max-w-[1296px] flex-col gap-6 px-12 pt-8 max-[900px]:px-6 max-[560px]:gap-5 max-[560px]:px-4 max-[560px]:pt-5">
+      <div className="mx-auto flex w-full max-w-[1296px] flex-col gap-6 px-12 pt-8 max-[900px]:px-6 max-[560px]:gap-5 max-[560px]:pt-5">
         <nav aria-label="Categorías" className="flex flex-wrap gap-2.5">
           {CATEGORIAS.map((c) => {
             const activa = c === categoria;
@@ -271,6 +271,8 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
         colorAcento={info.color}
         colorSobreAcento={pub.sobreAcento.texto}
         colorNombre={info.ink}
+        // Sin franja de otro color ni borde: sigue el mismo fondo que el resto de la página, con aire arriba (antes arrancaba pegada a la última tarjeta).
+        className="border-b-0 bg-transparent px-12 pt-16 pb-2 max-[900px]:px-6 max-[560px]:px-6 max-[560px]:pt-12"
       />
 
       <BandaFundador cupos={cupos} categoria={categoria} />
