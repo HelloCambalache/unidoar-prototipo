@@ -130,6 +130,20 @@ export function FormularioBusqueda({
     zona: v.zona,
   };
   const sinDisciplina = !disciplinaFinal;
+  // "Sugerir …": la primera vez completa el campo y, mientras la persona no lo toque, el mismo botón ofrece otra redacción.
+  const [sugerencias, setSugerencias] = useState<Record<CampoSugerible, { veces: number; texto: string }>>({
+    puesto: { veces: 0, texto: "" },
+    descripcion: { veces: 0, texto: "" },
+    requisitos: { veces: 0, texto: "" },
+  });
+  const sugerir = (campo: CampoSugerible) => {
+    const { veces } = sugerencias[campo];
+    const texto = REDACTORES[campo](paraRedactar, veces);
+    set(campo, texto);
+    setSugerencias((previas) => ({ ...previas, [campo]: { veces: veces + 1, texto } }));
+  };
+  /** Se ofrece con el campo vacío o con la última sugerencia sin tocar: un texto que la persona editó nunca se pisa. */
+  const sugerible = (campo: CampoSugerible) => !v[campo].trim() || v[campo] === sugerencias[campo].texto;
   const cancelar = modo === "editar" && busquedaId ? `/institucion/postulantes?busqueda=${busquedaId}` : "/institucion/busquedas";
 
   return (
@@ -187,8 +201,8 @@ export function FormularioBusqueda({
             placeholder="Ej. Profe de Educación Física — Primario"
           />
         </Campo>
-        {!v.puesto.trim() && (
-          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("puesto", sugerirPuesto(paraRedactar))}>
+        {sugerible("puesto") && (
+          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => sugerir("puesto")} otra={!!v.puesto.trim()}>
             Sugerir título
           </BotonSugerir>
         )}
@@ -434,8 +448,8 @@ export function FormularioBusqueda({
             placeholder="Contá en qué consiste el cargo: grupos, horarios, responsabilidades…"
           />
         </Campo>
-        {!v.descripcion.trim() && (
-          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("descripcion", sugerirDescripcion(paraRedactar))}>
+        {sugerible("descripcion") && (
+          <BotonSugerir deshabilitado={sinDisciplina} onClick={() => sugerir("descripcion")} otra={!!v.descripcion.trim()}>
             Sugerir descripción con lo que ya completaste
           </BotonSugerir>
         )}
@@ -451,8 +465,8 @@ export function FormularioBusqueda({
                 placeholder={"Título profesional vigente\nExperiencia en Primario"}
               />
             </Campo>
-            {!v.requisitos.trim() && (
-              <BotonSugerir deshabilitado={sinDisciplina} onClick={() => set("requisitos", sugerirRequisitos(paraRedactar))}>
+            {sugerible("requisitos") && (
+              <BotonSugerir deshabilitado={sinDisciplina} onClick={() => sugerir("requisitos")} otra={!!v.requisitos.trim()}>
                 Sugerir requisitos habituales
               </BotonSugerir>
             )}
@@ -499,11 +513,32 @@ export function FormularioBusqueda({
   );
 }
 
+type CampoSugerible = "puesto" | "descripcion" | "requisitos";
+
+/** Quién redacta cada campo (plantillas puras de `redaccion-busqueda.ts`): la variante sube cada vez que se pide otra. */
+const REDACTORES: Record<CampoSugerible, (d: DatosParaRedactar, variante: number) => string> = {
+  puesto: sugerirPuesto,
+  descripcion: sugerirDescripcion,
+  requisitos: sugerirRequisitos,
+};
+
 /**
- * "Sugerir …": completa un campo vacío con una plantilla armada con lo que ya se cargó (no hay ningún modelo detrás y no se
- * inventa nada). Solo aparece mientras el campo está vacío; se edita como cualquier texto.
+ * "Sugerir …": completa un campo con una plantilla armada con lo que ya se cargó (no hay ningún modelo detrás y no se inventan
+ * condiciones). Aparece con el campo vacío o con la última sugerencia sin tocar, y en ese caso ofrece "Probar otra redacción".
+ * El texto se edita como cualquier otro.
  */
-function BotonSugerir({ deshabilitado, onClick, children }: { deshabilitado: boolean; onClick: () => void; children: React.ReactNode }) {
+function BotonSugerir({
+  deshabilitado,
+  onClick,
+  otra = false,
+  children,
+}: {
+  deshabilitado: boolean;
+  onClick: () => void;
+  /** Ya hay una sugerencia en el campo: el botón pide otra redacción en vez de la primera. */
+  otra?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="-mt-2 flex flex-col gap-1">
       <button
@@ -512,12 +547,13 @@ function BotonSugerir({ deshabilitado, onClick, children }: { deshabilitado: boo
         disabled={deshabilitado}
         className="flex w-max cursor-pointer items-center gap-1.5 rounded text-[12.5px] leading-none font-semibold text-navy-700 hover:underline focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
       >
-        <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
-        </svg>
-        {children}
+        <Icono nombre="chispas" tamano={13} trazo={1.6} relleno />
+        {otra ? "Probar otra redacción" : children}
       </button>
       {deshabilitado && <span className="text-[11.5px] leading-none text-sutil">Elegí primero la disciplina.</span>}
+      {otra && !deshabilitado && (
+        <span className="text-[11.5px] leading-snug text-sutil">Es un punto de partida: revisalo y ajustalo antes de publicar.</span>
+      )}
     </div>
   );
 }
