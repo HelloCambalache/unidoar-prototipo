@@ -18,7 +18,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     intro: "Depende de cómo uses UNIDOAR:",
     items: [
       "Educadores, entrenadores y guardavidas: nombre, email, teléfono, zonas de trabajo, disponibilidad, experiencia, formación, foto y CV. Para verificar tu identidad y tu título también pedimos el DNI (número, CUIL, fecha de nacimiento, domicilio y fotos de ambos lados), tu título o credencial y, si querés, el certificado de buena conducta. Si todavía estudiás, en lugar del título te pedimos la constancia de alumno regular y qué porcentaje de las materias ya aprobaste.",
-      "Instituciones: los datos de la institución (nombre, CUIT, dirección, contacto), los de las personas que administran la cuenta, el plan contratado y las facturas.",
+      "Instituciones: los datos de la institución (nombre, CUIT, dirección, contacto), los de las personas que administran la cuenta, el plan contratado y las facturas. Si una institución recomienda UNIDOAR a otra con su enlace de referidos, guardamos quién recomendó a quién, cuándo y si ya se aplicó el beneficio por recomendar; la que recomendó ve el nombre de las instituciones que recomendó y en qué paso está cada una.",
       "Tu cuenta: tu email y tu contraseña (la guarda de forma cifrada nuestro proveedor de ingreso: nosotros no la vemos). Si ingresás con Google, el nombre, el email y la foto que Google nos informa: la foto la copiamos a nuestro propio espacio de archivos, así tu perfil no depende de un enlace de Google. También guardamos cuándo aceptaste los términos y condiciones.",
       "Examen preocupacional: si una institución te lo pide antes de que ingreses a trabajar, anota en tu postulación que lo hiciste y la fecha, y puede guardar el archivo del estudio (PDF o foto). Es información de salud: queda en un espacio privado, la ve solo esa institución y se abre con un enlace que comprueba que sea de su equipo. Vos ves en tu postulación si el examen figura como pendiente o realizado.",
       "Contactos que cargan las instituciones: una institución puede anotar datos de profesionales que conoce (nombre, email, teléfono, disciplina y una nota). Esos datos los ve solo esa institución. Si figurás en la lista de una institución y querés que se borren, escribinos.",
@@ -61,14 +61,14 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     id: "cookies",
     titulo: "5. Cookies",
     parrafos: [
-      "Usamos solo las cookies necesarias para mantener tu sesión iniciada (y una de muy corta duración mientras te registrás con Google). No usamos cookies de publicidad ni de seguimiento de terceros.",
+      "Usamos solo las cookies necesarias para mantener tu sesión iniciada (y una de muy corta duración mientras te registrás con Google). Si entrás por el enlace de referidos de una institución, guardamos durante 30 días una cookie con su código, solo para anotar quién te recomendó cuando creás tu cuenta de institución. No usamos cookies de publicidad ni de seguimiento de terceros.",
     ],
   },
   {
     id: "conservacion",
     titulo: "6. Cuánto tiempo los conservamos",
     parrafos: [
-      "Mientras tu cuenta esté activa. Si pedís la baja, el equipo de UNIDOAR se contacta con vos para confirmarla; al procesarla se borran tu perfil, tus documentos, tus postulaciones y tu usuario de acceso. En el caso de una institución se borran su equipo y las cuentas de acceso, sus búsquedas con las postulaciones, los cursos, los contactos que cargó, el perfil público y los archivos. Conservamos lo que la ley nos obliga a guardar: de una institución, su nombre, CUIT y domicilio y sus facturas (los registros de facturación).",
+      "Mientras tu cuenta esté activa. Si pedís la baja, el equipo de UNIDOAR se contacta con vos para confirmarla; al procesarla se borran tu perfil, tus documentos, tus postulaciones y tu usuario de acceso. En el caso de una institución se borran su equipo y las cuentas de acceso, sus búsquedas con las postulaciones, los cursos, los contactos que cargó, sus recomendaciones de referidos, el perfil público y los archivos. Conservamos lo que la ley nos obliga a guardar: de una institución, su nombre, CUIT y domicilio y sus facturas (los registros de facturación).",
       "De los mails que te enviamos guardamos un registro (a quién, de qué tipo y su contenido) durante 90 días, para poder reintentar un envío fallido y resolver reclamos.",
     ],
   },
@@ -76,7 +76,7 @@ const SECCIONES: { id: string; titulo: string; intro?: string; items?: string[];
     id: "derechos",
     titulo: "7. Tus derechos",
     parrafos: [
-      "Podés acceder a tus datos, corregirlos o pedir que se supriman. Muchos los editás vos mismo: en Mi perfil y en Mi cuenta podés cambiar tus datos, tu email y tu contraseña, y pedir la baja. Para cualquier otra consulta o pedido, escribinos desde la página de contacto.",
+      "Podés acceder a tus datos, corregirlos o pedir que se supriman. Muchos los editás vos mismo: en Mi perfil y en Mi cuenta podés cambiar tus datos y tu contraseña, y pedir la baja. El email con el que ingresás no se cambia desde la app: si necesitás usar otro, escribinos desde la página de contacto, que también es el camino para cualquier otra consulta o pedido.",
       "La Agencia de Acceso a la Información Pública es el organismo de control de la Ley 25.326 de Protección de los Datos Personales y atiende las denuncias y reclamos de quienes vean afectados sus derechos.",
     ],
   },

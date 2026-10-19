@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import {
   auditoria,
   busquedas,
+  codigosReferido,
   colaCorreos,
   contactosInstitucion,
   cursos,
@@ -18,6 +19,7 @@ import {
   mensajesContacto,
   notificaciones,
   postulaciones,
+  referidosInstituciones,
   solicitudesPlan,
   usuarios,
 } from "@/db/schema";
@@ -242,6 +244,11 @@ export async function borrarDatosDeLaInstitucion(
   await tx.delete(institucionNovedades).where(eq(institucionNovedades.institucionId, institucionId));
   await tx.delete(institucionFotos).where(eq(institucionFotos.institucionId, institucionId));
   await tx.delete(solicitudesPlan).where(eq(solicitudesPlan.institucionId, institucionId));
+  // Su código de referidos y las recomendaciones de las dos puntas (las que hizo y la que la trajo): el registro que queda es solo lo fiscal.
+  await tx
+    .delete(referidosInstituciones)
+    .where(or(eq(referidosInstituciones.referidorId, institucionId), eq(referidosInstituciones.referidoId, institucionId)));
+  await tx.delete(codigosReferido).where(eq(codigosReferido.institucionId, institucionId));
   await tx.delete(institucionMiembros).where(eq(institucionMiembros.institucionId, institucionId));
   // De las sedes queda solo la principal, con el domicilio (el de los comprobantes): sin ubicación en el mapa ni CUE.
   await tx.delete(institucionSedes).where(and(eq(institucionSedes.institucionId, institucionId), eq(institucionSedes.esPrincipal, false)));

@@ -622,6 +622,40 @@ export const mensajesContacto = pgTable("mensajes_contacto", {
 
 export type MensajeContacto = typeof mensajesContacto.$inferSelect;
 
+/* ───────────────────────────── Referidos de instituciones ─────────────────────────────
+   Una institución recomienda a otra con su enlace personal (`/referido/<código>`). El código vive aparte para no tocar
+   `instituciones`. Tablas agregadas a mano con `pnpm db:referidos` (con RLS). En qué paso está cada referido NO se guarda: sale de
+   si la recomendada está verificada y de `beneficioEn` (ver `estadoDeReferido`, src/lib/referidos.ts). */
+
+export const codigosReferido = pgTable("codigos_referido", {
+  institucionId: uuid("institucion_id")
+    .primaryKey()
+    .references(() => instituciones.id, { onDelete: "cascade" }),
+  codigo: text("codigo").notNull().unique(),
+  creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const referidosInstituciones = pgTable(
+  "referidos_instituciones",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referidorId: uuid("referidor_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** Única: una institución solo puede haber sido recomendada una vez (por quien la trajo primero). */
+    referidoId: uuid("referido_id")
+      .notNull()
+      .unique("referidos_instituciones_referido_unico")
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    /** Cuándo el equipo aplicó el beneficio a quien recomendó (null: todavía no). */
+    beneficioEn: timestamp("beneficio_en", { withTimezone: true }),
+  },
+  (t) => [index("referidos_instituciones_referidor_idx").on(t.referidorId)],
+);
+
+export type ReferidoInstitucion = typeof referidosInstituciones.$inferSelect;
+
 /* ───────────────────────────── Paquete A2 · Acceso y altas ───────────────────────────── */
 
 export type EstadoCeldaDisponibilidad = "disponible" | "convenir" | "ocupada";

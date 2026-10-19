@@ -10,6 +10,7 @@ const NAV: NavItem[] = [
   { href: "/backoffice/altas-sin-terminar", label: "Altas sin terminar", icono: "equipo", grupo: "Personas" },
   { href: "/backoffice/cobros", label: "Cobros", icono: "plan", grupo: "Negocio" },
   { href: "/backoffice/planes", label: "Planes", icono: "estrella", grupo: "Negocio" },
+  { href: "/backoffice/referidos", label: "Referidos", icono: "rayo", grupo: "Negocio" },
   { href: "/backoffice/categorias", label: "Categorías", icono: "etiqueta", grupo: "Contenido" },
   { href: "/backoffice/mensajes", label: "Mensajes", icono: "publicaciones", grupo: "Contenido" },
 ];

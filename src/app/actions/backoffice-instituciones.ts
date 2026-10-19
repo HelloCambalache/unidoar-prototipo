@@ -12,6 +12,7 @@ import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { planes } from "@/lib/queries/planes";
+import { avisarReferidorDeVerificacion } from "@/lib/queries/referidos";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { borrarArchivosDeLaCuenta, borrarUsuarioDeAcceso } from "@/lib/queries/baja-docente";
@@ -40,6 +41,8 @@ function revalidarInstitucion(id: string, slug?: string) {
   revalidatePath(`/backoffice/instituciones/${id}/editar`);
   revalidatePath("/backoffice/cobros");
   revalidatePath(`/backoffice/cobros/${id}`);
+  revalidatePath("/backoffice/referidos");
+  revalidatePath("/institucion/referidos");
   revalidatePath("/institucion/dashboard");
   revalidatePath("/institucion/plan");
   if (slug) {
@@ -74,11 +77,13 @@ export async function verificarInstitucion(institucionId: string, verificada: bo
   if (!esUuid(institucionId) || typeof verificada !== "boolean") return fallo(NO_ENCONTRADA);
 
   let slug: string | undefined;
+  let cambio = false;
   const resultado = await transaccion(async (tx) => {
     const [inst] = await institucionBloqueada(tx, institucionId);
     if (!inst) return fallo(NO_ENCONTRADA);
     if (inst.verificada === verificada) return ok();
     slug = inst.slug;
+    cambio = true;
 
     await tx.update(instituciones).set({ verificada }).where(eq(instituciones.id, inst.id));
     await registrarAuditoria(
@@ -103,6 +108,8 @@ export async function verificarInstitucion(institucionId: string, verificada: bo
   });
 
   if (resultado.ok) revalidarInstitucion(institucionId, slug);
+  // Si la recomendó otra institución, se le avisa que su beneficio está listo (el paso del referido sale de la verificación: esto es solo el aviso).
+  if (resultado.ok && cambio && verificada) await avisarReferidorDeVerificacion(institucionId);
   return resultado;
 }
 

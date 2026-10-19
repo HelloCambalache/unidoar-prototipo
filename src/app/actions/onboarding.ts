@@ -14,6 +14,7 @@ import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
 import { institucionComoMiembro } from "@/lib/queries/equipo";
+import { anotarReferidoDelNavegador } from "@/lib/queries/referidos";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import { valorElegido } from "@/lib/otro";
@@ -218,14 +219,18 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
             estado: "activo",
           })
           .onConflictDoNothing();
+        return creada!.id;
       });
+    let nuevaId: string;
     try {
-      await crear(await slugLibre(d.nombre));
+      nuevaId = await crear(await slugLibre(d.nombre));
     } catch (e) {
       // Otra institución tomó el mismo slug entre la consulta y el insert: se reintenta con un sufijo al azar.
       if (!esViolacionUnica(e)) throw e;
-      await crear(`${slugify(d.nombre) || "institucion"}-${crypto.randomUUID().slice(0, 6)}`);
+      nuevaId = await crear(`${slugify(d.nombre) || "institucion"}-${crypto.randomUUID().slice(0, 6)}`);
     }
+    // Si entró por el enlace de otra institución (cookie de /referido/<código>), queda anotada como recomendada. Nunca frena el alta.
+    await anotarReferidoDelNavegador({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id });
   }
 
   revalidatePath("/institucion", "layout");

@@ -97,6 +97,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Suspendió la cuenta${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "institucion.reactivar":
       return "Reactivó la cuenta";
+    case "referido.beneficio_aplicado":
+      return `Aplicó el beneficio de referidos${texto("nombre") ? ` por recomendar a ${texto("nombre")}` : ""}`;
+    case "referido.beneficio_deshecho":
+      return `Deshizo el beneficio de referidos${texto("nombre") ? ` por recomendar a ${texto("nombre")}` : ""}`;
     case "cuenta.baja_solicitada":
       return "Pidió la baja de la cuenta";
     case "cuenta.baja_retirada":
