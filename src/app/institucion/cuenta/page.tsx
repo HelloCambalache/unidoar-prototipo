@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { CuentaBaja } from "@/components/institucion/cuenta-baja";
-import { AvisoEmailConfirmado } from "@/components/cuenta/aviso-email";
 import { CuentaAvisos } from "@/components/cuenta/cuenta-avisos";
 import { CuentaContrasena } from "@/components/cuenta/cuenta-contrasena";
 import { CuentaEmail } from "@/components/cuenta/cuenta-email";
@@ -13,10 +12,9 @@ import { datosDeCuenta } from "@/lib/queries/cuenta";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
-export default async function MiCuenta({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
+export default async function MiCuenta() {
   const { usuario, institucion } = await requerirInstitucion();
   const cuenta = await datosDeCuenta(institucion, usuario);
-  const { email: avisoEmail } = await searchParams;
 
   return (
     <>
@@ -25,13 +23,12 @@ export default async function MiCuenta({ searchParams }: { searchParams: Promise
         bajada="Tus datos personales como responsable de la institución. No se muestran en la vitrina pública."
       />
       <div className="flex max-w-[980px] flex-col gap-4">
-        {avisoEmail === "confirmado" && <AvisoEmailConfirmado email={cuenta.email} />}
         <CuentaDatos
           inicial={{ nombre: cuenta.nombre, apellido: cuenta.apellido, telefono: cuenta.telefono }}
           email={cuenta.email}
           rolEtiqueta={infoDeRol(cuenta.rol).label}
         />
-        <CuentaEmail email={cuenta.email} tieneContrasena={cuenta.tieneContrasena} />
+        <CuentaEmail email={cuenta.email} />
         <CuentaContrasena tieneContrasena={cuenta.tieneContrasena} />
         <CuentaAvisos rol="institucion" inicial={usuario.avisosPorCorreo} />
         <CuentaBaja

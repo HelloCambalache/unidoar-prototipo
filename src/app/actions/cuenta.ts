@@ -1,11 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { getDb, transaccion } from "@/db";
-import { usuarios } from "@/db/schema";
-import { registrarFallaDeMail, traducirErrorAuth } from "@/lib/acceso";
+import { transaccion } from "@/db";
+import { traducirErrorAuth } from "@/lib/acceso";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirDocente, requerirUsuario } from "@/lib/auth";
@@ -13,11 +11,10 @@ import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { fijarAvisosPorCorreo } from "@/lib/queries/correo";
 import { ACCION_BAJA_RETIRADA, ACCION_BAJA_SOLICITADA, bajaDocenteSolicitadaEn, tieneContrasena } from "@/lib/queries/cuenta";
-import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
 
 /*
- * Acciones de "Mi cuenta" que valen para cualquier rol: contraseña y email de acceso. La baja de la institución está
+ * Acciones de "Mi cuenta" que valen para cualquier rol: contraseña y avisos por mail. El email de acceso NO se cambia desde la app. La baja de la institución está
  * en src/app/actions/institucion.ts; la del docente, al final de este archivo.
  */
 
@@ -61,70 +58,6 @@ export async function cambiarContrasenaCuenta(_previo: Resultado | null, formDat
   const { error } = await supabase.auth.updateUser({ password: nueva });
   if (error) return fallo(traducirErrorAuth(error), { nueva: traducirErrorAuth(error) });
   return ok();
-}
-
-/* ───────────────────────────── Email de acceso ───────────────────────────── */
-
-const emailSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .max(200, "Revisá el email: es demasiado largo")
-    .pipe(z.email("Revisá el email: no parece válido")),
-  actual: z.string().max(200).optional(),
-});
-
-/**
- * Pide cambiar el email de acceso. No cambia nada todavía: Supabase manda un enlace de confirmación al email nuevo (y,
- * según su configuración, también al actual) y el cambio se aplica recién cuando se confirma. Pide la contraseña
- * actual, así que alguien con la sesión abierta en una computadora ajena no puede apropiarse de la cuenta. Las cuentas
- * que ingresan solo con Google no lo pueden cambiar: su email es el de Google. Cuando se confirma, la fila local
- * (`usuarios.email` y lo que copia) se pone al día sola (ver `sincronizarEmailDeCuenta`).
- */
-export async function cambiarEmail(
-  _previo: Resultado<{ nuevo: string }> | null,
-  formData: FormData,
-): Promise<Resultado<{ nuevo: string }>> {
-  const usuario = await requerirUsuario();
-
-  const r = parsear(emailSchema, formData);
-  if (!r.ok) return fallo(r.error, r.campos);
-  const { email: nuevo, actual } = r.data;
-
-  if (nuevo === usuario.email.toLowerCase()) {
-    return fallo("Revisá los campos marcados.", { email: "Ese ya es el email de tu cuenta." });
-  }
-  if (!(await tieneContrasena())) {
-    return fallo(
-      "Tu cuenta ingresa con Google: su email es el de tu cuenta de Google y desde acá no se puede cambiar. Si querés usar otro, creá una cuenta nueva.",
-    );
-  }
-  if (!actual) return fallo("Revisá los campos marcados.", { actual: "Escribí tu contraseña actual para confirmar el cambio." });
-
-  const supabase = await crearClienteServidor();
-  const { error: errorClave } = await supabase.auth.signInWithPassword({ email: usuario.email, password: actual });
-  if (errorClave) {
-    return fallo(esLimite(errorClave) ? traducirErrorAuth(errorClave) : "Revisá los campos marcados.", {
-      actual: esLimite(errorClave) ? traducirErrorAuth(errorClave) : "La contraseña actual no es correcta.",
-    });
-  }
-
-  const [enUso] = await getDb().select({ id: usuarios.id }).from(usuarios).where(sql`lower(${usuarios.email}) = ${nuevo}`).limit(1);
-  if (enUso) return fallo("Revisá los campos marcados.", { email: "Ese email ya tiene una cuenta en UNIDOAR." });
-
-  const area = usuario.rol === "docente" ? "/docente/cuenta" : usuario.rol === "institucion" ? "/institucion/cuenta" : "/inicio";
-  const { error } = await supabase.auth.updateUser(
-    { email: nuevo },
-    { emailRedirectTo: urlDeCallback(await origenSitio(), `${area}?email=confirmado`) },
-  );
-  registrarFallaDeMail(error, "cambio-de-email");
-  if (error) {
-    const yaExiste = error.code === "email_exists" || error.code === "user_already_exists";
-    const mensaje = yaExiste ? "Ese email ya tiene una cuenta en UNIDOAR." : traducirErrorAuth(error);
-    return fallo(mensaje, { email: mensaje });
-  }
-  return ok({ nuevo });
 }
 
 /* ───────────────────────────── Avisos por mail ───────────────────────────── */

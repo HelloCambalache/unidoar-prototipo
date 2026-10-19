@@ -29,8 +29,8 @@ nuestro código con la API de Resend.
 |---|---|---|---|---|---|---|
 | M01 | Confirmá tu email | Al registrarse (y al reenviar) | Docente, institución | Auth | Plantilla lista | Lanzamiento |
 | M02 | Recuperá tu contraseña | "¿Olvidaste tu contraseña?" | Cualquiera | Auth | Plantilla lista | Lanzamiento |
-| M03 | Confirmá tu email nuevo | Al pedir el cambio de email en Mi cuenta | Email nuevo | Auth | Falta la plantilla en español | Lanzamiento |
-| M04 | Se pidió cambiar el email de tu cuenta | Al pedir el cambio (aviso de seguridad) | Email anterior | Auth | Falta activarlo y traducirlo | Lanzamiento |
+| M03 | Confirmá tu email nuevo | Ya no se dispara: el email no se cambia desde la app (2026-10-19) | Email nuevo | Auth | Sin uso | — |
+| M04 | Se pidió cambiar el email de tu cuenta | Ya no se dispara: el email no se cambia desde la app (2026-10-19) | Email anterior | Auth | Sin uso | — |
 | M05 | Tu contraseña cambió | Al cambiarla (aviso de seguridad) | Cualquiera | Auth | Falta activarlo y traducirlo | Pronto |
 | M06 | Te invitaron a sumarte a {institución} | Al invitar a alguien al equipo | Persona invitada | App | Hoy se copia un enlace a mano | Lanzamiento |
 | M07 | Te damos la bienvenida | Al completar el alta | Docente, institución | App | No existe | Pronto |
