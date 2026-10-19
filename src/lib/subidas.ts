@@ -33,7 +33,7 @@ export const LIMITE_IMAGEN = 5 * 1024 * 1024;
  * archivo de cientos de MB no. El límite que cuenta (`LIMITE_IMAGEN`) se aplica al resultado ya comprimido.
  */
 export const LIMITE_ORIGINAL_IMAGEN = 25 * 1024 * 1024;
-export const LIMITE_PDF = 10 * 1024 * 1024;
+export const LIMITE_PDF = 50 * 1024 * 1024;
 /**
  * Las funciones de Vercel rechazan cuerpos de más de 4,5 MB: el navegador comprime las imágenes grandes antes de
  * subirlas, y los PDF que pasan de este tope se suben directo a Storage con una URL firmada (ver `CARPETA_DE_PASO`).

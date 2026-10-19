@@ -235,22 +235,39 @@ export function CursoFormulario({
           error={errores.direccion}
         />
       ) : (
-        <Campo
-          etiqueta="Link para conectarse"
-          ayuda="Lo ven los profesionales que se inscriben."
-          error={errores.link}
-        >
-          <Input
-            name="link"
-            inputMode="url"
-            autoComplete="off"
-            value={v.link}
-            onChange={(e) => set("link", e.target.value)}
-            maxLength={500}
-            aria-invalid={!!errores.link}
-            placeholder="Ej. https://meet.google.com/..."
-          />
-        </Campo>
+        <>
+          <Campo
+            etiqueta="Link para conectarse"
+            ayuda="Lo ven los profesionales que se inscriben."
+            error={errores.link}
+          >
+            <Input
+              name="link"
+              inputMode="url"
+              autoComplete="off"
+              value={v.link}
+              onChange={(e) => set("link", e.target.value)}
+              maxLength={500}
+              aria-invalid={!!errores.link}
+              placeholder="Ej. https://meet.google.com/..."
+            />
+          </Campo>
+          <Campo
+            etiqueta="Contraseña o código de acceso (opcional)"
+            ayuda="Si la sala lo pide (por ejemplo, en Zoom), lo ven junto al link los profesionales que se inscriben."
+            error={errores.linkClave}
+          >
+            <Input
+              name="linkClave"
+              autoComplete="off"
+              value={v.linkClave}
+              onChange={(e) => set("linkClave", e.target.value)}
+              maxLength={100}
+              aria-invalid={!!errores.linkClave}
+              placeholder="Ej. 482915"
+            />
+          </Campo>
+        </>
       )}
 
       {/*

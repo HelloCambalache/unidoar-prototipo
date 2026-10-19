@@ -250,6 +250,8 @@ export const cursoSchema = z
     /** Firma de la sugerencia de ubicación que eligió la persona (/api/ubicacion); el servidor la verifica antes de usarla. */
     ubicacion: textoOpcional(4000),
     link: linkOpcional,
+    /** Contraseña o código de acceso de la sala (p. ej. Zoom): se guarda solo si hay link. */
+    linkClave: textoOpcional(100),
     fotoUrl: textoOpcional(500),
   })
   .superRefine((d, ctx) => {
@@ -275,6 +277,7 @@ export function valoresDeCurso(d: CursoFormulario) {
     horario: d.horario ?? null,
     direccion: d.modalidad === "Presencial" ? (d.direccion ?? null) : null,
     link: d.modalidad === "Online" ? (d.link ?? null) : null,
+    linkClave: d.modalidad === "Online" && d.link ? (d.linkClave ?? null) : null,
     certifica: d.certifica,
     puntaje: d.certifica ? (d.puntaje ?? PUNTAJE_POR_DEFECTO) : null,
     fotoUrl: d.fotoUrl ?? null,
@@ -295,6 +298,7 @@ export type ValoresCurso = {
   horario: string;
   direccion: string;
   link: string;
+  linkClave: string;
   fotoUrl: string;
 };
 

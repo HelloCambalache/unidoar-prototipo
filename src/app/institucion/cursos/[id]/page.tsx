@@ -98,6 +98,12 @@ export default async function FichaCurso({
             )}
           </p>
         )}
+        {c.link && c.linkClave && (
+          <p className="m-0 mb-3.5 text-sm leading-normal break-all text-tinta-2">
+            <b className="font-semibold">Contraseña o código:</b>{" "}
+            <code className="rounded-md bg-lienzo px-1.5 py-0.5 font-medium text-tinta select-all">{c.linkClave}</code>
+          </p>
+        )}
 
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {c.certifica ? (

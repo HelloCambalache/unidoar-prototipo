@@ -19,6 +19,7 @@ const VACIO: ValoresCurso = {
   horario: "",
   direccion: "",
   link: "",
+  linkClave: "",
   fotoUrl: "",
 };
 

@@ -31,6 +31,7 @@ export default async function EditarCurso({ params }: { params: Promise<{ id: st
     horario: curso.horario ?? "",
     direccion: curso.direccion ?? "",
     link: curso.link ?? "",
+    linkClave: curso.linkClave ?? "",
     fotoUrl: curso.fotoUrl ?? "",
   };
 

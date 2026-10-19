@@ -387,6 +387,8 @@ export const cursos = pgTable(
     partido: text("partido"),
     provincia: text("provincia"),
     link: text("link"),
+    /** Contraseña o código de acceso de la sala del curso online (p. ej. el de Zoom). Solo la ven quienes se inscriben. Agregada a mano con `pnpm db:curso-clave`. */
+    linkClave: text("link_clave"),
     certifica: boolean("certifica").notNull().default(true),
     puntaje: integer("puntaje"),
     fotoUrl: text("foto_url"),

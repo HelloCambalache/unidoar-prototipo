@@ -17,7 +17,7 @@ import {
 /**
  * Subida de archivos a Supabase Storage (multipart: `archivo`, `bucket`, `carpeta`).
  * Exige sesión con alta completa, valida bucket y carpeta contra una lista blanca, mira los bytes
- * para confirmar el tipo real (imágenes ≤ 5 MB, PDF ≤ 10 MB) y guarda en `<usuarioId>/<carpeta>/<uuid>.<ext>`.
+ * para confirmar el tipo real (imágenes ≤ 5 MB, PDF ≤ 50 MB) y guarda en `<usuarioId>/<carpeta>/<uuid>.<ext>`.
  * Bucket `publico` devuelve la URL pública; `privado` devuelve solo el path.
  */
 

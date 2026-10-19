@@ -65,6 +65,13 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
               ) : (
                 <span className="text-apagado">te lo mostramos cuando te inscribís.</span>
               )}
+              {c.inscripto && c.link && c.linkClave && (
+                <>
+                  <br />
+                  <b className="font-semibold">Contraseña o código: </b>
+                  <code className="rounded-md bg-lienzo px-1.5 py-0.5 font-medium text-tinta select-all">{c.linkClave}</code>
+                </>
+              )}
             </p>
           ) : (
             c.direccion && (

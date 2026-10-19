@@ -22,7 +22,7 @@ const IMAGENES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 const BUCKETS = [
   { id: "publico", public: true, fileSizeLimit: 5 * 1024 * 1024, allowedMimeTypes: IMAGENES },
-  { id: "privado", public: false, fileSizeLimit: 10 * 1024 * 1024, allowedMimeTypes: ["application/pdf", ...IMAGENES] },
+  { id: "privado", public: false, fileSizeLimit: 50 * 1024 * 1024, allowedMimeTypes: ["application/pdf", ...IMAGENES] },
 ];
 
 async function main() {

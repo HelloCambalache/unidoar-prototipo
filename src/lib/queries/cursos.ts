@@ -19,6 +19,8 @@ export type CursoBase = {
   horario: string | null;
   direccion: string | null;
   link: string | null;
+  /** Contraseña de la sala; en la vista del docente solo viene si está inscripto (ver `consultar`). */
+  linkClave: string | null;
   certifica: boolean;
   puntaje: number | null;
   fotoUrl: string | null;
@@ -63,6 +65,7 @@ function base(f: typeof cursos.$inferSelect, inst: CursoBase["institucion"]): Cu
     horario: f.horario,
     direccion: f.direccion,
     link: f.link,
+    linkClave: f.linkClave,
     certifica: f.certifica,
     puntaje: f.puntaje,
     fotoUrl: f.fotoUrl,
@@ -105,6 +108,8 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
     const mia = porCurso.get(f.curso.id);
     return {
       ...base(f.curso, { id: f.instId, nombre: f.instNombre, slug: f.instSlug, logoUrl: f.instLogo }),
+      // La contraseña de la sala es solo de quienes se inscribieron (igual que el link, pero esta ni siquiera sale del servidor).
+      linkClave: mia ? f.curso.linkClave : null,
       inscriptos: f.inscriptos,
       inscripto: !!mia,
       distanciaKm:
