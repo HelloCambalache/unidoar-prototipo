@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Icono } from "@/components/icons";
-import { useToast } from "@/components/ui/toast";
-import { enlaceDeWhatsApp } from "@/lib/compartir-perfil";
 import { BotonLink } from "@/components/ui/button";
 import { crearPlanes, pesos, type CatalogoDePlanes, type Planes, type PlanClave } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
@@ -22,9 +20,6 @@ const etiquetaDe = (P: Planes, clave: PlanClave) =>
 /** "1 mes" · "2 meses" */
 const meses = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 
-/** Lo que se manda al recomendar: lo escribe la institución que ya está, a un colega. */
-const TEXTO_REFERIDO = "Te paso UNIDOAR, lo usamos para cubrir búsquedas de profesionales:";
-
 /** Los tipos que entran en cada arancel, para que quien elige sepa si es el suyo. */
 function detalleDe(P: Planes, clave: PlanClave) {
   if (clave === "multisede") return P.planDe("multisede").detalle;
@@ -36,25 +31,15 @@ function detalleDe(P: Planes, clave: PlanClave) {
  * Tarjeta de precio de las instituciones. El arancel depende del tipo, así que en vez de una tarjeta
  * por precio hay una sola con un desplegable: la institución se elige a sí misma y ve lo que paga.
  */
-export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios: readonly string[]; url: string; catalogo: CatalogoDePlanes }) {
+export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: readonly string[]; catalogo: CatalogoDePlanes }) {
   const P = crearPlanes(catalogo);
   const [clave, setClave] = useState<PlanClave>("colegio");
-  const toast = useToast();
   const plan = P.planDe(clave);
   const pack = P.packDe(clave);
-  const { meses: mesesDelPack, mesesQueSePagan, mesesConReferido } = P.condiciones.pack;
-
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Enlace copiado");
-    } catch {
-      toast("No pudimos copiarlo solo: copiá la dirección de esta página.", "error");
-    }
-  };
+  const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
 
   return (
-    <article className="relative flex min-w-[320px] flex-[1.15] flex-col overflow-hidden rounded-caja bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
+    <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
       <span
         aria-hidden
         className="pointer-events-none absolute -top-[60px] -right-[50px] size-[200px] rounded-full bg-[radial-gradient(circle,rgba(245,147,50,.3),transparent_70%)]"
@@ -90,7 +75,7 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
       </div>
 
       <div className="relative mt-5 mb-1">
-        <span className="text-[38px] leading-none font-bold tracking-[-0.02em]">{pesos(plan.precio)}</span>
+        <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(plan.precio)}</span>
         <span className="text-[15px] leading-none text-white/60">
           &nbsp;/ mes{plan.porSede ? " por sede" : ""}
         </span>
@@ -106,7 +91,7 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
         ))}
       </ul>
 
-      <div className="relative mt-5 rounded-caja bg-white/8 px-4 py-3.5">
+      <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
         <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
           {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
         </span>
@@ -116,34 +101,6 @@ export function PlanesInstituciones({ beneficios, url, catalogo }: { beneficios:
           <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
           {plan.porSede ? ", por sede" : ""}.
         </p>
-      </div>
-
-      <div className="relative mt-3 rounded-caja bg-white/8 px-4 py-3.5">
-        <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-          {meses(mesesQueSePagan - mesesConReferido)} más
-        </span>
-        <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Plan Referidos</div>
-        <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
-          Recomendás a otra institución y se suma a la red: pagás {mesesConReferido} de los{" "}
-          {mesesDelPack}.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a
-            href={enlaceDeWhatsApp(`${TEXTO_REFERIDO} ${url}`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-3 py-1.5 text-xs leading-none font-semibold text-white/85 transition-colors hover:bg-white/10"
-          >
-            Recomendar por WhatsApp
-          </a>
-          <button
-            type="button"
-            onClick={copiar}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/25 px-3 py-1.5 text-xs leading-none font-semibold text-white/85 transition-colors hover:bg-white/10"
-          >
-            Copiar enlace
-          </button>
-        </div>
       </div>
 
       <BotonLink

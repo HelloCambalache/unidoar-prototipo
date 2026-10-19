@@ -315,7 +315,7 @@ export function PlanesFormulario({
             </Campo>
           </div>
           <p className="mt-2 mb-0 text-xs leading-normal text-sutil">
-            Hoy: contratando {pack.meses} meses por adelantado se pagan {pack.mesesQueSePagan}, y si recomienda a una institución que se suma, {pack.mesesConReferido}.
+            Hoy: contratando {pack.meses} meses por adelantado se pagan {pack.mesesQueSePagan}, y si recomienda a una institución que se suma, {pack.mesesConReferido}. Este último valor es el beneficio del módulo Referidos (lo ve cada institución en su menú y lo aplicás desde Referidos); ya no se muestra en la página de precios.
           </p>
         </fieldset>
 
