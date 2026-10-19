@@ -25,15 +25,16 @@ export function MapaDeSedes({ sedes, className }: { sedes: SedePublica[]; classN
       const L = await import("leaflet");
       if (cancelado || !contenedor.current) return;
       mapa = L.map(contenedor.current, { center: [primero.lat, primero.lng], zoom: 15, scrollWheelZoom: false });
+      // Con varias sedes el encuadre va antes de agregar los mosaicos y sin animación: se descargan directo a este zoom.
+      if (puntos.length > 1) {
+        mapa.fitBounds(L.latLngBounds(puntos.map((p): [number, number] => [p.lat, p.lng])), { padding: [44, 44], maxZoom: 15, animate: false });
+      }
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
         attribution: '&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(mapa);
       for (const p of puntos) {
         L.marker([p.lat, p.lng], { icon: iconoPin(L, "#16214F", false), title: p.nombre, alt: p.nombre }).addTo(mapa);
-      }
-      if (puntos.length > 1) {
-        mapa.fitBounds(L.latLngBounds(puntos.map((p): [number, number] => [p.lat, p.lng])), { padding: [44, 44], maxZoom: 15 });
       }
     })();
     return () => {

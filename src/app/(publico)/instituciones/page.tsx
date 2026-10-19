@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { SelectorDeVista } from "@/components/app/selector-vista";
+import { InstitucionesMapa } from "@/components/docente/instituciones-mapa";
 import { InstitucionesFiltros } from "@/components/instituciones/filtros";
+import { pinesDeInstituciones } from "@/components/instituciones/pines";
 import { TarjetaInstitucion } from "@/components/instituciones/tarjeta";
 import { MuroCuenta } from "@/components/publico/muro-cuenta";
 import { sesionPublica } from "@/components/publico/sesion";
@@ -18,10 +22,14 @@ export const metadata: Metadata = {
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
 
+const BASE = "/instituciones";
+
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
+/** Misma pantalla que "Instituciones" del área del profesional (título, filtros, lista o mapa y tarjetas); sin cuenta no hay favoritas. */
 export default async function Instituciones({ searchParams }: { searchParams: Params }) {
   const f = leerFiltrosInstituciones(await searchParams);
+  const vista = f.vista ?? "lista";
   const [instituciones, zonas, sesion] = await Promise.all([
     catalogoInstituciones(null, { texto: f.q ?? "", tipo: f.tipo ?? "", zona: f.zona ?? "", soloFavoritas: false }),
     zonasDisponibles(),
@@ -29,16 +37,24 @@ export default async function Instituciones({ searchParams }: { searchParams: Pa
   ]);
   const hayFiltros = !!(f.q || f.tipo || f.zona);
 
+  const hrefVista = (v: "lista" | "mapa") => {
+    const p = new URLSearchParams();
+    if (f.q) p.set("q", f.q);
+    if (f.tipo) p.set("tipo", f.tipo);
+    if (f.zona) p.set("zona", f.zona);
+    if (v === "mapa") p.set("vista", "mapa");
+    const qs = p.toString();
+    return qs ? `${BASE}?${qs}` : BASE;
+  };
+  const pines = pinesDeInstituciones(instituciones, (i) => `${BASE}/${i.slug}`);
+
   return (
-    <div className="flex-1 bg-app px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
-      <div className="mx-auto max-w-[1320px]">
-        <h1 className="mb-1.5 font-display text-[34px] leading-[1.2] font-bold tracking-[-0.02em] text-tinta max-[560px]:text-[28px]">
-          Instituciones en UNIDOAR
-        </h1>
-        <p className="mb-[22px] text-[15px] leading-normal text-apagado">
-          Colegios, clubes, jardines y gimnasios que ya contratan por acá. Entrá a cualquiera para ver qué están
-          buscando.
-        </p>
+    <div className="flex-1 px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
+      <div className="mx-auto flex max-w-[1320px] flex-col">
+        <EncabezadoPagina
+          titulo="Instituciones en UNIDOAR"
+          bajada="Colegios, clubes, jardines y gimnasios que ya contratan por acá. Entrá a cualquiera para ver qué están buscando."
+        />
 
         {!sesion.rol && (
           <MuroCuenta
@@ -53,6 +69,8 @@ export default async function Instituciones({ searchParams }: { searchParams: Pa
           conFavoritas={false}
         />
 
+        <SelectorDeVista vista={vista} hrefLista={hrefVista("lista")} hrefMapa={hrefVista("mapa")} className="mb-[18px] self-end" />
+
         {instituciones.length === 0 ? (
           <EstadoVacio
             titulo={hayFiltros ? "Ninguna institución coincide con esos filtros" : "Todavía no hay instituciones para mostrar"}
@@ -63,19 +81,22 @@ export default async function Instituciones({ searchParams }: { searchParams: Pa
             }
             accion={
               hayFiltros ? (
-                <BotonLink href="/instituciones" variante="secundario" tamano="sm">
+                <BotonLink href={BASE} variante="secundario" tamano="sm">
                   Ver todas las instituciones
                 </BotonLink>
               ) : undefined
             }
           />
+        ) : vista === "mapa" ? (
+          <InstitucionesMapa pines={pines} />
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[18px] max-[560px]:grid-cols-1">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4 max-[560px]:grid-cols-1">
             {instituciones.map((i) => (
               <TarjetaInstitucion
                 key={i.id}
+                app
                 i={i}
-                href={`/instituciones/${i.slug}`}
+                href={`${BASE}/${i.slug}`}
                 estrella={sesion.rol ? undefined : <EstrellaRegistro nombre={i.nombre} />}
               />
             ))}

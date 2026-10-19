@@ -10,6 +10,8 @@ import { InstitucionLogo } from "@/components/docente/instituciones-logo";
 export type PinInstitucion = {
   id: string;
   slug: string;
+  /** A dónde lleva "Ver perfil"; sin esto, el perfil en el panel del profesional. */
+  href?: string;
   nombre: string;
   /** Nombre de la sede que marca este pin; solo si la institución tiene más de una. */
   sede: string | null;
@@ -43,6 +45,9 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
   const claveDe = (p: PinInstitucion) => `${p.id}:${p.lat}:${p.lng}`;
   const seleccionada = pines.find((p) => claveDe(p) === seleccion) ?? null;
   const firma = pines.map(claveDe).join("|");
+  // Los pines con los que nace el mapa: arranca ya encuadrado, sin el zoom animado desde lejos (que dejaba ver el mapa viejo
+  // agrandado y borroso mientras llegaban los mosaicos nuevos).
+  const [puntosIniciales] = useState<[number, number][]>(() => pines.map((p): [number, number] => [p.lat, p.lng]));
 
   useEffect(() => {
     let cancelado = false;
@@ -51,6 +56,10 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
       const L = await import("leaflet");
       if (cancelado || !contenedor.current) return;
       mapa = L.map(contenedor.current, { center: CENTRO_POR_DEFECTO, zoom: 11, scrollWheelZoom: false });
+      // El encuadre va antes de agregar los mosaicos y sin animación: se descargan directo a este zoom.
+      if (puntosIniciales.length > 0) {
+        mapa.fitBounds(L.latLngBounds(puntosIniciales), { padding: [44, 44], maxZoom: 14, animate: false });
+      }
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
         attribution:
@@ -64,7 +73,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
       instancia.current = null;
       mapa?.remove();
     };
-  }, []);
+  }, [puntosIniciales]);
 
   useEffect(() => {
     const m = instancia.current;
@@ -123,7 +132,7 @@ export function InstitucionesMapa({ pines }: { pines: PinInstitucion[] }) {
             <Boton variante="secundario" tamano="sm" onClick={() => setSeleccion(null)}>
               Cerrar
             </Boton>
-            <BotonLink href={`/docente/instituciones/${seleccionada.slug}`} tamano="sm">
+            <BotonLink href={seleccionada.href ?? `/docente/instituciones/${seleccionada.slug}`} tamano="sm">
               Ver perfil
             </BotonLink>
           </div>

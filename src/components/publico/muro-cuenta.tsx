@@ -4,7 +4,7 @@ import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 /** Aviso azul de los listados públicos: se mira sin cuenta, pero para actuar hay que crearla. */
 export function MuroCuenta({ titulo, bajada }: { titulo: string; bajada: string }) {
   return (
-    <div className="mb-[26px] flex flex-wrap items-center justify-between gap-[18px] rounded-xl bg-navy-700 px-[26px] py-[22px] max-[560px]:px-5">
+    <div className="mb-[26px] flex flex-wrap items-center justify-between gap-[18px] rounded-tarjeta bg-navy-900 px-7 py-6 max-[560px]:px-5">
       <div className="min-w-0 flex-[1_1_320px]">
         <div className="mb-[5px] font-display text-[19px] leading-[1.3] font-bold text-white">{titulo}</div>
         <p className="text-sm leading-normal text-white/72">{bajada}</p>

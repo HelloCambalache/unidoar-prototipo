@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { SelectorDeVista } from "@/components/app/selector-vista";
+import { MapaOfertas } from "@/components/docente/mapa-ofertas";
+import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
 import { BannerBuscador } from "@/components/oportunidades/banner-buscador";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
-import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
+import { pinesDeOfertas } from "@/components/oportunidades/pines";
 import { Paginacion } from "@/components/publico/paginacion";
 import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
-import { RADIO_MAX, urgentesPrimero } from "@/lib/oportunidades";
+import { hrefOportunidades, RADIO_MAX, urgentesPrimero } from "@/lib/oportunidades";
 import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunidades";
 import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
@@ -27,18 +30,20 @@ const BASE = "/buscar-trabajo";
 type Params = Promise<Record<string, string | string[] | undefined>>;
 const primero = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-/** A dónde lleva cada tarjeta según quién mira: una visita al registro, un docente a la oferta de su panel. */
+/** A dónde lleva cada tarjeta (y el botón de cada pin del mapa) según quién mira: una visita al registro, un docente a la oferta de su panel. */
 function destino(sesion: SesionPublica, o: OfertaListada) {
   if (!sesion.rol) return { href: "/registro", etiqueta: "Postularme" };
   if (sesion.rol === "docente") return { href: `/docente/oferta/${o.id}`, etiqueta: "Ver oferta" };
   return { href: `/instituciones/${o.institucion.slug}`, etiqueta: "Ver institución" };
 }
 
+/** Misma pantalla que "Buscar trabajo" del área del profesional (banner, filtros, lista o mapa y tarjetas); sin cuenta no hay distancia ni favoritas. */
 export default async function BuscarTrabajo({ searchParams }: { searchParams: Params }) {
   const sp = await searchParams;
-  // Sin cuenta no hay ubicación ni favoritas ni mapa: esos parámetros de la URL se ignoran.
+  // Sin cuenta no hay ubicación ni favoritas: esos parámetros de la URL se ignoran. La vista (lista o mapa) sí se respeta.
   const { filtros: delUsuario, lectura } = await filtrosConFrase(sp, { publico: true });
-  const filtros = { ...delUsuario, radio: undefined, favoritos: undefined, vista: undefined };
+  const filtros = { ...delUsuario, radio: undefined, favoritos: undefined };
+  const vista = filtros.vista === "mapa" ? "mapa" : "lista";
   const pedida = Math.max(1, Number.parseInt(primero(sp.pagina) ?? "1", 10) || 1);
 
   const [{ ofertas }, sesion] = await Promise.all([listarOportunidades(null, null, filtros), sesionPublica()]);
@@ -47,8 +52,10 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const pagina = Math.min(pedida, paginas);
   // Las urgentes abiertas van primero, igual que en Buscar trabajo de adentro (antes de paginar).
-  const visibles = urgentesPrimero(ofertas).slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
-  const filtrando = Object.values(filtros).some((v) => v !== undefined);
+  const ordenadas = urgentesPrimero(ofertas);
+  const visibles = ordenadas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  const filtrando = Object.entries(filtros).some(([clave, valor]) => clave !== "vista" && valor !== undefined);
+  const pines = pinesDeOfertas(ordenadas, (o) => destino(sesion, o));
 
   return (
     <div className="flex-1 px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">
@@ -83,6 +90,14 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
           modo="todas"
           publico
           lectura={lectura}
+          vistaNav={
+            <SelectorDeVista
+              vista={vista}
+              hrefLista={hrefOportunidades(BASE, filtros, { vista: "lista" })}
+              hrefMapa={hrefOportunidades(BASE, filtros, { vista: "mapa" })}
+              reemplazar
+            />
+          }
         >
           <p aria-live="polite" className="mb-4 text-[13px] text-apagado">
             {plural(total, "búsqueda abierta", "búsquedas abiertas")}
@@ -105,6 +120,20 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
                 ) : undefined
               }
             />
+          ) : vista === "mapa" ? (
+            pines.length > 0 ? (
+              <MapaOfertas pines={pines} centro={null} radioKm={null} />
+            ) : (
+              <EstadoVacio
+                titulo="Estas búsquedas todavía no tienen ubicación en el mapa"
+                texto="Podés verlas en la lista."
+                accion={
+                  <BotonLink variante="secundario" tamano="sm" href={hrefOportunidades(BASE, filtros, { vista: "lista" })}>
+                    Ver la lista
+                  </BotonLink>
+                }
+              />
+            )
           ) : (
             <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(270px,1fr))] items-stretch gap-4 p-0 max-[620px]:grid-cols-1">
               {visibles.map((o) => {
@@ -123,20 +152,22 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
             </ul>
           )}
 
-          <Paginacion
-            base={BASE}
-            parametros={{
-              q: filtros.q,
-              categoria: filtros.categoria,
-              nivel: filtros.nivel,
-              turno: filtros.turno,
-              tipo: filtros.tipo,
-              rapidas: filtros.rapidas,
-              verificadas: filtros.verificadas,
-            }}
-            pagina={pagina}
-            paginas={paginas}
-          />
+          {vista === "lista" && (
+            <Paginacion
+              base={BASE}
+              parametros={{
+                q: filtros.q,
+                categoria: filtros.categoria,
+                nivel: filtros.nivel,
+                turno: filtros.turno,
+                tipo: filtros.tipo,
+                rapidas: filtros.rapidas,
+                verificadas: filtros.verificadas,
+              }}
+              pagina={pagina}
+              paginas={paginas}
+            />
+          )}
         </ControlesBuscador>
       </div>
     </div>

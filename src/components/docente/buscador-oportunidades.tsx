@@ -1,16 +1,16 @@
-import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { SelectorDeVista } from "@/components/app/selector-vista";
 import { BotonFavorito } from "@/components/docente/boton-favorito";
-import { MapaOfertas, type PinOferta } from "@/components/docente/mapa-ofertas";
+import { MapaOfertas } from "@/components/docente/mapa-ofertas";
 import { TarjetaOfertaApp } from "@/components/docente/tarjeta-oferta-app";
 import { BannerBuscador } from "@/components/oportunidades/banner-buscador";
 import { ControlesBuscador } from "@/components/oportunidades/controles-buscador";
+import { pinesDeOfertas } from "@/components/oportunidades/pines";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
 import { hrefOportunidades, RADIO_MAX, urgentesPrimero, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { listarOportunidades } from "@/lib/queries/oportunidades";
 import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
-import { cn } from "@/lib/utils";
 
 const BASES = {
   todas: "/docente/oportunidades",
@@ -54,24 +54,7 @@ export async function BuscadorOportunidades({
     ? "Suplencias y reemplazos urgentes: respondé dentro del plazo para quedarte con el puesto."
     : perfilDocente || "Completá tus asignaturas y zonas en el perfil para encontrar búsquedas que te sirvan.";
 
-  const pines: PinOferta[] = ofertas.flatMap((o) =>
-    o.institucion.lat != null && o.institucion.lng != null
-      ? [
-          {
-            id: o.id,
-            puesto: o.puesto,
-            institucion: o.institucion.nombre,
-            logoUrl: o.institucion.logoUrl,
-            zona: o.zona,
-            horario: o.horario,
-            categoria: o.categoria,
-            rapida: o.rapida,
-            lat: o.institucion.lat,
-            lng: o.institucion.lng,
-          },
-        ]
-      : [],
-  );
+  const pines = pinesDeOfertas(ofertas);
   const centro = docente.lat != null && docente.lng != null ? { lat: docente.lat, lng: docente.lng } : null;
 
   return (
@@ -86,24 +69,14 @@ export async function BuscadorOportunidades({
         modo={modo}
         lectura={lectura}
         vistaNav={
-        <nav aria-label="Vista" className="flex w-max max-w-full gap-1 rounded-full bg-[#E9E7E1] p-1">
-          <EnlaceVista href={hrefOportunidades(base, filtros, { vista: "lista" })} activa={vista === "lista"}>
-            <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
-              <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
-            </svg>
-            Lista
-          </EnlaceVista>
-          <EnlaceVista href={hrefOportunidades(base, filtros, { vista: "mapa" })} activa={vista === "mapa"}>
-            <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
-              <path d="M9 3L3 5.5v15L9 18l6 3 6-2.5v-15L15 6z" />
-              <path d="M9 3v15M15 6v15" />
-            </svg>
-            Mapa
-          </EnlaceVista>
-        </nav>
+          <SelectorDeVista
+            vista={vista}
+            hrefLista={hrefOportunidades(base, filtros, { vista: "lista" })}
+            hrefMapa={hrefOportunidades(base, filtros, { vista: "mapa" })}
+            reemplazar
+          />
         }
       >
-
         {n === 0 ? (
           <EstadoVacio
             titulo={hayFiltros ? "Ninguna búsqueda coincide con estos filtros" : "Todavía no hay búsquedas para vos"}
@@ -143,22 +116,5 @@ export async function BuscadorOportunidades({
         )}
       </ControlesBuscador>
     </>
-  );
-}
-
-function EnlaceVista({ href, activa, children }: { href: string; activa: boolean; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      replace
-      scroll={false}
-      aria-current={activa ? "true" : undefined}
-      className={cn(
-        "inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 text-[13px] leading-none font-semibold transition-colors",
-        activa ? "bg-white text-navy-900 shadow-[0_1px_3px_rgba(4,11,53,.12)] hover:text-navy-900" : "text-apagado hover:text-tinta",
-      )}
-    >
-      {children}
-    </Link>
   );
 }

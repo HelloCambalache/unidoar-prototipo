@@ -23,6 +23,9 @@ export type PinOferta = {
   rapida: boolean;
   lat: number;
   lng: number;
+  /** A dónde lleva el botón de la tarjeta del pin y cómo se llama; sin esto, "Ver oferta" en el panel del profesional. */
+  href?: string;
+  etiqueta?: string;
 };
 
 type Leaflet = typeof import("leaflet");
@@ -75,6 +78,13 @@ export function MapaOfertas({
     const primero = pines[0];
     return primero ? [primero.lat, primero.lng] : [0, 0];
   });
+  // Los puntos que tiene que abarcar el mapa al nacer: así arranca ya en su zoom final y no hace un zoom animado desde lejos
+  // (mientras llegaban los mosaicos nuevos se veía el mapa viejo agrandado y borroso, con las letras gigantes).
+  const [puntosIniciales] = useState<[number, number][]>(() => {
+    const puntos = pines.map((p): [number, number] => [p.lat, p.lng]);
+    if (centro) puntos.push([centro.lat, centro.lng]);
+    return puntos;
+  });
 
   useEffect(() => {
     let cancelado = false;
@@ -88,6 +98,10 @@ export function MapaOfertas({
         scrollWheelZoom: false, // que la rueda siga desplazando la página
         attributionControl: true,
       });
+      // El encuadre va antes de agregar los mosaicos y sin animación: se descargan directo a este zoom.
+      if (puntosIniciales.length > 0) {
+        mapa.fitBounds(L.latLngBounds(puntosIniciales), { padding: [44, 44], maxZoom: compacto ? 15 : 14, animate: false });
+      }
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
         attribution:
@@ -101,7 +115,7 @@ export function MapaOfertas({
       instancia.current = null;
       mapa?.remove();
     };
-  }, [puntoInicial]);
+  }, [puntoInicial, puntosIniciales, compacto]);
 
   // Pines, marca del docente y radio.
   useEffect(() => {
@@ -210,8 +224,8 @@ export function MapaOfertas({
             <Boton variante="secundario" tamano="sm" onClick={() => setSeleccion(null)}>
               Cerrar
             </Boton>
-            <BotonLink variante="cta" tamano="sm" href={`/docente/oferta/${seleccionada.id}`}>
-              Ver oferta
+            <BotonLink variante="cta" tamano="sm" href={seleccionada.href ?? `/docente/oferta/${seleccionada.id}`}>
+              {seleccionada.etiqueta ?? "Ver oferta"}
             </BotonLink>
           </div>
         </div>
