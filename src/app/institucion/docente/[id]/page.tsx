@@ -332,9 +332,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
                   rel="noopener noreferrer"
                   className={botonClases({ variante: "secundario", bloque: true })}
                 >
-                  <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1E7A4C" strokeWidth="1.8" className="flex-none">
-                    <path d="M4 20l1.4-4A8 8 0 1112 20H4z" />
-                  </svg>
+                  <Icono nombre="whatsapp" tamano={14} trazo={1.8} className="text-verde" />
                   Contactar por WhatsApp
                 </a>
               )}

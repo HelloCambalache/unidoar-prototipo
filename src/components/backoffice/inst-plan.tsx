@@ -7,6 +7,7 @@ import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
 import { crearPlanes, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 /**
  * "Plan actual" de la ficha con el selector de plan del prototipo. Guardar pide confirmación; el cambio se
@@ -101,9 +102,7 @@ export function InstPlan({
                 <span className="mb-1.5 flex items-center justify-between gap-2">
                   <span className="text-sm leading-tight font-semibold">{P.planDe(clave).label}</span>
                   {elegido === clave && (
-                    <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16214F" strokeWidth="2.6" strokeLinecap="round">
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
+                    <Icono nombre="tilde" tamano={16} trazo={2.6} className="text-navy-700" />
                   )}
                 </span>
                 <span className="mb-1.5 block text-[18px] leading-none font-semibold">{P.precioDePlan(clave)}</span>

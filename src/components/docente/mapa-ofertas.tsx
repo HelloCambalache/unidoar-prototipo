@@ -10,6 +10,7 @@ import { iconoPin } from "@/components/docente/pin-mapa";
 import { CATEGORIA_INFO, CATEGORIAS } from "@/lib/catalogo";
 import { LEYENDA_CATEGORIA } from "@/lib/oportunidades";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 export type PinOferta = {
   id: string;
@@ -198,11 +199,7 @@ export function MapaOfertas({
         ))}
         {pines.some((p) => p.rapida) && (
           <span className="flex items-center gap-[7px] text-[11.5px] leading-none font-medium text-tinta-2 max-[620px]:text-[10px]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16214F" strokeWidth="2.2" strokeLinecap="round" className="flex-none" aria-hidden>
-              <circle cx="12" cy="13" r="8" />
-              <path d="M12 9.5V13l2.4 1.6" />
-              <path d="M9.6 2.8h4.8" />
-            </svg>
+            <Icono nombre="cronometro" tamano={12} trazo={2.2} className="text-navy-700" />
             Suplencia rápida
           </span>
         )}

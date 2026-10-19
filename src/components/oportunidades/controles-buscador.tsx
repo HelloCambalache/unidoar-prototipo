@@ -151,21 +151,7 @@ export function ControlesBuscador({
                 tono="naranja"
                 onClick={() => aplicar({ rapidas: filtros.rapidas ? null : "1" })}
               >
-                <svg
-                  aria-hidden
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="flex-none"
-                >
-                  <circle cx="12" cy="13" r="8" />
-                  <path d="M12 9.5V13l2.4 1.6" />
-                  <path d="M9.6 2.8h4.8" />
-                </svg>
+                <Icono nombre="cronometro" tamano={13} trazo={2} />
                 Búsqueda rápida
               </BotonFiltro>
             )}
@@ -404,10 +390,7 @@ function FraseDeBusqueda({
   return (
     <section aria-label="Buscá con IA" className="mb-4 rounded-tarjeta bg-white px-5 py-[18px] shadow-tarjeta">
       <div className="mb-2.5 flex items-center gap-2 text-rosa">
-        <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="currentColor" className="flex-none">
-          <path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7z" />
-          <path d="M18.5 14.4l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" />
-        </svg>
+        <Icono nombre="chispas" tamano={17} trazo={1.6} relleno />
         <span className="text-sm leading-none font-semibold">Buscá con IA</span>
       </div>
       <form

@@ -21,6 +21,7 @@ import { enlaceWhatsApp, puedeReabrirRevision } from "@/lib/backoffice-docentes"
 import { esUuid } from "@/lib/busquedas";
 import { resumenParaBaja } from "@/lib/queries/baja-docente";
 import { fichaDocenteBo } from "@/lib/queries/backoffice-docentes";
+import { Icono } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Ficha del profesional" };
 // DNI, CUIL y enlaces firmados a documentos: nada de esta pantalla se cachea.
@@ -74,9 +75,7 @@ export default async function FichaDocentePage({ params }: { params: Promise<{ i
                 rel="noopener noreferrer"
                 className={botonClases({ variante: "secundario", bloque: true })}
               >
-                <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="flex-none">
-                  <path d="M21 11.5a8.4 8.4 0 01-12.4 7.4L3 20.5l1.6-5.4A8.4 8.4 0 1121 11.5z" />
-                </svg>
+                <Icono nombre="whatsapp" tamano={16} trazo={1.8} />
                 Contactar por WhatsApp
               </a>
             ) : (

@@ -9,6 +9,7 @@ import { etiquetaFechas } from "@/lib/fechas-curso";
 import type { pendientesDePerfil } from "@/lib/perfil";
 import type { CursoHistorial } from "@/lib/queries/cursos";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 /* Piezas de "Mi perfil" que no tienen estado: se renderizan en el servidor y entran al formulario como `children`/props. */
 
@@ -67,9 +68,7 @@ export function PerfilVerificacion({ requisitos }: { requisitos: RequisitoVerifi
             <li key={r.clave} className="inline-flex min-h-8 items-center gap-2 rounded-full bg-[#F7F6F2] py-1 pr-3 pl-1">
               <span aria-hidden className={cn("inline-flex size-6 flex-none items-center justify-center rounded-full text-[11px] font-bold", p.clase)}>
                 {r.estado === "verificado" ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
+                  <Icono nombre="tilde" tamano={12} trazo={3} />
                 ) : r.estado === "revision" ? (
                   "…"
                 ) : null}
@@ -181,10 +180,7 @@ export function PerfilCursosHechos({ cursos }: { cursos: CursoHistorial[] }) {
                     hecho ? "bg-verde-tint text-verde" : "bg-[#F0EFEA] text-apagado",
                   )}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M12 3l9 4.5-9 4.5-9-4.5z" />
-                    <path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />
-                  </svg>
+                  <Icono nombre="birrete" tamano={15} trazo={1.8} />
                 </span>
                 <div className="min-w-0 flex-[1_1_180px]">
                   <div className="text-[13.5px] leading-[1.3] font-semibold">{c.titulo}</div>

@@ -68,11 +68,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           />
         ) : (
           <div aria-hidden className="flex aspect-[16/7] max-h-[340px] w-full items-center justify-center rounded-interno bg-lienzo text-[#C9C6C0]">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <circle cx="8.5" cy="9.5" r="1.6" />
-              <path d="M4 17l5-5 4 4 3-2 4 4" />
-            </svg>
+            <Icono nombre="imagen" tamano={26} trazo={1.5} />
           </div>
         )}
         {/* Solo el logo se monta sobre la portada; el nombre queda abajo, sobre blanco. */}
@@ -213,18 +209,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
               <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[13px] leading-[1.4]">
                 {QUE_VE.map((q) => (
                   <li key={q.texto} className={q.si ? "flex items-start gap-2 text-tinta-2" : "flex items-start gap-2 text-apagado"}>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke={q.si ? "#1E7A4C" : "#9AA09B"}
-                      strokeWidth="2.4"
-                      className="mt-0.5 flex-none"
-                      aria-hidden
-                    >
-                      <path d={q.si ? "M20 6L9 17l-5-5" : "M18 6L6 18M6 6l12 12"} />
-                    </svg>
+                    <Icono nombre={q.si ? "tilde" : "cerrar"} tamano={14} trazo={2.4} className={q.si ? "mt-0.5 text-verde" : "mt-0.5 text-sutil"} />
                     {q.texto}
                   </li>
                 ))}

@@ -5,6 +5,7 @@ import { BotonMarcarTodasLeidas, ListaNotificaciones } from "@/components/docent
 import { Pestanas } from "@/components/ui/pestanas";
 import { requerirDocente } from "@/lib/auth";
 import { notificacionesDe } from "@/lib/queries/notificaciones";
+import { Icono } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Notificaciones" };
 
@@ -29,9 +30,7 @@ export default async function NotificacionesPage({
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/docente/dashboard" aria-label="Volver al inicio" className="inline-flex text-tinta hover:text-tinta">
-            <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
+            <Icono nombre="chevronIzq" tamano={18} trazo={1.8} />
           </Link>
           <h1 className="m-0 text-2xl leading-[1.25] font-semibold tracking-[-0.018em] max-[860px]:text-[22px]">
             Notificaciones

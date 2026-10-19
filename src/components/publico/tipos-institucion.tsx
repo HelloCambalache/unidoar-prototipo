@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Icono, type IconoClave } from "@/components/icons";
 
 type Estilo = "claro" | "naranja" | "ambar" | "celeste";
 
@@ -45,20 +46,14 @@ const TIPOS: {
   href: string;
   estilo: Estilo;
   etiqueta?: string;
-  icono: React.ReactNode;
+  icono: IconoClave;
 }[] = [
   {
     titulo: "Colegios privados",
     texto: "Titulares, suplencias y reemplazos por licencia, de Inicial a Secundario.",
     href: "/educadores",
     estilo: "claro",
-    icono: (
-      <>
-        <path d="M3 21h18" />
-        <path d="M5 21V7l7-4 7 4v14" />
-        <path d="M9 21v-6h6v6" />
-      </>
-    ),
+    icono: "instituciones",
   },
   {
     titulo: "Gimnasios y clubes deportivos",
@@ -66,92 +61,49 @@ const TIPOS: {
     href: "/entrenadores",
     estilo: "naranja",
     etiqueta: "nadie más los cubre",
-    icono: (
-      <>
-        <path d="M4 9v6" />
-        <path d="M20 9v6" />
-        <path d="M7 6v12" />
-        <path d="M17 6v12" />
-        <path d="M7 12h10" />
-      </>
-    ),
+    icono: "gimnasio",
   },
   {
     titulo: "Jardines de infantes",
     texto: "Maestras de sala, auxiliares y profes de música o expresión corporal.",
     href: "/educadores",
     estilo: "claro",
-    icono: (
-      <>
-        <circle cx="12" cy="8" r="3.2" />
-        <path d="M5 21c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5" />
-      </>
-    ),
+    icono: "jardin",
   },
   {
     titulo: "Escuelas de danza y arte",
     texto: "Profes por estilo y por franja horaria, muchas veces contratados por hora.",
     href: "/educadores",
     estilo: "ambar",
-    icono: (
-      <>
-        <path d="M12 3.2c-4.9 0-8.8 3.6-8.8 8.1 0 4.5 3.9 8.1 8.8 8.1 1 0 1.7-.7 1.7-1.6 0-.42-.16-.8-.43-1.08a1.55 1.55 0 0 1 1.13-2.6h1.72c2.6 0 4.68-1.95 4.68-4.36 0-3.7-3.6-6.57-8.8-6.57z" />
-        <circle cx="7.6" cy="11.4" r="1.05" fill="currentColor" stroke="none" />
-        <circle cx="10.4" cy="7.8" r="1.05" fill="currentColor" stroke="none" />
-        <circle cx="14.6" cy="8.2" r="1.05" fill="currentColor" stroke="none" />
-      </>
-    ),
+    icono: "arte",
   },
   {
     titulo: "Universidades",
     texto: "Profesionales de cátedra y ayudantías, por cuatrimestre o por materia.",
     href: "/educadores",
     estilo: "claro",
-    icono: (
-      <>
-        <path d="M22 10L12 5 2 10l10 5 10-5z" />
-        <path d="M6 12v5c3 3 9 3 12 0v-5" />
-      </>
-    ),
+    icono: "birrete",
   },
   {
     titulo: "Natatorios y colonias",
     texto: "Profes de natación y guardavidas habilitados, para temporadas cortas.",
     href: "/guardavidas",
     estilo: "celeste",
-    icono: (
-      <>
-        <circle cx="12" cy="5.5" r="1.8" />
-        <path d="M3 14c2 0 2 1.6 4 1.6S11 14 13 14s2 1.6 4 1.6S19 14 21 14" />
-        <path d="M3 19c2 0 2 1.6 4 1.6S11 19 13 19s2 1.6 4 1.6S19 19 21 19" />
-      </>
-    ),
+    icono: "natacion",
   },
   {
     titulo: "Escuelas de tecnología",
     texto: "Talleres de programación y robótica, por módulo o por cuatrimestre.",
     href: "/educadores",
     estilo: "claro",
-    icono: (
-      <>
-        <rect x="5" y="5" width="14" height="14" rx="2.5" />
-        <rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.2" />
-        <path d="M9 2.6v2.4M15 2.6v2.4M9 19v2.4M15 19v2.4M2.6 9H5M2.6 15H5M19 9h2.4M19 15h2.4" />
-      </>
-    ),
+    icono: "tecnologia",
   },
   {
     titulo: "Institutos de idiomas",
     texto: "Profes de inglés, portugués y más, por nivel y por grupo reducido.",
     href: "/educadores",
     estilo: "ambar",
-    icono: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18" />
-        <path d="M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z" />
-      </>
-    ),
+    icono: "idiomas",
   },
 ];
 
@@ -169,35 +121,10 @@ function Tarjeta({ tipo, oculta }: { tipo: (typeof TIPOS)[number]; oculta?: bool
       >
         <span className="mb-4 flex items-start justify-between gap-3">
           <span className={cn("inline-flex size-[38px] flex-none items-center justify-center rounded-[11px]", e.icono)}>
-            <svg
-              aria-hidden
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {tipo.icono}
-            </svg>
+            <Icono nombre={tipo.icono} tamano={18} trazo={1.7} />
           </span>
-          <span className={cn("inline-flex size-[30px] flex-none items-center justify-center rounded-full", e.flecha)}>
-            <svg
-              aria-hidden
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={e.trazoFlecha}
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M7 17L17 7" />
-              <path d="M9 7h8v8" />
-            </svg>
+          <span style={{ color: e.trazoFlecha }} className={cn("inline-flex size-[30px] flex-none items-center justify-center rounded-full", e.flecha)}>
+            <Icono nombre="flechaDiagonal" tamano={13} trazo={2.4} />
           </span>
         </span>
         {tipo.etiqueta && (

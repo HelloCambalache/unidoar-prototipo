@@ -24,8 +24,6 @@ function DatoDeContacto({ icono, titulo, children }: { icono: React.ReactNode; t
   );
 }
 
-const TRAZO = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" } as const;
-
 export default function Contacto() {
   return (
     <div className="mx-auto w-full max-w-[1100px] flex-1 px-12 pt-10 pb-14 max-[900px]:px-6 max-[560px]:pt-6 max-[560px]:pb-10">
@@ -47,10 +45,7 @@ export default function Contacto() {
           <DatoDeContacto
             titulo="Email"
             icono={
-              <svg width="20" height="20" viewBox="0 0 24 24" {...TRAZO}>
-                <rect x="3" y="5" width="18" height="14" rx="2.5" />
-                <path d="M3.5 7.5l8.5 6 8.5-6" />
-              </svg>
+              <Icono nombre="mensaje" tamano={20} trazo={1.8} />
             }
           >
             <a href={`mailto:${CONTACTO_SITIO.email}`} className="hover:text-naranja">
@@ -61,9 +56,7 @@ export default function Contacto() {
             <DatoDeContacto
               titulo="WhatsApp"
               icono={
-                <svg width="20" height="20" viewBox="0 0 24 24" {...TRAZO}>
-                  <path d="M4 20l1.3-4.2A8 8 0 1 1 8.3 18.8z" />
-                </svg>
+                <Icono nombre="whatsapp" tamano={20} trazo={1.8} />
               }
             >
               {CONTACTO_SITIO.whatsapp}

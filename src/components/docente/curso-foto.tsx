@@ -1,5 +1,6 @@
 import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 /** Foto del curso a todo el ancho; sin foto, el recuadro gris con el ícono de imagen del prototipo. */
 export function CursoFoto({
@@ -31,11 +32,7 @@ export function CursoFoto({
       style={estilo}
       className={cn("flex w-full items-center justify-center bg-[#F3F2EE] text-[#C9C6C0]", redondeada && "rounded-interno", className)}
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="8.5" cy="9.5" r="1.6" />
-        <path d="M4 17l5-5 4 4 3-2 4 4" />
-      </svg>
+      <Icono nombre="imagen" tamano={24} trazo={1.5} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { guardarCategoriaDocente } from "@/app/actions/onboarding";
 import type { CategoriaDocente } from "@/db/schema";
+import { Icono, ICONO_DE_CATEGORIA } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { AlertaError, SeccionPaso } from "@/components/onboarding/elementos";
 import { Campo, Casilla, Input } from "@/components/ui/campos";
@@ -72,11 +73,11 @@ export function PasoCategoria({
                 <span
                   aria-hidden
                   className={cn(
-                    "inline-flex size-6 flex-none items-center justify-center rounded-full text-xs leading-none font-bold",
-                    seleccionada ? "bg-navy-700 text-white" : "border border-borde bg-[#F0EFEA]",
+                    "inline-flex size-11 flex-none items-center justify-center rounded-xl transition-colors",
+                    seleccionada ? "bg-navy-700 text-white" : "bg-[#F0EFEA] text-tinta-2",
                   )}
                 >
-                  {seleccionada ? "✓" : ""}
+                  <Icono nombre={ICONO_DE_CATEGORIA[c]} tamano={22} trazo={1.7} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="mb-[3px] block text-base leading-snug font-semibold text-tinta">{CATEGORIA_ALTA[c].label}</span>

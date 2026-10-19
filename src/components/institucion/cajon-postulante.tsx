@@ -25,6 +25,7 @@ import { CARPETA_EXAMEN, MAX_ARCHIVOS_EXAMEN, puedeAdjuntarAlExamen } from "@/li
 import { enlaceWhatsapp, ETAPA_MENU, INSIGNIA_ETAPA, type PostulanteTarjeta } from "@/lib/pipeline";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 const ETAPAS_DEL_SELECT: EtapaPostulacion[] = [...ETAPAS_MOVIBLES, "contratado", "descartado"];
 
@@ -565,9 +566,7 @@ function Verificacion({ ok, texto }: { ok: boolean; texto: string }) {
     <li className={cn("flex items-center gap-2", !ok && "text-sutil")}>
       {ok ? (
         <span className="inline-flex size-[18px] flex-none items-center justify-center rounded-full bg-verde text-white">
-          <svg aria-hidden width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
+          <Icono nombre="tilde" tamano={11} trazo={3} />
         </span>
       ) : (
         <span aria-hidden className="size-[18px] flex-none rounded-full border-[1.5px] border-dashed border-borde-fuerte" />

@@ -13,6 +13,7 @@ import { esUuid } from "@/lib/busquedas";
 import { busquedaPorDefecto, opcionesDeBusqueda, pipelineDeBusqueda } from "@/lib/queries/pipeline";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Postulantes" };
 
@@ -83,17 +84,11 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
       </BotonLink>
       <div role="group" aria-label="Vista" className="ml-auto flex flex-none gap-1 rounded-full bg-[#E9E7E1] p-1">
         <Link href={base} aria-current={vista === "kanban" ? "page" : undefined} className={enlaceVista(vista === "kanban")}>
-          <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="7" height="18" rx="1.5" />
-            <rect x="14" y="3" width="7" height="10" rx="1.5" />
-          </svg>
+          <Icono nombre="kanban" tamano={14} trazo={2} />
           Kanban
         </Link>
         <Link href={`${base}&vista=tabla`} aria-current={vista === "tabla" ? "page" : undefined} className={enlaceVista(vista === "tabla")}>
-          <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="16" rx="1.5" />
-            <path d="M3 10h18M9 10v10" />
-          </svg>
+          <Icono nombre="tabla" tamano={14} trazo={2} />
           Tabla
         </Link>
       </div>
@@ -108,9 +103,7 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
           aria-label="Volver a Publicaciones"
           className="inline-flex size-[30px] flex-none items-center justify-center rounded-full border border-borde bg-white text-tinta-2 shadow-[0_1px_2px_rgba(31,36,33,.06)] transition-colors hover:border-borde-fuerte hover:bg-[#F0EFEA]"
         >
-          <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
+          <Icono nombre="volver" tamano={16} trazo={2} />
         </Link>
         <span className="min-w-0 truncate text-[13px] leading-none text-apagado">
           <Link href="/institucion/busquedas" className="text-apagado hover:text-tinta">

@@ -9,6 +9,7 @@ import type { BusquedaInvitable, DocenteTarjeta } from "@/lib/queries/profesiona
 import { cn, iniciales } from "@/lib/utils";
 import { BotonFavoritoDocente } from "./boton-favorito-docente";
 import { BotonInvitarDocente } from "./boton-invitar-docente";
+import { Icono } from "@/components/icons";
 
 /**
  * Tarjeta de un profesional en el buscador. Al pasar el mouse el borde toma el color de su categoría;
@@ -59,11 +60,7 @@ export function TarjetaDocente({
     >
       {rapidas && (
         <Insignia tono="naranja" className="mb-2.5 gap-[5px] self-start">
-          <svg aria-hidden width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="flex-none">
-            <circle cx="12" cy="13" r="8" />
-            <path d="M12 9.5V13l2.4 1.6" />
-            <path d="M9.6 2.8h4.8" />
-          </svg>
+          <Icono nombre="cronometro" tamano={11} trazo={2} />
           Suplencia rápida
         </Insignia>
       )}

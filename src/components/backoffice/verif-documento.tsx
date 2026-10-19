@@ -1,5 +1,6 @@
 import type { DocumentoBo } from "@/lib/backoffice-docentes";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 /**
  * Un documento de la cola de verificación: vista previa si es una imagen, ícono si es un PDF, y el enlace
@@ -38,10 +39,7 @@ export function VerifDocumento({ d }: { d: DocumentoBo }) {
           )}
         >
           {d.subido ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" />
-              <path d="M14 3v6h6" />
-            </svg>
+            <Icono nombre="archivo" tamano={20} trazo={1.6} />
           ) : (
             "—"
           )}

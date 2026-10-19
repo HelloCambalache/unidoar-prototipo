@@ -20,6 +20,7 @@ import { OTRO, opcionYTexto, valorAlEscribirOtro } from "@/lib/otro";
 import { focoDeFoto } from "@/lib/fotos";
 import type { BusquedaAbierta, CursoVitrina, DatosFormularioVitrina, VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 export type { DatosFormularioVitrina } from "@/lib/vitrina";
 
@@ -154,11 +155,7 @@ export function VitrinaFormulario({
             rel="noopener noreferrer"
             className={cn(botonClases({ variante: "secundario", tamano: "lg" }), "gap-[7px] text-sm text-tinta hover:text-tinta")}
           >
-            <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M14 4h6v6" />
-              <path d="M20 4l-9 9" />
-              <path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5" />
-            </svg>
+            <Icono nombre="externo" tamano={14} trazo={1.8} />
             Ver perfil público
             <span className="sr-only"> (se abre en una pestaña nueva)</span>
           </a>

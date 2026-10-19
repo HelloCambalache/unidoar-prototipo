@@ -1,9 +1,8 @@
 import { botonClases } from "@/components/ui/button";
+import { Icono } from "@/components/icons";
 
 const ICONO = (
-  <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="flex-none">
-    <path d="M21 11.5a8.4 8.4 0 01-12.4 7.4L3 20.5l1.6-5.4A8.4 8.4 0 1121 11.5z" />
-  </svg>
+  <Icono nombre="whatsapp" tamano={16} trazo={1.8} />
 );
 
 /**

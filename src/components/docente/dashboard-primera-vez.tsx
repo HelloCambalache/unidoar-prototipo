@@ -12,6 +12,7 @@ import type { Docente } from "@/db/schema";
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { focoDeFoto } from "@/lib/fotos";
 import type { Tablero } from "@/lib/queries/docente";
+import { Icono } from "@/components/icons";
 
 type Paso = {
   clave: "documentacion" | "foto" | "postular";
@@ -179,10 +180,7 @@ export function DashboardPrimeraVez({ docente, tablero }: { docente: Docente; ta
                     style={{ backgroundColor: p.tinta }}
                     className="inline-flex size-[34px] flex-none items-center justify-center rounded-full text-white"
                   >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M7 17L17 7" />
-                      <path d="M9 7h8v8" />
-                    </svg>
+                    <Icono nombre="flechaDiagonal" tamano={15} trazo={2.3} />
                   </span>
                 </div>
                 <div className="font-display mb-2 text-[21px] leading-[1.2] font-bold tracking-[-0.02em]">{p.titulo}</div>

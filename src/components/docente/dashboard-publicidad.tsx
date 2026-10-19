@@ -1,6 +1,7 @@
 import { Insignia } from "@/components/ui/insignia";
 import { focoDeFoto } from "@/lib/fotos";
 import { cn } from "@/lib/utils";
+import { Icono, type IconoClave } from "@/components/icons";
 
 /*
  * Banners editoriales de UNIDOAR en el tablero del docente. Es contenido fijo de marca (no sale
@@ -70,7 +71,7 @@ export function PublicidadLateral({ className }: { className?: string }) {
   );
 }
 
-type Aviso = { icono: React.ReactNode; titulo: string; texto: string; fondo: string; foto: string };
+type Aviso = { icono: IconoClave; titulo: string; texto: string; fondo: string; foto: string };
 
 const AVISOS: Aviso[] = [
   {
@@ -79,13 +80,7 @@ const AVISOS: Aviso[] = [
     titulo: "Librería El Aula · 25% para profesionales",
     texto:
       "Manuales, material didáctico y literatura infantil. Mostrás tu perfil verificado de UNIDOAR en la caja y tenés el descuento todo el año.",
-    icono: (
-      <>
-        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-        <path d="M9 7h7" />
-      </>
-    ),
+    icono: "cursos",
   },
   {
     fondo: "#97125F",
@@ -93,12 +88,7 @@ const AVISOS: Aviso[] = [
     titulo: "Seguro de responsabilidad civil profesional",
     texto:
       "Cobertura para quienes trabajan con grupos: educación física, natación, colonias y salidas. Desde $4.900 por mes, sin trámite presencial.",
-    icono: (
-      <>
-        <path d="M12 3l7.5 3v6c0 4.4-3.1 8.2-7.5 9.4C7.6 20.2 4.5 16.4 4.5 12V6z" />
-        <path d="M9.2 12.2l2 2 3.6-4" />
-      </>
-    ),
+    icono: "escudo",
   },
 ];
 
@@ -114,19 +104,7 @@ export function PublicidadesPareja({ className }: { className?: string }) {
           <div className="relative z-[1] flex min-w-0 flex-1 flex-col px-6 py-[22px]">
             <div className="mb-3 flex items-center gap-[9px]">
               <span className="inline-flex size-8 flex-none items-center justify-center rounded-[9px] bg-white/[.16] text-white">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  {a.icono}
-                </svg>
+                <Icono nombre={a.icono} tamano={18} trazo={1.7} />
               </span>
               <Insignia className="bg-white/[.16] text-white/[.88]">Publicidad</Insignia>
             </div>

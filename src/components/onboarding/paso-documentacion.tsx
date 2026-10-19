@@ -10,6 +10,7 @@ import { AlertaError, EnlaceVolver, TituloPaso } from "@/components/onboarding/e
 import { CONSTANCIA } from "@/lib/estudiantes";
 import { CATEGORIA_ALTA, ID_FORMULARIO_ONBOARDING, type SituacionEstudio } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 function Fila({
   icono,
@@ -32,20 +33,7 @@ function Fila({
           cargado ? "bg-verde-tint text-verde" : "bg-[#F3F2EE] text-sutil",
         )}
       >
-        <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-          {icono === "dni" ? (
-            <>
-              <rect x="2" y="5" width="20" height="14" rx="2" />
-              <circle cx="8" cy="12" r="2" />
-              <path d="M14 10h4M14 14h4" />
-            </>
-          ) : (
-            <>
-              <path d="M12 3l9 4.5-9 4.5-9-4.5z" />
-              <path d="M6 10v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />
-            </>
-          )}
-        </svg>
+        <Icono nombre={icono === "dni" ? "dni" : "birrete"} tamano={15} trazo={1.7} />
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-sm leading-snug font-medium">{nombre}</div>

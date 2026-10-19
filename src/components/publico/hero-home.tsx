@@ -7,6 +7,7 @@ import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { RUTA_PUBLICAR_BUSQUEDA } from "@/lib/publicar-busqueda";
 import type { ConteoCategoria } from "@/lib/queries/publico";
 import { CATEGORIAS_PUBLICAS } from "./categorias";
+import { Icono } from "@/components/icons";
 
 const FOTOS_HERO = [
   { src: "/assets/hero-aula.jpg", demora: "0s" },
@@ -96,19 +97,7 @@ export function HeroHome({ conteos }: { conteos: Record<CategoriaDocente, Conteo
             href="/quienes-somos"
             className={`${TILE} flex flex-col justify-center bg-naranja p-5 text-white hover:text-white max-[900px]:col-span-2 max-[560px]:col-span-1`}
           >
-            <svg
-              aria-hidden
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="1.8"
-              className="mb-2.5 flex-none"
-            >
-              <path d="M9 12l2 2 4-4" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
+            <Icono nombre="circuloCheck" tamano={22} trazo={1.8} className="mb-2.5 text-white" />
             <span className="mb-[5px] block font-display text-[17px] leading-[1.2] font-bold tracking-[-0.015em]">
               Documentación verificada
             </span>

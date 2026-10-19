@@ -7,6 +7,7 @@ import type { EtapaPostulacion } from "@/db/schema";
 import { ETAPAS_MOVIBLES } from "@/lib/postulaciones";
 import { ETAPA_MENU } from "@/lib/pipeline";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 type Posicion = { left: number; top?: number; bottom?: number };
 
@@ -97,11 +98,7 @@ export function MenuEtapas({
         onClick={() => (abierto ? cerrar() : abrir())}
         className="inline-flex size-7 flex-none items-center justify-center rounded-md text-apagado transition-colors hover:bg-black/5 hover:text-tinta focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
       >
-        <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="5" cy="12" r="1.8" />
-          <circle cx="12" cy="12" r="1.8" />
-          <circle cx="19" cy="12" r="1.8" />
-        </svg>
+        <Icono nombre="puntos" tamano={16} trazo={2.2} />
       </button>
       {posicion &&
         createPortal(

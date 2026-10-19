@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NodosMarca } from "@/components/app/nodos-marca";
-import { Icono, type IconoClave } from "@/components/icons";
+import { Icono, ICONO_DE_CATEGORIA, type IconoClave } from "@/components/icons";
 import { BotonLink } from "@/components/ui/button";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, CATEGORIA_INFO } from "@/lib/catalogo";
@@ -106,7 +106,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
           <div className="grid grid-cols-[minmax(0,1fr)_340px] items-center gap-12 px-12 py-14 max-[960px]:grid-cols-1 max-[960px]:gap-9 max-[900px]:px-6 max-[900px]:py-10">
             <div>
               <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1.5">
-                <span aria-hidden className="size-[7px] flex-none rounded-full bg-(--acento)" />
+                <Icono nombre={ICONO_DE_CATEGORIA[categoria]} tamano={15} trazo={2} className="text-(color:--acento)" />
                 <span className="text-xs leading-[1.4] font-semibold tracking-[.06em] text-white/90 uppercase">{pub.eyebrow}</span>
               </span>
               <h1 className="font-display m-0 mb-[18px] text-[44px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance max-[900px]:text-[34px] max-[560px]:text-[28px]">

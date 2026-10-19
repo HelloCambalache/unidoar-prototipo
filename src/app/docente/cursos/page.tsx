@@ -19,6 +19,7 @@ import {
   resumenFormacion,
 } from "@/lib/queries/cursos";
 import { cn } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Cursos" };
 
@@ -94,19 +95,14 @@ export default async function CursosDocentePage({ searchParams }: { searchParams
         {pestana(
           "lista",
           <>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="flex-none">
-              <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
-            </svg>
+            <Icono nombre="lista" tamano={14} trazo={2} />
             Lista
           </>,
         )}
         {pestana(
           "agenda",
           <>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden className="flex-none">
-              <rect x="3" y="5" width="18" height="16" rx="2" />
-              <path d="M3 10h18M8 3v4M16 3v4" />
-            </svg>
+            <Icono nombre="calendario" tamano={14} trazo={1.9} />
             Agenda
           </>,
         )}

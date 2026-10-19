@@ -353,10 +353,7 @@ export function SubirArchivo(props: Props) {
         {hayArchivo ? (
           <div className="flex items-center gap-3 rounded-interno border border-borde bg-white px-5 py-[18px]">
             <span className="inline-flex size-[34px] flex-none items-center justify-center rounded-lg bg-[#F0EFEA] text-apagado">
-              <svg aria-hidden width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                <path d="M14 3v6h6" />
-              </svg>
+              <Icono nombre="archivo" tamano={17} trazo={1.6} />
             </span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm leading-tight font-semibold text-tinta">{archivoNombre || "Archivo cargado"}</div>
@@ -393,10 +390,7 @@ export function SubirArchivo(props: Props) {
             )}
           >
             <span className="mb-3 inline-flex size-10 items-center justify-center rounded-full bg-[#F0EFEA] text-apagado">
-              <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M12 16V4M12 4l-4 4M12 4l4 4" />
-                <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3" />
-              </svg>
+              <Icono nombre="subir" tamano={18} trazo={1.8} />
             </span>
             <span className="mb-1 block text-sm leading-snug font-semibold text-tinta">{subiendo ? "Subiendo…" : titulo}</span>
             <span className="block text-[13px] leading-snug text-apagado">{ayudaTexto}</span>

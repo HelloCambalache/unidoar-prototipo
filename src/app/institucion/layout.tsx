@@ -14,7 +14,7 @@ const NAV: NavItem[] = [
   { href: "/institucion/cursos", label: "Mis cursos", icono: "cursos" },
   { href: "/institucion/equipo", label: "Equipo", icono: "equipo" },
   { href: "/institucion/plan", label: "Plan", icono: "plan" },
-  { href: "/institucion/referidos", label: "Referidos", icono: "estrella" },
+  { href: "/institucion/referidos", label: "Referidos", icono: "apreton" },
 ];
 
 const NAV_PIE: NavItem[] = [{ href: "/institucion/cuenta", label: "Mi cuenta", icono: "cuenta" }];

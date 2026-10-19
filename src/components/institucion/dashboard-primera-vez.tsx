@@ -7,6 +7,7 @@ import { focoDeFoto } from "@/lib/fotos";
 import { pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import type { DocenteRecomendado } from "@/lib/queries/coincidencias";
 import { cn, haceCuanto } from "@/lib/utils";
+import { Icono } from "@/components/icons";
 
 type PasoPendiente = {
   n: number;
@@ -154,10 +155,7 @@ export function DashboardPrimeraVez({
                   Paso {p.n}
                 </span>
                 <span className={cn("inline-flex size-[34px] flex-none items-center justify-center rounded-full text-white", p.boton)}>
-                  <svg aria-hidden width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17L17 7" />
-                    <path d="M9 7h8v8" />
-                  </svg>
+                  <Icono nombre="flechaDiagonal" tamano={15} trazo={2.3} />
                 </span>
               </div>
               <span className="mb-2 font-display text-[21px] leading-tight font-bold tracking-[-0.02em]">{p.titulo}</span>
