@@ -35,7 +35,7 @@ export function MarcoOnboarding({
         className="sticky top-4 h-[calc(100dvh-2rem)] self-start max-[860px]:relative max-[860px]:top-auto max-[860px]:self-auto"
       />
 
-      <div className="flex min-w-[380px] max-w-[720px] flex-1 flex-col overflow-hidden rounded-marco bg-white shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:shadow-none">
+      <div className="flex min-w-[380px] max-w-[720px] flex-1 flex-col rounded-marco bg-white shadow-tarjeta max-[860px]:max-w-none max-[860px]:min-w-0 max-[860px]:rounded-none max-[860px]:shadow-none">
         <div className="flex items-center justify-between gap-3 px-10 py-5 max-[640px]:px-6">
           <span className="text-[13px] leading-none font-semibold text-tinta">{paso.etiqueta}</span>
           {formId ? (
