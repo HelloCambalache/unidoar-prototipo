@@ -11,13 +11,13 @@ import { Tabla } from "@/components/ui/tabla";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_EQUIPO_INFO, ROLES_INVITABLES } from "@/lib/catalogo";
-import { infoDeRol, rutaDeInvitacion, type MiembroVista } from "@/lib/equipo";
+import { DIAS_DE_VIGENCIA_DE_INVITACION, infoDeRol, rutaDeInvitacion, type MiembroVista } from "@/lib/equipo";
 import { cn } from "@/lib/utils";
 
 const NOTA_SIN_MAIL =
-  "Todavía no mandamos mails: al crear la invitación te damos un enlace para que se lo pases. La persona lo abre, crea su acceso con ese mismo email y queda directo en tu equipo.";
+  "Todavía no mandamos mails: al crear la invitación te damos un enlace para que se lo pases. La persona lo abre, crea su acceso con ese mismo email y acepta la invitación (vale " + DIAS_DE_VIGENCIA_DE_INVITACION + " días).";
 const NOTA_CON_MAIL =
-  "Le mandamos un mail con la invitación. La persona lo abre, crea su acceso con ese mismo email y queda directo en tu equipo. Después te damos el enlace por si querés pasárselo vos.";
+  "Le mandamos un mail con la invitación. La persona lo abre, crea su acceso con ese mismo email y acepta la invitación (vale " + DIAS_DE_VIGENCIA_DE_INVITACION + " días). Después te damos el enlace por si querés pasárselo vos.";
 
 /** Caja gris con texto chico (descripción del rol, avisos). */
 const CAJA = "rounded-caja border border-borde bg-superficie px-3.5 py-3 text-[12.5px] leading-normal text-apagado";
@@ -219,7 +219,11 @@ function Ficha({
         </div>
         <div>
           <dt className="inline font-semibold text-tinta">Estado: </dt>
-          <dd className="m-0 inline">{invitado ? "Invitación pendiente: todavía no se registró" : "Activo"}</dd>
+          <dd className="m-0 inline">{!invitado
+              ? "Activo"
+              : miembro.vencida
+                ? `Invitación vencida: pasaron más de ${DIAS_DE_VIGENCIA_DE_INVITACION} días sin que la acepte. Podés invitarla de nuevo.`
+                : "Invitación pendiente: todavía no la aceptó"}</dd>
         </div>
         <div>
           <dt className="inline font-semibold text-tinta">{invitado ? "Invitado en: " : "Miembro desde: "}</dt>
@@ -248,7 +252,7 @@ function Ficha({
         </div>
       )}
 
-      {invitado && (
+      {invitado && !miembro.vencida && (
         <div className="mt-4 border-t border-borde pt-4">
           <div className="mb-2.5 text-[13px] font-semibold text-tinta">Cómo se suma</div>
           <EnlaceInvitacion url={`${origen}${rutaDeInvitacion(miembro.id)}`} email={miembro.email} />
@@ -348,8 +352,8 @@ export function EquipoPanel({
                 <Insignia tono={m.esDueno ? "azul" : "neutro"}>{infoDeRol(m.rol).label}</Insignia>
               </td>
               <td>
-                <Insignia tono={m.estado === "activo" ? "verde" : "ambar"}>
-                  {m.estado === "activo" ? "Activo" : "Invitación enviada"}
+                <Insignia tono={m.estado === "activo" ? "verde" : m.vencida ? "neutro" : "ambar"}>
+                  {m.estado === "activo" ? "Activo" : m.vencida ? "Invitación vencida" : "Invitación enviada"}
                 </Insignia>
               </td>
               <td className="text-right">

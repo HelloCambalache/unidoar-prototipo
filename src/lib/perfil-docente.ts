@@ -74,3 +74,13 @@ type NombreCompleto = { nombre: string; apellido: string };
 /** ¿Cambió el nombre o el apellido respecto de lo guardado? Los espacios de más no cuentan. */
 export const cambiaElNombre = (guardado: NombreCompleto, nuevo: NombreCompleto) =>
   guardado.nombre.trim() !== nuevo.nombre.trim() || guardado.apellido.trim() !== nuevo.apellido.trim();
+
+/**
+ * ¿Este profesional puede postularse a una búsqueda o mandarle su CV a una institución? No si el equipo rechazó su verificación: ya
+ * no aparece en el catálogo ni lo pueden invitar, y postularse le habría abierto su contacto a la institución. Se destraba con "Reabrir
+ * la revisión" desde el backoffice (queda en «Corrección pedida»).
+ */
+export const puedePostularse = (verificacion: string) => verificacion !== "rechazado";
+
+export const PERFIL_RECHAZADO =
+  "El equipo de UNIDOAR no pudo verificar tu perfil, así que por ahora no podés postularte ni mandar tu CV. Escribinos desde Contacto y lo resolvemos.";

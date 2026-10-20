@@ -3,6 +3,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { CursoFoto } from "@/components/docente/curso-foto";
 import { CursoInscripcionBoton } from "@/components/docente/curso-inscripcion-boton";
 import { etiquetaPuntos } from "@/components/docente/curso-tarjeta";
+import { esEnlaceWeb } from "@/lib/cursos";
 import { etiquetaFechas, hoyArgentina } from "@/lib/fechas-curso";
 import { kmLegible } from "@/lib/geo";
 import type { CursoVista } from "@/lib/queries/cursos";
@@ -59,9 +60,14 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
             <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
               <b className="font-semibold">Link: </b>
               {c.inscripto && c.link ? (
-                <a href={c.link} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline">
-                  {c.link}
-                </a>
+                esEnlaceWeb(c.link) ? (
+                  <a href={c.link} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline">
+                    {c.link}
+                  </a>
+                ) : (
+                  // Un valor que no es http(s) se muestra como texto, nunca como enlace.
+                  <span className="break-all font-medium">{c.link}</span>
+                )
               ) : (
                 <span className="text-apagado">te lo mostramos cuando te inscribís.</span>
               )}

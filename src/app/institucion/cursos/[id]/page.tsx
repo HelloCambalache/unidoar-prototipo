@@ -7,7 +7,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
-import { etiquetaInscriptos, PUNTAJE_POR_DEFECTO } from "@/lib/cursos";
+import { esEnlaceWeb, etiquetaInscriptos, PUNTAJE_POR_DEFECTO } from "@/lib/cursos";
 import { etiquetaFechas } from "@/lib/fechas-curso";
 import { cursoConInscriptos } from "@/lib/queries/cursos-institucion";
 
@@ -47,7 +47,7 @@ export default async function FichaCurso({
 
   const avisoTexto = AVISOS[Array.isArray(aviso) ? (aviso[0] ?? "") : (aviso ?? "")];
   // Los links se cargan validados, pero un valor viejo que no sea http(s) se muestra como texto, nunca como enlace.
-  const enlace = c.link && /^https?:\/\//i.test(c.link) ? c.link : null;
+  const enlace = esEnlaceWeb(c.link) ? c.link : null;
 
   return (
     <>

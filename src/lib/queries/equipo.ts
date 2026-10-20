@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import {
   institucionMiembros,
@@ -8,7 +8,7 @@ import {
   type Institucion,
   type Usuario,
 } from "@/db/schema";
-import { infoDeRol, nombreDeEmail, mesYAnio, puedeSumarseAlEquipo, type MiembroVista } from "@/lib/equipo";
+import { corteDeInvitaciones, infoDeRol, invitacionVencida, nombreDeEmail, mesYAnio, puedeSumarseAlEquipo, type MiembroVista } from "@/lib/equipo";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
@@ -40,6 +40,7 @@ export async function miembrosDeInstitucion(
       email: f.email,
       rol: f.rol,
       estado: f.estado === "activo" ? "activo" : "invitado",
+      vencida: f.estado !== "activo" && invitacionVencida(f.creadoEn),
       desde: mesYAnio(f.creadoEn),
       esDueno: f.rol === "dueno",
       esYo: f.usuarioId === usuarioId,
@@ -61,6 +62,7 @@ export async function miembrosDeInstitucion(
         email: dueno.email,
         rol: "dueno",
         estado: "activo",
+        vencida: false,
         desde: mesYAnio(dueno.creadoEn),
         esDueno: true,
         esYo: institucion.propietarioId === usuarioId,
@@ -116,6 +118,7 @@ export async function invitacionPendiente(invitacionId: string) {
       id: institucionMiembros.id,
       email: institucionMiembros.email,
       rol: institucionMiembros.rol,
+      creadoEn: institucionMiembros.creadoEn,
       institucion: { nombre: instituciones.nombre, suspendida: instituciones.suspendida },
     })
     .from(institucionMiembros)
@@ -129,29 +132,37 @@ export async function invitacionPendiente(invitacionId: string) {
       ),
     )
     .limit(1);
-  return fila && !fila.institucion.suspendida ? fila : null;
+  // Una invitación que pasó de los `DIAS_DE_VIGENCIA_DE_INVITACION` sigue existiendo (el equipo la ve como vencida), pero ya no sirve.
+  return fila && !fila.institucion.suspendida ? { ...fila, vencida: invitacionVencida(fila.creadoEn) } : null;
 }
 
 /**
- * La invitación pendiente que tiene un email (la más antigua): a qué institución y con qué rol lo invitaron. Sirve para pedirle
- * que acepte los términos antes de sumarse al equipo. Null si no hay ninguna.
+ * La invitación pendiente y vigente más antigua que tiene un email, con su institución. Es la que se le muestra a quien llega al
+ * paso 2 del alta para que la acepte o la rechace. Las que pasaron de `DIAS_DE_VIGENCIA_DE_INVITACION` ya no cuentan.
  */
-export async function invitacionDeEmail(email: string) {
-  const [fila] = await getDb()
-    .select({ rol: institucionMiembros.rol, institucion: { nombre: instituciones.nombre, suspendida: instituciones.suspendida } })
+async function invitacionVigenteDe(email: string) {
+  const [pendiente] = await getDb()
+    .select({ miembro: institucionMiembros, institucion: instituciones })
     .from(institucionMiembros)
     .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
     .where(
       and(
         eq(sql`lower(${institucionMiembros.email})`, email.trim().toLowerCase()),
-        eq(institucionMiembros.estado, "invitado"),
         isNull(institucionMiembros.usuarioId),
+        eq(institucionMiembros.estado, "invitado"),
         ne(institucionMiembros.rol, "dueno"),
+        gt(institucionMiembros.creadoEn, corteDeInvitaciones()),
       ),
     )
     .orderBy(asc(institucionMiembros.creadoEn))
     .limit(1);
-  return fila && !fila.institucion.suspendida ? { institucion: fila.institucion.nombre, rol: fila.rol } : null;
+  return pendiente && !pendiente.institucion.suspendida ? pendiente : null;
+}
+
+/** A qué institución y con qué rol invitaron a un email (la invitación vigente más antigua), o null si no hay ninguna. */
+export async function invitacionDeEmail(email: string) {
+  const pendiente = await invitacionVigenteDe(email);
+  return pendiente ? { institucion: pendiente.institucion.nombre, rol: pendiente.miembro.rol } : null;
 }
 
 /** Datos de la membresía de una cuenta (para "Mi cuenta"). */
@@ -165,50 +176,37 @@ export async function membresiaDeUsuario(institucionId: string, usuarioId: strin
 }
 
 /**
- * Institución a la que la cuenta pertenece como miembro (no como dueña). Si ya es miembro activo, devuelve esa;
- * si no, busca una invitación pendiente hecha a su mismo email y la activa: la membresía pasa a "activo" con su
- * cuenta y se avisa al resto del equipo. Devuelve null si no tiene ninguna, o si todavía no aceptó los términos (en ese
- * caso el paso 2 del alta se los pide antes: ver `invitacionDeEmail`).
- *
- * No está cacheada a propósito: el paso 2 del alta la llama en el mismo request que crea la fila `usuarios`.
- * Las invitaciones se guardan con el email en minúsculas y se comparan sin distinguir mayúsculas.
+ * La institución de la que la cuenta es miembro activo (no dueña), o null. No suma a nadie a un equipo: una invitación pendiente se
+ * acepta a propósito con `sumarseAlEquipo`.
  */
-export async function institucionComoMiembro(
+export async function institucionDeMiembro(usuario: Pick<Usuario, "id" | "rol">): Promise<Institucion | null> {
+  if (usuario.rol !== "institucion") return null;
+  const [m] = await getDb()
+    .select({ institucion: instituciones })
+    .from(institucionMiembros)
+    .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
+    .where(and(eq(institucionMiembros.usuarioId, usuario.id), eq(institucionMiembros.estado, "activo")))
+    .limit(1);
+  return m?.institucion ?? null;
+}
+
+/**
+ * La persona **acepta** la invitación que le hicieron a su mismo email: la más antigua que no venció pasa a "activo" con su cuenta y se
+ * avisa al resto del equipo. Solo se llama cuando toca "Aceptar" (`unirseAlEquipo`): una invitación nunca se activa sola, ni al
+ * registrarse ni al abrir una página (quien se registra con un email que alguien invitó no queda dentro de un equipo sin saberlo).
+ * Devuelve null si no hay una invitación vigente o si todavía no aceptó los términos. Las invitaciones se guardan con el email en
+ * minúsculas y se comparan sin distinguir mayúsculas.
+ */
+export async function sumarseAlEquipo(
   usuario: Pick<Usuario, "id" | "email" | "rol" | "terminosAceptadosEn">,
   nombre?: string | null,
 ): Promise<Institucion | null> {
   if (usuario.rol !== "institucion") return null;
-  const db = getDb();
-
-  const activa = async () => {
-    const [m] = await db
-      .select({ institucion: instituciones })
-      .from(institucionMiembros)
-      .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
-      .where(and(eq(institucionMiembros.usuarioId, usuario.id), eq(institucionMiembros.estado, "activo")))
-      .limit(1);
-    return m?.institucion ?? null;
-  };
-
-  const yaMiembro = await activa();
+  const yaMiembro = await institucionDeMiembro(usuario);
   if (yaMiembro) return yaMiembro;
   if (!puedeSumarseAlEquipo(usuario)) return null;
 
-  const email = usuario.email.trim().toLowerCase();
-  const [pendiente] = await db
-    .select({ miembro: institucionMiembros, institucion: instituciones })
-    .from(institucionMiembros)
-    .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
-    .where(
-      and(
-        eq(sql`lower(${institucionMiembros.email})`, email),
-        isNull(institucionMiembros.usuarioId),
-        eq(institucionMiembros.estado, "invitado"),
-        ne(institucionMiembros.rol, "dueno"),
-      ),
-    )
-    .orderBy(asc(institucionMiembros.creadoEn))
-    .limit(1);
+  const pendiente = await invitacionVigenteDe(usuario.email);
   if (!pendiente) return null;
 
   const destinatarios = (await usuariosDeInstitucion(pendiente.institucion.id)).filter((id) => id !== usuario.id);
@@ -223,6 +221,7 @@ export async function institucionComoMiembro(
           eq(institucionMiembros.id, pendiente.miembro.id),
           isNull(institucionMiembros.usuarioId),
           eq(institucionMiembros.estado, "invitado"),
+          gt(institucionMiembros.creadoEn, corteDeInvitaciones()),
         ),
       )
       .returning({ id: institucionMiembros.id });
@@ -237,5 +236,37 @@ export async function institucionComoMiembro(
   });
 
   // Si otra request la activó primero, ya figura como miembro activo.
-  return activada ? pendiente.institucion : activa();
+  return activada ? pendiente.institucion : institucionDeMiembro(usuario);
+}
+
+/**
+ * La persona **rechaza** la invitación que se le muestra (la vigente más antigua): se borra y se avisa al equipo que invitó. Devuelve
+ * false si ya no hay ninguna.
+ */
+export async function rechazarInvitacion(usuario: Pick<Usuario, "id" | "email" | "rol">): Promise<boolean> {
+  if (usuario.rol !== "institucion") return false;
+  const pendiente = await invitacionVigenteDe(usuario.email);
+  if (!pendiente) return false;
+
+  const destinatarios = await usuariosDeInstitucion(pendiente.institucion.id);
+  return transaccion(async (tx) => {
+    const borradas = await tx
+      .delete(institucionMiembros)
+      .where(
+        and(
+          eq(institucionMiembros.id, pendiente.miembro.id),
+          isNull(institucionMiembros.usuarioId),
+          eq(institucionMiembros.estado, "invitado"),
+        ),
+      )
+      .returning({ id: institucionMiembros.id });
+    if (borradas.length === 0) return false;
+    await avisarAVarios(tx, destinatarios, {
+      tipo: "sistema",
+      titulo: pendiente.miembro.email,
+      texto: "rechazó la invitación al equipo.",
+      enlace: "/institucion/equipo",
+    });
+    return true;
+  });
 }

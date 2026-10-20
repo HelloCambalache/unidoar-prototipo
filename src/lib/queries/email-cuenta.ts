@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { transaccion } from "@/db";
 import { docentes, institucionMiembros, usuarios, type Usuario } from "@/db/schema";
 import { registrarAuditoria } from "@/lib/auditoria";
+import { resumenDeError } from "@/lib/errores";
 
 /**
  * Pone al día lo que la app copió del email de la cuenta cuando la persona lo cambió en Supabase Auth (confirmando
@@ -37,7 +38,7 @@ export async function sincronizarEmailDeCuenta(fila: Usuario, emailNuevo: string
       return actualizado;
     });
   } catch (e) {
-    console.error("No se pudo poner al día el email de la cuenta", e);
+    console.error("No se pudo poner al día el email de la cuenta", resumenDeError(e));
     return null;
   }
 }

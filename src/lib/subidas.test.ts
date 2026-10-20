@@ -98,3 +98,29 @@ describe("URLs públicas", () => {
     assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/../${OTRO}/logos/a.webp`)!, UID), false);
   });
 });
+
+describe("nombres de carpeta y de archivo que intentan colarse", () => {
+  before(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://proyecto.supabase.co";
+  });
+
+  it("las carpetas son solo las de la lista: los nombres heredados de Object no valen", () => {
+    for (const nombre of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__", "isPrototypeOf"]) {
+      assert.equal(tipoDeCarpeta("privado", nombre), null, nombre);
+      assert.equal(tipoDeCarpeta("publico", nombre), null, nombre);
+    }
+  });
+
+  it("un path privado no puede esconder un ../ codificado", () => {
+    assert.equal(esPathPrivadoPropio(`${UID}/cv/%2e%2e%2f${OTRO}%2fcv%2f${ARCHIVO}`, UID, "cv"), false);
+    assert.equal(esPathPrivadoPropio(`${UID}/cv/%2E%2E/${ARCHIVO}`, UID, "cv"), false);
+    assert.equal(esPathPrivadoPropio(`${UID}/cv/a%2Fb.pdf`, UID, "cv"), false);
+    assert.equal(esPathPrivadoPropio(`${UID}/cv/${ARCHIVO}`, UID, "cv"), true, "el nombre normal sigue valiendo");
+  });
+
+  it("una URL pública tampoco puede esconder un ../ codificado", () => {
+    assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/%2e%2e%2f${OTRO}%2flogos%2fa.webp`)!, UID), false);
+    assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/a%00.webp`)!, UID), false);
+    assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/3f2a9c1e-77aa-4d3b-9c0e-123456789abc.webp`)!, UID), true);
+  });
+});

@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { requerirSupabase } from "./env";
+import { opcionesDeCookieDeSesion } from "./cookies";
 
 /**
  * Cliente de Supabase para Server Components, server actions y route handlers.
@@ -16,7 +17,7 @@ export async function crearClienteServidor() {
       getAll: () => almacen.getAll(),
       setAll: (lista) => {
         try {
-          for (const { name, value, options } of lista) almacen.set(name, value, options);
+          for (const { name, value, options } of lista) almacen.set(name, value, opcionesDeCookieDeSesion(options));
         } catch {
           // Desde un Server Component no se pueden escribir cookies; no pasa nada,
           // el proxy (src/proxy.ts) ya refresca la sesión en cada request.

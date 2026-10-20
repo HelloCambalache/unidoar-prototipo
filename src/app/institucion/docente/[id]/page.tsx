@@ -11,7 +11,6 @@ import { Icono } from "@/components/icons";
 import { Boton, botonClases } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
-import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { CATEGORIA_INFO, ETAPA_LABEL } from "@/lib/catalogo";
@@ -21,6 +20,7 @@ import { opcionesDeInvitacion } from "@/lib/invitaciones";
 import { busquedaDeContexto, perfilDeDocente } from "@/lib/queries/profesionales";
 import { cn, iniciales } from "@/lib/utils";
 import { registrarVistaDePerfil } from "@/lib/vistas-perfil";
+import { resumenDeError } from "@/lib/errores";
 
 export const metadata: Metadata = { title: "Perfil del profesional" };
 
@@ -93,7 +93,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
     try {
       await registrarVistaDePerfil(institucion, d);
     } catch (error) {
-      console.error("No se pudo registrar la vista del perfil", error);
+      console.error("No se pudo registrar la vista del perfil", resumenDeError(error));
     }
   });
 
@@ -122,13 +122,16 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
     perfil.busquedasDelDocente.flatMap((b) => (b.relacion ? [{ busquedaId: b.id, origen: b.relacion.origen }] : [])),
   );
   const nivelesYAsignaturas = d.asignaturas.length > 0 || d.niveles.length > 0;
-  // El CV vive en un bucket privado: se guarda el path y el enlace se firma al mostrarlo.
-  // De un perfil suspendido no se abre el CV: trae el mismo contacto que no se muestra.
-  const cvEnlace = d.cvUrl && !d.suspendido ? (/^https?:\/\//.test(d.cvUrl) ? d.cvUrl : await urlFirmada(d.cvUrl)) : null;
+  // El CV trae el teléfono y el email: se abre con la misma regla que el contacto (la persona se postuló o mandó su CV; una invitación no
+  // alcanza) y de un perfil suspendido, nunca. El archivo no viaja en la página: el enlace pasa por /api/cv/docente/<id>, que lo comprueba
+  // y firma la URL por un minuto.
+  const cvEnlace = d.cvUrl && !d.suspendido && perfil.puedeContactar ? `/api/cv/docente/${d.id}` : null;
   const sinCv = d.suspendido
     ? "El equipo de UNIDOAR suspendió este perfil: por ahora no se puede abrir su CV."
     : d.cvUrl
-      ? "No pudimos abrir el CV ahora. Probá de nuevo en un rato."
+      ? perfil.puedeContactar
+        ? "No pudimos abrir el CV ahora. Probá de nuevo en un rato."
+        : `El CV de ${nombre} se habilita cuando se postula a una de tus búsquedas o te lo envía.`
       : `${nombre} todavía no cargó su CV.`;
 
   return (

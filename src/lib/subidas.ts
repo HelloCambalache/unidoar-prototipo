@@ -24,7 +24,8 @@ export type CarpetaDe<B extends BucketAlmacenamiento> = keyof (typeof CARPETAS)[
 
 export const tipoDeCarpeta = (bucket: BucketAlmacenamiento, carpeta: string): TipoArchivo | null => {
   const carpetas: Record<string, TipoArchivo> = CARPETAS[bucket];
-  return carpetas[carpeta] ?? null;
+  // Solo claves propias: "constructor", "toString" o "__proto__" no son carpetas (un objeto común las hereda de `Object`).
+  return Object.hasOwn(carpetas, carpeta) ? (carpetas[carpeta] ?? null) : null;
 };
 
 export const LIMITE_IMAGEN = 5 * 1024 * 1024;
@@ -87,7 +88,7 @@ export function esUrlPublicaPropia(url: string, usuarioId: string) {
   const prefijo = urlPublicaDe(`${usuarioId}/`);
   if (!prefijo || !url.startsWith(prefijo)) return false;
   const resto = url.slice(prefijo.length);
-  return !/[?#]|\.\./.test(resto) && resto.length > 0;
+  return !/[?#%]|\.\./.test(resto) && resto.length > 0;
 }
 
 /** ¿Es un path del bucket privado de esta cuenta, en esa carpeta? (`<usuarioId>/<carpeta>/<archivo>`) */
@@ -95,7 +96,8 @@ export function esPathPrivadoPropio(path: string, usuarioId: string, carpeta: st
   const prefijo = `${usuarioId}/${carpeta}/`;
   if (!path.startsWith(prefijo)) return false;
   const resto = path.slice(prefijo.length);
-  return resto.length > 0 && !/[/\\?#]|\.\./.test(resto);
+  // Sin "%": los nombres que genera /api/subir son "<uuid>.<ext>"; "%2e%2e%2f" sería un "../" escondido que Storage podría decodificar.
+  return resto.length > 0 && !/[/\\?#%]|\.\./.test(resto);
 }
 
 /** "…/cv/3f2a.pdf" → "3f2a.pdf" */

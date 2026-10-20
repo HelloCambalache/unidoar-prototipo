@@ -259,6 +259,8 @@ export async function cambiarContrasena(_previo: EstadoAuth, formData: FormData)
   const supabase = await crearClienteServidor();
   const { error } = await supabase.auth.updateUser({ password: r.data.password });
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code };
+  // Una contraseña nueva tiene que dejar afuera a quien tenga otra sesión abierta (una robada, o una computadora que quedó prendida).
+  await supabase.auth.signOut({ scope: "others" }).catch(() => undefined);
   jar.delete(COOKIE_RECUPERACION);
 
   revalidatePath("/", "layout");

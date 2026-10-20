@@ -21,6 +21,7 @@ import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
 import type { SedeVista } from "@/lib/sedes";
 import type { VitrinaGuardada } from "@/lib/vitrina";
+import { DEMASIADOS_PEDIDOS, permitirPedidoAlEquipo } from "@/lib/pedidos";
 
 /*
  * Acciones de la institución sobre su propia cuenta: vitrina (perfil público), datos de quien administra y
@@ -127,6 +128,7 @@ const comparable = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
  */
 export async function solicitarBajaCuenta(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if ((await rolEnInstitucion(institucion, usuario.id)) !== "dueno") {
     return fallo("Solo el dueño de la cuenta puede pedir la baja.");
   }
@@ -165,6 +167,7 @@ export async function solicitarBajaCuenta(_previo: Resultado | null, formData: F
 /** Retira un pedido de baja que todavía no se procesó (la cuenta sigue exactamente como estaba). */
 export async function retirarBajaCuenta(): Promise<Resultado> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if ((await rolEnInstitucion(institucion, usuario.id)) !== "dueno") {
     return fallo("Solo el dueño de la cuenta puede retirar el pedido de baja.");
   }

@@ -11,6 +11,7 @@ import {
   type VitrinaFotoVista,
   type VitrinaNovedadVista,
 } from "@/lib/vitrina";
+import { planes } from "@/lib/queries/planes";
 
 /**
  * Misma regla que `busquedaVigente` (queries/instituciones.ts): activa y, si es rápida, con plazo vigente. No se
@@ -94,6 +95,7 @@ export async function guardarVitrina(
   d: DatosVitrina,
   huellaEsperada?: string,
 ): Promise<{ conflicto: true } | ({ conflicto: false; huella: string } & VitrinaGuardadaSinHuella)> {
+  const P = await planes();
   return transaccion(async (tx) => {
     // Lo que hay ahora, con la fila bloqueada: dos personas que guardan a la vez se turnan en vez de pisarse.
     const [antes] = await tx.select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1).for("update");
@@ -109,6 +111,8 @@ export async function guardarVitrina(
       .set({
         nombre: d.nombre,
         tipo: d.tipo,
+        // El plan sigue al tipo mientras sea el que le tocaba (uno que cambió el equipo a mano no se toca).
+        plan: P.planTrasCambiarElTipo(antes.plan, antes.tipo, d.tipo),
         fundada: d.fundada,
         alumnos: d.alumnos,
         niveles: vacioANull(d.niveles),

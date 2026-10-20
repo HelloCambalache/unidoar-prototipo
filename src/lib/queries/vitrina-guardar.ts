@@ -7,7 +7,7 @@ import { OTRO } from "@/lib/otro";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { fotosDeInstitucion, guardarVitrina, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { esUrlPublicaPropia } from "@/lib/subidas";
-import { cambiosDeVitrina, camposDeError, vitrinaSchema, type VitrinaGuardada } from "@/lib/vitrina";
+import { cambiosDeVitrina, camposDeError, identidadCambiada, vitrinaSchema, type VitrinaGuardada } from "@/lib/vitrina";
 
 /*
  * "Guardar cambios" del perfil público (la vitrina) de una institución. Lo comparten dos puertas: la de la propia
@@ -21,15 +21,27 @@ import { cambiosDeVitrina, camposDeError, vitrinaSchema, type VitrinaGuardada } 
  * novedades que ya no vienen se borran, las que traen `id` se actualizan (solo si son de esta institución) y las demás se crean.
  * `quienSube` es la cuenta que subió las imágenes nuevas (la de la institución o la del admin): solo se aceptan imágenes que ya
  * estaban guardadas o que subió esa misma cuenta. Devuelve las listas con sus ids y los nombres de lo que cambió.
+ * El nombre y el tipo de una institución verificada solo los cambia el equipo (`puedeCambiarIdentidad`, que pasa la puerta del backoffice).
  */
 export async function guardarVitrinaDeInstitucion(
   institucion: Institucion,
   quienSube: string,
   entrada: unknown,
+  opciones: { puedeCambiarIdentidad?: boolean } = {},
 ): Promise<Resultado<{ guardado: VitrinaGuardada; cambios: string[] }>> {
   const r = vitrinaSchema.safeParse(entrada);
   if (!r.success) return fallo("Revisá los campos marcados.", camposDeError(r.error));
   const d = r.data;
+
+  // Con la institución verificada, el equipo ya revisó el nombre y el tipo junto con el CUIT: la propia institución no los cambia (la pantalla
+  // los muestra fijos; esto cubre un pedido directo).
+  if (institucion.verificada && !opciones.puedeCambiarIdentidad) {
+    const cambiados = identidadCambiada(institucion, d);
+    if (cambiados.length > 0) {
+      const motivo = "El equipo de UNIDOAR ya revisó este dato junto con el CUIT: para cambiarlo, escribinos desde Contacto.";
+      return fallo("Revisá los campos marcados.", Object.fromEntries(cambiados.map((c) => [c, motivo])));
+    }
+  }
 
   const campos: Record<string, string> = {};
   // Quien elige "Otro" tiene que decir cuál (el formulario guarda lo que escribió, no la palabra). Se tolera el "Otro" que la cuenta ya tenía.

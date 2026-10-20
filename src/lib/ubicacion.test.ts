@@ -240,6 +240,14 @@ describe("búsqueda de una dirección", () => {
     assert.equal(llamadas[0]!.params.direccion, "Av. Maipú 1234");
   });
 
+  it("un texto con decenas de pistas no dispara decenas de consultas a Georef", async () => {
+    const { impl, llamadas } = fetchFalso({ georef: [] });
+    const pistas = Array.from({ length: 40 }, (_, i) => `Lugar${i}`).join(", ");
+    await buscarUbicacionesEn({ texto: `Av. Maipú 1234, ${pistas}`, osm: false }, { fetchImpl: impl });
+    const aGeoref = llamadas.filter((l) => l.host.includes("datos.gob.ar")).length;
+    assert.ok(aGeoref >= 1 && aGeoref <= 5, `consultó a Georef ${aGeoref} veces`);
+  });
+
   it("sin pistas ofrece las opciones de distintos lugares para que la persona elija", async () => {
     const { impl } = fetchFalso({ georef: [[MAIPU_CORRIENTES, MAIPU_SANTA_FE, MAIPU_BA]] });
     const r = await buscarUbicacionesEn({ texto: "Av. Maipú 1234", osm: true }, { fetchImpl: impl });

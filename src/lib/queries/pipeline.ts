@@ -44,6 +44,31 @@ export async function postulacionPropia(institucionId: string, postulacionId: st
   return fila ?? null;
 }
 
+/** ¿Esta persona le mandó su CV a esta institución? (junto con postularse, es lo que habilita su contacto y su CV) */
+export async function mandoSuCv(institucionId: string, docenteId: string, ejecutor: Ejecutor = getDb()): Promise<boolean> {
+  const [fila] = await ejecutor
+    .select({ docenteId: cvEnviados.docenteId })
+    .from(cvEnviados)
+    .where(and(eq(cvEnviados.institucionId, institucionId), eq(cvEnviados.docenteId, docenteId)))
+    .limit(1);
+  return Boolean(fila);
+}
+
+/**
+ * ¿La institución puede abrir el CV de esta persona? Es la misma regla que el contacto, a nivel de persona (el CV suele traer el
+ * teléfono y el email): se postuló a alguna búsqueda de la institución o le mandó su CV. Que la institución la haya invitado no alcanza.
+ */
+export async function puedeVerElCvDe(institucionId: string, docenteId: string): Promise<boolean> {
+  if (await mandoSuCv(institucionId, docenteId)) return true;
+  const [fila] = await getDb()
+    .select({ id: postulaciones.id })
+    .from(postulaciones)
+    .innerJoin(busquedas, eq(busquedas.id, postulaciones.busquedaId))
+    .where(and(eq(busquedas.institucionId, institucionId), eq(postulaciones.docenteId, docenteId), eq(postulaciones.origen, "postulacion")))
+    .limit(1);
+  return Boolean(fila);
+}
+
 /** Para el selector de búsqueda del pipeline: abiertas primero, con cuántos postulantes nuevos tiene cada una. */
 export async function opcionesDeBusqueda(institucionId: string): Promise<OpcionBusqueda[]> {
   return getDb()
@@ -206,7 +231,8 @@ export async function pipelineDeBusqueda(
         telefono: !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)) ? d.telefono : null,
         email: !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)) ? (d.email ?? emailCuenta ?? null) : null,
         // El archivo no viaja al navegador: "Descargar CV" pasa por /api/cv/<postulación>, que comprueba de quién es y firma la URL.
-        tieneCv: Boolean(d.cvUrl),
+        // El CV trae el teléfono y el email: se ofrece con la misma regla que el contacto (una invitación sin aceptar no alcanza).
+        tieneCv: Boolean(d.cvUrl) && !d.suspendido && puedeVerElContacto(p.origen, mandaronCv.has(d.id)),
       },
     };
   });

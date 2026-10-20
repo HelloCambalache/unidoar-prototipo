@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import { institucionMiembros, instituciones, usuarios } from "@/db/schema";
@@ -8,20 +9,40 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarCorreo } from "@/lib/correo/cola";
-import { cambioRolSchema, esRolGestor, infoDeRol, invitacionSchema, motivoDeTopeDeEquipo, rutaDeInvitacion } from "@/lib/equipo";
+import {
+  cambioRolSchema,
+  corteDeInvitaciones,
+  esRolGestor,
+  infoDeRol,
+  invitacionSchema,
+  invitacionVencida,
+  motivoDeTopeDeEquipo,
+  rutaDeInvitacion,
+} from "@/lib/equipo";
+import { avisarAVarios } from "@/lib/queries/avisos";
 import { membresiaDeUsuario, miembroDeInstitucion, rolEnInstitucion } from "@/lib/queries/equipo";
+import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
+import { crearTope } from "@/lib/tope";
 
 /*
  * Equipo de la institución. Invitar, cambiar el rol y quitar gente es cosa del dueño y de los administradores;
  * cada acción lo verifica acá (no alcanza con esconder los botones). Invitar crea la membresía con estado "invitado"
 
  * y le manda un mail con el enlace de la invitación, `/invitacion/<id>` (si el envío está encendido; si no, el panel muestra
- * el enlace para copiar). La persona se une al registrarse con ese mismo email (ver `institucionComoMiembro` en src/lib/queries/equipo.ts).
+ * el enlace para copiar). La persona se suma al registrarse con ese mismo email y **aceptar** la invitación en el paso 2 del alta (ver
+ * `sumarseAlEquipo` en src/lib/queries/equipo.ts): una invitación nunca se activa sola y vence a los 30 días.
  */
 
 const SOLO_GESTORES = "Solo el dueño y los administradores pueden manejar el equipo.";
 const NO_ENCONTRADO = "No encontramos a esa persona en el equipo.";
 const DUENO_INTOCABLE = "El dueño de la cuenta no se puede degradar ni eliminar.";
+
+/**
+ * Intentos de invitar por institución y hora (cuentan también los que terminan en error): las respuestas de `invitarMiembro` distinguen
+ * si un email es de un profesional o de otra institución, y sin un tope servían para ir probando emails de a miles. Vive en la memoria
+ * de la instancia: frena un bucle, no es exacto con varias instancias.
+ */
+const permitirIntentoDeInvitar = crearTope(30, 60 * 60 * 1000);
 
 function revalidarEquipo() {
   revalidatePath("/institucion/equipo");
@@ -53,6 +74,7 @@ export type InvitacionCreada = { id: string; email: string; rol: string };
 export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null, formData: FormData): Promise<Resultado<InvitacionCreada>> {
   const { usuario, institucion, rol: rolDeQuienInvita, permitido } = await gestor();
   if (!permitido) return fallo(SOLO_GESTORES);
+  if (!permitirIntentoDeInvitar(institucion.id)) return fallo("Hiciste muchos intentos de invitar seguidos. Esperá un rato y probá de nuevo.");
 
   const r = parsear(invitacionSchema, formData);
   if (!r.ok) return fallo(r.error, r.campos);
@@ -64,11 +86,18 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
 
   const db = getDb();
   const [yaEsta] = await db
-    .select({ estado: institucionMiembros.estado })
+    .select({ id: institucionMiembros.id, estado: institucionMiembros.estado, creadoEn: institucionMiembros.creadoEn })
     .from(institucionMiembros)
     .where(and(eq(institucionMiembros.institucionId, institucion.id), eq(sql`lower(${institucionMiembros.email})`, email)))
     .limit(1);
-  if (yaEsta) {
+  // Una invitación que venció sin que la acepten se puede volver a mandar: se reemplaza por la nueva.
+  const vencida = Boolean(yaEsta && yaEsta.estado !== "activo" && invitacionVencida(yaEsta.creadoEn));
+  if (yaEsta && vencida) {
+    await db
+      .delete(institucionMiembros)
+      .where(and(eq(institucionMiembros.id, yaEsta.id), eq(institucionMiembros.institucionId, institucion.id), eq(institucionMiembros.estado, "invitado")));
+  }
+  if (yaEsta && !vencida) {
     const mensaje =
       yaEsta.estado === "activo"
         ? "Esa persona ya forma parte del equipo."
@@ -111,7 +140,11 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
   const [conteo] = await db
     .select({
       activos: sql<number>`count(*) filter (where ${institucionMiembros.estado} = 'activo')`.mapWith(Number),
-      pendientes: sql<number>`count(*) filter (where ${institucionMiembros.estado} = 'invitado')`.mapWith(Number),
+      // Las invitaciones vencidas no cuentan para el tope: ya no pueden aceptarse.
+      pendientes:
+        sql<number>`count(*) filter (where ${institucionMiembros.estado} = 'invitado' and ${institucionMiembros.creadoEn} > ${corteDeInvitaciones().toISOString()}::timestamptz)`.mapWith(
+          Number,
+        ),
     })
     .from(institucionMiembros)
     .where(eq(institucionMiembros.institucionId, institucion.id));
@@ -134,7 +167,7 @@ export async function invitarMiembro(_previo: Resultado<InvitacionCreada> | null
         plantilla: "M06",
         datos: { institucion: institucion.nombre, rol: infoDeRol(rol).label, invitadoPor: nombreDeQuienInvita, email, ruta: rutaDeInvitacion(fila!.id) },
         para: email,
-        topeClave: `M06:${institucion.id}`,
+        topeClave: `M06:${email}`,
       });
       return fila;
     });
@@ -192,4 +225,32 @@ export async function quitarMiembro(miembroId: string): Promise<Resultado> {
 
   revalidarEquipo();
   return ok();
+}
+
+/* ───────────────────────────── Salir del equipo ───────────────────────────── */
+
+/**
+ * Quien es miembro de un equipo (no el dueño) puede salir por su cuenta desde Mi cuenta: se borra su membresía, se avisa al resto del
+ * equipo y vuelve al paso 2 del alta, donde puede crear su propia institución. No borra su cuenta de acceso. El dueño no puede salir:
+ * si quiere cerrar la institución, pide la baja.
+ */
+export async function salirDelEquipo(): Promise<Resultado> {
+  const { usuario, institucion } = await requerirInstitucion();
+  if (institucion.propietarioId === usuario.id) {
+    return fallo("El dueño de la cuenta no puede salir del equipo. Si querés cerrar la institución, pedí la baja desde Mi cuenta.");
+  }
+  const membresia = await membresiaDeUsuario(institucion.id, usuario.id);
+  if (!membresia || membresia.estado !== "activo" || membresia.rol === "dueno") return fallo("No formás parte de este equipo.");
+
+  const destinatarios = (await usuariosDeInstitucion(institucion.id)).filter((id) => id !== usuario.id);
+  const nombre = membresia.nombre?.trim() || membresia.email;
+  await transaccion(async (tx) => {
+    await tx
+      .delete(institucionMiembros)
+      .where(and(eq(institucionMiembros.id, membresia.id), eq(institucionMiembros.usuarioId, usuario.id)));
+    await avisarAVarios(tx, destinatarios, { tipo: "sistema", titulo: nombre, texto: "salió del equipo.", enlace: "/institucion/equipo" });
+  });
+
+  revalidatePath("/institucion", "layout");
+  redirect("/onboarding/institucion/2");
 }

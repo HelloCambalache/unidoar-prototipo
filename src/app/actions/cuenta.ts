@@ -12,6 +12,7 @@ import { avisarAAdmins } from "@/lib/queries/avisos";
 import { fijarAvisosPorCorreo } from "@/lib/queries/correo";
 import { ACCION_BAJA_RETIRADA, ACCION_BAJA_SOLICITADA, bajaDocenteSolicitadaEn, tieneContrasena } from "@/lib/queries/cuenta";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { DEMASIADOS_PEDIDOS, permitirPedidoAlEquipo } from "@/lib/pedidos";
 
 /*
  * Acciones de "Mi cuenta" que valen para cualquier rol: contraseña y avisos por mail. El email de acceso NO se cambia desde la app. La baja de la institución está
@@ -57,6 +58,8 @@ export async function cambiarContrasenaCuenta(_previo: Resultado | null, formDat
 
   const { error } = await supabase.auth.updateUser({ password: nueva });
   if (error) return fallo(traducirErrorAuth(error), { nueva: traducirErrorAuth(error) });
+  // Una contraseña nueva tiene que dejar afuera a quien tenga otra sesión abierta (una robada, o una computadora que quedó prendida).
+  await supabase.auth.signOut({ scope: "others" }).catch(() => undefined);
   return ok();
 }
 
@@ -87,6 +90,7 @@ const comparable = (t: string) => t.trim().replace(/\s+/g, " ").toLowerCase();
  */
 export async function solicitarBajaDocente(_previo: Resultado | null, formData: FormData): Promise<Resultado> {
   const { usuario, docente } = await requerirDocente();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
 
   const r = parsear(bajaSchema, formData);
   if (!r.ok) return fallo(r.error, r.campos);
@@ -124,6 +128,7 @@ export async function solicitarBajaDocente(_previo: Resultado | null, formData: 
 /** Retira un pedido de baja que todavía no se procesó (la cuenta sigue exactamente como estaba). */
 export async function retirarBajaDocente(): Promise<Resultado> {
   const { usuario, docente } = await requerirDocente();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
 
   if (await bajaDocenteSolicitadaEn(docente.id)) {
     const nombre = `${docente.nombre} ${docente.apellido}`.trim();

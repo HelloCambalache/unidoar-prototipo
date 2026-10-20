@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cambiaElNombre, identidadFija, sinArchivosDeDni } from "./perfil-docente";
+import { cambiaElNombre, identidadFija, puedePostularse, sinArchivosDeDni } from "./perfil-docente";
 
 describe("fotos del DNI al verificar", () => {
   it("separa las dos fotos del DNI y deja el resto de la documentación", () => {
@@ -50,5 +50,12 @@ describe("cambio de nombre y apellido", () => {
 
   it("distingue mayúsculas: es el nombre del documento", () => {
     assert.equal(cambiaElNombre(guardado, { nombre: "luciana", apellido: "Prieto" }), true);
+  });
+});
+
+describe("postularse con la verificación rechazada", () => {
+  it("solo el rechazado queda afuera", () => {
+    assert.equal(puedePostularse("rechazado"), false);
+    for (const v of ["pendiente", "verificado", "correccion", "revision"]) assert.equal(puedePostularse(v), true, v);
   });
 });

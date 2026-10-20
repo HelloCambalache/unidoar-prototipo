@@ -43,56 +43,61 @@ export const ROLES_CONTACTO = ["Director/a", "Coordinador/a", "Docente", "Admini
  * Roles del equipo de una institución. La clave es lo que se guarda en `institucion_miembros.rol`;
  * "colaborador" es el rol previo a estos y se sigue mostrando si quedó alguna fila vieja.
  */
+/**
+ * Los textos de los roles tienen que decir lo que el sistema hace de verdad: hoy solo el dueño y los administradores manejan el equipo,
+ * el perfil público, las sedes y los pedidos de plan (`esRolGestor`); todo el resto del equipo puede lo mismo (publicar búsquedas, mover y
+ * contratar postulantes, ver sus datos de contacto). Si algún día un rol restringe algo, se cambia la descripción junto con el permiso.
+ */
 export const ROLES_EQUIPO_INFO = {
   dueno: {
     label: "Dueño de la cuenta",
     corto: "Dueño",
-    desc: "Acceso total, incluido el plan y la facturación. Es único y no se puede invitar: se transfiere.",
+    desc: "Acceso total: maneja el equipo, el perfil público, las sedes y el plan. Es único y no se puede invitar.",
   },
   administrador: {
     label: "Administrador/a",
     corto: "Admin",
-    desc: "Hace todo salvo tocar el plan y la facturación: publica, contrata, edita la vitrina y maneja el equipo.",
+    desc: "Además de publicar y contratar, maneja el equipo (invita, cambia roles y quita gente), edita el perfil público y las sedes, y pide cambios de plan.",
   },
   reclutador: {
     label: "Reclutador/a",
     corto: "Reclutador",
-    desc: "Publica búsquedas, mueve postulantes y contrata. No accede al equipo, al plan ni a la vitrina.",
+    desc: "Para quien se ocupa de las búsquedas y los postulantes: publica, mueve postulantes y contrata. No maneja el equipo, el perfil público ni el plan.",
   },
   coordinador: {
     label: "Coordinador/a de área",
     corto: "Coordinador",
-    desc: "Ve las búsquedas de su área y deja comentarios en los postulantes. No publica ni contrata.",
+    desc: "Para quien coordina un área. Hoy puede lo mismo que el resto del equipo (publicar, comentar y contratar) y no maneja el equipo, el perfil público ni el plan.",
   },
   director: {
     label: "Director/a",
     corto: "Director",
-    desc: "Ve todo y aprueba contrataciones. No toca el plan ni la facturación.",
+    desc: "Para la dirección de la institución. Puede lo mismo que el resto del equipo y no maneja el equipo, el perfil público ni el plan.",
   },
   secretario: {
     label: "Secretario/a",
     corto: "Secretario",
-    desc: "Carga y edita búsquedas, agenda entrevistas y responde postulantes.",
+    desc: "Para quien carga las búsquedas y agenda las entrevistas. No maneja el equipo, el perfil público ni el plan.",
   },
   referente: {
     label: "Referente de nivel",
     corto: "Referente",
-    desc: "Ve las búsquedas de su nivel y comenta en los postulantes. No publica ni contrata.",
+    desc: "Para quien referencia un nivel. Hoy puede lo mismo que el resto del equipo (publicar, comentar y contratar) y no maneja el equipo, el perfil público ni el plan.",
   },
   facturacion: {
     label: "Administración y facturación",
     corto: "Facturación",
-    desc: "Accede al plan, los comprobantes y los datos de facturación. No ve las búsquedas.",
+    desc: "Para quien se ocupa de la administración: ve el plan y las facturas. Hoy también ve las búsquedas y los postulantes, como todo el equipo, y no maneja el equipo, el perfil público ni el plan.",
   },
   otro: {
     label: "Otro",
     corto: "Otro",
-    desc: "Los permisos los definís vos cuando acepte la invitación.",
+    desc: "Un rol a medida. Hoy puede lo mismo que el resto del equipo y no maneja el equipo, el perfil público ni el plan.",
   },
   colaborador: {
     label: "Colaborador/a",
     corto: "Colaborador",
-    desc: "Participa de las contrataciones.",
+    desc: "Participa de las contrataciones. No maneja el equipo, el perfil público ni el plan.",
   },
 } as const;
 export type RolEquipo = keyof typeof ROLES_EQUIPO_INFO;

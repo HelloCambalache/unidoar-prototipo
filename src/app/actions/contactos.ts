@@ -15,6 +15,7 @@ import {
   filasCrudasSchema,
   validarFilas,
 } from "@/lib/contactos";
+import { resumenDeError } from "@/lib/errores";
 
 /*
  * Contactos privados de la institución (Profesionales → "Cargar perfil" e "Importar CSV"). Cualquier persona del
@@ -77,7 +78,7 @@ export async function guardarContacto(_previo: Resultado<{ id: string }> | null,
   } catch (e) {
     // El índice único (institución, email) es la red de seguridad si dos personas cargan el mismo email a la vez.
     if (esViolacionUnica(e)) return fallo(EMAIL_REPETIDO, { email: EMAIL_REPETIDO });
-    console.error("No se pudo guardar el contacto", e);
+    console.error("No se pudo guardar el contacto", resumenDeError(e));
     return fallo("No pudimos guardar el contacto. Probá de nuevo.");
   }
 }

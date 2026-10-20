@@ -8,6 +8,7 @@ import { rutaDeBaja, rutaDeBajaConUnClic } from "./baja";
 import { destinatariosDelEquipo, modoCorreo, origenDeLosMails, remitenteDe } from "./config";
 import { enviarMensaje } from "./enviar";
 import { PLANTILLAS, armarMail, esGrupoOpcional, esPlantilla, urlInterna, type DatosDe, type PlantillaId } from "./plantillas";
+import { resumenDeError } from "@/lib/errores";
 
 /*
  * Cola de mails ("outbox"). El flujo es siempre el mismo:
@@ -121,7 +122,7 @@ export function despacharCola() {
       try {
         await vaciarCola({ limite: 15 });
       } catch (e) {
-        console.error("No se pudo despachar la cola de mails", e);
+        console.error("No se pudo despachar la cola de mails", resumenDeError(e));
       }
     });
   } catch {

@@ -17,6 +17,8 @@ export type MiembroVista = {
   /** Clave de ROLES_EQUIPO_INFO (puede ser una vieja que ya no está en el catálogo). */
   rol: string;
   estado: EstadoMiembro;
+  /** Invitación a la que le pasaron más de `DIAS_DE_VIGENCIA_DE_INVITACION` días sin que la acepten (solo con `estado: "invitado"`). */
+  vencida: boolean;
   /** "Ene 2026" */
   desde: string;
   esDueno: boolean;
@@ -43,6 +45,16 @@ export const rutaDeInvitacion = (invitacionId: string) => `/invitacion/${invitac
  * donde las instituciones los aceptan, así que se le piden antes de sumarla al equipo.
  */
 export const puedeSumarseAlEquipo = (usuario: { terminosAceptadosEn: Date | null }) => usuario.terminosAceptadosEn !== null;
+
+/** Cuántos días vale una invitación al equipo: pasado ese tiempo hay que invitar de nuevo. */
+export const DIAS_DE_VIGENCIA_DE_INVITACION = 30;
+const MS_POR_DIA = 86_400_000;
+
+/** La fecha desde la cual una invitación todavía vale: las creadas antes de esa fecha vencieron. */
+export const corteDeInvitaciones = (ahora: Date = new Date()) => new Date(ahora.getTime() - DIAS_DE_VIGENCIA_DE_INVITACION * MS_POR_DIA);
+
+/** ¿Esta invitación ya venció? */
+export const invitacionVencida = (creadoEn: Date, ahora: Date = new Date()) => creadoEn.getTime() <= corteDeInvitaciones(ahora).getTime();
 
 /** Invitaciones sin responder que puede tener una institución a la vez, y personas (activas o invitadas) en su equipo. */
 export const MAX_INVITACIONES_PENDIENTES = 20;

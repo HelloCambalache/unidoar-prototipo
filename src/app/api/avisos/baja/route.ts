@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { darDeBajaConFirma } from "@/lib/queries/correo";
+import { resumenDeError } from "@/lib/errores";
 
 // Depende de la base y de la firma del enlace: nunca se cachea.
 export const dynamic = "force-dynamic";
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     if (r === "invalido") return NextResponse.json({ error: "Enlace no válido" }, { status: 400, headers: SIN_CACHE });
     return NextResponse.json({ ok: true }, { headers: SIN_CACHE });
   } catch (e) {
-    console.error("No se pudo procesar la baja de avisos por mail", e);
+    console.error("No se pudo procesar la baja de avisos por mail", resumenDeError(e));
     return NextResponse.json({ error: "No se pudo procesar" }, { status: 500, headers: SIN_CACHE });
   }
 }

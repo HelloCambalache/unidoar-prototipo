@@ -1,6 +1,7 @@
 "use server";
 
 import { darDeBajaConFirma } from "@/lib/queries/correo";
+import { resumenDeError } from "@/lib/errores";
 
 export type EstadoBajaAvisos = { ok: boolean; error?: string } | null;
 
@@ -13,7 +14,7 @@ export async function confirmarBajaDeAvisos(_previo: EstadoBajaAvisos, formData:
     const r = await darDeBajaConFirma(usuario, firma);
     return r === "hecho" ? { ok: true } : { ok: false, error: "El enlace no es válido o ya no corresponde a una cuenta." };
   } catch (e) {
-    console.error("No se pudo dar de baja de los avisos por mail", e);
+    console.error("No se pudo dar de baja de los avisos por mail", resumenDeError(e));
     return { ok: false, error: "No pudimos guardar el cambio. Probá de nuevo en unos minutos." };
   }
 }

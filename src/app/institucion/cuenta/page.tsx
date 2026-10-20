@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { CuentaBaja } from "@/components/institucion/cuenta-baja";
+import { CuentaEquipo } from "@/components/institucion/cuenta-equipo";
 import { CuentaAvisos } from "@/components/cuenta/cuenta-avisos";
 import { CuentaContrasena } from "@/components/cuenta/cuenta-contrasena";
 import { CuentaEmail } from "@/components/cuenta/cuenta-email";
@@ -31,6 +32,7 @@ export default async function MiCuenta() {
         <CuentaEmail email={cuenta.email} />
         <CuentaContrasena tieneContrasena={cuenta.tieneContrasena} />
         <CuentaAvisos rol="institucion" inicial={usuario.avisosPorCorreo} />
+        {!cuenta.esDueno && <CuentaEquipo nombreInstitucion={institucion.nombre} />}
         <CuentaBaja
           nombreInstitucion={institucion.nombre}
           email={cuenta.email}

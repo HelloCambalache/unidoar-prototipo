@@ -6,6 +6,7 @@ import { mensajesContacto } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
 import { contactoSchema, type EstadoContacto, type ValoresContacto } from "@/lib/contacto";
 import { encolarParaEquipo } from "@/lib/correo/cola";
+import { resumenDeError } from "@/lib/errores";
 
 /** Mensajes por email y hora: corta el spam sin pedir captcha. */
 const MAX_POR_HORA = 5;
@@ -59,7 +60,7 @@ export async function enviarContacto(_previo: EstadoContacto, formData: FormData
       await encolarParaEquipo(tx, "M60", { nombre: datos.nombre, email: datos.email, rol, mensaje: datos.mensaje });
     });
   } catch (e) {
-    console.error("No se pudo guardar el mensaje de contacto", e);
+    console.error("No se pudo guardar el mensaje de contacto", resumenDeError(e));
     return { ok: false, error: "No pudimos enviar tu mensaje. Probá de nuevo en unos minutos.", valores };
   }
   return { ok: true };

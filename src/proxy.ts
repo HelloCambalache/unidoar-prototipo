@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
+import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
 
 /**
  * Pantallas con cuenta. El rol (docente / institución / admin) se valida en cada
@@ -30,7 +31,7 @@ export async function proxy(request: NextRequest) {
       setAll: (lista) => {
         for (const { name, value } of lista) request.cookies.set(name, value);
         response = NextResponse.next({ request });
-        for (const { name, value, options } of lista) response.cookies.set(name, value, options);
+        for (const { name, value, options } of lista) response.cookies.set(name, value, opcionesDeCookieDeSesion(options));
       },
     },
   });

@@ -359,3 +359,23 @@ describe("cómo se cuentan los cambios", () => {
     assert.notEqual(huellaDePlanes(base), huellaDePlanes(otra));
   });
 });
+
+describe("el plan sigue al tipo de institución", () => {
+  const P = crearPlanes(CATALOGO_POR_DEFECTO);
+
+  it("si el plan era el que le tocaba por su tipo, acompaña al nuevo tipo", () => {
+    assert.equal(P.planTrasCambiarElTipo("deportiva", "Otro", "Colegio privado"), "colegio");
+    assert.equal(P.planTrasCambiarElTipo("colegio", "Colegio privado", "Club o gimnasio"), "deportiva");
+  });
+
+  it("un plan que el equipo cambió a mano no se toca", () => {
+    assert.equal(P.planTrasCambiarElTipo("multisede", "Colegio privado", "Club o gimnasio"), "multisede");
+    assert.equal(P.planTrasCambiarElTipo("fundador", "Otro", "Colegio privado"), "fundador");
+    assert.equal(P.planTrasCambiarElTipo("colegio", "Otro", "Club o gimnasio"), "colegio", "uno que no era el derivado de su tipo anterior");
+  });
+
+  it("si el tipo no cambia de arancel, el plan queda igual", () => {
+    assert.equal(P.planTrasCambiarElTipo("colegio", "Colegio privado", "Jardín de infantes"), "colegio");
+    assert.equal(P.planTrasCambiarElTipo("deportiva", "Club o gimnasio", "Natatorio o colonia"), "deportiva");
+  });
+});

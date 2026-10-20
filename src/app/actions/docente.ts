@@ -30,6 +30,7 @@ import { cambiaElNombre, identidadFija, perfilDocenteSchema } from "@/lib/perfil
 import { notificar } from "@/lib/queries/notificaciones";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
+import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
 
 const idSchema = z.guid();
 
@@ -84,6 +85,7 @@ export async function alternarFavoritoInstitucion(institucionId: string): Promis
 /** "Enviá tu CV a esta institución": una vez por institución; le llega un aviso con el link a tu perfil. */
 export async function enviarCvAInstitucion(institucionId: string): Promise<Resultado> {
   const { docente } = await requerirDocente();
+  if (!puedePostularse(docente.verificacion)) return fallo(PERFIL_RECHAZADO);
   const id = idSchema.safeParse(institucionId);
   if (!id.success) return fallo("Institución inválida.");
 

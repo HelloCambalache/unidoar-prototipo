@@ -90,17 +90,18 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
   M06: {
     grupo: "cuenta",
     remitente: "app",
-    tope: { max: 20, horas: 24 },
+    // Por destinatario (ver `topeClave` en `invitarMiembro`): nadie recibe más de 3 invitaciones al día, la manden las instituciones que la manden.
+    tope: { max: 3, horas: 24 },
     contenido: (d) => ({
       asunto: `${d.institucion} te invitó a sumarte a su equipo en UNIDOAR`,
       previa: `Te invitaron a ser parte del equipo de ${d.institucion}.`,
       titulo: `Te invitaron a sumarte a ${d.institucion}`,
       parrafos: [
         [d.invitadoPor ? n(d.invitadoPor) : "Una persona del equipo", " te invitó a ser parte del equipo de ", n(d.institucion), " en UNIDOAR, con el rol de ", n(d.rol), "."],
-        ["Para aceptar, entrá al enlace y creá tu acceso con este mismo email: ", n(d.email), ". Quedás directo en el equipo."],
+        ["Para aceptar, entrá al enlace y creá tu acceso con este mismo email: ", n(d.email), ". Cuando entres, vas a poder aceptar la invitación o rechazarla."],
       ],
       boton: { texto: "Aceptar la invitación", ruta: d.ruta },
-      nota: ["Si no esperabas esta invitación, ignorá este mail: no se suma nadie hasta que alguien cree la cuenta."],
+      nota: ["Si no esperabas esta invitación, ignorá este mail: no te sumamos a ningún equipo si no la aceptás, y la invitación vence sola a los 30 días."],
       motivo: `Te escribimos porque ${d.institucion} te invitó a su equipo en UNIDOAR.`,
     }),
   },
@@ -196,6 +197,9 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
   M20: {
     grupo: "contratacion",
     remitente: "app",
+    // Por persona (ver `topeClave` en `correoDeInvitacion`): cualquier institución puede invitar, y el asunto lleva su nombre y el puesto
+    // que escribió. Sin un tope, una cuenta nueva podía llenarle la casilla a un profesional con el dominio de UNIDOAR.
+    tope: { max: 5, horas: 24 },
     contenido: (d) => ({
       asunto: `${d.institucion} te invitó a postularte a ${d.puesto}`,
       previa: `${d.institucion} vio tu perfil y quiere que te postules.`,
@@ -435,6 +439,8 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
   M62: {
     grupo: "interno",
     remitente: "app",
+    // Un tope general: pedir y retirar la baja en un bucle no puede llenar la casilla del equipo.
+    tope: { max: 30, horas: 24 },
     contenido: (d) => ({
       asunto: `${d.cuenta} pidió la baja`,
       previa: `Pedido de baja de ${tipoDeCuenta(d.tipo)}.`,
@@ -446,6 +452,8 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
   M63: {
     grupo: "interno",
     remitente: "app",
+    // Un tope general: pedir y cancelar un cambio de plan en un bucle no puede llenar la casilla del equipo.
+    tope: { max: 30, horas: 24 },
     contenido: (d) => ({
       asunto: `${d.institucion} pidió cambiar de plan`,
       previa: `Pidió pasar al plan ${d.plan}.`,

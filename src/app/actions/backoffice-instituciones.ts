@@ -127,7 +127,7 @@ export async function actualizarVitrinaComoAdmin(institucionId: string, entrada:
   const [inst] = await getDb().select().from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
   if (!inst || inst.bajaEn) return fallo(NO_ENCONTRADA);
 
-  const r = await guardarVitrinaDeInstitucion(inst, admin.id, entrada);
+  const r = await guardarVitrinaDeInstitucion(inst, admin.id, entrada, { puedeCambiarIdentidad: true });
   if (!r.ok) return r;
   if (r.data.cambios.length > 0) {
     await registrarAuditoria({

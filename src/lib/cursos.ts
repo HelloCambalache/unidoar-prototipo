@@ -172,6 +172,12 @@ export function diasIniciales(inicio: string | null | undefined, fin: string | n
  * Los links de un curso se muestran como enlace a los docentes inscriptos: solo se aceptan http(s).
  * Sin esquema ("meet.google.com/abc") se asume https. Devuelve null si no es un link usable.
  */
+/**
+ * ¿Es un enlace que se puede mostrar como link? Solo http(s). Los links se guardan validados con `normalizarLink`, pero un dato viejo o
+ * cargado por otro camino ("javascript:…") nunca tiene que llegar a un `href`: se vuelve a mirar al mostrarlo.
+ */
+export const esEnlaceWeb = (valor: string | null | undefined): valor is string => Boolean(valor && /^https?:\/\//i.test(valor.trim()));
+
 export function normalizarLink(valor: string): string | null {
   const v = valor.trim();
   if (!v) return null;

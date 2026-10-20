@@ -14,6 +14,7 @@ import { CLAVES_PLAN } from "@/lib/planes";
 import { planes } from "@/lib/queries/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/queries/plan";
+import { DEMASIADOS_PEDIDOS, permitirPedidoAlEquipo } from "@/lib/pedidos";
 
 /*
  * Todavía no hay pasarela de pago (se integra Mercado Pago más adelante): pedir un cambio de plan NO
@@ -33,6 +34,7 @@ const revalidarPlan = () => revalidatePath("/institucion/plan");
  */
 export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   const destino = planSchema.safeParse(plan);
   if (!destino.success) return fallo("Ese plan no existe.");
   const P = await planes();
@@ -79,6 +81,7 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
 /** Cancela el pedido pendiente de la institución (la fila se borra: el equipo ya no lo ve en su cola). */
 export async function cancelarSolicitudPlan(solicitudId: string): Promise<Resultado> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if (!esUuid(solicitudId)) return fallo("No encontramos ese pedido.");
 
   const resultado = await transaccion(async (tx) => {

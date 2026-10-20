@@ -4,6 +4,7 @@ import { purgarCola, vaciarCola } from "@/lib/correo/cola";
 import { modoCorreo } from "@/lib/correo/config";
 import { cronAutorizado } from "@/lib/cron";
 import { encolarRecordatoriosDeFactura } from "@/lib/queries/recordatorios-factura";
+import { resumenDeError } from "@/lib/errores";
 
 // Se evalúa en cada pedido: manda mails, no es algo cacheable.
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     console.info("Tarea de mails", { modo, recordatorios, ...cola, purgados });
     return NextResponse.json({ modo, recordatorios, ...cola, purgados }, { headers: SIN_CACHE });
   } catch (e) {
-    console.error("Falló la tarea de mails", e);
+    console.error("Falló la tarea de mails", resumenDeError(e));
     return NextResponse.json({ error: "Falló la tarea de mails" }, { status: 500, headers: SIN_CACHE });
   }
 }

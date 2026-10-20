@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cambiosDeVitrina, huellaDeVitrina, vitrinaSchema, type VitrinaAntes } from "./vitrina";
+import { cambiosDeVitrina, huellaDeVitrina, identidadCambiada, vitrinaSchema, type VitrinaAntes } from "./vitrina";
 
 const antes: VitrinaAntes = {
   nombre: "Colegio San Martín",
@@ -103,5 +103,20 @@ describe("huella del perfil público (detecta que otra persona guardó mientras 
 
   it("no cambia por repetidos en los valores, que al guardar se descartan", () => {
     assert.equal(huellaDeVitrina({ ...antes, valores: ["Respeto", "respeto", "Esfuerzo"] }), huellaDeVitrina(antes));
+  });
+});
+
+describe("identidad de una institución verificada (nombre y tipo)", () => {
+  const actual = { nombre: "Colegio San Andrés", tipo: "Colegio privado" };
+
+  it("lo mismo, con espacios de más o no, no es un cambio", () => {
+    assert.deepEqual(identidadCambiada(actual, { ...actual }), []);
+    assert.deepEqual(identidadCambiada(actual, { nombre: "  Colegio   San Andrés ", tipo: "Colegio privado " }), []);
+  });
+
+  it("detecta qué campo se quiere cambiar", () => {
+    assert.deepEqual(identidadCambiada(actual, { ...actual, nombre: "Colegio Lincoln" }), ["nombre"]);
+    assert.deepEqual(identidadCambiada(actual, { ...actual, tipo: "Club o gimnasio" }), ["tipo"]);
+    assert.deepEqual(identidadCambiada(actual, { nombre: "Otro", tipo: "Otro" }), ["nombre", "tipo"]);
   });
 });

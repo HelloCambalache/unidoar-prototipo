@@ -7,6 +7,7 @@ import { codigosReferido, instituciones, referidosInstituciones } from "@/db/sch
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
 import { COOKIE_REFERIDO, estadoDeReferido, generarCodigo, normalizarCodigo, sePuedeAnotar, type EstadoReferido } from "@/lib/referidos";
+import { resumenDeError } from "@/lib/errores";
 
 /*
  * Referidos de instituciones (reglas y textos en src/lib/referidos.ts). El código de cada institución se crea la primera vez que
@@ -80,7 +81,7 @@ export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: st
       });
     });
   } catch (e) {
-    console.error("No se pudo anotar el referido", e);
+    console.error("No se pudo anotar el referido", resumenDeError(e));
   }
 }
 
@@ -105,7 +106,7 @@ export async function avisarReferidorDeVerificacion(institucionId: string) {
       enlace: "/institucion/referidos",
     });
   } catch (e) {
-    console.error("No se pudo avisar la verificación de un referido", e);
+    console.error("No se pudo avisar la verificación de un referido", resumenDeError(e));
   }
 }
 

@@ -19,12 +19,18 @@ type Postulacion = { usuarioId: string | null; institucion: string; puesto: stri
 
 /* ───────────────────────────── Para el docente ───────────────────────────── */
 
-/** M20: la institución lo invitó a postularse. */
+/** M20: la institución lo invitó a postularse. Como máximo 5 por día por persona, inviten las instituciones que inviten (el tope se cuenta al enviar). */
 export async function correoDeInvitacion(
   ejecutor: Ejecutor,
   d: { usuarioId: string | null; institucion: string; puesto: string; busquedaId: string },
 ) {
-  await encolarParaUsuarios(ejecutor, unico(d.usuarioId), "M20", { institucion: d.institucion, puesto: d.puesto, ruta: `/docente/oferta/${d.busquedaId}` });
+  await encolarParaUsuarios(
+    ejecutor,
+    unico(d.usuarioId),
+    "M20",
+    { institucion: d.institucion, puesto: d.puesto, ruta: `/docente/oferta/${d.busquedaId}` },
+    { topeClave: (id) => `M20:${id}` },
+  );
 }
 
 /** M21: salió una búsqueda rápida que encaja. Como máximo 3 por día por persona (el tope se cuenta al enviar). */

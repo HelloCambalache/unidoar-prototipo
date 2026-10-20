@@ -36,6 +36,7 @@ import {
   type ResultadoFacturaDelPeriodo,
 } from "@/lib/queries/backoffice-cobros";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { resumenDeError } from "@/lib/errores";
 
 /*
  * Cobros del backoffice. Todavía no hay pasarela de pago: el equipo registra los pagos y carga las facturas
@@ -233,7 +234,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
     // El índice único (institución, período) es la red de seguridad si dos personas cargan el mismo mes a la vez.
     const codigo = (e as { code?: string; cause?: { code?: string } }).code ?? (e as { cause?: { code?: string } }).cause?.code;
     if (codigo === "23505") return fallo(`Ya hay una factura de ${etiquetaPeriodo(periodo)} para esta institución.`, { periodo: "Ese mes ya tiene factura" });
-    console.error("No se pudo registrar el pago en efectivo", e);
+    console.error("No se pudo registrar el pago en efectivo", resumenDeError(e));
     return fallo("No pudimos registrar el pago. Probá de nuevo.");
   }
 }
@@ -384,7 +385,7 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
     // El índice único (institución, período) es la red de seguridad si dos personas cargan el mismo mes a la vez.
     const codigo = (e as { code?: string; cause?: { code?: string } }).code ?? (e as { cause?: { code?: string } }).cause?.code;
     if (codigo === "23505") return fallo(`Ya hay una factura de ${etiquetaPeriodo(periodo)} para esta institución.`, { periodo: "Ese mes ya tiene factura" });
-    console.error("No se pudo cargar la factura", e);
+    console.error("No se pudo cargar la factura", resumenDeError(e));
     return fallo("No pudimos cargar la factura. Probá de nuevo.");
   }
 }

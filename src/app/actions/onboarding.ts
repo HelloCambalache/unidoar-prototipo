@@ -13,7 +13,7 @@ import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, 
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
-import { institucionComoMiembro } from "@/lib/queries/equipo";
+import { rechazarInvitacion, sumarseAlEquipo } from "@/lib/queries/equipo";
 import { anotarReferidoDelNavegador } from "@/lib/queries/referidos";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
@@ -196,7 +196,11 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
 
   if (existente) {
     await transaccion(async (tx) => {
-      await tx.update(instituciones).set(datos).where(eq(instituciones.id, existente.id));
+      // El plan sigue al tipo mientras sea el que le tocaba (uno que cambió el equipo a mano no se toca): ver `planTrasCambiarElTipo`.
+      await tx
+        .update(instituciones)
+        .set({ ...datos, plan: P.planTrasCambiarElTipo(existente.plan, existente.tipo, tipo) })
+        .where(eq(instituciones.id, existente.id));
       await guardarSedePrincipal(tx, existente.id, ubicacionDeLaSede);
     });
   } else {
@@ -238,20 +242,36 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
 }
 
 /**
- * Quien llega invitado al equipo de una institución acepta los términos antes de sumarse (no pasa por el paso donde las
- * instituciones los aceptan). Deja la constancia y, recién ahí, activa la invitación y entra al inicio de la institución.
+ * La persona **acepta** la invitación al equipo (paso 2 del alta, con un toque). Una invitación nunca se activa sola. Los términos casi
+ * siempre ya se aceptaron al registrarse; si la cuenta no tiene constancia (cuentas anteriores), se piden acá y se deja la constancia.
  */
 export async function unirseAlEquipo(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
   const usuario = await usuarioParaAlta("institucion");
-  if (formData.get("aceptaTerminos") !== "on") {
-    return conError(formData, "Revisá los campos marcados.", { aceptaTerminos: "Tenés que aceptar los términos y condiciones" });
+  let terminosAceptadosEn = usuario.terminosAceptadosEn;
+  if (!terminosAceptadosEn) {
+    if (formData.get("aceptaTerminos") !== "on") {
+      return conError(formData, "Revisá los campos marcados.", { aceptaTerminos: "Tenés que aceptar los términos y condiciones" });
+    }
+    await registrarAceptacionDeTerminos(usuario.id);
+    terminosAceptadosEn = new Date();
   }
-  await registrarAceptacionDeTerminos(usuario.id);
-  const unida = await institucionComoMiembro({ ...usuario, terminosAceptadosEn: new Date() }, (await datosDeSesion())?.nombre);
+  const unida = await sumarseAlEquipo({ ...usuario, terminosAceptadosEn }, (await datosDeSesion())?.nombre);
   if (!unida) return conError(formData, "Esa invitación ya no está disponible. Pedile a quien te invitó que te mande otra.");
 
   revalidatePath("/institucion", "layout");
   redirect(RUTA_INICIO.institucion);
+}
+
+/**
+ * La persona **rechaza** la invitación que se le muestra: se borra y se le avisa al equipo que invitó. Después vuelve al paso 2, que
+ * muestra la siguiente invitación vigente (si hay otra) o el formulario para crear su propia institución.
+ */
+export async function rechazarInvitacionAlEquipo(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
+  const usuario = await usuarioParaAlta("institucion");
+  const hecho = await rechazarInvitacion(usuario);
+  if (!hecho) return conError(formData, "Esa invitación ya no está disponible.");
+  revalidatePath("/institucion", "layout");
+  redirect("/onboarding/institucion/2");
 }
 
 /** Paso 3 de la institución: descripción, logo y portada (todo opcional). Al terminar entra al dashboard. */

@@ -142,6 +142,8 @@ export async function marcarExamenPreocupacional(postulacionId: string, realizad
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda } = fila;
     if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
+    // Tildar que hizo el examen en un perfil suspendido no; destildarlo sí (deshacer un error es siempre posible).
+    if (fila.docente.suspendido && realizado) return fallo(PERFIL_SUSPENDIDO);
     if (postulacion.etapa !== "examen_preocupacional") return fallo("Primero pasá a la persona a «Examen preocupacional».");
     if (realizado === !!postulacion.examenPreocupacionalEn) return ok();
 
@@ -172,6 +174,8 @@ export async function agregarArchivoExamen(postulacionId: string, path: string, 
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion } = fila;
+    // Un estudio médico es un dato de salud: no se suma a la ficha de un perfil suspendido (quitarlo sí se puede siempre).
+    if (fila.docente.suspendido) return fallo(PERFIL_SUSPENDIDO);
     if (!puedeAdjuntarAlExamen(postulacion.etapa)) return fallo(SOLO_EN_EL_EXAMEN);
 
     const suma = sumarArchivoDeExamen(archivosDeExamen(postulacion.examenPreocupacionalArchivos), {

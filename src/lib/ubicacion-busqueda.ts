@@ -92,6 +92,9 @@ async function consultarOsm(consulta: string, fetchImpl: typeof fetch, esperar?:
 /** A menos de ~150 m es el mismo lugar. */
 const mismoLugar = (a: Ubicacion, b: Ubicacion) => Math.abs(a.lat - b.lat) < 0.0014 && Math.abs(a.lng - b.lng) < 0.0014;
 
+/** Cuántas pistas de lugar se prueban contra Georef como mucho por búsqueda (más de 3 no es una dirección: es abuso o un error). */
+const MAX_PISTAS_PARA_CONSULTAR = 3;
+
 export async function buscarUbicacionesEn(pedido: PedidoDeUbicacion, deps: DependenciasDeBusqueda = {}): Promise<Ubicacion[]> {
   const fetchImpl = deps.fetchImpl ?? fetch;
   const texto = pedido.texto.trim();
@@ -116,7 +119,9 @@ export async function buscarUbicacionesEn(pedido: PedidoDeUbicacion, deps: Depen
     if (provincia) agregar({ provincia, departamento: partido });
     agregar({ departamento: partido });
   }
-  for (const pista of pistas) {
+  // Solo las primeras pistas se prueban como partido: cada una es una consulta a Georef, y un texto con decenas de comas no puede
+  // convertirse en decenas de pedidos seguidos. (Todas las pistas siguen sirviendo para decidir si un resultado coincide.)
+  for (const pista of pistas.slice(0, MAX_PISTAS_PARA_CONSULTAR)) {
     if (esCaba(pista)) agregar({ provincia: NOMBRE_OFICIAL_CABA });
     else agregar({ departamento: alias.get(normalizarTexto(pista)) ?? pista });
   }

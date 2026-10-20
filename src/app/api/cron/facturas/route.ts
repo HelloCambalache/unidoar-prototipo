@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { resumenDeError } from "@/lib/errores";
 
 // Se evalúa en cada pedido: crea facturas, no es algo cacheable.
 export const dynamic = "force-dynamic";
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       { headers: SIN_CACHE },
     );
   } catch (e) {
-    console.error("No se pudieron generar las facturas del período", e);
+    console.error("No se pudieron generar las facturas del período", resumenDeError(e));
     return NextResponse.json({ error: "No se pudieron generar las facturas" }, { status: 500, headers: SIN_CACHE });
   }
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, ne } from "drizzle-orm";
+import { and, count, eq, gt, ne } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { busquedas, docentes, favoritos, postulaciones } from "@/db/schema";
@@ -10,6 +10,8 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { correoDeInvitacion } from "@/lib/correo/eventos";
 import { notificar } from "@/lib/queries/notificaciones";
 import { docenteVisible } from "@/lib/visibilidad";
+import { resumenDeError } from "@/lib/errores";
+import { motivoDeTopeDeInvitaciones } from "@/lib/invitaciones";
 
 const idsInvitacion = z.object({
   docenteId: z.guid({ error: "Perfil inválido" }),
@@ -49,6 +51,21 @@ export async function invitarDocente(docenteId: string, busquedaId: string): Pro
     .limit(1);
   if (!busqueda) return fallo("No encontramos esa búsqueda.");
   if (busqueda.estado !== "activa") return fallo("Solo podés invitar a búsquedas activas.");
+
+  // Tope diario por institución (cuenta en la base, no en la memoria de una instancia): ver `MAX_INVITACIONES_A_PROFESIONALES_POR_DIA`.
+  const [{ n: invitadasHoy }] = await db
+    .select({ n: count() })
+    .from(postulaciones)
+    .innerJoin(busquedas, eq(busquedas.id, postulaciones.busquedaId))
+    .where(
+      and(
+        eq(busquedas.institucionId, institucion.id),
+        eq(postulaciones.origen, "invitacion"),
+        gt(postulaciones.creadoEn, new Date(Date.now() - 24 * 3_600_000)),
+      ),
+    );
+  const tope = motivoDeTopeDeInvitaciones(invitadasHoy);
+  if (tope) return fallo(tope);
   if (busqueda.rapida && busqueda.venceEn && busqueda.venceEn < new Date())
     return fallo("Esa búsqueda rápida ya venció.");
 
@@ -95,7 +112,7 @@ export async function invitarDocente(docenteId: string, busquedaId: string): Pro
     });
     await correoDeInvitacion(db, { usuarioId: docente.usuarioId, institucion: institucion.nombre, puesto: busqueda.puesto, busquedaId: busqueda.id });
   } catch (error) {
-    console.error("No se pudo avisar la invitación al profesional", error);
+    console.error("No se pudo avisar la invitación al profesional", resumenDeError(error));
   }
 
   refrescarProfesionales();

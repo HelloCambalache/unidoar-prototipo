@@ -23,6 +23,7 @@ import { avisoDeRespuesta, MAX_MENSAJE_RESPUESTA, motivoParaNoResponder, type Re
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
+import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
 
 /** Pantallas del docente que listan o cuentan postulaciones / ofertas. */
 function revalidarPostulaciones(busquedaId?: string) {
@@ -60,6 +61,7 @@ export async function postular(
   mensaje?: string,
 ): Promise<Resultado<{ postulacionId: string }>> {
   const { docente } = await requerirDocente();
+  if (!puedePostularse(docente.verificacion)) return fallo(PERFIL_RECHAZADO);
   if (!esId(busquedaId)) return fallo("La búsqueda no existe.");
   const datos = parsear(postulacionMensajeSchema, { mensaje });
   if (!datos.ok) return fallo(datos.campos?.mensaje ?? datos.error, datos.campos);

@@ -79,6 +79,8 @@ export function VitrinaFormulario({
   institucionIdAdmin?: string;
 }) {
   const admin = Boolean(institucionIdAdmin);
+  // Con la institución verificada, el equipo ya revisó el nombre y el tipo: quien edita su propio perfil los ve fijos (solo el equipo los cambia).
+  const congelada = verificada && !admin;
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [d, setD] = useState(inicial);
@@ -252,6 +254,7 @@ export function VitrinaFormulario({
                   aria-invalid={Boolean(errores.nombre)}
                   value={d.nombre}
                   onChange={(e) => set("nombre", e.target.value)}
+                  readOnly={congelada}
                   maxLength={120}
                   className={cn(EN_LINEA, "min-w-[200px] flex-1 text-[22px] leading-[1.2] font-semibold max-[860px]:text-lg")}
                 />
@@ -262,6 +265,15 @@ export function VitrinaFormulario({
                 )}
               </div>
               <MensajeError>{errores.nombre}</MensajeError>
+              {congelada && (
+                <p className="m-0 mt-1 text-xs leading-snug text-sutil">
+                  El nombre y el tipo ya los revisó el equipo de UNIDOAR junto con el CUIT. Para cambiarlos,{" "}
+                  <Link href="/contacto" className="font-semibold text-navy-700 hover:underline">
+                    escribinos
+                  </Link>
+                  .
+                </p>
+              )}
               <div className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1">
                 <div className="min-w-[160px] flex-1">
                   <Select
@@ -269,6 +281,7 @@ export function VitrinaFormulario({
                     aria-invalid={Boolean(errores.tipo)}
                     value={tipoElegido.opcion}
                     onChange={(e) => set("tipo", e.target.value)}
+                    disabled={congelada}
                     className="rounded-md border-transparent bg-transparent px-1.5 py-0.5 pr-8 text-[13px] text-apagado hover:border-borde"
                   >
                     {TIPOS_INSTITUCION.map((t) => (
@@ -283,6 +296,7 @@ export function VitrinaFormulario({
                       aria-invalid={Boolean(errores.tipo)}
                       value={tipoElegido.texto}
                       onChange={(e) => set("tipo", valorAlEscribirOtro(e.target.value))}
+                      readOnly={congelada}
                       maxLength={60}
                       placeholder="¿Cuál? Ej. Academia de danza"
                       className="mt-1 py-1.5 text-[13px]"

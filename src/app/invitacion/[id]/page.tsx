@@ -9,27 +9,32 @@ import { Boton, BotonLink } from "@/components/ui/button";
 import { PRIMER_PASO_PROTEGIDO } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
-import { infoDeRol } from "@/lib/equipo";
+import { DIAS_DE_VIGENCIA_DE_INVITACION, infoDeRol } from "@/lib/equipo";
 import { invitacionPendiente } from "@/lib/queries/equipo";
 
 export const metadata: Metadata = { title: "Invitación al equipo" };
 
 /**
  * Enlace del mail de una invitación al equipo de una institución (`/invitacion/<id>`). Lleva a la persona directo a esa
- * institución: sin elegir "Soy institución" y con el email de la invitación ya puesto. Al confirmar el mail entra al equipo
- * (el paso 2 del alta la une, ver `institucionComoMiembro`); quien ya tiene cuenta con ese email solo ingresa.
+ * institución: sin elegir "Soy institución" y con el email de la invitación ya puesto. Al confirmar el mail, el paso 2 del alta le
+ * muestra la invitación para aceptarla o rechazarla (`sumarseAlEquipo`: nunca se activa sola); quien ya tiene cuenta con ese email solo
+ * ingresa. Una invitación vale `DIAS_DE_VIGENCIA_DE_INVITACION` días.
  */
 export default async function PaginaInvitacion({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const invitacion = esUuid(id) ? await invitacionPendiente(id) : null;
   const sesion = await sesionActual();
 
-  if (!invitacion) {
+  if (!invitacion || invitacion.vencida) {
     return (
       <MarcoAcceso>
         <TituloPaso
-          titulo="Esta invitación ya no está disponible"
-          bajada="Puede que ya la hayas aceptado o que la institución la haya cancelado. Si ya tenés cuenta, ingresá. Si no, pedile a quien te invitó que te mande otra."
+          titulo={invitacion ? "Esta invitación venció" : "Esta invitación ya no está disponible"}
+          bajada={
+            invitacion
+              ? `Pasaron más de ${DIAS_DE_VIGENCIA_DE_INVITACION} días desde que te invitaron. Pedile a quien te invitó que te mande otra. Si ya tenés cuenta, ingresá.`
+              : "Puede que ya la hayas aceptado, que la hayas rechazado o que la institución la haya cancelado. Si ya tenés cuenta, ingresá. Si no, pedile a quien te invitó que te mande otra."
+          }
         />
         <BotonLink href={sesion ? "/inicio" : "/ingresar"} variante="primario" bloque className="min-h-12 text-base">
           {sesion ? "Ir a mi cuenta" : "Ingresá"}
@@ -41,7 +46,7 @@ export default async function PaginaInvitacion({ params }: { params: Promise<{ i
   const nombre = invitacion.institucion.nombre;
 
   if (sesion) {
-    // Con la sesión del email invitado alcanza: el paso 2 del alta lo une al equipo y lo manda al inicio.
+    // Con la sesión del email invitado alcanza: el paso 2 del alta le muestra la invitación para aceptarla o rechazarla.
     if (sesion.email?.toLowerCase() === invitacion.email.toLowerCase()) redirect(PRIMER_PASO_PROTEGIDO.institucion);
     return (
       <MarcoAcceso titulo={`Sumate al equipo de ${nombre}`}>

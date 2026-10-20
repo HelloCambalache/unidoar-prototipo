@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cursoSchema, valoresDeCurso } from "./cursos";
+import { cursoSchema, esEnlaceWeb, valoresDeCurso } from "./cursos";
 
 const base = { titulo: "Primeros auxilios", modalidad: "Online", certifica: "on" };
 
@@ -36,5 +36,21 @@ describe("contraseña de la sala de un curso online", () => {
   it("tiene un tope de largo", () => {
     const r = cursoSchema.safeParse({ ...base, link: "https://zoom.us/j/1", linkClave: "x".repeat(101) });
     assert.equal(r.success, false);
+  });
+});
+
+describe("enlaces que se muestran", () => {
+  it("solo http y https llegan a un enlace", () => {
+    assert.equal(esEnlaceWeb("https://meet.google.com/abc-defg-hij"), true);
+    assert.equal(esEnlaceWeb("http://sala.ejemplo.com/x"), true);
+    assert.equal(esEnlaceWeb(" HTTPS://sala.ejemplo.com "), true);
+  });
+
+  it("lo demás se muestra como texto, nunca como link", () => {
+    for (const malo of ["javascript:alert(1)", "data:text/html,<script>1</script>", "mailto:a@b.c", "ftp://x.y", "//otro.com", "meet.google.com/abc", "", "   "]) {
+      assert.equal(esEnlaceWeb(malo), false, malo);
+    }
+    assert.equal(esEnlaceWeb(null), false);
+    assert.equal(esEnlaceWeb(undefined), false);
   });
 });

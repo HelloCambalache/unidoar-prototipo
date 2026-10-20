@@ -17,7 +17,6 @@ import {
 import { RUTA_INICIO } from "@/lib/catalogo";
 import { rutaPasoPendienteDocente } from "@/lib/onboarding";
 import { sincronizarEmailDeCuenta } from "@/lib/queries/email-cuenta";
-import { institucionComoMiembro } from "@/lib/queries/equipo";
 import { datosDeSesion } from "@/lib/sesion";
 import { COOKIE_TERMINOS, EDAD_MAXIMA_COOKIE_MS, decodificarAceptacion } from "@/lib/terminos";
 import { crearClienteServidor } from "@/lib/supabase/server";
@@ -115,9 +114,8 @@ export const institucionActual = cache(async (): Promise<Institucion | null> => 
     .innerJoin(instituciones, eq(instituciones.id, institucionMiembros.institucionId))
     .where(and(eq(institucionMiembros.usuarioId, usuario.id), eq(institucionMiembros.estado, "activo")))
     .limit(1);
-  if (membresia) return membresia.institucion;
-  // Sin institución propia ni membresía: si la invitaron con este mismo email, se une ahora.
-  return institucionComoMiembro(usuario, (await datosDeSesion())?.nombre);
+  // Una invitación pendiente no suma a nadie sola: la persona la acepta (o la rechaza) en el paso 2 del alta.
+  return membresia?.institucion ?? null;
 });
 
 /** Perfil de docente de la sesión. */

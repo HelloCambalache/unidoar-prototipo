@@ -22,6 +22,7 @@ import {
   usoDeAsignatura,
   type UsoAsignatura,
 } from "@/lib/queries/backoffice-categorias";
+import { resumenDeError } from "@/lib/errores";
 
 /*
  * ABM del catálogo de asignaturas. Cada acción exige rol admin, relee las filas dentro de la transacción y deja
@@ -96,7 +97,7 @@ export async function agregarAsignatura(entrada: AsignaturaNueva): Promise<Resul
     return resultado;
   } catch (e) {
     if (esUnica(e)) return fallo(REPETIDA, { nombre: "Ya existe en esta categoría" });
-    console.error("No se pudo agregar la asignatura", e);
+    console.error("No se pudo agregar la asignatura", resumenDeError(e));
     return fallo("No pudimos agregar la asignatura. Probá de nuevo.");
   }
 }
@@ -141,7 +142,7 @@ export async function renombrarAsignatura(id: string, nombre: string): Promise<R
     return resultado;
   } catch (e) {
     if (esUnica(e)) return fallo(REPETIDA);
-    console.error("No se pudo renombrar la asignatura", e);
+    console.error("No se pudo renombrar la asignatura", resumenDeError(e));
     return fallo("No pudimos renombrar la asignatura. Probá de nuevo.");
   }
 }

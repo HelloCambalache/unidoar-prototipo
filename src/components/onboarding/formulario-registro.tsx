@@ -19,7 +19,7 @@ import type { RolAlta } from "@/lib/onboarding";
  * Google se ofrece solo si está activado en Supabase (`conGoogle`).
  *
  * Con `invitacion` (el enlace del mail de una invitación al equipo) el email viene puesto y no se puede cambiar: quien
- * se registra con ese email queda directo en esa institución (ver `institucionComoMiembro`).
+ * se registra con ese email ve la invitación en el paso 2 y la acepta con un toque (ver `sumarseAlEquipo`).
  */
 export function FormularioRegistro({
   rol,
@@ -59,7 +59,7 @@ export function FormularioRegistro({
           invitacion ? (
             <>
               Te invitaron a sumarte al equipo de <b className="font-semibold text-tinta">{invitacion.institucion}</b> como{" "}
-              {invitacion.rol}. Creá tu acceso con este email y entrás directo.
+              {invitacion.rol}. Creá tu acceso con este email y, al terminar, aceptás la invitación.
             </>
           ) : esDocente ? (
             "Es gratis y tardás 2 minutos."

@@ -247,3 +247,16 @@ export function cambiosDeVitrina(antes: VitrinaAntes, d: DatosVitrina): string[]
   if (novedades(antes.novedades) !== novedades(d.novedades)) cambios.push("novedades");
   return cambios;
 }
+
+/**
+ * Una institución verificada tiene el nombre y el tipo congelados para quien edita su propio perfil: el equipo los revisó junto con el CUIT
+ * y el sello de verificada depende de eso (si no, una institución verificada podía pasar a llamarse como otra y conservar el sello). Solo
+ * el equipo los cambia, desde el backoffice. Devuelve cuáles de los dos campos se quieren cambiar (ignora espacios de más).
+ */
+export function identidadCambiada(actual: { nombre: string; tipo: string }, nuevo: { nombre: string; tipo: string }): ("nombre" | "tipo")[] {
+  const igual = (a: string, b: string) => a.trim().replace(/\s+/g, " ") === b.trim().replace(/\s+/g, " ");
+  const cambios: ("nombre" | "tipo")[] = [];
+  if (!igual(actual.nombre, nuevo.nombre)) cambios.push("nombre");
+  if (!igual(actual.tipo, nuevo.tipo)) cambios.push("tipo");
+  return cambios;
+}
