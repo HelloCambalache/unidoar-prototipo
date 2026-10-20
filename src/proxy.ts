@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
-import { cabeceraDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
+import { cabecerasDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
 
 /**
  * Pantallas con cuenta. El rol (docente / institución / admin) se valida en cada
@@ -20,7 +20,7 @@ const REGISTRO = /^\/onboarding\/(docente|institucion)\/1\/?$/;
 function politicaDelPedido(pathname: string, supabase: string | undefined) {
   if (process.env.NODE_ENV !== "production" || pathname.startsWith("/api/")) return null;
   const nonce = nuevoNonce();
-  return { nonce, cabecera: cabeceraDeCsp(modoDeCsp()), valor: politicaDeContenido(nonce, { supabaseUrl: supabase }) };
+  return { nonce, ...cabecerasDeCsp(modoDeCsp(), politicaDeContenido(nonce, { supabaseUrl: supabase })) };
 }
 
 export async function proxy(request: NextRequest) {
@@ -34,11 +34,14 @@ export async function proxy(request: NextRequest) {
   // la de la respuesta. Se arma de nuevo cada vez que cambian las cookies, así el pedido lleva las cookies ya renovadas.
   const seguir = () => {
     if (!csp) return NextResponse.next({ request });
+    // Ninguna política que venga en el pedido: Next saca el nonce de la primera que encuentra (ver src/lib/csp.ts).
     const cabeceras = new Headers(request.headers);
+    cabeceras.delete("content-security-policy");
+    cabeceras.delete("content-security-policy-report-only");
     cabeceras.set("x-nonce", csp.nonce);
-    cabeceras.set(csp.cabecera, csp.valor);
+    for (const [nombre, valor] of csp.delPedido) cabeceras.set(nombre, valor);
     const r = NextResponse.next({ request: { headers: cabeceras } });
-    r.headers.set(csp.cabecera, csp.valor);
+    for (const [nombre, valor] of csp.deLaRespuesta) r.headers.set(nombre, valor);
     return r;
   };
   let response = seguir();

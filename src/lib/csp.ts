@@ -28,8 +28,31 @@ type Entorno = Record<string, string | undefined>;
 /** "aplicar" solo si la variable lo dice exactamente: ante cualquier otra cosa, no se bloquea nada. */
 export const modoDeCsp = (env: Entorno = process.env): ModoDeCsp => (env.CSP_MODO === "aplicar" ? "aplicar" : "solo-avisar");
 
-/** El nombre de la cabecera según el modo. */
-export const cabeceraDeCsp = (modo: ModoDeCsp) => (modo === "aplicar" ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only");
+type Par = [nombre: string, valor: string];
+
+/**
+ * Las cabeceras de una página según el modo. `delPedido` es lo que lee Next para poner el nonce en sus scripts; `deLaRespuesta` es lo que
+ * ve el navegador.
+ *
+ * **Nunca puede haber una `Content-Security-Policy` sin nonce en el modo "solo-avisar".** Next copia al PEDIDO las cabeceras que devuelve
+ * el proxy y saca el nonce de la primera que encuentra: `content-security-policy` antes que `-report-only`. Una cabecera fija (la que estaba en
+ * next.config.ts, o una puesta desde el proxy) tapa a la del nonce y los scripts salen sin él: se vio en producción el 2026-10-20 con la de
+ * next.config.ts (en local andaba, porque ahí las de la configuración no llegan al pedido; una puesta desde el proxy sí lo tapaba). Por eso, mientras la política solo
+ * avisa, `frame-ancestors` queda cubierto por `X-Frame-Options: DENY` (next.config.ts) y `base-uri` / `object-src` solo se avisan; en el modo
+ * "aplicar" van adentro de la única política (`frame-ancestors` no se acepta en una que solo avisa).
+ */
+export function cabecerasDeCsp(modo: ModoDeCsp, politica: string): { delPedido: Par[]; deLaRespuesta: Par[] } {
+  if (modo === "aplicar") {
+    return {
+      delPedido: [["content-security-policy", politica]],
+      deLaRespuesta: [["Content-Security-Policy", `${politica}; frame-ancestors 'none'`]],
+    };
+  }
+  return {
+    delPedido: [["content-security-policy-report-only", politica]],
+    deLaRespuesta: [["Content-Security-Policy-Report-Only", politica]],
+  };
+}
 
 /** Un valor al azar nuevo para cada pedido (base64 de un UUID, como en la guía de Next). */
 export const nuevoNonce = () => Buffer.from(crypto.randomUUID()).toString("base64");

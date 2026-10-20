@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cabeceraDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
+import { cabecerasDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
 
 const SUPABASE = "https://abcdefgh.supabase.co";
 
@@ -52,9 +52,45 @@ describe("modo de la política", () => {
     assert.equal(modoDeCsp({ CSP_MODO: "aplicar" }), "aplicar");
   });
 
-  it("la cabecera depende del modo", () => {
-    assert.equal(cabeceraDeCsp("solo-avisar"), "Content-Security-Policy-Report-Only");
-    assert.equal(cabeceraDeCsp("aplicar"), "Content-Security-Policy");
+});
+
+describe("cabeceras de cada modo", () => {
+  const politica = politicaDeContenido("N1", { supabaseUrl: SUPABASE });
+
+  it("solo avisar: la política va solo como \"avisar\", en el pedido y en la respuesta", () => {
+    const { delPedido, deLaRespuesta } = cabecerasDeCsp("solo-avisar", politica);
+    assert.deepEqual(delPedido, [["content-security-policy-report-only", politica]]);
+    assert.deepEqual(deLaRespuesta, [["Content-Security-Policy-Report-Only", politica]]);
+  });
+
+  it("solo avisar: ninguna cabecera Content-Security-Policy que bloquee (taparía al nonce: Next la lee primero)", () => {
+    const { delPedido, deLaRespuesta } = cabecerasDeCsp("solo-avisar", politica);
+    for (const [nombre] of [...delPedido, ...deLaRespuesta]) {
+      assert.notEqual(nombre.toLowerCase(), "content-security-policy", nombre);
+    }
+  });
+
+  it("aplicar: el pedido lleva la política completa y la respuesta una sola, con lo fijo adentro", () => {
+    const { delPedido, deLaRespuesta } = cabecerasDeCsp("aplicar", politica);
+    assert.deepEqual(delPedido, [["content-security-policy", politica]]);
+    assert.equal(deLaRespuesta.length, 1);
+    assert.equal(deLaRespuesta[0][0], "Content-Security-Policy");
+    assert.ok(deLaRespuesta[0][1].startsWith(politica));
+    assert.match(deLaRespuesta[0][1], /frame-ancestors 'none'$/);
+  });
+
+  it("al pedido le llega una sola política, la del nonce, en los dos modos", () => {
+    for (const modo of ["solo-avisar", "aplicar"] as const) {
+      const { delPedido } = cabecerasDeCsp(modo, politica);
+      assert.equal(delPedido.length, 1, modo);
+      assert.equal(delPedido[0][1], politica, modo);
+      assert.match(delPedido[0][1], /script-src [^;]*'nonce-N1'/, modo);
+    }
+  });
+
+  it("aplicar cubre también marcos, <base> y plugins", () => {
+    const [[, valor]] = cabecerasDeCsp("aplicar", politica).deLaRespuesta;
+    for (const d of ["frame-ancestors 'none'", "base-uri 'self'", "object-src 'none'"]) assert.ok(valor.includes(d), d);
   });
 });
 

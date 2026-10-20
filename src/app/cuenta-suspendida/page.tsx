@@ -4,6 +4,9 @@ import { BotonLink } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Cuenta suspendida" };
 
+// Dinámica a propósito: una página generada en el build no puede llevar el nonce de la política de contenido (ver src/lib/csp.ts).
+export const dynamic = "force-dynamic";
+
 export default function PaginaCuentaSuspendida() {
   return (
     <main className="mx-auto flex min-h-screen max-w-[520px] flex-col justify-center px-6 py-16">
