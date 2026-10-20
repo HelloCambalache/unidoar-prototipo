@@ -8,13 +8,15 @@ export const RUTA_REGISTRO_INSTITUCION = "/onboarding/institucion/1";
 export const RUTA_REGISTRO_DOCENTE = "/onboarding/docente/1";
 
 /**
- * Datos de contacto que muestra /contacto. El WhatsApp es `null` hasta tener el número real: así no se muestra uno de ejemplo
- * (poner el número acá y la tarjeta aparece sola). El email tiene que ser un buzón que alguien lea.
+ * Datos de contacto reales de UNIDOAR (cargados el 2026-10-20 por pedido de la titular). Es la ÚNICA fuente: /contacto los muestra, y el
+ * email también es a donde llegan las respuestas a los mails automáticos (`remitenteDe`, src/lib/correo/config.ts) y el contacto que
+ * se declara a OpenStreetMap (src/lib/ubicacion-busqueda.ts). El email tiene que ser un buzón que alguien lea. El WhatsApp se escribe
+ * como se dice en Argentina ("11 5473-5876"); el enlace wa.me sale de `enlaceWhatsapp`. Con `null` la tarjeta de WhatsApp no aparece.
  */
 export const CONTACTO_SITIO: { email: string; whatsapp: string | null; horario: string } = {
-  email: "hola@unidoar.com.ar",
-  whatsapp: null,
-  horario: "Lunes a viernes, 9 a 18 hs",
+  email: "unidoar@gmail.com",
+  whatsapp: "11 5473-5876",
+  horario: "Lunes a viernes, 9 a 21 hs · Sábados, 10 a 13 hs",
 };
 
 /** Valor de `testimonios.pagina` de cada categoría. */

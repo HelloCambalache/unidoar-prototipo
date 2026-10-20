@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { firmaDeBaja, firmaDeBajaValida, rutaDeBaja } from "./baja";
+import { CONTACTO_SITIO } from "@/lib/publico";
 import { destinatariosDelEquipo, modoCorreo, origenDeLosMails, remitenteDe } from "./config";
 
 const USUARIO = "3f2b8c1e-5d4a-4c7b-9e0a-1b2c3d4e5f60";
@@ -21,8 +22,12 @@ describe("configuración de los mails", () => {
 
   it("remitentes con valores por defecto y configurables", () => {
     assert.equal(remitenteDe("app", {}).de, "UNIDOAR <no-responder@unidoar.com.ar>");
-    assert.equal(remitenteDe("app", {}).responderA, "hola@unidoar.com.ar");
-    assert.equal(remitenteDe("facturacion", {}).responderA, "facturacion@unidoar.com.ar");
+    // Mientras no haya buzones propios, las respuestas van al mail de contacto del sitio (un buzón que alguien lee).
+    assert.equal(remitenteDe("app", {}).responderA, CONTACTO_SITIO.email);
+    assert.equal(remitenteDe("facturacion", {}).responderA, CONTACTO_SITIO.email);
+    assert.equal(remitenteDe("facturacion", {}).de, "UNIDOAR Facturación <facturacion@unidoar.com.ar>");
+    assert.equal(remitenteDe("app", { CORREO_RESPONDER_A: "x@otro.com" }).responderA, "x@otro.com");
+    assert.equal(remitenteDe("facturacion", { CORREO_RESPONDER_A_FACTURACION: "y@otro.com" }).responderA, "y@otro.com");
     assert.equal(remitenteDe("app", { CORREO_DE: "UNIDOAR <hola@otro.com>", CORREO_RESPONDER_A: "x@otro.com" }).de, "UNIDOAR <hola@otro.com>");
   });
 

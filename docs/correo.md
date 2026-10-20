@@ -41,9 +41,9 @@ Todas son opcionales: **sin `RESEND_API_KEY` el envío está apagado** (no se ma
 | `RESEND_API_KEY` | Clave de Resend (solo permiso de envío). Enciende el modo `resend` | — |
 | `CORREO_MODO` | `consola` (imprime en el log en vez de enviar, para probar) o `apagado` | `resend` si hay clave |
 | `CORREO_DE` | Remitente de los mails automáticos | `UNIDOAR <no-responder@unidoar.com.ar>` |
-| `CORREO_RESPONDER_A` | A dónde llegan las respuestas | `hola@unidoar.com.ar` |
+| `CORREO_RESPONDER_A` | A dónde llegan las respuestas | el mail de contacto del sitio (`CONTACTO_SITIO.email`, hoy `unidoar@gmail.com`) |
 | `CORREO_DE_FACTURACION` | Remitente de los mails de facturación y plan | `UNIDOAR Facturación <facturacion@unidoar.com.ar>` |
-| `CORREO_RESPONDER_A_FACTURACION` | Respuestas de facturación | `facturacion@unidoar.com.ar` |
+| `CORREO_RESPONDER_A_FACTURACION` | Respuestas de facturación | el mismo mail de contacto (todavía no hay un buzón de facturación) |
 | `CORREO_EQUIPO` | Destinatarios de los avisos internos (coma o espacio) | los emails de las cuentas admin |
 | `CORREO_SECRETO` | Clave para firmar los enlaces de baja de avisos | la clave de servicio de Supabase |
 | `NEXT_PUBLIC_SITE_URL` | Origen de los enlaces de los mails | el dominio de producción de Vercel |

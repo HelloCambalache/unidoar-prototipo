@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono } from "@/components/icons";
 import { FormularioContacto } from "@/components/publico/formulario-contacto";
+import { enlaceWhatsapp } from "@/lib/pipeline";
 import { CONTACTO_SITIO } from "@/lib/publico";
 
 export const metadata: Metadata = {
@@ -59,7 +60,14 @@ export default function Contacto() {
                 <Icono nombre="whatsapp" tamano={20} trazo={1.8} />
               }
             >
-              {CONTACTO_SITIO.whatsapp}
+              <a
+                href={enlaceWhatsapp(CONTACTO_SITIO.whatsapp) ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-naranja"
+              >
+                {CONTACTO_SITIO.whatsapp}
+              </a>
             </DatoDeContacto>
           )}
           <DatoDeContacto titulo="Horario de atención" icono={<Icono nombre="reloj" tamano={20} trazo={1.8} />}>

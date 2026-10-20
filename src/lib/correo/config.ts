@@ -5,13 +5,15 @@
  *   RESEND_API_KEY                  clave de Resend. Sin ella (y sin CORREO_MODO) la app no manda ni anota ningún mail.
  *   CORREO_MODO                     "consola" (solo imprime, para probar) | "apagado". Por defecto: resend si hay clave.
  *   CORREO_DE                       remitente de los mails automáticos. Por defecto "UNIDOAR <no-responder@unidoar.com.ar>".
- *   CORREO_RESPONDER_A              a dónde llegan las respuestas. Por defecto hola@unidoar.com.ar.
+ *   CORREO_RESPONDER_A              a dónde llegan las respuestas. Por defecto el mail de contacto del sitio (CONTACTO_SITIO.email).
  *   CORREO_DE_FACTURACION           remitente de los mails de facturación. Por defecto "UNIDOAR Facturación <facturacion@…>".
- *   CORREO_RESPONDER_A_FACTURACION  respuestas de facturación. Por defecto facturacion@unidoar.com.ar.
+ *   CORREO_RESPONDER_A_FACTURACION  respuestas de facturación. Por defecto el mismo mail de contacto (todavía no hay un buzón de facturación).
  *   CORREO_EQUIPO                   destinatarios de los avisos internos (separados por coma). Sin esto, los admins.
  *   CORREO_SECRETO                  clave para firmar los enlaces de baja de avisos. Por defecto, la clave de servicio de Supabase.
  *   NEXT_PUBLIC_SITE_URL            origen de los enlaces de los mails (cuando cambie el dominio, cambiar esto y redeployar).
  */
+
+import { CONTACTO_SITIO } from "@/lib/publico";
 
 export type ModoCorreo = "resend" | "consola" | "apagado";
 export type Remitente = "app" | "facturacion";
@@ -36,12 +38,12 @@ export function remitenteDe(tipo: Remitente, env: Entorno = process.env): { de: 
   if (tipo === "facturacion") {
     return {
       de: valor(env, "CORREO_DE_FACTURACION") ?? "UNIDOAR Facturación <facturacion@unidoar.com.ar>",
-      responderA: valor(env, "CORREO_RESPONDER_A_FACTURACION") ?? "facturacion@unidoar.com.ar",
+      responderA: valor(env, "CORREO_RESPONDER_A_FACTURACION") ?? CONTACTO_SITIO.email,
     };
   }
   return {
     de: valor(env, "CORREO_DE") ?? "UNIDOAR <no-responder@unidoar.com.ar>",
-    responderA: valor(env, "CORREO_RESPONDER_A") ?? "hola@unidoar.com.ar",
+    responderA: valor(env, "CORREO_RESPONDER_A") ?? CONTACTO_SITIO.email,
   };
 }
 

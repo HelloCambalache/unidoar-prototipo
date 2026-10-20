@@ -89,7 +89,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 
 ## 5. Facturación y plan (institución)
 
-Van desde `facturacion@unidoar.com.ar`, con ese mismo correo como respuesta. No se pueden desactivar.
+Van desde `facturacion@unidoar.com.ar` (solo envía) y las respuestas llegan al mail de contacto del sitio (`CONTACTO_SITIO.email`, hoy `unidoar@gmail.com`) hasta que haya un buzón de facturación. No se pueden desactivar.
 
 | ID | Mail | Cuándo | Para | Hoy | Prioridad |
 |---|---|---|---|---|---|
@@ -132,9 +132,9 @@ M65 reemplaza a la mayoría de los avisos sueltos cuando haya volumen: pendiente
 
 | Dirección | Para qué | Notas |
 |---|---|---|
-| `no-responder@unidoar.com.ar` | Todos los mails automáticos de cuenta y contratación | Solo envía. Siempre con `Reply-To: hola@unidoar.com.ar` para que una respuesta no se pierda |
-| `hola@unidoar.com.ar` | Contacto del sitio y respuestas | Recibe: con Cloudflare Email Routing se reenvía gratis a tu Gmail. Es la que va en el sitio público |
-| `facturacion@unidoar.com.ar` | Mails de la sección 5 y consultas de cobro | Recibe, igual que `hola@` |
+| `no-responder@unidoar.com.ar` | Todos los mails automáticos de cuenta y contratación | Solo envía. Siempre con `Reply-To` al mail de contacto (hoy `unidoar@gmail.com`) para que una respuesta no se pierda |
+| `unidoar@gmail.com` | Contacto del sitio (`/contacto`) y respuestas a todos los mails | **Es el buzón real hoy** (lo cargó la titular el 2026-10-20). Si algún día hay `hola@unidoar.com.ar` con reenvío, se cambia en `CONTACTO_SITIO` (`src/lib/publico.ts`) y listo |
+| `facturacion@unidoar.com.ar` | Remitente de los mails de la sección 5 | Solo envía por ahora: las respuestas van al mail de contacto. Si se arma un buzón, se carga `CORREO_RESPONDER_A_FACTURACION` en Vercel |
 | `equipo@unidoar.com.ar` | Destino de los avisos internos (sección 6) | Alias que reenvía a las personas del equipo, así no depende de una sola |
 
 El nombre visible es siempre "UNIDOAR" (o "UNIDOAR Facturación").
@@ -153,5 +153,5 @@ El nombre visible es siempre "UNIDOAR" (o "UNIDOAR Facturación").
 
 - **M28, archivar a un postulante** (antes "descartar"): **no se avisa**, ni por mail ni en la campanita. Se enteran recién si la búsqueda se cierra (aviso de cierre, solo campanita).
 - **M30, postulantes nuevos:** **agrupado**: un mail por búsqueda por día (por hora en las rápidas), con el primer postulante del período. No dice cuántos son.
-- **Remitente de facturación:** **separado** (`facturacion@`), con ese mismo correo como respuesta; se cambia con `CORREO_DE_FACTURACION`.
+- **Remitente de facturación:** **separado** (`facturacion@`); las respuestas van al mail de contacto del sitio; se cambia con `CORREO_DE_FACTURACION` y `CORREO_RESPONDER_A_FACTURACION`.
 - **M06, invitación al equipo:** **se manda por mail** al crear la invitación; el panel sigue mostrando el enlace para copiar por si no llega. El enlace es `/invitacion/<id>` y lleva a la persona **directo a esa institución** (email puesto, sin elegir tipo de cuenta); al confirmar el mail ve la invitación en el paso 2 del alta y la **acepta o la rechaza** (nunca se activa sola); la invitación vence a los 30 días y el mail tiene un tope de 3 por día por destinatario; ver CLAUDE.md, "Invitaciones al equipo".

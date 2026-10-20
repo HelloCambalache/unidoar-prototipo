@@ -12,6 +12,7 @@ import {
   type Ubicacion,
 } from "@/lib/ubicacion";
 import { normalizarTexto } from "@/lib/onboarding";
+import { CONTACTO_SITIO } from "@/lib/publico";
 
 /*
  * Busca una dirección escrita a mano: primero en Georef (API oficial del Estado argentino, sin clave) y, solo si no
@@ -23,7 +24,7 @@ import { normalizarTexto } from "@/lib/onboarding";
 
 const GEOREF = "https://apis.datos.gob.ar/georef/api/direcciones";
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
-const USER_AGENT = "UNIDOAR/1.0 (https://www.unidoar.com.ar; hola@unidoar.com.ar)";
+const USER_AGENT = `UNIDOAR/1.0 (https://www.unidoar.com.ar; ${CONTACTO_SITIO.email})`;
 const MAXIMO_DE_SUGERENCIAS = 5;
 const NOMBRE_OFICIAL_CABA = "Ciudad Autónoma de Buenos Aires";
 
