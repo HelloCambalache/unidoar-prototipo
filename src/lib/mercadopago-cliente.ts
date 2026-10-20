@@ -8,7 +8,7 @@ import {
   PreApproval,
   WebhookSignatureValidator,
 } from "mercadopago";
-import { cuerpoDeNuevoMonto, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDeSuscripcion } from "@/lib/debito-automatico";
+import { cuerpoDeNuevoMonto, detalleDeRechazo, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDeSuscripcion } from "@/lib/debito-automatico";
 import { secretoDelWebhook, TOLERANCIA_DE_AVISO_SEGUNDOS, tokenDeMercadoPago } from "@/lib/mercadopago-config";
 
 /*
@@ -53,7 +53,8 @@ function traducir(error: unknown): ErrorDeMercadoPago {
     const estado = error.status;
     // 4xx (salvo 408, 429 y 423): lo pedido está mal o no tenemos permiso: reintentar no cambia nada.
     if (estado >= 400 && estado < 500 && ![408, 423, 429].includes(estado)) {
-      return new ErrorDeMercadoPago("rechazado", `Mercado Pago rechazó el pedido (${estado}).`, estado);
+      const detalle = detalleDeRechazo({ message: error.message, error: error.error, causes: error.causes });
+      return new ErrorDeMercadoPago("rechazado", `Mercado Pago rechazó el pedido (${estado})${detalle ? `: ${detalle}` : ""}.`, estado);
     }
     return new ErrorDeMercadoPago("no-disponible", `Mercado Pago no respondió bien (${estado || "sin estado"}).`, estado || undefined);
   }

@@ -5,6 +5,7 @@ import {
   cuerpoDeNuevoMonto,
   cuerpoDeSuscripcion,
   decidirSincronizacion,
+  detalleDeRechazo,
   esEmailDePago,
   esPlanDebitable,
   esUrlDeMercadoPago,
@@ -202,5 +203,33 @@ describe("poner al día el monto de una suscripción", () => {
     for (const esperado of [null, 0, -5, 10.5, NaN]) {
       assert.deepEqual(decidirSincronizacion({ plan: "colegio", monto: 59000, esperado }), { accion: "nada" }, String(esperado));
     }
+  });
+});
+
+describe("qué dijo Mercado Pago de un rechazo (para el log)", () => {
+  it("junta el mensaje, el error y los códigos de causa", () => {
+    const d = detalleDeRechazo({
+      message: "Invalid users involved",
+      error: "bad_request",
+      causes: [{ code: 2000, description: "payer_email no es válido" }, { code: "X1" }],
+    });
+    assert.equal(d, "Invalid users involved | bad_request | 2000: payer_email no es válido | X1");
+  });
+
+  it("no repite el mismo texto", () => {
+    assert.equal(detalleDeRechazo({ message: "boom", error: "boom" }), "boom");
+  });
+
+  it("tapa los mails, que podrían repetir el que escribió la persona", () => {
+    const d = detalleDeRechazo({ message: "El mail persona@ejemplo.com no pertenece a un usuario de prueba" });
+    assert.equal(d.includes("@"), false);
+    assert.match(d, /\[mail\]/);
+  });
+
+  it("acota el largo y tolera cualquier forma", () => {
+    assert.ok(detalleDeRechazo({ message: "x".repeat(2000) }).length <= 400);
+    assert.equal(detalleDeRechazo({}), "");
+    assert.equal(detalleDeRechazo({ causes: "no es una lista" }), "");
+    assert.equal(detalleDeRechazo({ causes: [null, 3, "x", { description: "ok" }] }), "ok");
   });
 });

@@ -98,6 +98,29 @@ export function esUrlDeMercadoPago(url: unknown): url is string {
   }
 }
 
+/**
+ * Lo que contó Mercado Pago de un rechazo (su mensaje y los códigos de causa), para anotarlo en el log: sin eso un 400 no dice si el
+ * problema es el mail, el monto, la dirección de vuelta o las credenciales. Es lo que **respondió** Mercado Pago, nunca el pedido (que
+ * lleva el token); igual se tapan los mails (podrían repetir el que escribió la persona) y se acota el largo.
+ */
+export function detalleDeRechazo(entrada: { message?: unknown; error?: unknown; causes?: unknown }): string {
+  const partes: string[] = [];
+  const texto = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v).trim() : "");
+  for (const v of [entrada.message, entrada.error]) {
+    const t = texto(v);
+    if (t && !partes.includes(t)) partes.push(t);
+  }
+  if (Array.isArray(entrada.causes)) {
+    for (const c of entrada.causes.slice(0, 5)) {
+      if (!c || typeof c !== "object") continue;
+      const { code, description } = c as { code?: unknown; description?: unknown };
+      const t = [texto(code), texto(description)].filter(Boolean).join(": ");
+      if (t) partes.push(t);
+    }
+  }
+  return partes.join(" | ").replace(/[^\s@|]+@[^\s@|]+/g, "[mail]").slice(0, 400);
+}
+
 /** Un mail con forma de mail (lo valida además Mercado Pago). */
 export const esEmailDePago = (email: unknown): email is string =>
   typeof email === "string" && email.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
