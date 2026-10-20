@@ -18,7 +18,7 @@ import {
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { COOKIE_RECUPERACION, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
+import { COOKIE_RECUPERACION, firmarRecuperacion, recuperacionVigente, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
 import { COOKIE_TERMINOS, VIDA_COOKIE_TERMINOS_SEGUNDOS, codificarAceptacion } from "@/lib/terminos";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 
@@ -252,7 +252,9 @@ export async function cambiarContrasena(_previo: EstadoAuth, formData: FormData)
 
   // Sin la contraseña actual solo se puede si se llegó por el enlace del mail de recuperación (deja una cookie de unos minutos).
   const jar = await cookies();
-  if (!(await sesionActual()) || !jar.has(COOKIE_RECUPERACION)) {
+  const sesion = await sesionActual();
+  // La cookie va firmada y atada a esta cuenta: una que se fabricó a mano, o que es de otra cuenta, no sirve.
+  if (!sesion || !recuperacionVigente(jar.get(COOKIE_RECUPERACION)?.value, sesion.id)) {
     return { ok: false, error: traducirErrorAuth({ code: "otp_expired" }), codigo: "otp_expired" };
   }
 
@@ -280,18 +282,22 @@ export async function confirmarEnlace(formData: FormData): Promise<void> {
   if (!tokenHash || !esTipoDeConfirmacion(tipo) || !supabaseConfigurado()) redirect("/ingresar?error=enlace");
 
   const supabase = await crearClienteServidor();
-  const { error } = await supabase.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
+  const { data, error } = await supabase.auth.verifyOtp({ type: tipo, token_hash: tokenHash });
   if (error) redirect("/ingresar?error=enlace");
 
-  // Quien llegó por el enlace de recuperación puede elegir la contraseña nueva sin la actual, durante unos minutos.
+  // Quien llegó por el enlace de recuperación puede elegir la contraseña nueva sin la actual, durante unos minutos. El permiso va firmado
+  // y atado a la cuenta que abrió el enlace (ver src/lib/recuperacion.ts).
   if (tipo === "recovery") {
-    (await cookies()).set(COOKIE_RECUPERACION, "1", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: VIDA_RECUPERACION_SEGUNDOS,
-    });
+    const permiso = data.user?.id ? firmarRecuperacion(data.user.id) : null;
+    if (permiso) {
+      (await cookies()).set(COOKIE_RECUPERACION, permiso, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: VIDA_RECUPERACION_SEGUNDOS,
+      });
+    }
   }
   revalidatePath("/", "layout");
   redirect(destinoTrasConfirmar(tipo));

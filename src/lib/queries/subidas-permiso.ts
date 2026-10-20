@@ -33,3 +33,16 @@ export async function negarConfirmacion(usuario: Usuario): Promise<NegacionDeSub
   if (usuario.rol === "admin") return null;
   return (await estaSuspendida(usuario)) ? SUSPENDIDA : null;
 }
+
+/**
+ * Pedir una URL de subida directa (`/api/subir/firmar`) tiene un tope más corto que subir: una persona normal pide una o dos en un alta
+ * (un CV y un título grandes), no decenas. Cuenta además contra el tope general de subidas.
+ */
+const permitirFirma = crearTope(10, 10 * 60 * 1000);
+
+export async function negarFirma(usuario: Usuario): Promise<NegacionDeSubida | null> {
+  const negada = await negarSubida(usuario);
+  if (negada) return negada;
+  if (usuario.rol === "admin") return null;
+  return permitirFirma(usuario.id) ? null : DEMASIADAS;
+}

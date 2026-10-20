@@ -6,14 +6,16 @@ import { FormularioNuevaContrasena } from "@/components/onboarding/formularios-c
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
 import { TituloPaso } from "@/components/onboarding/elementos";
 import { sesionActual } from "@/lib/auth";
-import { COOKIE_RECUPERACION } from "@/lib/recuperacion";
+import { COOKIE_RECUPERACION, recuperacionVigente } from "@/lib/recuperacion";
 
 export const metadata: Metadata = { title: "Elegí tu contraseña nueva" };
 
 /** A esta pantalla se llega desde el enlace del mail de recuperación: /auth/callback ya dejó la sesión abierta. */
 export default async function PaginaNuevaContrasena() {
   // Solo se puede elegir la contraseña nueva llegando por el enlace del mail: con una sesión abierta a secas no alcanza.
-  const haySesion = Boolean(await sesionActual()) && (await cookies()).has(COOKIE_RECUPERACION);
+  // El permiso va firmado y atado a esta cuenta: una cookie fabricada a mano no alcanza.
+  const sesion = await sesionActual();
+  const haySesion = Boolean(sesion) && recuperacionVigente((await cookies()).get(COOKIE_RECUPERACION)?.value, sesion!.id);
 
   return (
     <MarcoAcceso volverHref="/ingresar" volverTexto="‹ Volver a ingresar">

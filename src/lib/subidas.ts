@@ -102,3 +102,23 @@ export function esPathPrivadoPropio(path: string, usuarioId: string, carpeta: st
 
 /** "…/cv/3f2a.pdf" → "3f2a.pdf" */
 export const nombreDePath = (path: string) => path.split("/").pop() ?? path;
+
+/**
+ * Lo máximo que puede tener una cuenta sin terminar de subir en la carpeta de paso (`<usuario>/subidas/`): subidas directas a Storage que
+ * nunca se confirmaron. Es un freno al abuso (pedir URLs de subida y no confirmar llenaba Storage): tres PDF del tamaño máximo.
+ */
+export const CUOTA_DE_PASO_BYTES = 150 * 1024 * 1024;
+
+/** Cuántas horas puede quedar un archivo en la carpeta de paso antes de que la limpieza diaria lo borre (una subida en curso dura minutos). */
+export const HORAS_DE_PASO_ANTES_DE_BARRER = 2;
+
+/** ¿Entra un archivo más de `nuevo` bytes sin pasarse de la cuota de la carpeta de paso, teniendo ya `usado`? */
+export const cabeEnLaCuotaDePaso = (usado: number, nuevo: number) => usado + nuevo <= CUOTA_DE_PASO_BYTES;
+
+const PATH_DE_PASO = new RegExp(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/${CARPETA_DE_PASO}/[^/]+$`, "i");
+
+/**
+ * ¿Es un path de la carpeta de paso (`<uuid de la cuenta>/subidas/<archivo>`)? Es lo único que borra la limpieza automática: ante la duda
+ * (otra carpeta, otro bucket, un path raro) no se toca.
+ */
+export const esPathDePaso = (path: string) => PATH_DE_PASO.test(path);

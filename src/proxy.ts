@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
+import { cabeceraDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
 
 /**
  * Pantallas con cuenta. El rol (docente / institución / admin) se valida en cada
@@ -12,13 +13,35 @@ import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
 const PRIVADAS = [/^\/docente(\/|$)/, /^\/institucion(\/|$)/, /^\/backoffice(\/|$)/, /^\/onboarding(\/|$)/, /^\/app(\/|$)/];
 const REGISTRO = /^\/onboarding\/(docente|institucion)\/1\/?$/;
 
+/**
+ * La política de contenido de este pedido, con su nonce (ver src/lib/csp.ts). Solo en producción (en desarrollo el panel de vista previa y
+ * el recargado en caliente usan scripts que una política así bloquearía) y solo para páginas: las rutas de API devuelven datos, no HTML.
+ */
+function politicaDelPedido(pathname: string, supabase: string | undefined) {
+  if (process.env.NODE_ENV !== "production" || pathname.startsWith("/api/")) return null;
+  const nonce = nuevoNonce();
+  return { nonce, cabecera: cabeceraDeCsp(modoDeCsp()), valor: politicaDeContenido(nonce, { supabaseUrl: supabase }) };
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const esPrivada = PRIVADAS.some((r) => r.test(pathname)) && !REGISTRO.test(pathname);
 
   const url = supabaseUrl();
   const clave = supabaseClavePublica();
-  let response = NextResponse.next({ request });
+  const csp = politicaDelPedido(pathname, url);
+  // La respuesta "sigue adelante": con la política, el nonce viaja en la cabecera del pedido (Next lo pone en sus scripts) y la política en
+  // la de la respuesta. Se arma de nuevo cada vez que cambian las cookies, así el pedido lleva las cookies ya renovadas.
+  const seguir = () => {
+    if (!csp) return NextResponse.next({ request });
+    const cabeceras = new Headers(request.headers);
+    cabeceras.set("x-nonce", csp.nonce);
+    cabeceras.set(csp.cabecera, csp.valor);
+    const r = NextResponse.next({ request: { headers: cabeceras } });
+    r.headers.set(csp.cabecera, csp.valor);
+    return r;
+  };
+  let response = seguir();
 
   // Sin Supabase configurado no hay forma de saber quién es: las áreas privadas no se abren.
   if (!url || !clave) {
@@ -30,7 +53,7 @@ export async function proxy(request: NextRequest) {
       getAll: () => request.cookies.getAll(),
       setAll: (lista) => {
         for (const { name, value } of lista) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = seguir();
         for (const { name, value, options } of lista) response.cookies.set(name, value, opcionesDeCookieDeSesion(options));
       },
     },

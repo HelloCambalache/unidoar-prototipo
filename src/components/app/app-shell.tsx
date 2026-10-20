@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Icono, type IconoClave } from "@/components/icons";
-import { crearClienteNavegador } from "@/lib/supabase/client";
+import { salir } from "@/app/actions/auth";
 import { marcarLeida, marcarTodasLeidas } from "@/app/actions/notificaciones";
 import { estiloNotificacion, type NotificacionVista } from "@/lib/notificaciones";
 import { cn } from "@/lib/utils";
@@ -100,12 +100,13 @@ export function AppShell({
 }) {
   const t = TEMAS[tema];
   const pathname = usePathname();
-  const router = useRouter();
+  const [, empezarSalida] = useTransition();
 
-  async function cerrarSesion() {
-    await crearClienteNavegador().auth.signOut();
-    router.push("/");
-    router.refresh();
+  // La sesión vive en cookies que el navegador no puede leer ni borrar: se cierra en el servidor (la acción `salir`), que también vuelve al inicio.
+  function cerrarSesion() {
+    empezarSalida(async () => {
+      await salir();
+    });
   }
   // El drawer queda abierto solo en la ruta donde se abrió: al navegar se cierra solo.
   const [abiertoEn, setAbiertoEn] = useState<string | null>(null);

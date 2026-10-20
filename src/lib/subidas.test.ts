@@ -9,6 +9,9 @@ import {
   esUrlPublicaPropia,
   tipoDeCarpeta,
   urlPublicaDe,
+  CUOTA_DE_PASO_BYTES,
+  cabeEnLaCuotaDePaso,
+  esPathDePaso,
 } from "@/lib/subidas";
 
 const UID = "1b8c3355-2755-443f-af6a-0a2a7a06b997";
@@ -122,5 +125,26 @@ describe("nombres de carpeta y de archivo que intentan colarse", () => {
     assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/%2e%2e%2f${OTRO}%2flogos%2fa.webp`)!, UID), false);
     assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/a%00.webp`)!, UID), false);
     assert.equal(esUrlPublicaPropia(urlPublicaDe(`${UID}/logos/3f2a9c1e-77aa-4d3b-9c0e-123456789abc.webp`)!, UID), true);
+  });
+});
+
+describe("carpeta de paso: cuota y limpieza", () => {
+  it("la cuota deja subir varios PDF grandes pero no infinitos", () => {
+    assert.equal(cabeEnLaCuotaDePaso(0, LIMITE_PDF), true);
+    assert.equal(cabeEnLaCuotaDePaso(LIMITE_PDF * 2, LIMITE_PDF), true);
+    assert.equal(cabeEnLaCuotaDePaso(LIMITE_PDF * 2, LIMITE_PDF + 1), false);
+    assert.equal(cabeEnLaCuotaDePaso(CUOTA_DE_PASO_BYTES, 1), false);
+    assert.equal(cabeEnLaCuotaDePaso(0, CUOTA_DE_PASO_BYTES), true);
+  });
+
+  it("la limpieza solo toca paths de la carpeta de paso de una cuenta", () => {
+    assert.equal(esPathDePaso(`${UID}/${CARPETA_DE_PASO}/${ARCHIVO}`), true);
+    assert.equal(esPathDePaso(`${UID}/cv/${ARCHIVO}`), false, "ni la carpeta del CV");
+    assert.equal(esPathDePaso(`${UID}/documentos/${ARCHIVO}`), false);
+    assert.equal(esPathDePaso(`${UID}/${CARPETA_DE_PASO}/a/${ARCHIVO}`), false, "ni una subcarpeta");
+    assert.equal(esPathDePaso(`${CARPETA_DE_PASO}/${ARCHIVO}`), false, "ni uno sin cuenta");
+    assert.equal(esPathDePaso(`otra-cosa/${CARPETA_DE_PASO}/${ARCHIVO}`), false);
+    assert.equal(esPathDePaso(`${UID}/${CARPETA_DE_PASO}/`), false);
+    assert.equal(esPathDePaso(""), false);
   });
 });

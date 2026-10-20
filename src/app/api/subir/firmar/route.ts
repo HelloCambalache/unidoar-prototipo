@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { usuarioActual } from "@/lib/auth";
-import { negarSubida } from "@/lib/queries/subidas-permiso";
+import { bytesEnCarpetaDePaso } from "@/lib/queries/archivos";
+import { negarFirma } from "@/lib/queries/subidas-permiso";
 import { clienteAdmin } from "@/lib/supabase/admin";
-import { CARPETA_DE_PASO, LIMITE_PDF, mb, tipoDeCarpeta } from "@/lib/subidas";
+import { cabeEnLaCuotaDePaso, CARPETA_DE_PASO, LIMITE_PDF, mb, tipoDeCarpeta } from "@/lib/subidas";
 
 /**
  * Primer paso de la subida de un PDF grande (de más de ~4 MB, que no entra en una petición de Vercel): da una URL
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
   }
   const usuario = await usuarioActual();
   if (!usuario) return responder({ ok: false, error: "Iniciá sesión para subir archivos." }, 401);
-  const negada = await negarSubida(usuario);
+  const negada = await negarFirma(usuario);
   if (negada) return responder({ ok: false, error: negada.error }, negada.status);
 
   const datos = entrada.safeParse(await req.json().catch(() => null));
@@ -35,6 +36,12 @@ export async function POST(req: Request) {
   if (!tipo || tipo === "imagen") return responder({ ok: false, error: "Destino de subida no permitido." }, 400);
   if (tamano > LIMITE_PDF) {
     return responder({ ok: false, error: `El archivo pesa demasiado (máximo ${mb(LIMITE_PDF)} MB).` }, 413);
+  }
+
+  // Lo que ya quedó en la carpeta de paso (subidas que nunca se confirmaron) cuenta contra una cuota: una cuenta no puede llenar Storage
+  // pidiendo URLs y no confirmando. Esa carpeta se vacía sola todos los días (`limpiarSubidasDePaso`).
+  if (!cabeEnLaCuotaDePaso(await bytesEnCarpetaDePaso(usuario.id), tamano)) {
+    return responder({ ok: false, error: "Tenés archivos sin terminar de subir. Esperá un rato, que se limpian solos, y probá de nuevo." }, 429);
   }
 
   const path = `${usuario.id}/${CARPETA_DE_PASO}/${crypto.randomUUID()}.pdf`;

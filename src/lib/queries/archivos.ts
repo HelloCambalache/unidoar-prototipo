@@ -5,7 +5,8 @@ import { cursos, docenteDetalle, docentes, institucionFotos, instituciones, post
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { objetoDeArchivo } from "@/lib/archivos";
 import { clienteAdmin } from "@/lib/supabase/admin";
-import { BUCKETS } from "@/lib/subidas";
+import { BUCKETS, CARPETA_DE_PASO, HORAS_DE_PASO_ANTES_DE_BARRER, esPathDePaso } from "@/lib/subidas";
+import { resumenDeError } from "@/lib/errores";
 
 /**
  * ¿Alguna fila guarda todavía este archivo? `valor` es lo que se guarda en la base (URL pública o path privado) y
@@ -93,6 +94,44 @@ export async function borrarDocumentosSueltos(docenteId: string): Promise<number
     return sueltos.length;
   } catch (error) {
     console.error("[archivos] no se pudieron limpiar los documentos sueltos", error);
+    return 0;
+  }
+}
+
+/**
+ * Cuántos bytes tiene una cuenta en su carpeta de paso del bucket privado (`<usuario>/subidas/`): subidas directas que todavía no se
+ * confirmaron. Cuenta contra la cuota de `/api/subir/firmar`. Lee los metadatos de Storage en la base (una consulta).
+ */
+export async function bytesEnCarpetaDePaso(usuarioId: string): Promise<number> {
+  const filas = await getDb().execute(sql`
+    select coalesce(sum((metadata->>'size')::bigint), 0)::bigint as bytes
+    from storage.objects
+    where bucket_id = 'privado' and name like ${`${usuarioId}/${CARPETA_DE_PASO}/%`}`);
+  return Number((filas[0] as { bytes?: string | number } | undefined)?.bytes ?? 0);
+}
+
+/**
+ * Borra de Storage lo que quedó en las carpetas de paso de TODAS las cuentas hace más de `HORAS_DE_PASO_ANTES_DE_BARRER` horas: subidas
+ * directas de PDF grandes que nunca se confirmaron (la persona cerró la pestaña, o alguien las pidió para llenar Storage). Lo que se
+ * confirma se guarda en su carpeta definitiva y el de paso se borra solo; esto es la red de seguridad. Solo toca paths de la carpeta de paso
+ * (`esPathDePaso`). La corre el cron diario de mails y nunca rompe: si algo falla lo deja en el log y devuelve 0.
+ */
+export async function limpiarSubidasDePaso(horas: number = HORAS_DE_PASO_ANTES_DE_BARRER): Promise<number> {
+  try {
+    if (!almacenamientoConfigurado()) return 0;
+    const filas = await getDb().execute(sql`
+      select name from storage.objects
+      where bucket_id = 'privado' and name like ${`%/${CARPETA_DE_PASO}/%`} and created_at < now() - make_interval(hours => ${horas})
+      order by created_at
+      limit 1000`);
+    const paths = (filas as unknown as { name: string }[]).map((f) => f.name).filter(esPathDePaso);
+    for (let i = 0; i < paths.length; i += 100) {
+      const { error } = await clienteAdmin().storage.from("privado").remove(paths.slice(i, i + 100));
+      if (error) console.error("[archivos] no se pudieron borrar subidas de paso:", error.message);
+    }
+    return paths.length;
+  } catch (error) {
+    console.error("[archivos] no se pudieron limpiar las subidas de paso", resumenDeError(error));
     return 0;
   }
 }
