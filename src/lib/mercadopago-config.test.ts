@@ -9,16 +9,20 @@ describe("configuración de Mercado Pago", () => {
     assert.equal(secretoDelWebhook({}), undefined);
   });
 
-  it("hacen falta el token Y la clave de los avisos", () => {
-    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "TEST-abc" }), false);
+  it("alcanza con el token: la clave de los avisos es opcional", () => {
+    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "APP_USR-abc" }), true);
+    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "APP_USR-abc", MP_WEBHOOK_SECRET: "clave" }), true);
+  });
+
+  it("sin el token no se activa, aunque esté la clave de los avisos", () => {
     assert.equal(mercadoPagoActivo({ MP_WEBHOOK_SECRET: "clave" }), false);
-    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "TEST-abc", MP_WEBHOOK_SECRET: "clave" }), true);
   });
 
   it("un valor vacío o con espacios no cuenta", () => {
-    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "   ", MP_WEBHOOK_SECRET: "clave" }), false);
-    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "TEST-abc", MP_WEBHOOK_SECRET: "" }), false);
-    assert.equal(tokenDeMercadoPago({ MP_ACCESS_TOKEN: "  TEST-abc  " }), "TEST-abc");
+    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "   " }), false);
+    assert.equal(mercadoPagoActivo({ MP_ACCESS_TOKEN: "" }), false);
+    assert.equal(tokenDeMercadoPago({ MP_ACCESS_TOKEN: "  APP_USR-abc  " }), "APP_USR-abc");
+    assert.equal(secretoDelWebhook({ MP_WEBHOOK_SECRET: "  " }), undefined);
   });
 
   it("solo los avisos de suscripción que usamos", () => {

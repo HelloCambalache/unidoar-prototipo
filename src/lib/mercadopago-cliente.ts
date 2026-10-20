@@ -132,6 +132,20 @@ export async function cancelarSuscripcionMp(id: string): Promise<void> {
   }
 }
 
+/**
+ * Todos los cobros que Mercado Pago le hizo (o intentó hacerle) a una suscripción. Es lo que permite recuperar un cobro cuyo aviso nunca
+ * llegó o llegó cuando todavía estaba "en proceso" (Mercado Pago no siempre vuelve a avisar cuando acredita). Biomea perdió un cobro real
+ * así y por eso corre esta búsqueda todos los días. Hasta 100 cobros por suscripción, de sobra para un plan mensual.
+ */
+export async function buscarCobrosMp(suscripcionId: string): Promise<CobroDeMercadoPago[]> {
+  try {
+    const r = await new Invoice(configuracion()).search({ options: { preapproval_id: suscripcionId, limit: 100 } });
+    return (r.results ?? []) as CobroDeMercadoPago[];
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
 export async function obtenerCobroMp(id: string): Promise<CobroDeMercadoPago> {
   try {
     return (await new Invoice(configuracion()).get({ id })) as CobroDeMercadoPago;

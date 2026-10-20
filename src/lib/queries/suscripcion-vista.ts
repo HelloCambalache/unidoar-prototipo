@@ -12,7 +12,7 @@ import { suscripcionDe } from "@/lib/queries/suscripcion";
 
 /** Todo lo que muestra la tarjeta "Débito automático" de /institucion/plan, en una sola lectura. */
 export type DebitoVista = {
-  /** Mercado Pago está configurado (token y clave de los avisos): sin eso la tarjeta ni se muestra. */
+  /** Mercado Pago está configurado (hay token): sin eso la tarjeta ni se muestra. */
   disponible: boolean;
   /** El plan se cobra mes a mes (el Anual no). */
   planDebitable: boolean;

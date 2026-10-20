@@ -31,28 +31,57 @@ function diaDeMercadoPago(iso: string | null | undefined): string | null {
   return Number.isNaN(fecha.getTime()) ? null : hoyAR(fecha);
 }
 
-export type ResultadoDeEstado = "actualizada" | "sin-cambios" | "desconocida";
+export type ResultadoDeEstado = "actualizada" | "sin-cambios" | "adoptada" | "duplicada" | "desconocida";
+
+export type RespuestaDeEstado = {
+  resultado: ResultadoDeEstado;
+  /** Si una suscripción nueva reemplazó a una que seguía pendiente: la vieja, para cancelarla en Mercado Pago (no debe poder cobrar). */
+  reemplazada?: string;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Espeja el estado de la suscripción que informa Mercado Pago (aviso `subscription_preapproval`). Solo avisa cuando el estado cambia:
  * al pasar a "autorizada" le cuenta a la institución que el débito quedó activo; si pasa a pausada o cancelada desde Mercado Pago (la
  * persona lo hizo en su cuenta) avisa a la institución y al equipo, que tiene que saber que ese mes no se va a cobrar solo.
+ *
+ * Una suscripción que NO tenemos anotada se liga por su `external_reference` (el id de la institución que le pusimos al crearla). Biomea
+ * vio que Mercado Pago puede crear una suscripción nueva cuando la persona reintenta con otra tarjeta en el mismo checkout: si la nuestra
+ * seguía pendiente y esta quedó autorizada, esta pasa a ser la vigente ("adoptada"). Si la institución ya tenía otra activa, es una
+ * duplicada (la ruta la cancela). Si no hay a quién ligarla, queda "desconocida" y se avisa al equipo SIN cancelar nada: puede ser legítima.
  */
-export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): Promise<ResultadoDeEstado> {
+export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): Promise<RespuestaDeEstado> {
   return transaccion(async (tx) => {
-    const [fila] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.suscripcionId, mp.id)).limit(1).for("update");
-    if (!fila) return "desconocida";
+    const estadoMp = estadoDeSuscripcion(mp.estado);
+    let [fila] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.suscripcionId, mp.id)).limit(1).for("update");
+    let adoptada = false;
+    let reemplazada: string | undefined;
 
-    const estado = estadoDeSuscripcion(mp.estado) ?? fila.estado;
+    if (!fila) {
+      const institucionId = mp.referencia && UUID.test(mp.referencia) ? mp.referencia : null;
+      if (!institucionId || estadoMp !== "autorizada") return { resultado: "desconocida" };
+      // Bloquea la institución para no pisarse con otro aviso de la misma suscripción.
+      await tx.select({ id: instituciones.id }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1).for("update");
+      const [propia] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.institucionId, institucionId)).limit(1).for("update");
+      if (!propia) return { resultado: "desconocida" };
+      if (propia.estado === "autorizada" || propia.estado === "pausada") return { resultado: "duplicada" };
+      reemplazada = propia.estado === "pendiente" ? propia.suscripcionId : undefined;
+      await tx.update(suscripcionesMp).set({ suscripcionId: mp.id }).where(eq(suscripcionesMp.institucionId, institucionId));
+      fila = { ...propia, suscripcionId: mp.id };
+      adoptada = true;
+    }
+
+    const estado = estadoMp ?? fila.estado;
     const proximoCobro = diaDeMercadoPago(mp.proximoCobro) ?? fila.proximoCobro;
     const monto = mp.monto !== null && Number.isInteger(mp.monto) && mp.monto > 0 ? mp.monto : fila.monto;
-    if (estado === fila.estado && proximoCobro === fila.proximoCobro && monto === fila.monto) return "sin-cambios";
+    if (!adoptada && estado === fila.estado && proximoCobro === fila.proximoCobro && monto === fila.monto) return { resultado: "sin-cambios" };
 
     await tx
       .update(suscripcionesMp)
       .set({ estado, proximoCobro, monto, actualizadaEn: new Date() })
       .where(eq(suscripcionesMp.institucionId, fila.institucionId));
-    if (estado === fila.estado) return "actualizada";
+    if (estado === fila.estado) return { resultado: adoptada ? "adoptada" : "actualizada", reemplazada };
 
     const [inst] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, fila.institucionId)).limit(1);
     const nombre = inst?.nombre ?? "una institución";
@@ -62,7 +91,7 @@ export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): 
         accion: `suscripcion.${estado}`,
         entidad: "institucion",
         entidadId: fila.institucionId,
-        detalle: { origen: "mercadopago", antes: fila.estado, despues: estado, monto },
+        detalle: { origen: "mercadopago", antes: fila.estado, despues: estado, monto, ...(adoptada ? { adoptada: true } : {}) },
       },
       tx,
     );
@@ -89,7 +118,7 @@ export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): 
         enlace: `/backoffice/cobros/${fila.institucionId}`,
       });
     }
-    return "actualizada";
+    return { resultado: adoptada ? "adoptada" : "actualizada", reemplazada };
   });
 }
 

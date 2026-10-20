@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { reconciliarSuscripciones } from "@/lib/queries/suscripcion-reconciliar";
 import { sincronizarSuscripciones } from "@/lib/queries/suscripcion-sincronizar";
 import { resumenDeError } from "@/lib/errores";
 
 // Se evalúa en cada pedido: crea facturas, no es algo cacheable.
 export const dynamic = "force-dynamic";
+// La revisión de las suscripciones hace llamadas a Mercado Pago (dos por suscripción viva): el tiempo crece con la cantidad.
+export const maxDuration = 120;
 
 const SIN_CACHE = { "Cache-Control": "no-store" };
 
@@ -30,11 +33,13 @@ export async function GET(request: Request) {
         revalidatePath(`/backoffice/instituciones/${institucionId}`);
       }
     }
-    // Los montos de las suscripciones de débito automático siguen al plan y a las sedes (nunca lanza: si falla, queda en el log).
+    // Débito automático (ninguna de las dos lanza: si algo falla, queda en el log y se reintenta mañana). Primero se pone al día lo que
+    // Mercado Pago cobró o cambió sin que llegara el aviso, y después los montos siguen al plan y a las sedes.
+    const reconciliacion = await reconciliarSuscripciones();
     const suscripciones = await sincronizarSuscripciones();
-    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, suscripciones });
+    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, reconciliacion, suscripciones });
     return NextResponse.json(
-      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, suscripciones },
+      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones },
       { headers: SIN_CACHE },
     );
   } catch (e) {

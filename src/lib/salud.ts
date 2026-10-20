@@ -20,7 +20,7 @@ export type Salud = {
   tareasProgramadas: { CRON_SECRET: boolean };
   /** Cómo salen los mails de la app: resend (envío real), consola (solo pruebas) o apagado (no se manda ni se anota nada). No cuenta para `ok`. */
   correo: ModoCorreo;
-  /** Mercado Pago (débito automático): qué variables hay y si está activo (hacen falta las dos). Solo presencia, nunca valores. No cuenta para `ok`. */
+  /** Mercado Pago (débito automático): qué variables hay y si está activo (alcanza con el token; la clave de los avisos es opcional). Solo presencia, nunca valores. No cuenta para `ok`. */
   mercadoPago: { MP_ACCESS_TOKEN: boolean; MP_WEBHOOK_SECRET: boolean; activo: boolean };
   baseDeDatos: {
     conecta: boolean;
