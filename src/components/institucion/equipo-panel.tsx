@@ -9,6 +9,7 @@ import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { Tarjeta } from "@/components/ui/tarjeta";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_EQUIPO_INFO, ROLES_INVITABLES } from "@/lib/catalogo";
 import { DIAS_DE_VIGENCIA_DE_INVITACION, infoDeRol, rutaDeInvitacion, type MiembroVista } from "@/lib/equipo";
@@ -125,14 +126,15 @@ function FormularioInvitar({ origen, correoActivo, onCerrar }: { origen: string;
 
 function BotonEliminar({ miembro }: { miembro: MiembroVista }) {
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [pendiente, empezar] = useTransition();
   const invitado = miembro.estado === "invitado";
-  const quitar = (e: React.MouseEvent) => {
+  const quitar = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const pregunta = invitado
       ? `¿Cancelar la invitación a ${miembro.email}?`
       : `¿Quitar a ${miembro.nombre} del equipo? Va a perder el acceso a la cuenta de la institución.`;
-    if (!window.confirm(pregunta)) return;
+    if (!(await pedirConfirmacion(pregunta))) return;
     empezar(async () => {
       try {
         const r = await quitarMiembro(miembro.id);

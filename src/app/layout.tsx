@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Sora } from "next/font/google";
+import { ConfirmacionProvider } from "@/components/ui/confirmacion";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -44,7 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-AR" className={`${inter.variable} ${sora.variable}`}>
       <body className="min-h-screen bg-app font-sans text-tinta antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <ConfirmacionProvider>{children}</ConfirmacionProvider>
+        </ToastProvider>
       </body>
     </html>
   );

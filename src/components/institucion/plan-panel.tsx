@@ -5,6 +5,7 @@ import { cancelarSolicitudPlan, solicitarCambioPlan } from "@/app/actions/plan";
 import { BotonAccion } from "@/components/institucion/boton-accion";
 import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
@@ -34,13 +35,14 @@ export function PlanPanel({
 }) {
   const P = crearPlanes(catalogo);
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [abierto, setAbierto] = useState(false);
   const [pendiente, empezar] = useTransition();
   const actual = P.planDe(plan);
 
-  const pedir = (destino: PlanClave) => {
+  const pedir = async (destino: PlanClave) => {
     const p = P.planDe(destino);
-    const ok = window.confirm(
+    const ok = await pedirConfirmacion(
       `¿Pedir el cambio al ${p.label} (${pesos(p.precio)}/${p.periodo})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
     );
     if (!ok) return;

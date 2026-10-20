@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { borrarCurso } from "@/app/actions/cursos";
 import { Boton } from "@/components/ui/button";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { etiquetaInscriptos } from "@/lib/cursos";
 
@@ -25,14 +26,15 @@ export function CursoBorrar({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [pendiente, empezar] = useTransition();
 
-  const borrar = () => {
+  const borrar = async () => {
     const aviso =
       inscriptos > 0
         ? `«${titulo}» tiene ${etiquetaInscriptos(inscriptos).toLowerCase()}. Si lo borrás, se les avisa que el curso se canceló y pierden su inscripción. Esto no se puede deshacer. ¿Borrarlo?`
         : `¿Borrar «${titulo}»? Esto no se puede deshacer.`;
-    if (!window.confirm(aviso)) return;
+    if (!(await pedirConfirmacion(aviso))) return;
     empezar(async () => {
       try {
         const r = await borrarCurso(cursoId, inscriptos > 0);

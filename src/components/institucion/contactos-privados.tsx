@@ -5,6 +5,7 @@ import { borrarContacto, guardarContacto, importarContactos } from "@/app/action
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Textarea } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import type { Resultado } from "@/lib/acciones";
 import {
@@ -255,12 +256,13 @@ export function AccionesContactos() {
 
 export function AccionesContacto({ contacto }: { contacto: ContactoVista }) {
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [editando, setEditando] = useState(false);
   const [pendiente, empezar] = useTransition();
   const whatsapp = enlaceWhatsapp(contacto.telefono);
 
-  const borrar = () => {
-    if (!window.confirm(`¿Borrar a ${contacto.nombre} de tus contactos? Esto no se puede deshacer.`)) return;
+  const borrar = async () => {
+    if (!(await pedirConfirmacion(`¿Borrar a ${contacto.nombre} de tus contactos? Esto no se puede deshacer.`))) return;
     empezar(async () => {
       try {
         const r = await borrarContacto(contacto.id);

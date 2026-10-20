@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { verificarTitulo } from "@/app/actions/backoffice-verificacion";
 import { Boton } from "@/components/ui/button";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 
 /**
@@ -11,10 +12,11 @@ import { useToast } from "@/components/ui/toast";
  */
 export function DocVerificarTitulo({ docenteId, nombre }: { docenteId: string; nombre: string }) {
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [pendiente, empezar] = useTransition();
 
-  const verificar = () => {
-    if (!window.confirm(`¿Confirmás que revisaste el título de ${nombre}? Las instituciones lo van a ver como verificado.`)) return;
+  const verificar = async () => {
+    if (!(await pedirConfirmacion(`¿Confirmás que revisaste el título de ${nombre}? Las instituciones lo van a ver como verificado.`))) return;
     empezar(async () => {
       try {
         const r = await verificarTitulo(docenteId);

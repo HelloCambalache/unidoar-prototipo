@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { pedirCorreccion, rechazarDocente, verificarDocente } from "@/app/actions/backoffice-verificacion";
 import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Textarea } from "@/components/ui/campos";
+import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { EtiquetaSeccion } from "@/components/ui/tarjeta";
 
@@ -28,6 +29,7 @@ const MIN_MOTIVO = 5;
  */
 export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencialNoAplica, estudiante }: Props) {
   const toast = useToast();
+  const pedirConfirmacion = useConfirmacion();
   const [pendiente, empezar] = useTransition();
   const [identidad, setIdentidad] = useState(false);
   const [titulo, setTitulo] = useState(false);
@@ -54,7 +56,7 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
     });
   };
 
-  const verificar = () => {
+  const verificar = async () => {
     setErrorMotivo(null);
     if (!identidad) {
       setErrorRevision("Tildá «Revisé el DNI» para poder verificar.");
@@ -72,12 +74,12 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
       ...(estudiante ? (tiene.constancia ? [] : ["la constancia de alumno regular"]) : titulo && !tiene.credencial ? [credencial.toLowerCase()] : []),
       ...(antecedentes && !tiene.conducta ? ["el certificado de buena conducta"] : []),
     ];
-    if (faltan.length > 0 && !window.confirm(`En la plataforma no figura: ${faltan.join(", ")}. ¿Verificar a ${nombre} igual?`)) return;
+    if (faltan.length > 0 && !(await pedirConfirmacion(`En la plataforma no figura: ${faltan.join(", ")}. ¿Verificar a ${nombre} igual?`))) return;
     // La constancia respalda la identidad y el estado de estudiante: no verifica el título (que todavía no existe).
     ejecutar(() => verificarDocente(docenteId, { identidad, titulo: estudiante ? false : titulo, antecedentes }), `${nombre} quedó verificado/a`);
   };
 
-  const conMotivo = (
+  const conMotivo = async (
     accion: (id: string, entrada: { motivo: string }) => ReturnType<typeof verificarDocente>,
     exito: string,
     confirmar?: string,
@@ -89,7 +91,7 @@ export function VerifAcciones({ docenteId, nombre, credencial, tiene, credencial
       return;
     }
     setErrorMotivo(null);
-    if (confirmar && !window.confirm(confirmar)) return;
+    if (confirmar && !(await pedirConfirmacion(confirmar))) return;
     ejecutar(() => accion(docenteId, { motivo }), exito, () => setMotivo(""));
   };
 
