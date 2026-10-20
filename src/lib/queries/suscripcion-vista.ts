@@ -3,8 +3,9 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
 import { hoyAR } from "@/lib/cobros";
-import { esPlanDebitable, estadoGuardado, primerCobroDiferido, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import { decidirActivacion, esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
+import { diferirPrimerCobroActivo } from "@/lib/mercadopago-config";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
@@ -30,10 +31,15 @@ export type DebitoVista = {
    */
   planReciente: boolean;
   /**
-   * Si el mes en curso ya está pago, cuándo sale el primer cobro del débito ("20 de noviembre de 2026"): en vez de cobrar al suscribirse,
-   * Mercado Pago espera al próximo día de cobro (si no, se pagaría dos veces el mismo mes). null si el primer cobro sale al suscribirse.
+   * Si el mes en curso ya está pago y el período de prueba está encendido, cuándo sale el primer cobro del débito ("20 de noviembre de 2026"):
+   * en vez de cobrar al suscribirse, Mercado Pago espera al próximo día de cobro. null si el primer cobro sale al suscribirse.
    */
   primerCobro: string | null;
+  /**
+   * Si el mes en curso ya está pago y la institución es real (y el período de prueba está apagado), desde cuándo puede activar el débito
+   * ("1 de noviembre de 2026"): hasta entonces no se le ofrece, para no cobrarle dos veces el mismo mes. null si puede activarlo ahora.
+   */
+  activarDesde: string | null;
   suscripcion: null | {
     estado: EstadoSuscripcion;
     monto: number;
@@ -64,7 +70,9 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
   const cobro = ultimo[0];
   const sinSuscripcionViva = !estado || estado === "cancelada";
   const planReciente = !!plan && sinSuscripcionViva && Date.now() - plan.creadoEn.getTime() < HORAS_DE_PLAN_RECIENTE * 60 * 60 * 1000;
-  const diferido = sinSuscripcionViva ? primerCobroDiferido({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: mesPago }) : null;
+  const decision = sinSuscripcionViva
+    ? decidirActivacion({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: mesPago, diferirActivo: diferirPrimerCobroActivo(), esDemo: institucion.esDemo })
+    : null;
 
   return {
     // Sin token no hay débito; con un token de prueba, solo las instituciones de ejemplo lo ven (una real no puede suscribirse a un cobro de mentira).
@@ -73,7 +81,8 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     puedeGestionar: puedeGestionarPlan(rol),
     montoActual: Number.isInteger(monto) && monto > 0 ? monto : null,
     planReciente,
-    primerCobro: diferido ? fechaLarga(diferido.fecha) : null,
+    primerCobro: decision?.accion === "con-prueba" ? fechaLarga(decision.fecha) : null,
+    activarDesde: decision?.accion === "esperar" ? fechaLarga(decision.desde) : null,
     suscripcion:
       susc && estado
         ? { estado, monto: susc.monto, proximoCobro: susc.proximoCobro ? fechaLarga(susc.proximoCobro) : null, email: susc.email }
@@ -93,6 +102,15 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
   const [rol, susc] = await Promise.all([rolEnInstitucion(institucion, usuarioId), suscripcionDe(institucion.id)]);
   if (!puedeGestionarPlan(rol)) return null;
   if (susc && suscripcionVigente(susc.estado)) return null;
+  // Con el mes ya pago una institución real todavía no puede activarlo: no se le propone.
+  const decision = decidirActivacion({
+    hoy: hoyAR(),
+    diaDeCobro: institucion.diaCobro,
+    mesActualPago: await mesActualPago(institucion.id),
+    diferirActivo: diferirPrimerCobroActivo(),
+    esDemo: institucion.esDemo,
+  });
+  if (decision.accion === "esperar") return null;
   const [P, sedes] = await Promise.all([planes(), cantidadDeSedes(getDb(), [institucion.id])]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
   return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };

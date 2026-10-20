@@ -4,6 +4,7 @@ import {
   accionSobreLaFactura,
   cuerpoDeNuevoMonto,
   cuerpoDePlan,
+  decidirActivacion,
   decidirAltaDeSuscripcion,
   decidirSincronizacion,
   detalleDeRechazo,
@@ -45,6 +46,32 @@ describe("primer cobro de un débito cuando el mes ya está pago", () => {
         assert.ok(r !== null, `${hoy} día ${dia}: siempre hay un próximo cobro del mes que viene`);
       }
     }
+  });
+});
+
+describe("qué hacer al activar el débito", () => {
+  const base = { hoy: "2026-10-20", diaDeCobro: 20, mesActualPago: true, diferirActivo: false, esDemo: false };
+
+  it("con el mes sin pagar se activa ya, sea cual sea el interruptor", () => {
+    for (const diferirActivo of [false, true]) {
+      for (const esDemo of [false, true]) {
+        assert.deepEqual(decidirActivacion({ ...base, mesActualPago: false, diferirActivo, esDemo }), { accion: "ahora" });
+      }
+    }
+  });
+
+  it("con el mes ya pago y el interruptor apagado, una institución real espera al mes que viene", () => {
+    assert.deepEqual(decidirActivacion(base), { accion: "esperar", desde: "2026-11-01" });
+    assert.deepEqual(decidirActivacion({ ...base, hoy: "2026-12-31" }), { accion: "esperar", desde: "2027-01-01" });
+  });
+
+  it("con el mes ya pago y el interruptor apagado, una institución de ejemplo activa igual (cobro inmediato)", () => {
+    assert.deepEqual(decidirActivacion({ ...base, esDemo: true }), { accion: "ahora" });
+  });
+
+  it("con el interruptor prendido, el primer cobro se difiere al próximo día de cobro", () => {
+    assert.deepEqual(decidirActivacion({ ...base, diferirActivo: true }), { accion: "con-prueba", dias: 31, fecha: "2026-11-20" });
+    assert.deepEqual(decidirActivacion({ ...base, diferirActivo: true, esDemo: true }), { accion: "con-prueba", dias: 31, fecha: "2026-11-20" });
   });
 });
 

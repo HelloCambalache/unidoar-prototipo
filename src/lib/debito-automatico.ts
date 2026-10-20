@@ -147,6 +147,32 @@ export function primerCobroDiferido(e: { hoy: string; diaDeCobro: number | null;
   return dias > 0 && dias <= MAX_DIAS_DE_PRUEBA ? { dias, fecha } : null;
 }
 
+export type DecisionDeActivacion = { accion: "ahora" } | { accion: "con-prueba"; dias: number; fecha: string } | { accion: "esperar"; desde: string };
+
+/**
+ * Qué hacer cuando una institución quiere activar el débito y el mes en curso YA está pago: Mercado Pago cobra el primer mes al suscribirse,
+ * así que activarlo ahora cobraría dos veces el mismo mes.
+ *  - Con `diferirActivo` (variable MP_DIFERIR_PRIMER_COBRO=1) el plan lleva una prueba sin cobro hasta el próximo día de cobro (`con-prueba`).
+ *  - Sin eso, una institución real espera: puede activarlo desde el 1.º del mes que viene (`esperar`). Las de ejemplo (`esDemo`) activan igual,
+ *    con cobro inmediato: son las que prueban, y el "Posible doble cobro" que sale ahí no importa.
+ * Si el mes todavía no está pago, se activa ya (`ahora`): el primer cobro sale enseguida y paga la factura de este mes.
+ */
+export function decidirActivacion(e: {
+  hoy: string;
+  diaDeCobro: number | null;
+  mesActualPago: boolean;
+  diferirActivo: boolean;
+  esDemo: boolean;
+}): DecisionDeActivacion {
+  if (!e.mesActualPago) return { accion: "ahora" };
+  if (e.diferirActivo) {
+    const diferido = primerCobroDiferido({ hoy: e.hoy, diaDeCobro: e.diaDeCobro, mesActualPago: true });
+    if (diferido) return { accion: "con-prueba", ...diferido };
+  }
+  if (e.esDemo) return { accion: "ahora" };
+  return { accion: "esperar", desde: `${sumarMeses(e.hoy.slice(0, 7), 1)}-01` };
+}
+
 export type DecisionDeAlta = "ignorar" | "misma" | "crear" | "duplicada" | "reemplazar";
 
 /**

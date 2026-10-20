@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   AVISOS_QUE_USAMOS,
   esAvisoQueUsamos,
+  diferirPrimerCobroActivo,
   esCuentaDePrueba,
   esTokenDePrueba,
   mercadoPagoActivo,
@@ -29,6 +30,15 @@ describe("¿los cobros son de prueba?", () => {
     assert.equal(esCuentaDePrueba({ email: "unidoar@gmail.com", nickname: "UNIDOAR.COM", tags: ["normal", "credits"] }), false);
     assert.equal(esCuentaDePrueba({ email: "tester@empresa.com" }), false);
     for (const c of [{}, null, undefined, { email: 5, nickname: {}, tags: "test_user" }]) assert.equal(esCuentaDePrueba(c as never), false);
+  });
+});
+
+describe("interruptor del primer cobro diferido", () => {
+  it("apagado salvo que valga exactamente 1", () => {
+    assert.equal(diferirPrimerCobroActivo({}), false);
+    assert.equal(diferirPrimerCobroActivo({ MP_DIFERIR_PRIMER_COBRO: "1" }), true);
+    assert.equal(diferirPrimerCobroActivo({ MP_DIFERIR_PRIMER_COBRO: " 1 " }), true);
+    for (const v of ["0", "", "true", "si", "2"]) assert.equal(diferirPrimerCobroActivo({ MP_DIFERIR_PRIMER_COBRO: v }), false, v);
   });
 });
 

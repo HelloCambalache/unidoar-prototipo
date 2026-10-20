@@ -138,7 +138,11 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
                   Todavía no nos llegó la confirmación de Mercado Pago. Si ya te suscribiste, puede tardar unos minutos: tocá “Actualizar” en un rato.
                 </p>
               )}
-              {datos.puedeGestionar ? (
+              {datos.activarDesde ? (
+                <p className="m-0 max-w-[62ch] text-[13px] leading-normal text-tinta-2">
+                  Este mes ya figura pago: para no cobrarte dos veces, vas a poder activar el débito automático desde el {datos.activarDesde}.
+                </p>
+              ) : datos.puedeGestionar ? (
                 <div className="flex flex-wrap gap-2.5">
                   <Boton variante="primario" onClick={activar} disabled={pendiente} aria-busy={pendiente}>
                     {pendiente ? "Abriendo Mercado Pago…" : "Activar débito automático"}

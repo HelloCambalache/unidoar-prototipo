@@ -7,9 +7,10 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirInstitucion } from "@/lib/auth";
 import { origenDeLosMails } from "@/lib/correo/config";
 import { hoyAR } from "@/lib/cobros";
-import { esPlanDebitable, montoCobrable, primerCobroDiferido } from "@/lib/debito-automatico";
+import { decidirActivacion, esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
+import { fechaLarga } from "@/lib/fechas-curso";
 import { resumenDeError } from "@/lib/errores";
-import { mercadoPagoActivo } from "@/lib/mercadopago-config";
+import { diferirPrimerCobroActivo, mercadoPagoActivo } from "@/lib/mercadopago-config";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { buscarSuscripcionesDelPlanMp, ErrorDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { DEMASIADOS_PEDIDOS, permitirActivarDebito } from "@/lib/pedidos";
@@ -62,10 +63,20 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   const monto = P.montoDePlan(institucion.plan, sedes);
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
 
-  // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, el plan lleva una prueba hasta el próximo día de cobro
-  // y el primer cobro es el del mes que viene (si no, sería un cobro doble). Si el mes no está pago, el primer cobro sale enseguida y lo paga.
-  const diferido = primerCobroDiferido({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: await mesActualPago(institucion.id) });
-  const diasDePrueba = diferido?.dias ?? 0;
+  // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, activarlo ahora lo cobraría dos veces. Según el interruptor,
+  // el plan lleva una prueba hasta el próximo día de cobro o la institución espera al mes que viene (ver `decidirActivacion`). Si el mes no está
+  // pago, el primer cobro sale enseguida y lo paga.
+  const decision = decidirActivacion({
+    hoy: hoyAR(),
+    diaDeCobro: institucion.diaCobro,
+    mesActualPago: await mesActualPago(institucion.id),
+    diferirActivo: diferirPrimerCobroActivo(),
+    esDemo: institucion.esDemo,
+  });
+  if (decision.accion === "esperar") {
+    return fallo(`Este mes ya figura pago: para no cobrarte dos veces, podés activar el débito automático desde el ${fechaLarga(decision.desde)}.`);
+  }
+  const diasDePrueba = decision.accion === "con-prueba" ? decision.dias : 0;
 
   try {
     const { plan, creado } = await planParaSuscribirse({

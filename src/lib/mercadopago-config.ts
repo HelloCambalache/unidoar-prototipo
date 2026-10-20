@@ -21,6 +21,13 @@ export const tokenDeMercadoPago = (env: Entorno = process.env) => valor(env, "MP
 
 export const secretoDelWebhook = (env: Entorno = process.env) => valor(env, "MP_WEBHOOK_SECRET");
 
+/**
+ * ¿Se difiere el primer cobro (período de prueba en el plan) cuando el mes en curso ya está pago? Apagado por defecto: en el sandbox, pagar
+ * un plan con prueba falló ("No pudimos procesar tu pago", con tarjeta de crédito y de débito) y no se sabe si anda en producción; si fallara,
+ * una institución real no podría suscribirse. Se enciende con `MP_DIFERIR_PRIMER_COBRO=1` recién después de validarlo en producción.
+ */
+export const diferirPrimerCobroActivo = (env: Entorno = process.env) => valor(env, "MP_DIFERIR_PRIMER_COBRO") === "1";
+
 /** ¿Se puede ofrecer el débito automático? Alcanza con el token. */
 export const mercadoPagoActivo = (env: Entorno = process.env) => Boolean(tokenDeMercadoPago(env));
 
