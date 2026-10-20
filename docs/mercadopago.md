@@ -71,12 +71,12 @@ Si algo no llega: el panel de Mercado Pago (Webhooks) muestra cada aviso enviado
 
 ## Antes de abrir a instituciones reales (lista para salir a producción)
 
-Mientras el token sea de **prueba**, solo las instituciones de ejemplo ven el débito automático y pueden activarlo (una institución real no puede suscribirse a un cobro que no es real), y el backoffice muestra un **cartel rojo** en todas sus pantallas. `/api/salud` (con admin) informa `mercadoPago.modo` ("prueba" o "produccion"). El orden:
+Mientras el token sea de **prueba**, solo las instituciones de ejemplo ven el débito automático y pueden activarlo (una institución real no puede suscribirse a un cobro que no es real). `/api/salud` (con admin) informa `mercadoPago.modo` ("prueba" o "produccion"): es la forma de comprobar con qué token está corriendo producción. El orden:
 
 1. **Probar lo que falta con el token de prueba:** un cobro rechazado (titular `FUND` u `OTHE`) y cancelar desde la tarjeta.
 2. **Cancelar el débito de prueba** de cada institución de ejemplo que lo tenga (Plan y facturación → Cancelar débito automático), **con el token de prueba todavía cargado**: así Mercado Pago deja de cobrarlo.
 3. **Limpiar las pruebas:** `pnpm db:mercadopago-limpiar` muestra qué se borraría y `pnpm db:mercadopago-limpiar --borrar` lo borra (planes, suscripciones y cobros de las instituciones de ejemplo; nunca de instituciones reales). Se niega si queda alguna suscripción viva. Si una factura quedó marcada paga por una prueba, se deshace con "Anular pago" en Cobros. Sin este paso, la revisión diaria le preguntaría a Mercado Pago por suscripciones que el token de producción no conoce.
-4. **Cargar el token de producción** (`APP_USR-…`) en `MP_ACCESS_TOKEN` (Production, sensible) y **volver a desplegar**. Desaparece el cartel rojo y `modo` pasa a "produccion".
+4. **Cargar el token de producción** (`APP_USR-…`) en `MP_ACCESS_TOKEN` (Production, sensible) y **volver a desplegar**. Comprobar en `/api/salud` que `modo` pasó a "produccion": hasta entonces las instituciones reales no ven el débito.
 5. **Configurar el webhook en modo producción** en el panel de Mercado Pago: el de prueba no sirve. Misma URL y los dos eventos; la clave secreta (opcional) es otra.
 6. **Una prueba real chica** (opción B de arriba): activar con una tarjeta real, ver la factura paga, cancelar y devolver el cobro desde el panel de Mercado Pago.
 7. **Términos y Privacidad:** los puntos para la revisión legal están en [debito-automatico-puntos-legales.md](debito-automatico-puntos-legales.md).
