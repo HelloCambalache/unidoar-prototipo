@@ -7,7 +7,7 @@ export default function NoEncontrada() {
         No encontramos esa página
       </h1>
       <p className="mb-6 max-w-[46ch] text-[15px] leading-normal text-apagado">
-        Puede que el enlace esté mal escrito o que la institución ya no esté publicada.
+        Puede que el enlace esté mal escrito o que lo que buscás ya no esté publicado.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <BotonLink href="/" variante="primario">
