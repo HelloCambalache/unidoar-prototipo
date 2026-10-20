@@ -20,6 +20,7 @@ import {
   notificaciones,
   postulaciones,
   referidosInstituciones,
+  suscripcionesMp,
   solicitudesPlan,
   usuarios,
 } from "@/db/schema";
@@ -249,6 +250,9 @@ export async function borrarDatosDeLaInstitucion(
     .delete(referidosInstituciones)
     .where(or(eq(referidosInstituciones.referidorId, institucionId), eq(referidosInstituciones.referidoId, institucionId)));
   await tx.delete(codigosReferido).where(eq(codigosReferido.institucionId, institucionId));
+  // La suscripción de débito automático (lleva el mail de pago). Ya se canceló en Mercado Pago antes de llegar acá; el historial de cobros
+  // (`cobros_mp`) queda con las facturas como registro fiscal.
+  await tx.delete(suscripcionesMp).where(eq(suscripcionesMp.institucionId, institucionId));
   await tx.delete(institucionMiembros).where(eq(institucionMiembros.institucionId, institucionId));
   // De las sedes queda solo la principal, con el domicilio (el de los comprobantes): sin ubicación en el mapa ni CUE.
   await tx.delete(institucionSedes).where(and(eq(institucionSedes.institucionId, institucionId), eq(institucionSedes.esPrincipal, false)));

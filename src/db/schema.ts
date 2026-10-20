@@ -656,6 +656,58 @@ export const referidosInstituciones = pgTable(
 
 export type ReferidoInstitucion = typeof referidosInstituciones.$inferSelect;
 
+/* ───────────────────────────── Débito automático con Mercado Pago ─────────────────────────────
+   Una institución tiene como mucho una suscripción vigente (la fila se reemplaza si la anterior se canceló). Tablas agregadas a mano con
+   `pnpm db:mercadopago` (con RLS). Aparte de `facturas` e `instituciones` a propósito: agregarles una columna rompe todas las consultas
+   hasta correr el script. Nunca se guardan datos de tarjeta ni el token: eso vive solo en Mercado Pago y en las variables de Vercel. */
+
+export const suscripcionesMp = pgTable("suscripciones_mp", {
+  institucionId: uuid("institucion_id")
+    .primaryKey()
+    .references(() => instituciones.id, { onDelete: "cascade" }),
+  /** El número de la suscripción en Mercado Pago. */
+  suscripcionId: text("suscripcion_id").notNull().unique(),
+  /** pendiente | autorizada | pausada | cancelada (ver `EstadoSuscripcion`, src/lib/debito-automatico.ts). Lo informa Mercado Pago. */
+  estado: text("estado").notNull(),
+  /** El plan para el que se creó. */
+  plan: text("plan").notNull(),
+  /** Pesos por mes que cobra Mercado Pago hoy. */
+  monto: integer("monto").notNull(),
+  /** Con qué mail paga la persona en Mercado Pago (dato personal: se borra con la baja). */
+  email: text("email").notNull(),
+  proximoCobro: date("proximo_cobro"),
+  creadaEn: timestamp("creada_en", { withTimezone: true }).notNull().defaultNow(),
+  actualizadaEn: timestamp("actualizada_en", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Cada intento de cobro de una suscripción (el número es el del cobro en Mercado Pago: así un aviso repetido no cobra dos veces). */
+export const cobrosMp = pgTable(
+  "cobros_mp",
+  {
+    id: text("id").primaryKey(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    suscripcionId: text("suscripcion_id").notNull(),
+    /** La factura del mes a la que se aplicó el cobro aprobado (null si todavía no o si se borró). */
+    facturaId: uuid("factura_id").references(() => facturas.id, { onDelete: "set null" }),
+    periodo: text("periodo"),
+    monto: integer("monto"),
+    /** aprobado | rechazado | pendiente | cancelado */
+    resultado: text("resultado").notNull(),
+    pagoId: text("pago_id"),
+    detalle: text("detalle"),
+    intento: integer("intento").notNull().default(0),
+    debitoEn: date("debito_en"),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("cobros_mp_institucion_idx").on(t.institucionId)],
+);
+
+export type SuscripcionMp = typeof suscripcionesMp.$inferSelect;
+export type CobroMp = typeof cobrosMp.$inferSelect;
+
 /* ───────────────────────────── Paquete A2 · Acceso y altas ───────────────────────────── */
 
 export type EstadoCeldaDisponibilidad = "disponible" | "convenir" | "ocupada";

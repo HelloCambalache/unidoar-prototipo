@@ -7,4 +7,10 @@ import { crearTope } from "@/lib/tope";
  */
 export const permitirPedidoAlEquipo = crearTope(6, 60 * 60 * 1000);
 
-export const DEMASIADOS_PEDIDOS = "Hiciste muchos pedidos seguidos. Esperá un rato y probá de nuevo.";
+/**
+ * Activar el débito automático crea una suscripción en Mercado Pago (una llamada externa por intento): como mucho 5 por hora y por
+ * cuenta. Con las pruebas de cada institución alcanza de sobra; frena un bucle.
+ */
+export const permitirActivarDebito = crearTope(5, 60 * 60 * 1000);
+
+export const DEMASIADOS_PEDIDOS ="Hiciste muchos pedidos seguidos. Esperá un rato y probá de nuevo.";

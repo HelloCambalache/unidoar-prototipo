@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { urlApp } from "@/db/conexion";
 import { modoCorreo, type ModoCorreo } from "@/lib/correo/config";
+import { mercadoPagoActivo, secretoDelWebhook, tokenDeMercadoPago } from "@/lib/mercadopago-config";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 
 /*
@@ -19,6 +20,8 @@ export type Salud = {
   tareasProgramadas: { CRON_SECRET: boolean };
   /** Cómo salen los mails de la app: resend (envío real), consola (solo pruebas) o apagado (no se manda ni se anota nada). No cuenta para `ok`. */
   correo: ModoCorreo;
+  /** Mercado Pago (débito automático): qué variables hay y si está activo (hacen falta las dos). Solo presencia, nunca valores. No cuenta para `ok`. */
+  mercadoPago: { MP_ACCESS_TOKEN: boolean; MP_WEBHOOK_SECRET: boolean; activo: boolean };
   baseDeDatos: {
     conecta: boolean;
     conexion: TipoConexion;
@@ -88,6 +91,7 @@ export async function revisarSalud(): Promise<Salud> {
   };
   const tareasProgramadas = { CRON_SECRET: presente(process.env.CRON_SECRET) };
   const correo = modoCorreo();
+  const mercadoPago = { MP_ACCESS_TOKEN: presente(tokenDeMercadoPago()), MP_WEBHOOK_SECRET: presente(secretoDelWebhook()), activo: mercadoPagoActivo() };
   const conexion = tipoDeConexion(url);
 
   if (!url) {
@@ -96,6 +100,7 @@ export async function revisarSalud(): Promise<Salud> {
       variables,
       tareasProgramadas,
       correo,
+      mercadoPago,
       baseDeDatos: { conecta: false, conexion, codigo: "SIN_URL", causa: "No hay DATABASE_URL (ni POSTGRES_URL) en este entorno: cargarla en Vercel para Production y redeployar." },
     };
   }
@@ -106,9 +111,9 @@ export async function revisarSalud(): Promise<Salud> {
       new Promise<never>((_, rechazar) => setTimeout(() => rechazar(new Error("timeout")), 8000)),
     ]);
   } catch (err) {
-    return { ok: false, variables, tareasProgramadas, correo, baseDeDatos: { conecta: false, conexion, ...clasificarErrorDeBase(err) } };
+    return { ok: false, variables, tareasProgramadas, correo, mercadoPago, baseDeDatos: { conecta: false, conexion, ...clasificarErrorDeBase(err) } };
   }
 
   const ok = Object.values(variables).every(Boolean);
-  return { ok, variables, tareasProgramadas, correo, baseDeDatos: { conecta: true, conexion } };
+  return { ok, variables, tareasProgramadas, correo, mercadoPago, baseDeDatos: { conecta: true, conexion } };
 }

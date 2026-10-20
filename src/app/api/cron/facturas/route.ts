@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { sincronizarSuscripciones } from "@/lib/queries/suscripcion-sincronizar";
 import { resumenDeError } from "@/lib/errores";
 
 // Se evalúa en cada pedido: crea facturas, no es algo cacheable.
@@ -29,9 +30,11 @@ export async function GET(request: Request) {
         revalidatePath(`/backoffice/instituciones/${institucionId}`);
       }
     }
-    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas });
+    // Los montos de las suscripciones de débito automático siguen al plan y a las sedes (nunca lanza: si falla, queda en el log).
+    const suscripciones = await sincronizarSuscripciones();
+    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, suscripciones });
     return NextResponse.json(
-      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia },
+      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, suscripciones },
       { headers: SIN_CACHE },
     );
   } catch (e) {

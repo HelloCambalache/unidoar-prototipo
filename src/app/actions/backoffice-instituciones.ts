@@ -23,6 +23,7 @@ import {
 } from "@/lib/queries/baja-institucion";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
+import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
 import type { SedeVista } from "@/lib/sedes";
 import type { VitrinaGuardada } from "@/lib/vitrina";
@@ -362,6 +363,11 @@ export async function procesarBajaInstitucion(institucionId: string, entrada: { 
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const datos = parsear(bajaSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(datos.campos?.confirmacion ?? datos.error, datos.campos);
+
+  // Un débito automático activo se cancela PRIMERO en Mercado Pago: si no se pudiera, la baja no sigue (no puede quedar cobrándole a una
+  // institución que ya no existe).
+  const debito = await cancelarSuscripcion(institucionId, { usuarioId: admin.id, motivo: "baja" });
+  if (!debito.ok) return fallo(debito.error);
 
   // El enlace público de antes, para que deje de mostrarse.
   const [antes] = await getDb().select({ slug: instituciones.slug }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
