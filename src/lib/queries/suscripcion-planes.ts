@@ -1,7 +1,8 @@
 import "server-only";
-import { desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt } from "drizzle-orm";
 import { getDb } from "@/db";
-import { planesMp, type PlanMp } from "@/db/schema";
+import { facturas, planesMp, type PlanMp } from "@/db/schema";
+import { periodoActual } from "@/lib/cobros";
 import { cuerpoDePlan, puedeReutilizarPlan } from "@/lib/debito-automatico";
 import { crearPlanMp, ErrorDeMercadoPago, obtenerPlanMp, type PlanDeMercadoPago } from "@/lib/mercadopago-cliente";
 
@@ -35,6 +36,16 @@ export async function planesDe(institucionId: string, limite = 5): Promise<PlanM
   return getDb().select().from(planesMp).where(eq(planesMp.institucionId, institucionId)).orderBy(desc(planesMp.creadoEn)).limit(limite);
 }
 
+/** ¿La factura del mes en curso de la institución ya está paga? (por el débito, a mano o como sea). Define si el primer cobro se difiere. */
+export async function mesActualPago(institucionId: string, ejecutor: Lector = getDb()): Promise<boolean> {
+  const [f] = await ejecutor
+    .select({ estado: facturas.estado })
+    .from(facturas)
+    .where(and(eq(facturas.institucionId, institucionId), eq(facturas.periodo, periodoActual())))
+    .limit(1);
+  return f?.estado === "pagada";
+}
+
 export type DatosParaSuscribirse = {
   institucionId: string;
   institucion: string;
@@ -44,6 +55,8 @@ export type DatosParaSuscribirse = {
   /** Pesos por mes: plan × sedes. */
   monto: number;
   volverA: string;
+  /** Días sin cobro antes del primer cobro (0: sale al suscribirse). Ver `primerCobroDiferido`. */
+  diasDePrueba: number;
 };
 
 /**
@@ -53,7 +66,7 @@ export type DatosParaSuscribirse = {
  */
 export async function planParaSuscribirse(d: DatosParaSuscribirse): Promise<{ plan: PlanDeMercadoPago; creado: boolean }> {
   const guardado = await ultimoPlanDe(d.institucionId);
-  if (guardado && puedeReutilizarPlan(guardado, { plan: d.clavePlan, monto: d.monto })) {
+  if (guardado && puedeReutilizarPlan(guardado, { plan: d.clavePlan, monto: d.monto, diasDePrueba: d.diasDePrueba })) {
     try {
       const actual = await obtenerPlanMp(guardado.mpPlanId);
       if (actual.enlace && (actual.estado === undefined || actual.estado === "active")) return { plan: actual, creado: false };
@@ -63,7 +76,12 @@ export async function planParaSuscribirse(d: DatosParaSuscribirse): Promise<{ pl
     }
   }
 
-  const creado = await crearPlanMp(cuerpoDePlan({ institucion: d.institucion, planLabel: d.planLabel, monto: d.monto, volverA: d.volverA }));
-  await getDb().insert(planesMp).values({ mpPlanId: creado.id, institucionId: d.institucionId, plan: d.clavePlan, monto: d.monto }).onConflictDoNothing();
+  const creado = await crearPlanMp(
+    cuerpoDePlan({ institucion: d.institucion, planLabel: d.planLabel, monto: d.monto, volverA: d.volverA, diasDePrueba: d.diasDePrueba }),
+  );
+  await getDb()
+    .insert(planesMp)
+    .values({ mpPlanId: creado.id, institucionId: d.institucionId, plan: d.clavePlan, monto: d.monto, diasDePrueba: d.diasDePrueba })
+    .onConflictDoNothing();
   return { plan: creado, creado: true };
 }

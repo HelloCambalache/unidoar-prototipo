@@ -6,7 +6,8 @@ import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirInstitucion } from "@/lib/auth";
 import { origenDeLosMails } from "@/lib/correo/config";
-import { esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
+import { hoyAR } from "@/lib/cobros";
+import { esPlanDebitable, montoCobrable, primerCobroDiferido } from "@/lib/debito-automatico";
 import { resumenDeError } from "@/lib/errores";
 import { mercadoPagoActivo } from "@/lib/mercadopago-config";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
@@ -18,7 +19,7 @@ import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
-import { planesDe, planParaSuscribirse } from "@/lib/queries/suscripcion-planes";
+import { mesActualPago, planesDe, planParaSuscribirse } from "@/lib/queries/suscripcion-planes";
 
 /*
  * Débito automático con Mercado Pago, del lado de la institución (ver CLAUDE.md, "Mercado Pago"). Las tres acciones exigen que la cuenta sea
@@ -61,6 +62,11 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   const monto = P.montoDePlan(institucion.plan, sedes);
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
 
+  // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, el plan lleva una prueba hasta el próximo día de cobro
+  // y el primer cobro es el del mes que viene (si no, sería un cobro doble). Si el mes no está pago, el primer cobro sale enseguida y lo paga.
+  const diferido = primerCobroDiferido({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: await mesActualPago(institucion.id) });
+  const diasDePrueba = diferido?.dias ?? 0;
+
   try {
     const { plan, creado } = await planParaSuscribirse({
       institucionId: institucion.id,
@@ -68,6 +74,7 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
       clavePlan: institucion.plan,
       planLabel: P.planDe(institucion.plan).label,
       monto,
+      diasDePrueba,
       // Sin parámetros propios: Mercado Pago le agrega los suyos al volver (`preapproval_id`).
       volverA: `${origenDeLosMails()}/institucion/plan`,
     });
@@ -79,7 +86,7 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
         accion: "suscripcion.crear",
         entidad: "institucion",
         entidadId: institucion.id,
-        detalle: { plan: institucion.plan, monto, sedes },
+        detalle: { plan: institucion.plan, monto, sedes, diasDePrueba },
       });
     }
     revalidarPlan(institucion.id);

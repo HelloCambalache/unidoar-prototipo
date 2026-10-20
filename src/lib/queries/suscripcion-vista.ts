@@ -2,14 +2,15 @@ import "server-only";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
-import { esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import { hoyAR } from "@/lib/cobros";
+import { esPlanDebitable, estadoGuardado, primerCobroDiferido, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
-import { ultimoPlanDe } from "@/lib/queries/suscripcion-planes";
+import { mesActualPago, ultimoPlanDe } from "@/lib/queries/suscripcion-planes";
 
 /** Cuánto tiempo después de mandar a la persona a Mercado Pago se le sigue ofreciendo "Ya me suscribí" (puede haber seguido sin volver). */
 const HORAS_DE_PLAN_RECIENTE = 3;
@@ -28,6 +29,11 @@ export type DebitoVista = {
    * así que se le ofrece confirmarlo.
    */
   planReciente: boolean;
+  /**
+   * Si el mes en curso ya está pago, cuándo sale el primer cobro del débito ("20 de noviembre de 2026"): en vez de cobrar al suscribirse,
+   * Mercado Pago espera al próximo día de cobro (si no, se pagaría dos veces el mismo mes). null si el primer cobro sale al suscribirse.
+   */
+  primerCobro: string | null;
   suscripcion: null | {
     estado: EstadoSuscripcion;
     monto: number;
@@ -42,13 +48,14 @@ export type DebitoVista = {
 
 export async function datosDeDebito(institucion: Institucion, usuarioId: string): Promise<DebitoVista> {
   const db = getDb();
-  const [P, rol, susc, ultimo, sedes, plan] = await Promise.all([
+  const [P, rol, susc, ultimo, sedes, plan, mesPago] = await Promise.all([
     planes(),
     rolEnInstitucion(institucion, usuarioId),
     suscripcionDe(institucion.id),
     db.select().from(cobrosMp).where(eq(cobrosMp.institucionId, institucion.id)).orderBy(desc(cobrosMp.actualizadoEn)).limit(1),
     cantidadDeSedes(db, [institucion.id]),
     ultimoPlanDe(institucion.id),
+    mesActualPago(institucion.id),
   ]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
   // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
@@ -57,6 +64,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
   const cobro = ultimo[0];
   const sinSuscripcionViva = !estado || estado === "cancelada";
   const planReciente = !!plan && sinSuscripcionViva && Date.now() - plan.creadoEn.getTime() < HORAS_DE_PLAN_RECIENTE * 60 * 60 * 1000;
+  const diferido = sinSuscripcionViva ? primerCobroDiferido({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: mesPago }) : null;
 
   return {
     // Sin token no hay débito; con un token de prueba, solo las instituciones de ejemplo lo ven (una real no puede suscribirse a un cobro de mentira).
@@ -65,6 +73,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     puedeGestionar: puedeGestionarPlan(rol),
     montoActual: Number.isInteger(monto) && monto > 0 ? monto : null,
     planReciente,
+    primerCobro: diferido ? fechaLarga(diferido.fecha) : null,
     suscripcion:
       susc && estado
         ? { estado, monto: susc.monto, proximoCobro: susc.proximoCobro ? fechaLarga(susc.proximoCobro) : null, email: susc.email }

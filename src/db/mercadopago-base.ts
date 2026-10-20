@@ -63,6 +63,8 @@ async function main() {
         constraint planes_mp_monto_positivo check (monto > 0)
       )`;
     await tx`create index if not exists planes_mp_institucion_idx on public.planes_mp (institucion_id)`;
+    // Días sin cobro antes del primer cobro (0: sale al suscribirse): se usa cuando el mes en curso ya estaba pago (idempotente).
+    await tx`alter table public.planes_mp add column if not exists dias_de_prueba integer not null default 0`;
     // Por el enlace de un plan Mercado Pago no siempre informa el mail de quien paga: la columna pasa a ser opcional (idempotente).
     await tx`alter table public.suscripciones_mp alter column email drop not null`;
     await tx`alter table public.suscripciones_mp enable row level security`;

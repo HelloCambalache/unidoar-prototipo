@@ -99,7 +99,10 @@ async function avisarCambioDeEstado(tx: Tx, institucionId: string, antes: string
  * cambiarlo a mano. Devuelve el cambio (para la auditoría) o null si no hubo nada que cambiar.
  */
 async function alinearDiaDeCobro(tx: Tx, institucionId: string, mp: SuscripcionDeMercadoPago): Promise<{ antes: number | null; despues: number } | null> {
-  const dia = diaDeCobroDelDebito({ creada: mp.creadaEn, proximoCobro: mp.proximoCobro });
+  // Con una prueba, el primer cobro todavía no salió: el día del débito es el del próximo cobro, no el del alta.
+  const mapeo = mp.planId ? await institucionDelPlan(mp.planId, tx) : null;
+  const conPrueba = (mapeo?.diasDePrueba ?? 0) > 0;
+  const dia = diaDeCobroDelDebito({ creada: conPrueba ? null : mp.creadaEn, proximoCobro: mp.proximoCobro });
   if (dia === null) return null;
   const [inst] = await tx.select({ dia: instituciones.diaCobro }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
   if (!inst || inst.dia === dia) return null;

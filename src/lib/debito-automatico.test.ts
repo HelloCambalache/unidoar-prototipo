@@ -15,9 +15,38 @@ import {
   leerCobro,
   montoCobrable,
   motivoDeSuscripcion,
+  primerCobroDiferido,
   puedeReutilizarPlan,
   suscripcionVigente,
 } from "@/lib/debito-automatico";
+
+describe("primer cobro de un débito cuando el mes ya está pago", () => {
+  it("si el mes en curso no está pago no hay prueba: el primer cobro sale al suscribirse y paga ese mes", () => {
+    assert.equal(primerCobroDiferido({ hoy: "2026-10-20", diaDeCobro: 20, mesActualPago: false }), null);
+  });
+
+  it("si el mes ya está pago, el primer cobro es el día de cobro del mes que viene", () => {
+    assert.deepEqual(primerCobroDiferido({ hoy: "2026-10-20", diaDeCobro: 20, mesActualPago: true }), { dias: 31, fecha: "2026-11-20" });
+    // Sin día de cobro cargado, el 10.
+    assert.deepEqual(primerCobroDiferido({ hoy: "2026-10-31", diaDeCobro: null, mesActualPago: true }), { dias: 10, fecha: "2026-11-10" });
+  });
+
+  it("atraviesa el fin de año y los meses cortos", () => {
+    assert.deepEqual(primerCobroDiferido({ hoy: "2026-12-15", diaDeCobro: 10, mesActualPago: true }), { dias: 26, fecha: "2027-01-10" });
+    // Un día de cobro 31 cae el último día de un mes corto.
+    assert.deepEqual(primerCobroDiferido({ hoy: "2027-01-31", diaDeCobro: 31, mesActualPago: true }), { dias: 28, fecha: "2027-02-28" });
+  });
+
+  it("nunca difiere más de dos meses ni devuelve días que no sean positivos", () => {
+    for (const hoy of ["2026-10-01", "2026-12-31", "2027-02-28"]) {
+      for (const dia of [1, 10, 20, 28, 31, null]) {
+        const r = primerCobroDiferido({ hoy, diaDeCobro: dia, mesActualPago: true });
+        assert.ok(r === null || (r.dias > 0 && r.dias <= 62), `${hoy} día ${dia}`);
+        assert.ok(r !== null, `${hoy} día ${dia}: siempre hay un próximo cobro del mes que viene`);
+      }
+    }
+  });
+});
 
 describe("el día en que cobra el débito", () => {
   it("es el día en que se suscribió, en hora de Argentina", () => {
@@ -87,6 +116,26 @@ describe("armado del plan de la institución", () => {
     assert.equal(c.reason, "UNIDOAR · Plan Colegios · Colegio San Andrés del Norte");
     assert.equal("payer_email" in c, false);
     assert.equal("external_reference" in c, false);
+  });
+
+  it("con días de prueba el plan lleva un free_trial en días, y sin ellos no lleva nada", () => {
+    const con = cuerpoDePlan({ ...datos, diasDePrueba: 31 });
+    assert.deepEqual(con.auto_recurring, {
+      frequency: 1,
+      frequency_type: "months",
+      transaction_amount: 59000,
+      currency_id: "ARS",
+      free_trial: { frequency: 31, frequency_type: "days" },
+    });
+    for (const dias of [0, undefined, -3, 2.5, NaN]) assert.equal("free_trial" in cuerpoDePlan({ ...datos, diasDePrueba: dias }).auto_recurring, false, String(dias));
+  });
+
+  it("un plan con otros días de prueba no se reutiliza", () => {
+    const guardado = { plan: "colegio", monto: 59000, diasDePrueba: 31 };
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "colegio", monto: 59000, diasDePrueba: 31 }), true);
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "colegio", monto: 59000, diasDePrueba: 30 }), false);
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "colegio", monto: 59000 }), false);
+    assert.equal(puedeReutilizarPlan({ plan: "colegio", monto: 59000 }, { plan: "colegio", monto: 59000, diasDePrueba: 0 }), true);
   });
 
   it("el plan se reutiliza solo si sigue siendo el mismo plan y el mismo monto", () => {

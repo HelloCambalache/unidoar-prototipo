@@ -125,6 +125,11 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
                 {datos.montoActual ? ` (${pesos(datos.montoActual)} por mes)` : ""} en tu tarjeta cada mes. Te llevamos a Mercado Pago: ahí iniciás
                 sesión con tu cuenta y cargás la tarjeta. Nosotros nunca la vemos ni la guardamos. Podés cancelarlo cuando quieras.
               </p>
+              {datos.primerCobro && (
+                <p className="mt-0 mb-4 max-w-[62ch] text-[13px] leading-normal text-tinta-2">
+                  Este mes ya figura pago: hoy no se te cobra nada y Mercado Pago recién cobra el {datos.primerCobro}.
+                </p>
+              )}
               {estado === "cancelada" && (
                 <p className="mt-0 mb-4 text-[13px] leading-normal text-apagado">El débito automático anterior está cancelado. Podés activarlo de nuevo.</p>
               )}

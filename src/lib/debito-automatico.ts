@@ -3,7 +3,7 @@
  * la suscripción, cómo se traduce lo que informa Mercado Pago y a qué factura cae cada cobro. El detalle de la integración está en
  * CLAUDE.md ("Mercado Pago") y la guía de puesta en marcha en docs/mercadopago.md.
  */
-import { hoyAR } from "@/lib/cobros";
+import { fechaCobroDelPeriodo, hoyAR, sumarMeses } from "@/lib/cobros";
 
 export const MONEDA = "ARS";
 
@@ -86,6 +86,8 @@ export type DatosDePlan = {
   monto: number;
   /** A dónde vuelve después de suscribirse (siempre una dirección nuestra, con https, sin parámetros propios). */
   volverA: string;
+  /** Días sin cobro antes del primer cobro (ver `primerCobroDiferido`). 0 o ausente: el primer cobro sale al suscribirse. */
+  diasDePrueba?: number;
 };
 
 /**
@@ -96,19 +98,53 @@ export type DatosDePlan = {
  * reconoce por el plan: hay un plan por institución y una tabla que los relaciona (`planes_mp`).
  */
 export function cuerpoDePlan(d: DatosDePlan) {
+  const dias = Number.isInteger(d.diasDePrueba) && (d.diasDePrueba as number) > 0 ? (d.diasDePrueba as number) : 0;
   return {
     reason: motivoDeSuscripcion(d.planLabel, d.institucion),
     back_url: d.volverA,
-    auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: d.monto, currency_id: MONEDA },
+    auto_recurring: {
+      frequency: 1,
+      frequency_type: "months",
+      transaction_amount: d.monto,
+      currency_id: MONEDA,
+      // Con `free_trial` Mercado Pago no cobra al suscribirse y el primer cobro sale al terminar la prueba.
+      ...(dias > 0 ? { free_trial: { frequency: dias, frequency_type: "days" } } : {}),
+    },
   };
 }
 
 /**
- * ¿Sirve el plan que ya creamos para esta institución? Solo si sigue siendo el mismo plan y el mismo monto: el monto va dentro del plan,
- * así que si el precio, las sedes o el plan cambiaron hay que crear otro (el viejo queda mapeado por si alguien lo tenía abierto).
+ * ¿Sirve el plan que ya creamos para esta institución? Solo si sigue siendo el mismo plan, el mismo monto y los mismos días de prueba: el
+ * monto y la prueba van dentro del plan, así que si el precio, las sedes, el plan o los días hasta el próximo cobro cambiaron hay que crear
+ * otro (el viejo queda mapeado por si alguien lo tenía abierto). Los días de prueba cambian cada día: un plan con prueba solo se reutiliza el mismo día.
  */
-export function puedeReutilizarPlan(guardado: { plan: string; monto: number } | null | undefined, actual: { plan: string; monto: number }): boolean {
-  return !!guardado && guardado.plan === actual.plan && guardado.monto === actual.monto;
+export function puedeReutilizarPlan(
+  guardado: { plan: string; monto: number; diasDePrueba?: number } | null | undefined,
+  actual: { plan: string; monto: number; diasDePrueba?: number },
+): boolean {
+  return (
+    !!guardado && guardado.plan === actual.plan && guardado.monto === actual.monto && (guardado.diasDePrueba ?? 0) === (actual.diasDePrueba ?? 0)
+  );
+}
+
+/** Lo más lejos que se difiere un primer cobro: dos meses (de sobra para llegar al día de cobro del mes que viene). */
+const MAX_DIAS_DE_PRUEBA = 62;
+
+/**
+ * Mercado Pago cobra el primer mes AL SUSCRIBIRSE. Si el mes en curso ya está pago (la suscripción anterior se canceló en el mismo mes, o se
+ * pagó por otro medio), ese cobro sería doble. Entonces el plan lleva una prueba hasta el día de cobro del mes que viene y el primer cobro
+ * es el de ese mes. Devuelve esos días y la fecha ("AAAA-MM-DD") del primer cobro, o null si el mes en curso todavía no está pago: ahí el
+ * primer cobro sale enseguida y paga la factura de este mes (lo que se quiere). `diaDeCobro` es el de la institución (por defecto el 10).
+ */
+export function primerCobroDiferido(e: { hoy: string; diaDeCobro: number | null; mesActualPago: boolean }): { dias: number; fecha: string } | null {
+  if (!e.mesActualPago) return null;
+  const fecha = fechaCobroDelPeriodo(sumarMeses(e.hoy.slice(0, 7), 1), e.diaDeCobro);
+  const aDia = (f: string) => {
+    const [a, m, d] = f.split("-").map(Number) as [number, number, number];
+    return Date.UTC(a, m - 1, d);
+  };
+  const dias = Math.round((aDia(fecha) - aDia(e.hoy)) / 86_400_000);
+  return dias > 0 && dias <= MAX_DIAS_DE_PRUEBA ? { dias, fecha } : null;
 }
 
 export type DecisionDeAlta = "ignorar" | "misma" | "crear" | "duplicada" | "reemplazar";

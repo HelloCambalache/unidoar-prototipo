@@ -723,6 +723,11 @@ export const planesMp = pgTable(
     plan: text("plan").notNull(),
     /** Pesos por mes del plan de Mercado Pago. */
     monto: integer("monto").notNull(),
+    /**
+     * Días sin cobro antes del primer cobro (0: sale al suscribirse). Se usa cuando el mes en curso ya estaba pago, para no cobrarlo dos veces
+     * (ver `primerCobroDiferido`). Un plan con prueba solo se reutiliza el mismo día.
+     */
+    diasDePrueba: integer("dias_de_prueba").notNull().default(0),
     creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("planes_mp_institucion_idx").on(t.institucionId)],
