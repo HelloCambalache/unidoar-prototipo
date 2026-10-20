@@ -22,9 +22,11 @@ export type DatosDe = {
   M12: { nombre: string; motivo: string };
   M13: { nombre: string; motivo: string };
   /** Docente: `nombre` y sin `institucion`. Institución: `institucion` y sin `nombre` (le llega a todo el equipo). */
-  M15: { nombre: string | null; institucion: string | null; motivo: string | null };
+  /** `debitoCancelado` (solo instituciones): al suspender el equipo canceló también su débito automático. */
+  M15: { nombre: string | null; institucion: string | null; motivo: string | null; debitoCancelado?: boolean };
   /** El equipo levantó la suspensión. Mismos datos que M15 (sin el motivo): profesional con `nombre`, institución con `institucion`. */
-  M16: { nombre: string | null; institucion: string | null };
+  /** `debitoCancelado` (solo instituciones): el débito automático sigue cancelado, así que se lo recuerda para que lo active de nuevo. */
+  M16: { nombre: string | null; institucion: string | null; debitoCancelado?: boolean };
   M20: { institucion: string; puesto: string; ruta: string };
   M21: { institucion: string; puesto: string; zona: string | null; plazo: string | null; ruta: string };
   M23: { institucion: string; puesto: string; ruta: string };
@@ -42,6 +44,8 @@ export type DatosDe = {
   M55: { institucion: string; plan: string };
   /** `detalle`: lo que pasó con la factura del mes (la crearon, la ajustaron…), ya redactado. */
   M56: { institucion: string; plan: string; aprobado: boolean; nota: string | null; detalle: string | null };
+  /** Mercado Pago no pudo cobrar el débito automático del mes (solo el primer rechazo de cada cobro; los reintentos avisan en la campanita). */
+  M58: { institucion: string; periodo: string; monto: string };
   M60: { nombre: string; email: string; rol: string | null; mensaje: string };
   M61: { docente: string; detalle: string; ruta: string };
   M62: { cuenta: string; tipo: string; ruta: string };
@@ -170,6 +174,9 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
             : "Mientras esté suspendida no podés usar la plataforma ni aparecés en las búsquedas de las instituciones.",
           " Escribinos para ver cómo regularizarla.",
         ],
+        ...(d.institucion && d.debitoCancelado
+          ? [["También cancelamos el débito automático de tu plan: Mercado Pago no te va a cobrar mientras la cuenta esté suspendida. Cuando la reactivemos, podés activarlo de nuevo desde Plan y facturación."]]
+          : []),
         // El motivo va al final, justo antes de la cita que lo muestra: así "El motivo:" encabeza lo que sigue.
         ...(d.motivo ? [["El motivo:"]] : []),
       ],
@@ -188,6 +195,9 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
         d.institucion
           ? ["Hola: reactivamos la cuenta de ", n(d.institucion), " en UNIDOAR. El equipo ya puede volver a entrar y usar la plataforma con normalidad."]
           : ["Hola", d.nombre ? " " : "", d.nombre ? n(d.nombre) : "", ": reactivamos tu cuenta en UNIDOAR. Ya podés volver a entrar y volvés a aparecer en las búsquedas de las instituciones."],
+        ...(d.institucion && d.debitoCancelado
+          ? [["Tu débito automático sigue cancelado: si querés volver a pagar con débito, activalo de nuevo desde Plan y facturación."]]
+          : []),
       ],
       boton: { texto: "Entrar a UNIDOAR", ruta: d.institucion ? "/institucion/dashboard" : "/docente/dashboard" },
     }),
@@ -404,6 +414,22 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       cita: d.nota ?? undefined,
       boton: { texto: "Ver mi plan", ruta: "/institucion/plan" },
       nota: d.aprobado ? undefined : ["Si querés hablarlo, respondé este mail."],
+    }),
+  },
+
+  M58: {
+    grupo: "facturacion",
+    remitente: "facturacion",
+    contenido: (d) => ({
+      asunto: `No pudimos cobrar tu débito automático de ${minuscula(d.periodo)}`,
+      previa: "Mercado Pago no pudo cobrar tu plan. Revisá tu medio de pago.",
+      titulo: "No pudimos cobrar tu débito automático",
+      parrafos: [
+        ["Mercado Pago no pudo cobrar el plan de ", n(d.institucion), " de ", n(d.periodo), " (", n(d.monto), ") en la tarjeta que autorizaste. Lo va a volver a intentar en los próximos días."],
+        ["Para que no se corte, revisá que la tarjeta tenga saldo y esté vigente, o cambiá el medio de pago desde tu cuenta de Mercado Pago."],
+      ],
+      boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
+      nota: ["Si ya lo resolviste, no tenés que hacer nada: cuando Mercado Pago logre cobrar, te avisamos."],
     }),
   },
 

@@ -85,6 +85,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M53, M54 | Se registra un pago / se anula (si el equipo pidió avisar) | Dueño y administradores | facturación |
 | M55 | Se pide un cambio de plan | Quien lo pidió | facturación |
 | M56 | Se aprueba o rechaza el cambio de plan | Dueño y administradores | facturación |
+| M58 | Mercado Pago no pudo cobrar el débito automático (solo el primer rechazo de cada cobro) | Dueño y administradores | facturación |
 | M60 | Mensaje desde Contacto | El equipo (responder a este mail contesta a la persona) | interno |
 | M61 | Un docente sube documentación para revisar | El equipo | interno |
 | M62 | Una cuenta pide la baja | El equipo | interno |

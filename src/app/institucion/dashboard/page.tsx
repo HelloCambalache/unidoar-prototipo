@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { TarjetaMetrica } from "@/components/app/tarjeta-metrica";
+import { AvisoDebito } from "@/components/institucion/aviso-debito";
 import { BannerPasos } from "@/components/institucion/banner-pasos";
 import { DashboardPrimeraVez } from "@/components/institucion/dashboard-primera-vez";
 import { RecomendadosLateral } from "@/components/institucion/docentes-sugeridos";
@@ -15,13 +16,16 @@ import { enumerar, pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import { estadisticasInstitucion, integrantesDeEquipo, listarBusquedas } from "@/lib/queries/busquedas";
 import { docentesRecomendados } from "@/lib/queries/coincidencias";
 import { planes } from "@/lib/queries/planes";
+import { avisoDeDebito } from "@/lib/queries/suscripcion-vista";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardInstitucion() {
-  const { institucion } = await requerirInstitucion();
+  const { usuario, institucion } = await requerirInstitucion();
   const nombre = institucion.contactoNombre?.trim().split(/\s+/)[0] || institucion.nombre;
   const est = await estadisticasInstitucion(institucion.id);
+  // Una vez verificada, se le propone activar el débito automático (desaparece solo cuando queda activo).
+  const debito = await avisoDeDebito(institucion, usuario.id);
 
   // Sin búsquedas todavía: la variante de "institución recién creada".
   if (est.totalBusquedas === 0) {
@@ -31,13 +35,16 @@ export default async function DashboardInstitucion() {
       planes(),
     ]);
     return (
-      <DashboardPrimeraVez
-        institucion={institucion}
-        nombre={nombre}
-        equipo={equipo}
-        cercanos={cercanos}
-        planLabel={P.planDe(institucion.plan).label}
-      />
+      <>
+        {debito && <AvisoDebito monto={debito.monto} />}
+        <DashboardPrimeraVez
+          institucion={institucion}
+          nombre={nombre}
+          equipo={equipo}
+          cercanos={cercanos}
+          planLabel={P.planDe(institucion.plan).label}
+        />
+      </>
     );
   }
 
@@ -64,6 +71,7 @@ export default async function DashboardInstitucion() {
 
   return (
     <>
+      {debito && <AvisoDebito monto={debito.monto} />}
       <EncabezadoPagina
         titulo={`Buenas, ${nombre}`}
         bajada={bajada}

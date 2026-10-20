@@ -7,6 +7,7 @@ import {
   MPNotFoundError,
   PreApproval,
   PreApprovalPlan,
+  User,
   WebhookSignatureValidator,
 } from "mercadopago";
 import { cuerpoDeNuevoMonto, detalleDeRechazo, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDePlan } from "@/lib/debito-automatico";
@@ -39,11 +40,11 @@ export class ErrorDeMercadoPago extends Error {
   }
 }
 
-function configuracion() {
+function configuracion(opciones: { timeout: number; maxRetries: number } = { timeout: 10_000, maxRetries: 2 }) {
   const token = tokenDeMercadoPago();
   if (!token) throw new ErrorDeMercadoPago("sin-configurar", "Falta MP_ACCESS_TOKEN.");
   // El SDK reintenta solo ante fallos transitorios y usa una clave de idempotencia por pedido: reintentar una creación no la duplica.
-  return new MercadoPagoConfig({ accessToken: token, options: { timeout: 10_000, maxRetries: 2 } });
+  return new MercadoPagoConfig({ accessToken: token, options: opciones });
 }
 
 /** Un error del SDK → uno nuestro, sin arrastrar el pedido (que lleva el token) ni el cuerpo de la respuesta. */
@@ -203,6 +204,20 @@ export async function buscarCobrosMp(suscripcionId: string): Promise<CobroDeMerc
 export async function obtenerCobroMp(id: string): Promise<CobroDeMercadoPago> {
   try {
     return (await new Invoice(configuracion()).get({ id })) as CobroDeMercadoPago;
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+/**
+ * La cuenta dueña del Access Token (`GET /users/me`): sirve para saber si los cobros son de prueba o reales (un token `APP_USR-` también
+ * puede ser de una cuenta de prueba). Solo lee mail, usuario y etiquetas; nada de eso se guarda.
+ */
+export async function obtenerCuentaDeCobroMp(): Promise<{ email: string | null; nickname: string | null; tags: string[] }> {
+  try {
+    // Se pregunta al dibujar pantallas del backoffice: un límite corto y sin reintentos, para que una demora de Mercado Pago no las trabe.
+    const u = await new User(configuracion({ timeout: 3_000, maxRetries: 0 })).get();
+    return { email: u.email ?? null, nickname: u.nickname ?? null, tags: Array.isArray(u.tags) ? u.tags.map(String) : [] };
   } catch (e) {
     throw traducir(e);
   }

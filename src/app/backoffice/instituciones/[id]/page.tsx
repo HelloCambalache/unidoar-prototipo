@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { InstAcciones } from "@/components/backoffice/inst-acciones";
+import { InstDebito } from "@/components/backoffice/inst-debito";
 import { InstProcesarBaja } from "@/components/backoffice/inst-procesar-baja";
 import { InsigniaCuenta, InsigniaFactura, InsigniaVerificada } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
@@ -16,6 +17,8 @@ import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { describirAccion, ROL_MIEMBRO } from "@/lib/backoffice-instituciones";
 import { esUuid } from "@/lib/busquedas";
+import { suscripcionVigente } from "@/lib/debito-automatico";
+import { debitoParaBackoffice } from "@/lib/queries/suscripcion-backoffice";
 import {
   enlaceWhatsappConTexto,
   esClavePlan,
@@ -64,6 +67,9 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
   const deBaja = i.bajaEn !== null;
   // Lo que se llevaría la baja (para el diálogo): solo si se puede procesar, o sea no es de ejemplo ni ya está dada de baja.
   const resumenDeBaja = !deBaja && !i.esDemo ? await resumenParaBajaDeInstitucion(i.id) : null;
+  // El débito automático: se muestra en la ficha y, si está vivo (pendiente, activo o en pausa), el diálogo de suspender ofrece cancelarlo.
+  const debito = await debitoParaBackoffice(i.id);
+  const debitoVigente = !deBaja && suscripcionVigente(debito.suscripcion?.estado);
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "fundador";
   const contacto = [i.contactoNombre, i.contactoRol].filter(Boolean).join(" · ");
@@ -304,6 +310,8 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
             )}
           </Seccion>
 
+          <InstDebito debito={debito} />
+
           <Seccion titulo="Equipo">
             {ficha.equipo.length === 0 ? (
               <div className="text-[13px] leading-[1.4] text-apagado">Todavía no sumó a nadie al equipo.</div>
@@ -329,6 +337,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
                 nombre={i.nombre}
                 verificada={i.verificada}
                 suspendida={i.suspendida}
+                debitoVigente={debitoVigente}
                 enlaceWhatsapp={whatsapp}
               />
               {resumenDeBaja && (

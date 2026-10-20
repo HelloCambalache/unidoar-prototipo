@@ -2,7 +2,8 @@ import { sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { urlApp } from "@/db/conexion";
 import { modoCorreo, type ModoCorreo } from "@/lib/correo/config";
-import { mercadoPagoActivo, secretoDelWebhook, tokenDeMercadoPago } from "@/lib/mercadopago-config";
+import { mercadoPagoActivo, secretoDelWebhook, tokenDeMercadoPago, type ModoDeCobro } from "@/lib/mercadopago-config";
+import { modoDeMercadoPago } from "@/lib/queries/mercadopago-modo";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 
 /*
@@ -21,7 +22,7 @@ export type Salud = {
   /** Cómo salen los mails de la app: resend (envío real), consola (solo pruebas) o apagado (no se manda ni se anota nada). No cuenta para `ok`. */
   correo: ModoCorreo;
   /** Mercado Pago (débito automático): qué variables hay y si está activo (alcanza con el token; la clave de los avisos es opcional). Solo presencia, nunca valores. No cuenta para `ok`. */
-  mercadoPago: { MP_ACCESS_TOKEN: boolean; MP_WEBHOOK_SECRET: boolean; activo: boolean };
+  mercadoPago: { MP_ACCESS_TOKEN: boolean; MP_WEBHOOK_SECRET: boolean; activo: boolean; modo: ModoDeCobro | null };
   baseDeDatos: {
     conecta: boolean;
     conexion: TipoConexion;
@@ -91,7 +92,13 @@ export async function revisarSalud(): Promise<Salud> {
   };
   const tareasProgramadas = { CRON_SECRET: presente(process.env.CRON_SECRET) };
   const correo = modoCorreo();
-  const mercadoPago = { MP_ACCESS_TOKEN: presente(tokenDeMercadoPago()), MP_WEBHOOK_SECRET: presente(secretoDelWebhook()), activo: mercadoPagoActivo() };
+  // `modo`: "prueba" si los cobros no son reales (token TEST- o cuenta de prueba), "produccion", "desconocido" o null sin token. Nunca el token.
+  const mercadoPago = {
+    MP_ACCESS_TOKEN: presente(tokenDeMercadoPago()),
+    MP_WEBHOOK_SECRET: presente(secretoDelWebhook()),
+    activo: mercadoPagoActivo(),
+    modo: await modoDeMercadoPago().catch(() => null),
+  };
   const conexion = tipoDeConexion(url);
 
   if (!url) {

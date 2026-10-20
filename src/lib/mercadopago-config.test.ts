@@ -1,6 +1,36 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { AVISOS_QUE_USAMOS, esAvisoQueUsamos, mercadoPagoActivo, secretoDelWebhook, tokenDeMercadoPago } from "@/lib/mercadopago-config";
+import {
+  AVISOS_QUE_USAMOS,
+  esAvisoQueUsamos,
+  esCuentaDePrueba,
+  esTokenDePrueba,
+  mercadoPagoActivo,
+  secretoDelWebhook,
+  tokenDeMercadoPago,
+} from "@/lib/mercadopago-config";
+
+describe("¿los cobros son de prueba?", () => {
+  it("un token que empieza con TEST- es de prueba; uno de producción (APP_USR-) o vacío, no", () => {
+    assert.equal(esTokenDePrueba("TEST-123456-abc"), true);
+    assert.equal(esTokenDePrueba("  test-123  "), true);
+    assert.equal(esTokenDePrueba("APP_USR-123456-abc"), false);
+    for (const t of ["", "   ", null, undefined]) assert.equal(esTokenDePrueba(t), false, String(t));
+  });
+
+  it("una cuenta de prueba se reconoce por su mail, su usuario o sus etiquetas", () => {
+    assert.equal(esCuentaDePrueba({ email: "test_user_328791889392025651@testuser.com" }), true);
+    assert.equal(esCuentaDePrueba({ email: "otro@testuser.com" }), true);
+    assert.equal(esCuentaDePrueba({ nickname: "TESTUSER328791889392025651" }), true);
+    assert.equal(esCuentaDePrueba({ tags: ["normal", "test_user"] }), true);
+  });
+
+  it("una cuenta real, o sin datos, no es de prueba", () => {
+    assert.equal(esCuentaDePrueba({ email: "unidoar@gmail.com", nickname: "UNIDOAR.COM", tags: ["normal", "credits"] }), false);
+    assert.equal(esCuentaDePrueba({ email: "tester@empresa.com" }), false);
+    for (const c of [{}, null, undefined, { email: 5, nickname: {}, tags: "test_user" }]) assert.equal(esCuentaDePrueba(c as never), false);
+  });
+});
 
 describe("configuración de Mercado Pago", () => {
   it("apagado sin variables", () => {

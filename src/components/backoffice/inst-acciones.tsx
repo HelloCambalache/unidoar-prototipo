@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { reactivarInstitucion, suspenderInstitucion, verificarInstitucion } from "@/app/actions/backoffice-instituciones";
 import { BotonWhatsapp } from "@/components/backoffice/inst-whatsapp";
 import { Boton } from "@/components/ui/button";
-import { Campo, Select, Textarea } from "@/components/ui/campos";
+import { Campo, Casilla, Select, Textarea } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
 import { MOTIVOS_SUSPENSION } from "@/lib/backoffice-instituciones";
@@ -20,12 +20,15 @@ export function InstAcciones({
   nombre,
   verificada,
   suspendida,
+  debitoVigente,
   enlaceWhatsapp,
 }: {
   institucionId: string;
   nombre: string;
   verificada: boolean;
   suspendida: boolean;
+  /** Tiene un débito automático vivo en Mercado Pago: el diálogo de suspender ofrece cancelarlo. */
+  debitoVigente: boolean;
   enlaceWhatsapp: string | null;
 }) {
   const toast = useToast();
@@ -33,12 +36,15 @@ export function InstAcciones({
   const [dialogo, setDialogo] = useState<Dialogo>(null);
   const [motivo, setMotivo] = useState("");
   const [nota, setNota] = useState("");
+  // Tildada por defecto: suspender no cancela el débito por sí solo, y Mercado Pago seguiría cobrando a una cuenta que no puede usar el servicio.
+  const [cancelarDebito, setCancelarDebito] = useState(debitoVigente);
   const [error, setError] = useState<string | null>(null);
 
   const cerrar = () => {
     setDialogo(null);
     setMotivo("");
     setNota("");
+    setCancelarDebito(debitoVigente);
     setError(null);
   };
 
@@ -65,7 +71,10 @@ export function InstAcciones({
       setError("Elegí el motivo de la suspensión.");
       return;
     }
-    ejecutar(() => suspenderInstitucion(institucionId, { motivo, nota }), "Cuenta suspendida");
+    ejecutar(
+      () => suspenderInstitucion(institucionId, { motivo, nota, cancelarDebito: debitoVigente && cancelarDebito }),
+      debitoVigente && cancelarDebito ? "Cuenta suspendida y débito cancelado" : "Cuenta suspendida",
+    );
   };
 
   const texto = "m-0 mb-4 text-sm leading-normal text-apagado";
@@ -146,6 +155,17 @@ export function InstAcciones({
           <Campo etiqueta="Nota interna" ayuda="Queda en el registro del equipo; la institución no la ve.">
             <Textarea value={nota} maxLength={500} rows={3} placeholder="Opcional" onChange={(e) => setNota(e.target.value)} />
           </Campo>
+          {debitoVigente && (
+            <div className="rounded-caja border border-borde bg-superficie px-3.5 py-3">
+              <Casilla checked={cancelarDebito} onChange={(e) => setCancelarDebito(e.target.checked)}>
+                Cancelar también el débito automático
+              </Casilla>
+              <p className="mt-1.5 mb-0 text-[12.5px] leading-normal text-apagado">
+                Tiene un débito activo en Mercado Pago: si no lo cancelás, le sigue cobrando todos los meses aunque la cuenta esté
+                suspendida. Al reactivarla tendrá que activarlo de nuevo.
+              </p>
+            </div>
+          )}
         </div>
         <div className="flex gap-2.5">
           <Boton variante="peligro" disabled={pendiente} onClick={confirmarSuspension}>

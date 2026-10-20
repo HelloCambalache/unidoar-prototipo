@@ -69,6 +69,24 @@ Con el Access Token de producción (`APP_USR-`) no hay tarjetas de prueba: un co
 
 Si algo no llega: el panel de Mercado Pago (Webhooks) muestra cada aviso enviado y su respuesta; en Vercel → Logs, buscar `[mercadopago]`. "Simular notificación" del panel sirve para ver que el endpoint responde (con un número de prueba contesta 200 y lo ignora).
 
+## Antes de abrir a instituciones reales (lista para salir a producción)
+
+Mientras el token sea de **prueba**, solo las instituciones de ejemplo ven el débito automático y pueden activarlo (una institución real no puede suscribirse a un cobro que no es real), y el backoffice muestra un **cartel rojo** en todas sus pantallas. `/api/salud` (con admin) informa `mercadoPago.modo` ("prueba" o "produccion"). El orden:
+
+1. **Probar lo que falta con el token de prueba:** un cobro rechazado (titular `FUND` u `OTHE`) y cancelar desde la tarjeta.
+2. **Cancelar el débito de prueba** de cada institución de ejemplo que lo tenga (Plan y facturación → Cancelar débito automático), **con el token de prueba todavía cargado**: así Mercado Pago deja de cobrarlo.
+3. **Limpiar las pruebas:** `pnpm db:mercadopago-limpiar` muestra qué se borraría y `pnpm db:mercadopago-limpiar --borrar` lo borra (planes, suscripciones y cobros de las instituciones de ejemplo; nunca de instituciones reales). Se niega si queda alguna suscripción viva. Si una factura quedó marcada paga por una prueba, se deshace con "Anular pago" en Cobros. Sin este paso, la revisión diaria le preguntaría a Mercado Pago por suscripciones que el token de producción no conoce.
+4. **Cargar el token de producción** (`APP_USR-…`) en `MP_ACCESS_TOKEN` (Production, sensible) y **volver a desplegar**. Desaparece el cartel rojo y `modo` pasa a "produccion".
+5. **Configurar el webhook en modo producción** en el panel de Mercado Pago: el de prueba no sirve. Misma URL y los dos eventos; la clave secreta (opcional) es otra.
+6. **Una prueba real chica** (opción B de arriba): activar con una tarjeta real, ver la factura paga, cancelar y devolver el cobro desde el panel de Mercado Pago.
+7. **Términos y Privacidad:** los puntos para la revisión legal están en [debito-automatico-puntos-legales.md](debito-automatico-puntos-legales.md).
+
+## Qué ve el equipo y qué ve la institución
+
+- **Ficha de la institución (backoffice):** una tarjeta "Débito automático" con el estado, el monto, el próximo cobro, desde cuándo, la cuenta de Mercado Pago (si la informó) y los últimos 5 cobros, con los rechazos a la vista. Es solo lectura.
+- **Inicio de la institución:** un aviso "Activá el débito automático" cuando ya está verificada y todavía no lo activó. Desaparece solo al activarlo.
+- **Cobro rechazado:** además de la campanita, la primera vez le llega un mail a quien paga (no se repite en los reintentos).
+
 ## Qué pasa en cada caso
 
 - **La persona se suscribe:** Mercado Pago avisa (o la persona vuelve a UNIDOAR) y la suscripción se ata a la institución por su plan. Se avisa a la institución y queda en la auditoría.
@@ -79,6 +97,7 @@ Si algo no llega: el panel de Mercado Pago (Webhooks) muestra cada aviso enviado
 - **Mes que ya figuraba pago por otro medio:** no se pisa nada y se avisa al equipo ("Posible doble cobro") para revisar una devolución.
 - **La persona se suscribe dos veces (otro plan o otra tarjeta):** si ya tenía el débito activo, la segunda se cancela y se avisa al equipo. Si la primera había quedado pendiente y la nueva está autorizada, la nueva pasa a ser la vigente y la pendiente se cancela. Una suscripción que no se puede atribuir a ninguna institución **no se cancela**: se avisa al equipo para que la mire.
 - **La institución cancela o se da de baja:** se cancela primero en Mercado Pago; si no se pudiera, la baja no sigue.
+- **El equipo suspende una institución con débito activo:** suspender no cancela el débito por sí solo, así que el diálogo de suspender trae la casilla **"Cancelar también el débito automático"**, tildada por defecto. Si se deja tildada, primero se cancela en Mercado Pago y después se suspende; si Mercado Pago no responde, no se suspende nada y se puede reintentar (o destildar la casilla para una suspensión urgente). La institución recibe el aviso y el mail de la suspensión con esa aclaración, y al reactivarla se le recuerda que el débito sigue cancelado y que lo active de nuevo desde Plan y facturación.
 - **Cambia el precio del plan, las sedes o el plan de la institución:** el cron diario compara lo que cobra cada suscripción con lo que hoy cuesta el plan y, si difiere, actualiza el monto en Mercado Pago **desde el próximo cobro** y avisa a la institución. Un aumento puede sacar la suscripción de "autorizada" hasta que la persona apruebe el monto nuevo: si pasa, se avisa al equipo. Si pasó al plan Anual, se cancela la suscripción mensual.
 - **Mercado Pago o la base caídas al llegar un aviso:** respondemos 500 y Mercado Pago reintenta cada 15 minutos hasta que salga.
 

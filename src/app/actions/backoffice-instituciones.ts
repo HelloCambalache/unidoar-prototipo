@@ -23,6 +23,7 @@ import {
 } from "@/lib/queries/baja-institucion";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { guardarSedesDeInstitucion } from "@/lib/queries/sedes-guardar";
+import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { guardarVitrinaDeInstitucion } from "@/lib/queries/vitrina-guardar";
 import type { SedeVista } from "@/lib/sedes";
@@ -268,15 +269,29 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
 /**
  * Suspende la cuenta: el equipo de la institución deja de poder entrar a su área (se hace cumplir en
  * `requerirInstitucion`). El motivo queda en la auditoría y se le dice a la institución; la nota es interna.
+ *
+ * Suspender NO cancela el débito automático por sí solo (Mercado Pago seguiría cobrando a una cuenta que no puede usar el servicio):
+ * con `cancelarDebito` se cancela también, y se hace ANTES de suspender, igual que en la baja. Si Mercado Pago no responde, no se suspende
+ * nada y se puede reintentar o suspender sin cancelar el débito (una suspensión urgente no queda trabada por Mercado Pago).
  */
 export async function suspenderInstitucion(
   institucionId: string,
-  entrada: { motivo: string; nota?: string },
+  entrada: { motivo: string; nota?: string; cancelarDebito?: boolean },
 ): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const datos = parsear(suspensionSchema, entrada);
   if (!datos.ok) return fallo(datos.campos?.motivo ?? datos.campos?.nota ?? datos.error, datos.campos);
+
+  let debitoCancelado = false;
+  if (entrada.cancelarDebito === true) {
+    const [previa] = await institucionBloqueada(getDb(), institucionId);
+    if (!previa) return fallo(NO_ENCONTRADA);
+    if (previa.suspendida) return fallo("Esta cuenta ya está suspendida.");
+    const cancelacion = await cancelarSuscripcion(institucionId, { usuarioId: admin.id, motivo: "suspension" });
+    if (!cancelacion.ok) return fallo(`${cancelacion.error} La cuenta no se suspendió: probá de nuevo o suspendela sin cancelar el débito.`);
+    debitoCancelado = cancelacion.habiaVigente;
+  }
 
   const resultado = await transaccion(async (tx) => {
     const [inst] = await institucionBloqueada(tx, institucionId);
@@ -290,7 +305,7 @@ export async function suspenderInstitucion(
         accion: "institucion.suspender",
         entidad: "institucion",
         entidadId: inst.id,
-        detalle: { institucionId: inst.id, nombre: inst.nombre, motivo: datos.data.motivo, nota: datos.data.nota ?? null },
+        detalle: { institucionId: inst.id, nombre: inst.nombre, motivo: datos.data.motivo, nota: datos.data.nota ?? null, debitoCancelado },
       },
       tx,
     );
@@ -298,11 +313,11 @@ export async function suspenderInstitucion(
     await avisarAVarios(tx, destinatarios, {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `suspendió la cuenta de ${inst.nombre}. Motivo: ${datos.data.motivo.toLowerCase()}. Escribinos desde Contacto para regularizarla.`,
+      texto: `suspendió la cuenta de ${inst.nombre}. Motivo: ${datos.data.motivo.toLowerCase()}.${debitoCancelado ? " También cancelamos tu débito automático." : ""} Escribinos desde Contacto para regularizarla.`,
       enlace: "/contacto",
     });
     // Una cuenta suspendida no ve la campanita: el mail es la única forma de que el equipo se entere.
-    await encolarParaUsuarios(tx, destinatarios, "M15", { nombre: null, institucion: inst.nombre, motivo: datos.data.motivo });
+    await encolarParaUsuarios(tx, destinatarios, "M15", { nombre: null, institucion: inst.nombre, motivo: datos.data.motivo, debitoCancelado });
     return ok();
   });
 
@@ -332,14 +347,16 @@ export async function reactivarInstitucion(institucionId: string): Promise<Resul
       tx,
     );
     const destinatarios = await destinatariosDeInstitucion(tx, inst.id);
+    // Si tenía un débito automático y quedó cancelado (al suspenderla o antes), se lo recordamos: no vuelve solo.
+    const debitoCancelado = (await suscripcionDe(inst.id, tx))?.estado === "cancelada";
     await avisarAVarios(tx, destinatarios, {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `reactivó la cuenta de ${inst.nombre}. Ya podés volver a usar UNIDOAR con normalidad.`,
+      texto: `reactivó la cuenta de ${inst.nombre}. Ya podés volver a usar UNIDOAR con normalidad.${debitoCancelado ? " Tu débito automático sigue cancelado: podés activarlo de nuevo desde Plan y facturación." : ""}`,
       enlace: "/institucion/dashboard",
     });
     // Como la suspensión (M15): quien estaba suspendido no veía la campanita, así que el mail es la forma de enterarse de que ya puede entrar.
-    await encolarParaUsuarios(tx, destinatarios, "M16", { nombre: null, institucion: inst.nombre });
+    await encolarParaUsuarios(tx, destinatarios, "M16", { nombre: null, institucion: inst.nombre, debitoCancelado });
     return ok();
   });
 

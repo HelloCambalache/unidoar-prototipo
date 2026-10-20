@@ -9,6 +9,7 @@ import { origenDeLosMails } from "@/lib/correo/config";
 import { esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
 import { resumenDeError } from "@/lib/errores";
 import { mercadoPagoActivo } from "@/lib/mercadopago-config";
+import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { buscarSuscripcionesDelPlanMp, ErrorDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { DEMASIADOS_PEDIDOS, permitirActivarDebito } from "@/lib/pedidos";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
@@ -46,6 +47,8 @@ const revalidarPlan = (institucionId: string) => {
 export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string | null }>> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!mercadoPagoActivo()) return fallo(NO_DISPONIBLE);
+  // Con un token de prueba, una institución real no puede suscribirse: el cobro no sería real (ver `debitoDisponiblePara`).
+  if (!(await debitoDisponiblePara(institucion))) return fallo(NO_DISPONIBLE);
   if (!permitirActivarDebito(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id))) return fallo(SOLO_GESTORES);
   if (!esPlanDebitable(institucion.plan)) return fallo("Tu plan es anual: se paga por adelantado y no tiene débito automático.");

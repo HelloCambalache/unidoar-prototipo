@@ -27,6 +27,7 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M54: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000" },
   M55: { institucion: "Club Atlético", plan: "Pro" },
   M56: { institucion: "Club Atlético", plan: "Pro", aprobado: true, nota: null, detalle: null },
+  M58: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000" },
   M60: { nombre: "Marta", email: "marta@example.com", rol: "Institución", mensaje: "Hola, quiero consultar un precio." },
   M61: { docente: "Lucía Pérez", detalle: "subió documentación para revisar.", ruta: "/backoffice/verificacion" },
   M62: { cuenta: "Lucía Pérez", tipo: "docente", ruta: "/backoffice/docentes" },
@@ -149,6 +150,24 @@ describe("plantillas de mails", () => {
     assert.ok(sinNombre.texto.includes("Hola: suspendimos tu cuenta"));
   });
 
+  it("M15 cuenta que se canceló el débito automático solo si se canceló, y solo a una institución", () => {
+    const con = armarMail("M15", { nombre: null, institucion: "Club Atlético", motivo: "Datos falsos", debitoCancelado: true }, { origen: ORIGEN });
+    assert.ok(con.texto.includes("También cancelamos el débito automático de tu plan"));
+    const sin = armarMail("M15", { nombre: null, institucion: "Club Atlético", motivo: "Datos falsos" }, { origen: ORIGEN });
+    assert.ok(!sin.texto.includes("débito automático"));
+    const docente = armarMail("M15", { nombre: "Lucía", institucion: null, motivo: null, debitoCancelado: true }, { origen: ORIGEN });
+    assert.ok(!docente.texto.includes("débito automático"));
+  });
+
+  it("M16 recuerda que el débito automático sigue cancelado solo si lo está, y solo a una institución", () => {
+    const con = armarMail("M16", { nombre: null, institucion: "Club Atlético", debitoCancelado: true }, { origen: ORIGEN });
+    assert.ok(con.texto.includes("Tu débito automático sigue cancelado"));
+    const sin = armarMail("M16", { nombre: null, institucion: "Club Atlético" }, { origen: ORIGEN });
+    assert.ok(!sin.texto.includes("débito automático"));
+    const docente = armarMail("M16", { nombre: "Lucía", institucion: null, debitoCancelado: true }, { origen: ORIGEN });
+    assert.ok(!docente.texto.includes("débito automático"));
+  });
+
   it("M16 avisa la reactivación a un profesional y a una institución, cada uno con su botón", () => {
     const docente = armarMail("M16", { nombre: "Lucía", institucion: null }, { origen: ORIGEN });
     assert.ok(docente.texto.includes("Hola Lucía: reactivamos tu cuenta en UNIDOAR."));
@@ -158,6 +177,15 @@ describe("plantillas de mails", () => {
     assert.ok(institucion.texto.includes(`${ORIGEN}/institucion/dashboard`));
     const sinNombre = armarMail("M16", { nombre: null, institucion: null }, { origen: ORIGEN });
     assert.ok(sinNombre.texto.includes("Hola: reactivamos tu cuenta"));
+  });
+
+  it("M58 avisa del cobro rechazado, lleva a Plan y facturación y no se puede apagar", () => {
+    const m = armarMail("M58", EJEMPLOS.M58, { origen: ORIGEN });
+    assert.ok(m.asunto.includes("débito automático de octubre de 2026"));
+    assert.ok(m.texto.includes("Mercado Pago no pudo cobrar el plan de Club Atlético de Octubre de 2026 ($ 45.000)"));
+    assert.ok(m.texto.includes(`${ORIGEN}/institucion/plan`));
+    assert.equal(PLANTILLAS.M58.grupo, "facturacion");
+    assert.equal(esGrupoOpcional(PLANTILLAS.M58.grupo), false);
   });
 
   it("M60 responde a quien escribió y el resto no define una respuesta propia", () => {

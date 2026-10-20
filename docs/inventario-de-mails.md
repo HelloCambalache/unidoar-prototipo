@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -49,7 +49,7 @@ nuestro código con la API de Resend.
 | M17 | Recibimos tu pedido de baja | Al pedir la baja en Mi cuenta | Docente, institución | App | Solo un aviso en pantalla | Pronto |
 | M18 | Tu baja quedó confirmada | El equipo la procesa | Docente, institución | App | No existe (se hace a mano) | Pronto |
 
-M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de "cuenta suspendida" y no la campanita.
+M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de "cuenta suspendida" y no la campanita. Si el equipo canceló también su débito automático al suspender, M15 lo cuenta (solo a instituciones); M16 recuerda que el débito sigue cancelado si lo está.
 
 ## 3. Contratación (el corazón del producto)
 
@@ -101,6 +101,7 @@ Van desde `facturacion@unidoar.com.ar` (solo envía) y las respuestas llegan al 
 | M55 | Recibimos tu pedido de cambio de plan | La institución lo pide | Dueño | No existe | Pronto |
 | M56 | Aprobamos tu cambio de plan / no pudimos aprobarlo (con la nota) | El equipo resuelve | Dueño y administradores | En la app | Lanzamiento |
 | M57 | Cambiamos el plan de {institución} | El equipo lo cambia | Dueño y administradores | En la app | Pronto |
+| M58 | No pudimos cobrar tu débito automático de {mes} | Mercado Pago rechaza el cobro (solo el primer rechazo de cada cobro; los reintentos avisan en la campanita) | Dueño y administradores | En la app | Lanzamiento |
 
 ## 6. Para el equipo de UNIDOAR (internos)
 

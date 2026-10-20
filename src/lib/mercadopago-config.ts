@@ -24,6 +24,24 @@ export const secretoDelWebhook = (env: Entorno = process.env) => valor(env, "MP_
 /** ¿Se puede ofrecer el débito automático? Alcanza con el token. */
 export const mercadoPagoActivo = (env: Entorno = process.env) => Boolean(tokenDeMercadoPago(env));
 
+/** En qué modo están los cobros: con un token de prueba no entra plata real. "desconocido" si no se pudo averiguar de quién es el token. */
+export type ModoDeCobro = "produccion" | "prueba" | "desconocido";
+
+/** Un Access Token de prueba de la aplicación empieza con "TEST-" (el de producción, con "APP_USR-"). */
+export const esTokenDePrueba = (token: string | null | undefined) => typeof token === "string" && token.trim().toUpperCase().startsWith("TEST-");
+
+/**
+ * ¿Es de prueba la cuenta dueña del token? Lo dice `GET /users/me`: un usuario de prueba de Mercado Pago tiene un mail `test_user_…@testuser.com`
+ * y un usuario `TESTUSER…`. Cubre el token `APP_USR-` de una aplicación creada dentro de una cuenta de prueba, que el prefijo no delata.
+ */
+export function esCuentaDePrueba(cuenta: { email?: unknown; nickname?: unknown; tags?: unknown } | null | undefined): boolean {
+  if (!cuenta) return false;
+  const email = typeof cuenta.email === "string" ? cuenta.email : "";
+  const nickname = typeof cuenta.nickname === "string" ? cuenta.nickname : "";
+  const tags = Array.isArray(cuenta.tags) ? cuenta.tags : [];
+  return /@testuser\.com$/i.test(email) || /^test_user_/i.test(email) || /^TESTUSER/i.test(nickname) || tags.includes("test_user");
+}
+
 /** Cuánto se acepta que difiera el reloj de Mercado Pago del nuestro en un aviso: más que esto es un aviso repetido o armado de antes. */
 export const TOLERANCIA_DE_AVISO_SEGUNDOS = 15 * 60;
 

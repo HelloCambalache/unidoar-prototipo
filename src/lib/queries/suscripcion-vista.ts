@@ -2,9 +2,9 @@ import "server-only";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
-import { esPlanDebitable, estadoGuardado, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import { esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
-import { mercadoPagoActivo } from "@/lib/mercadopago-config";
+import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -59,7 +59,8 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
   const planReciente = !!plan && sinSuscripcionViva && Date.now() - plan.creadoEn.getTime() < HORAS_DE_PLAN_RECIENTE * 60 * 60 * 1000;
 
   return {
-    disponible: mercadoPagoActivo(),
+    // Sin token no hay débito; con un token de prueba, solo las instituciones de ejemplo lo ven (una real no puede suscribirse a un cobro de mentira).
+    disponible: await debitoDisponiblePara(institucion),
     planDebitable: esPlanDebitable(institucion.plan),
     puedeGestionar: puedeGestionarPlan(rol),
     montoActual: Number.isInteger(monto) && monto > 0 ? monto : null,
@@ -70,4 +71,20 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
         : null,
     rechazo: cobro && cobro.resultado === "rechazado" && estado === "autorizada" ? { periodo: cobro.periodo ?? "", detalle: cobro.detalle } : null,
   };
+}
+
+/**
+ * ¿Se le muestra en el inicio de la institución el aviso para activar el débito automático? Sí cuando ya está verificada (no se le pide pagar
+ * antes de que la revisemos), no está suspendida, su plan es mensual, puede manejar el plan, el débito está disponible para ella y todavía no
+ * tiene una suscripción viva. Devuelve lo que cobraría por mes, o null si no hay que mostrarlo.
+ */
+export async function avisoDeDebito(institucion: Institucion, usuarioId: string): Promise<{ monto: number | null } | null> {
+  if (!institucion.verificada || institucion.suspendida || !esPlanDebitable(institucion.plan)) return null;
+  if (!(await debitoDisponiblePara(institucion))) return null;
+  const [rol, susc] = await Promise.all([rolEnInstitucion(institucion, usuarioId), suscripcionDe(institucion.id)]);
+  if (!puedeGestionarPlan(rol)) return null;
+  if (susc && suscripcionVigente(susc.estado)) return null;
+  const [P, sedes] = await Promise.all([planes(), cantidadDeSedes(getDb(), [institucion.id])]);
+  const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
+  return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };
 }

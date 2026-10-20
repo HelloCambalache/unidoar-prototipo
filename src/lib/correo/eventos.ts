@@ -135,6 +135,20 @@ export async function correoDeRecordatorio(ejecutor: Ejecutor, r: Recordatorio, 
   }
 }
 
+/**
+ * M58: Mercado Pago no pudo cobrar el débito automático. Una vez por cobro y persona (la clave lleva el número del cobro en Mercado Pago):
+ * los reintentos del mismo cobro no repiten el mail, avisan en la campanita.
+ */
+export async function correoDeCobroRechazado(ejecutor: Ejecutor, d: Factura & { cobroId: string }) {
+  await encolarParaUsuarios(
+    ejecutor,
+    d.usuarioIds,
+    "M58",
+    { institucion: d.institucion, periodo: etiquetaPeriodo(d.periodo), monto: pesos(d.monto) },
+    { clave: () => `M58:${d.cobroId}` },
+  );
+}
+
 /** M53: el equipo registró el pago. */
 export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura) {
   await encolarParaUsuarios(ejecutor, d.usuarioIds, "M53", { institucion: d.institucion, periodo: etiquetaPeriodo(d.periodo), monto: pesos(d.monto) });

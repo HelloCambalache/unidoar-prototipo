@@ -4,7 +4,7 @@ import { getDb, transaccion, type Tx } from "@/db";
 import { cobrosMp, facturas, instituciones, suscripcionesMp, type SuscripcionMp } from "@/db/schema";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { etiquetaPeriodo, fechaCobroDelPeriodo, hoyAR, periodoActual } from "@/lib/cobros";
-import { correoDePagoRegistrado } from "@/lib/correo/eventos";
+import { correoDeCobroRechazado, correoDePagoRegistrado } from "@/lib/correo/eventos";
 import {
   accionSobreLaFactura,
   decidirAltaDeSuscripcion,
@@ -217,6 +217,14 @@ export async function aplicarCobro(cobro: CobroLeido): Promise<ResultadoDeCobro>
           titulo: "UNIDOAR",
           texto: `no pudimos cobrar el débito automático de ${etiquetaPeriodo(periodo)}. Mercado Pago lo vuelve a intentar: revisá el medio de pago en tu cuenta de Mercado Pago.`,
           enlace: "/institucion/plan",
+        });
+        // El mail sale una sola vez por cobro (la clave lleva su número): los reintentos avisan en la campanita.
+        await correoDeCobroRechazado(tx, {
+          usuarioIds: await destinatariosDeFacturacion(tx, inst.id),
+          institucion: inst.nombre,
+          periodo,
+          monto,
+          cobroId: cobro.id,
         });
         if (!previo) {
           await avisarAAdmins(tx, {
