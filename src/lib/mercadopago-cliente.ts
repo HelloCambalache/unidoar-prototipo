@@ -6,9 +6,10 @@ import {
   MercadoPagoError,
   MPNotFoundError,
   PreApproval,
+  PreApprovalPlan,
   WebhookSignatureValidator,
 } from "mercadopago";
-import { cuerpoDeNuevoMonto, detalleDeRechazo, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDeSuscripcion } from "@/lib/debito-automatico";
+import { cuerpoDeNuevoMonto, detalleDeRechazo, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDePlan } from "@/lib/debito-automatico";
 import { secretoDelWebhook, TOLERANCIA_DE_AVISO_SEGUNDOS, tokenDeMercadoPago } from "@/lib/mercadopago-config";
 
 /*
@@ -73,6 +74,11 @@ export type SuscripcionDeMercadoPago = {
   monto: number | null;
   email: string | null;
   referencia: string | null;
+  /**
+   * El plan por el que se suscribió la persona (`preapproval_plan_id`). Es lo ÚNICO que identifica a la institución cuando se suscribe por el
+   * enlace de un plan: Mercado Pago deja vacíos la referencia y el mail.
+   */
+  planId: string | null;
 };
 
 type RespuestaDeSuscripcion = {
@@ -83,6 +89,7 @@ type RespuestaDeSuscripcion = {
   auto_recurring?: { transaction_amount?: number };
   payer_email?: string;
   external_reference?: string;
+  preapproval_plan_id?: string;
 };
 
 function leerSuscripcion(r: RespuestaDeSuscripcion): SuscripcionDeMercadoPago {
@@ -94,14 +101,51 @@ function leerSuscripcion(r: RespuestaDeSuscripcion): SuscripcionDeMercadoPago {
     enlaceDeAutorizacion: esUrlDeMercadoPago(r.init_point) ? r.init_point : null,
     proximoCobro: r.next_payment_date ?? null,
     monto: typeof r.auto_recurring?.transaction_amount === "number" ? r.auto_recurring.transaction_amount : null,
-    email: r.payer_email ?? null,
-    referencia: r.external_reference ?? null,
+    // Mercado Pago deja el mail vacío cuando la suscripción nace de un plan: una cadena vacía es "no informó".
+    email: r.payer_email ? r.payer_email : null,
+    referencia: r.external_reference ? String(r.external_reference) : null,
+    planId: r.preapproval_plan_id ? String(r.preapproval_plan_id) : null,
   };
 }
 
-export async function crearSuscripcionMp(cuerpo: ReturnType<typeof cuerpoDeSuscripcion>): Promise<SuscripcionDeMercadoPago> {
+/** Un plan de Mercado Pago: la plantilla de la suscripción de una institución y la dirección donde la persona se suscribe. */
+export type PlanDeMercadoPago = {
+  id: string;
+  /** "active" mientras sirve para suscribirse. */
+  estado: string | undefined;
+  /** La dirección de Mercado Pago donde la persona inicia sesión, carga su tarjeta y se suscribe (solo si es de Mercado Pago). */
+  enlace: string | null;
+};
+
+function leerPlan(r: { id?: string; status?: string; init_point?: string }): PlanDeMercadoPago {
+  if (!r.id) throw new ErrorDeMercadoPago("no-disponible", "Mercado Pago no devolvió el número del plan.");
+  return { id: String(r.id), estado: r.status, enlace: esUrlDeMercadoPago(r.init_point) ? r.init_point : null };
+}
+
+export async function crearPlanMp(cuerpo: ReturnType<typeof cuerpoDePlan>): Promise<PlanDeMercadoPago> {
   try {
-    return leerSuscripcion(await new PreApproval(configuracion()).create({ body: cuerpo }));
+    return leerPlan(await new PreApprovalPlan(configuracion()).create({ body: cuerpo }));
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+export async function obtenerPlanMp(id: string): Promise<PlanDeMercadoPago> {
+  try {
+    return leerPlan(await new PreApprovalPlan(configuracion()).get({ preApprovalPlanId: id }));
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+/**
+ * Los números de las suscripciones que se crearon desde un plan. Sirve para confirmar una suscripción cuando la persona vuelve de
+ * Mercado Pago (o el aviso no llegó): se buscan por el plan de la institución, nunca por un número que venga del navegador.
+ */
+export async function buscarSuscripcionesDelPlanMp(planId: string): Promise<string[]> {
+  try {
+    const r = await new PreApproval(configuracion()).search({ options: { preapproval_plan_id: planId, limit: 20 } });
+    return (r.results ?? []).map((s) => (s.id ? String(s.id) : "")).filter(Boolean);
   } catch (e) {
     throw traducir(e);
   }
@@ -115,10 +159,15 @@ export async function obtenerSuscripcionMp(id: string): Promise<SuscripcionDeMer
   }
 }
 
-/** Cambia lo que cobra Mercado Pago cada mes (cuando cambia el plan, las sedes o el precio). */
-export async function cambiarMontoMp(id: string, monto: number): Promise<void> {
+/**
+ * Cambia lo que cobra Mercado Pago cada mes (cuando cambia el plan, las sedes o el precio). Devuelve el estado en que quedó la suscripción:
+ * un aumento puede sacarla de "authorized" hasta que la persona apruebe el monto nuevo, y eso no se puede dar por hecho ni en un sentido ni
+ * en el otro.
+ */
+export async function cambiarMontoMp(id: string, monto: number): Promise<{ estado: string | undefined }> {
   try {
-    await new PreApproval(configuracion()).update({ id, body: cuerpoDeNuevoMonto(monto) });
+    const r = await new PreApproval(configuracion()).update({ id, body: cuerpoDeNuevoMonto(monto) });
+    return { estado: r.status };
   } catch (e) {
     throw traducir(e);
   }

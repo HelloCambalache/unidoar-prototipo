@@ -1,15 +1,16 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
-import { getDb, transaccion } from "@/db";
+import { getDb, transaccion, type Tx } from "@/db";
 import { cobrosMp, facturas, instituciones, suscripcionesMp, type SuscripcionMp } from "@/db/schema";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { etiquetaPeriodo, fechaCobroDelPeriodo, hoyAR, periodoActual } from "@/lib/cobros";
 import { correoDePagoRegistrado } from "@/lib/correo/eventos";
-import { accionSobreLaFactura, estadoDeSuscripcion, type CobroLeido } from "@/lib/debito-automatico";
+import { accionSobreLaFactura, decidirAltaDeSuscripcion, estadoDeSuscripcion, montoCobrable, type CobroLeido, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import type { SuscripcionDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { pesos } from "@/lib/planes";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { institucionDelPlan } from "@/lib/queries/suscripcion-planes";
 
 /*
  * Lo que se escribe en la base cuando Mercado Pago avisa algo de una suscripción (ver CLAUDE.md, "Mercado Pago"). Cada función corre en
@@ -31,7 +32,7 @@ function diaDeMercadoPago(iso: string | null | undefined): string | null {
   return Number.isNaN(fecha.getTime()) ? null : hoyAR(fecha);
 }
 
-export type ResultadoDeEstado = "actualizada" | "sin-cambios" | "adoptada" | "duplicada" | "desconocida";
+export type ResultadoDeEstado = "actualizada" | "sin-cambios" | "creada" | "adoptada" | "duplicada" | "desconocida";
 
 export type RespuestaDeEstado = {
   resultado: ResultadoDeEstado;
@@ -39,86 +40,104 @@ export type RespuestaDeEstado = {
   reemplazada?: string;
 };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Avisa de un cambio de estado de la suscripción y lo deja en la auditoría. Solo se llama cuando el estado cambió de verdad: al pasar a
+ * "autorizada" le cuenta a la institución que el débito quedó activo; si pasa a pausada o cancelada desde Mercado Pago (la persona lo hizo
+ * en su cuenta) avisa a la institución y al equipo, que tiene que saber que ese mes no se va a cobrar solo. `antes` es null cuando la
+ * suscripción recién nace.
+ */
+async function avisarCambioDeEstado(tx: Tx, institucionId: string, antes: string | null, estado: EstadoSuscripcion, monto: number, extra: Record<string, unknown> = {}) {
+  const [inst] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+  const nombre = inst?.nombre ?? "una institución";
+  await registrarAuditoria(
+    {
+      usuarioId: null,
+      accion: `suscripcion.${estado}`,
+      entidad: "institucion",
+      entidadId: institucionId,
+      detalle: { origen: "mercadopago", antes, despues: estado, monto, ...extra },
+    },
+    tx,
+  );
+
+  const destinatarios = await destinatariosDeInstitucion(tx, institucionId);
+  if (estado === "autorizada") {
+    await avisarAVarios(tx, destinatarios, {
+      tipo: "sistema",
+      titulo: "UNIDOAR",
+      texto: `activaste el débito automático: Mercado Pago cobra ${pesos(monto)} cada mes.`,
+      enlace: "/institucion/plan",
+    });
+  } else if (estado === "cancelada" || estado === "pausada") {
+    const que = estado === "cancelada" ? "quedó cancelado" : "quedó en pausa";
+    await avisarAVarios(tx, destinatarios, {
+      tipo: "sistema",
+      titulo: "UNIDOAR",
+      texto: `el débito automático ${que}. Mientras tanto los pagos del plan se hacen por otro medio.`,
+      enlace: "/institucion/plan",
+    });
+    await avisarAAdmins(tx, {
+      titulo: "Débito automático",
+      texto: `${nombre}: el débito automático ${que} desde Mercado Pago. Los cobros de los próximos meses ya no salen solos.`,
+      enlace: `/backoffice/cobros/${institucionId}`,
+    });
+  }
+}
 
 /**
- * Espeja el estado de la suscripción que informa Mercado Pago (aviso `subscription_preapproval`). Solo avisa cuando el estado cambia:
- * al pasar a "autorizada" le cuenta a la institución que el débito quedó activo; si pasa a pausada o cancelada desde Mercado Pago (la
- * persona lo hizo en su cuenta) avisa a la institución y al equipo, que tiene que saber que ese mes no se va a cobrar solo.
+ * Espeja el estado de la suscripción que informa Mercado Pago (aviso `subscription_preapproval`).
  *
- * Una suscripción que NO tenemos anotada se liga por su `external_reference` (el id de la institución que le pusimos al crearla). Biomea
- * vio que Mercado Pago puede crear una suscripción nueva cuando la persona reintenta con otra tarjeta en el mismo checkout: si la nuestra
- * seguía pendiente y esta quedó autorizada, esta pasa a ser la vigente ("adoptada"). Si la institución ya tenía otra activa, es una
- * duplicada (la ruta la cancela). Si no hay a quién ligarla, queda "desconocida" y se avisa al equipo SIN cancelar nada: puede ser legítima.
+ * Una suscripción que NO tenemos anotada se atribuye por su **plan** (`preapproval_plan_id`): cuando la persona se suscribe por el enlace del
+ * plan de su institución, Mercado Pago deja vacíos la referencia y el mail, y el plan es lo único que dice de quién es (tabla `planes_mp`).
+ * Sin plan conocido queda "desconocida" y la ruta avisa al equipo SIN cancelar nada (puede ser legítima). Si la institución ya tenía otra
+ * activa, es "duplicada" (la ruta la cancela: Mercado Pago cobraría las dos); si tenía una pendiente y esta quedó autorizada, esta la
+ * reemplaza ("adoptada"). Ver `decidirAltaDeSuscripcion`.
  */
 export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): Promise<RespuestaDeEstado> {
   return transaccion(async (tx) => {
     const estadoMp = estadoDeSuscripcion(mp.estado);
-    let [fila] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.suscripcionId, mp.id)).limit(1).for("update");
-    let adoptada = false;
-    let reemplazada: string | undefined;
 
-    if (!fila) {
-      const institucionId = mp.referencia && UUID.test(mp.referencia) ? mp.referencia : null;
-      if (!institucionId || estadoMp !== "autorizada") return { resultado: "desconocida" };
-      // Bloquea la institución para no pisarse con otro aviso de la misma suscripción.
-      await tx.select({ id: instituciones.id }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1).for("update");
-      const [propia] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.institucionId, institucionId)).limit(1).for("update");
-      if (!propia) return { resultado: "desconocida" };
-      if (propia.estado === "autorizada" || propia.estado === "pausada") return { resultado: "duplicada" };
-      reemplazada = propia.estado === "pendiente" ? propia.suscripcionId : undefined;
-      await tx.update(suscripcionesMp).set({ suscripcionId: mp.id }).where(eq(suscripcionesMp.institucionId, institucionId));
-      fila = { ...propia, suscripcionId: mp.id };
-      adoptada = true;
+    // Pone al día la fila de una suscripción que ya tenemos anotada.
+    const ponerAlDia = async (fila: SuscripcionMp): Promise<RespuestaDeEstado> => {
+      const estado = estadoMp ?? fila.estado;
+      const proximoCobro = diaDeMercadoPago(mp.proximoCobro) ?? fila.proximoCobro;
+      const monto = montoCobrable(mp.monto) ? mp.monto : fila.monto;
+      if (estado === fila.estado && proximoCobro === fila.proximoCobro && monto === fila.monto) return { resultado: "sin-cambios" };
+
+      await tx
+        .update(suscripcionesMp)
+        .set({ estado, proximoCobro, monto, actualizadaEn: new Date() })
+        .where(eq(suscripcionesMp.institucionId, fila.institucionId));
+      if (estado !== fila.estado) await avisarCambioDeEstado(tx, fila.institucionId, fila.estado, estado as EstadoSuscripcion, monto);
+      return { resultado: "actualizada" };
+    };
+
+    const [fila] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.suscripcionId, mp.id)).limit(1).for("update");
+    if (fila) return ponerAlDia(fila);
+
+    // Una suscripción que todavía no tenemos anotada: ¿de qué institución es? Por su plan.
+    const mapeo = mp.planId ? await institucionDelPlan(mp.planId, tx) : null;
+    if (!mapeo) return { resultado: "desconocida" };
+    // Bloquea la institución para no pisarse con otro aviso de la misma suscripción.
+    const [inst] = await tx.select({ id: instituciones.id }).from(instituciones).where(eq(instituciones.id, mapeo.institucionId)).limit(1).for("update");
+    if (!inst) return { resultado: "desconocida" };
+    const [propia] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.institucionId, inst.id)).limit(1).for("update");
+
+    const decision = decidirAltaDeSuscripcion({ idNuevo: mp.id, estadoNuevo: estadoMp, propia: propia ?? null });
+    // Otro camino (el aviso de Mercado Pago o la vuelta de la persona) la anotó mientras esperábamos el bloqueo: es la misma, no un duplicado.
+    if (decision === "misma" && propia) return ponerAlDia(propia);
+    if (!estadoMp || decision === "ignorar" || decision === "misma") return { resultado: "sin-cambios" };
+    if (decision === "duplicada") return { resultado: "duplicada" };
+
+    const monto = montoCobrable(mp.monto) ? mp.monto : mapeo.monto;
+    const valores = { suscripcionId: mp.id, estado: estadoMp, plan: mapeo.plan, monto, email: mp.email, proximoCobro: diaDeMercadoPago(mp.proximoCobro) };
+    if (propia) {
+      await tx.update(suscripcionesMp).set({ ...valores, creadaEn: new Date(), actualizadaEn: new Date() }).where(eq(suscripcionesMp.institucionId, inst.id));
+    } else {
+      await tx.insert(suscripcionesMp).values({ institucionId: inst.id, ...valores });
     }
-
-    const estado = estadoMp ?? fila.estado;
-    const proximoCobro = diaDeMercadoPago(mp.proximoCobro) ?? fila.proximoCobro;
-    const monto = mp.monto !== null && Number.isInteger(mp.monto) && mp.monto > 0 ? mp.monto : fila.monto;
-    if (!adoptada && estado === fila.estado && proximoCobro === fila.proximoCobro && monto === fila.monto) return { resultado: "sin-cambios" };
-
-    await tx
-      .update(suscripcionesMp)
-      .set({ estado, proximoCobro, monto, actualizadaEn: new Date() })
-      .where(eq(suscripcionesMp.institucionId, fila.institucionId));
-    if (estado === fila.estado) return { resultado: adoptada ? "adoptada" : "actualizada", reemplazada };
-
-    const [inst] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, fila.institucionId)).limit(1);
-    const nombre = inst?.nombre ?? "una institución";
-    await registrarAuditoria(
-      {
-        usuarioId: null,
-        accion: `suscripcion.${estado}`,
-        entidad: "institucion",
-        entidadId: fila.institucionId,
-        detalle: { origen: "mercadopago", antes: fila.estado, despues: estado, monto, ...(adoptada ? { adoptada: true } : {}) },
-      },
-      tx,
-    );
-
-    const destinatarios = await destinatariosDeInstitucion(tx, fila.institucionId);
-    if (estado === "autorizada") {
-      await avisarAVarios(tx, destinatarios, {
-        tipo: "sistema",
-        titulo: "UNIDOAR",
-        texto: `activaste el débito automático: Mercado Pago cobra ${pesos(monto)} cada mes.`,
-        enlace: "/institucion/plan",
-      });
-    } else if (estado === "cancelada" || estado === "pausada") {
-      const que = estado === "cancelada" ? "quedó cancelado" : "quedó en pausa";
-      await avisarAVarios(tx, destinatarios, {
-        tipo: "sistema",
-        titulo: "UNIDOAR",
-        texto: `el débito automático ${que}. Mientras tanto los pagos del plan se hacen por otro medio.`,
-        enlace: "/institucion/plan",
-      });
-      await avisarAAdmins(tx, {
-        titulo: "Débito automático",
-        texto: `${nombre}: el débito automático ${que} desde Mercado Pago. Los cobros de los próximos meses ya no salen solos.`,
-        enlace: `/backoffice/cobros/${fila.institucionId}`,
-      });
-    }
-    return { resultado: adoptada ? "adoptada" : "actualizada", reemplazada };
+    await avisarCambioDeEstado(tx, inst.id, propia?.estado ?? null, estadoMp, monto, { plan: mapeo.plan });
+    return decision === "reemplazar" ? { resultado: "adoptada", reemplazada: propia?.suscripcionId } : { resultado: "creada" };
   });
 }
 

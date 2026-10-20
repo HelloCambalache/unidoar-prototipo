@@ -1,28 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { suscripcionesMp } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirInstitucion } from "@/lib/auth";
 import { origenDeLosMails } from "@/lib/correo/config";
-import { cuerpoDeSuscripcion, esEmailDePago, esPlanDebitable, montoCobrable, suscripcionVigente } from "@/lib/debito-automatico";
+import { esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
 import { resumenDeError } from "@/lib/errores";
 import { mercadoPagoActivo } from "@/lib/mercadopago-config";
-import {
-  cancelarSuscripcionMp,
-  crearSuscripcionMp,
-  ErrorDeMercadoPago,
-  obtenerSuscripcionMp,
-} from "@/lib/mercadopago-cliente";
+import { buscarSuscripcionesDelPlanMp, ErrorDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { DEMASIADOS_PEDIDOS, permitirActivarDebito } from "@/lib/pedidos";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
-import { aplicarEstadoDeSuscripcion, suscripcionDe } from "@/lib/queries/suscripcion";
+import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
+import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
+import { planesDe, planParaSuscribirse } from "@/lib/queries/suscripcion-planes";
 
 /*
  * Débito automático con Mercado Pago, del lado de la institución (ver CLAUDE.md, "Mercado Pago"). Las tres acciones exigen que la cuenta sea
@@ -33,6 +28,8 @@ import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 const SOLO_GESTORES = "Solo el dueño y los administradores del equipo pueden manejar el débito automático.";
 const NO_DISPONIBLE = "El débito automático todavía no está disponible. Escribinos por Contacto y lo resolvemos.";
 const FALLO_DE_MERCADO_PAGO = "No pudimos comunicarnos con Mercado Pago. Probá de nuevo en un rato.";
+/** Un número de recurso de Mercado Pago: letras, números, guion y guion bajo. Nada más viaja a su API. */
+const ID_VALIDO = /^[0-9A-Za-z_-]{1,64}$/;
 
 const revalidarPlan = (institucionId: string) => {
   revalidatePath("/institucion/plan");
@@ -41,23 +38,20 @@ const revalidarPlan = (institucionId: string) => {
 };
 
 /**
- * Crea la suscripción mensual en Mercado Pago y devuelve la dirección donde la persona carga su tarjeta y autoriza. Mientras no autorice
- * queda "pendiente" y no se cobra nada. `emailDePago` es con el que paga en Mercado Pago (por defecto, el de la cuenta).
+ * Devuelve la dirección de Mercado Pago donde la persona inicia sesión, carga su tarjeta y se suscribe al plan mensual de su institución.
+ * No se pide ningún mail: la suscripción la crea Mercado Pago con la cuenta con la que entre (con un mail fijado por nosotros exigiría
+ * entrar con ese mail exacto). Hasta que se suscriba no se cobra nada; cuando lo haga, el aviso de Mercado Pago (o la vuelta a esta
+ * pantalla) la ata a la institución por el plan.
  */
-export async function activarDebitoAutomatico(emailDePago: string): Promise<Resultado<{ url: string | null }>> {
+export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string | null }>> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!mercadoPagoActivo()) return fallo(NO_DISPONIBLE);
   if (!permitirActivarDebito(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id))) return fallo(SOLO_GESTORES);
-
-  const email = typeof emailDePago === "string" ? emailDePago.trim().toLowerCase() : "";
-  if (!esEmailDePago(email)) return fallo("Escribí un mail válido.", { email: "Escribí un mail válido." });
   if (!esPlanDebitable(institucion.plan)) return fallo("Tu plan es anual: se paga por adelantado y no tiene débito automático.");
 
   const existente = await suscripcionDe(institucion.id);
-  if (existente && suscripcionVigente(existente.estado)) {
-    return existente.estado === "pendiente" ? continuarDebitoAutomatico() : fallo("Ya tenés el débito automático activado.");
-  }
+  if (existente && (existente.estado === "autorizada" || existente.estado === "pausada")) return fallo("Ya tenés el débito automático activado.");
 
   const P = await planes();
   const sedes = (await cantidadDeSedes(getDb(), [institucion.id])).get(institucion.id) ?? 1;
@@ -65,73 +59,69 @@ export async function activarDebitoAutomatico(emailDePago: string): Promise<Resu
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
 
   try {
-    const mp = await crearSuscripcionMp(
-      cuerpoDeSuscripcion({
-        institucionId: institucion.id,
-        institucion: institucion.nombre,
-        planLabel: P.planDe(institucion.plan).label,
-        monto,
-        email,
-        volverA: `${origenDeLosMails()}/institucion/plan?debito=1`,
-      }),
-    );
-    if (!mp.enlaceDeAutorizacion) return fallo(FALLO_DE_MERCADO_PAGO);
-
-    // La fila se reemplaza solo si la anterior estaba cancelada: si dos pedidos llegan a la vez, el segundo no pisa al primero.
-    const [guardada] = await getDb()
-      .insert(suscripcionesMp)
-      .values({ institucionId: institucion.id, suscripcionId: mp.id, estado: "pendiente", plan: institucion.plan, monto, email })
-      .onConflictDoUpdate({
-        target: suscripcionesMp.institucionId,
-        set: { suscripcionId: mp.id, estado: "pendiente", plan: institucion.plan, monto, email, proximoCobro: null, creadaEn: new Date(), actualizadaEn: new Date() },
-        setWhere: eq(suscripcionesMp.estado, "cancelada"),
-      })
-      .returning({ suscripcionId: suscripcionesMp.suscripcionId });
-    if (guardada?.suscripcionId !== mp.id) {
-      // Ya había otra en curso: esta quedó de más y no tiene que poder cobrar.
-      await cancelarSuscripcionMp(mp.id).catch((e) => console.error("No se pudo cancelar la suscripción sobrante de Mercado Pago", resumenDeError(e)));
-      return fallo("Ya tenés un débito automático en curso. Recargá la página.");
-    }
-
-    await registrarAuditoria({
-      usuarioId: usuario.id,
-      accion: "suscripcion.crear",
-      entidad: "institucion",
-      entidadId: institucion.id,
-      detalle: { plan: institucion.plan, monto, sedes },
+    const { plan, creado } = await planParaSuscribirse({
+      institucionId: institucion.id,
+      institucion: institucion.nombre,
+      clavePlan: institucion.plan,
+      planLabel: P.planDe(institucion.plan).label,
+      monto,
+      // Sin parámetros propios: Mercado Pago le agrega los suyos al volver (`preapproval_id`).
+      volverA: `${origenDeLosMails()}/institucion/plan`,
     });
+    if (!plan.enlace) return fallo(FALLO_DE_MERCADO_PAGO);
+
+    if (creado) {
+      await registrarAuditoria({
+        usuarioId: usuario.id,
+        accion: "suscripcion.crear",
+        entidad: "institucion",
+        entidadId: institucion.id,
+        detalle: { plan: institucion.plan, monto, sedes },
+      });
+    }
     revalidarPlan(institucion.id);
-    return ok({ url: mp.enlaceDeAutorizacion });
+    return ok({ url: plan.enlace });
   } catch (e) {
-    console.error("No se pudo crear la suscripción de Mercado Pago", resumenDeError(e));
+    console.error("No se pudo preparar el plan de Mercado Pago", resumenDeError(e));
     if (e instanceof ErrorDeMercadoPago && e.tipo === "rechazado") {
-      return fallo("Mercado Pago no aceptó el pedido. Revisá el mail que escribiste o escribinos por Contacto.", { email: "Mercado Pago no aceptó este mail." });
+      return fallo("Mercado Pago no aceptó el pedido. Probá de nuevo en un rato o escribinos por Contacto.");
     }
     return fallo(FALLO_DE_MERCADO_PAGO);
   }
 }
 
 /**
- * Para quien dejó la autorización a medias: devuelve de nuevo la dirección de Mercado Pago donde terminarla. Si Mercado Pago ya la tiene
- * autorizada (y el aviso todavía no nos llegó), la pone al día y devuelve `url: null`: la pantalla se actualiza sola.
+ * Confirma una suscripción que acaba de nacer (o cuyo aviso todavía no llegó): le pregunta a Mercado Pago y pone al día lo que haya. La
+ * pantalla la llama al volver de Mercado Pago y mientras espera. Busca por los planes de la institución, nunca por un número que venga del
+ * navegador; el `preapproval_id` que Mercado Pago agrega al volver solo se usa si su plan es de ESTA institución. Devuelve si el débito ya
+ * quedó activo (autorizado).
  */
-export async function continuarDebitoAutomatico(): Promise<Resultado<{ url: string | null }>> {
+export async function confirmarDebitoAutomatico(suscripcionId?: string): Promise<Resultado<{ activo: boolean }>> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!mercadoPagoActivo()) return fallo(NO_DISPONIBLE);
   if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id))) return fallo(SOLO_GESTORES);
 
-  const susc = await suscripcionDe(institucion.id);
-  if (!susc || susc.estado !== "pendiente") return fallo("No hay una autorización pendiente.");
   try {
-    const mp = await obtenerSuscripcionMp(susc.suscripcionId);
-    // Si Mercado Pago ya la tiene autorizada y todavía no nos llegó el aviso, la ponemos al día.
-    await aplicarEstadoDeSuscripcion(mp);
+    // El número que trae la dirección de vuelta: primero, y solo si es de esta institución.
+    if (typeof suscripcionId === "string" && ID_VALIDO.test(suscripcionId)) {
+      try {
+        await procesarSuscripcionDeMp(suscripcionId, { deInstitucion: institucion.id });
+      } catch (e) {
+        // Un número que Mercado Pago no conoce (la dirección se puede editar a mano) no es un error: se sigue con los planes de la institución.
+        if (!(e instanceof ErrorDeMercadoPago && e.tipo === "no-existe")) throw e;
+      }
+    }
+    // Y lo que Mercado Pago tenga en los planes de la institución (cubre que la dirección no traiga el número o el aviso no llegue).
+    const yaActiva = (await suscripcionDe(institucion.id))?.estado === "autorizada";
+    if (!yaActiva) {
+      for (const plan of await planesDe(institucion.id, 3)) {
+        for (const id of await buscarSuscripcionesDelPlanMp(plan.mpPlanId)) await procesarSuscripcionDeMp(id, { deInstitucion: institucion.id });
+      }
+    }
     revalidarPlan(institucion.id);
-    if (mp.estado === "authorized") return ok({ url: null });
-    if (!mp.enlaceDeAutorizacion) return fallo(FALLO_DE_MERCADO_PAGO);
-    return ok({ url: mp.enlaceDeAutorizacion });
+    return ok({ activo: (await suscripcionDe(institucion.id))?.estado === "autorizada" });
   } catch (e) {
-    console.error("No se pudo consultar la suscripción de Mercado Pago", resumenDeError(e));
+    console.error("No se pudo confirmar la suscripción de Mercado Pago", resumenDeError(e));
     return fallo(FALLO_DE_MERCADO_PAGO);
   }
 }

@@ -56,32 +56,61 @@ export function motivoDeSuscripcion(planLabel: string, institucion: string) {
   return `UNIDOAR · ${planLabel} · ${institucion}`.replace(/\s+/g, " ").trim().slice(0, 100);
 }
 
-export type DatosDeSuscripcion = {
-  institucionId: string;
+export type DatosDePlan = {
   institucion: string;
   planLabel: string;
   /** Pesos enteros por mes (ya multiplicado por las sedes si el plan es por sede). */
   monto: number;
-  /** Con qué mail paga la persona en Mercado Pago. */
-  email: string;
-  /** A dónde vuelve después de autorizar (siempre una dirección nuestra, con https). */
+  /** A dónde vuelve después de suscribirse (siempre una dirección nuestra, con https, sin parámetros propios). */
   volverA: string;
 };
 
 /**
- * El cuerpo de `POST /preapproval`. `status: "pending"`: la suscripción queda esperando que la persona cargue su tarjeta en Mercado
- * Pago (nosotros nunca vemos datos de tarjeta); al autorizar, el primer cobro sale enseguida y los siguientes cada mes. El
- * `external_reference` es la institución: así un aviso de Mercado Pago se puede ligar a quien corresponde aunque falte la fila nuestra.
+ * El cuerpo de `POST /preapproval_plan`: la suscripción mensual de ESTA institución, con su monto. No lleva el mail de quien paga: la
+ * persona entra al `init_point` del plan, inicia sesión en Mercado Pago con la cuenta que tenga y carga su tarjeta ahí (nosotros nunca
+ * vemos datos de tarjeta). Mercado Pago crea la suscripción con esa cuenta, así que no hay un mail ni un país que puedan no coincidir (con
+ * `payer_email` Mercado Pago exige entrar con ese mail exacto). Como el `external_reference` se pierde en este camino, la institución se
+ * reconoce por el plan: hay un plan por institución y una tabla que los relaciona (`planes_mp`).
  */
-export function cuerpoDeSuscripcion(d: DatosDeSuscripcion) {
+export function cuerpoDePlan(d: DatosDePlan) {
   return {
     reason: motivoDeSuscripcion(d.planLabel, d.institucion),
-    external_reference: d.institucionId,
-    payer_email: d.email,
     back_url: d.volverA,
-    status: "pending",
     auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: d.monto, currency_id: MONEDA },
   };
+}
+
+/**
+ * ¿Sirve el plan que ya creamos para esta institución? Solo si sigue siendo el mismo plan y el mismo monto: el monto va dentro del plan,
+ * así que si el precio, las sedes o el plan cambiaron hay que crear otro (el viejo queda mapeado por si alguien lo tenía abierto).
+ */
+export function puedeReutilizarPlan(guardado: { plan: string; monto: number } | null | undefined, actual: { plan: string; monto: number }): boolean {
+  return !!guardado && guardado.plan === actual.plan && guardado.monto === actual.monto;
+}
+
+export type DecisionDeAlta = "ignorar" | "misma" | "crear" | "duplicada" | "reemplazar";
+
+/**
+ * Qué hacer cuando Mercado Pago avisa de una suscripción que NO tenemos anotada y ya sabemos de qué institución es (por su plan o por su
+ * referencia). `estadoNuevo` es el estado de la suscripción nueva; `propia` es lo que la institución ya tenía anotado (una sola fila).
+ *  - Si la fila de la institución ya ES esta suscripción (otro aviso o la vuelta de la persona la anotaron un instante antes), es la misma:
+ *    se pone al día. Sin esto, dos caminos simultáneos se verían como duplicados entre sí y se cancelaría la suscripción buena.
+ *  - Una cancelada o de estado desconocido no crea nada.
+ *  - Sin nada anotado, o con una cancelada, se crea (la persona acaba de suscribirse).
+ *  - Con una activa o en pausa, la nueva es una duplicada: Mercado Pago cobraría las dos, así que la ruta cancela la nueva.
+ *  - Con una pendiente, solo una autorizada la reemplaza (la pendiente no cobra y se cancela); otra pendiente no pisa a la anterior.
+ */
+export function decidirAltaDeSuscripcion(entrada: {
+  idNuevo: string;
+  estadoNuevo: EstadoSuscripcion | null;
+  propia: { estado: string; suscripcionId: string } | null;
+}): DecisionDeAlta {
+  const { idNuevo, estadoNuevo, propia } = entrada;
+  if (propia && propia.suscripcionId === idNuevo) return "misma";
+  if (!estadoNuevo || estadoNuevo === "cancelada") return "ignorar";
+  if (!propia || propia.estado === "cancelada") return "crear";
+  if (propia.estado === "autorizada" || propia.estado === "pausada") return "duplicada";
+  return estadoNuevo === "autorizada" ? "reemplazar" : "ignorar";
 }
 
 /** El cuerpo de `PUT /preapproval/{id}` que solo cambia el monto mensual. */
@@ -120,10 +149,6 @@ export function detalleDeRechazo(entrada: { message?: unknown; error?: unknown; 
   }
   return partes.join(" | ").replace(/[^\s@|]+@[^\s@|]+/g, "[mail]").slice(0, 400);
 }
-
-/** Un mail con forma de mail (lo valida además Mercado Pago). */
-export const esEmailDePago = (email: unknown): email is string =>
-  typeof email === "string" && email.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 /* ───────────────────────────── Cobros ───────────────────────────── */
 

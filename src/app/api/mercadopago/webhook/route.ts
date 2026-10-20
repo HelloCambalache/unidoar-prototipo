@@ -3,15 +3,10 @@ import { getDb } from "@/db";
 import { leerCobro } from "@/lib/debito-automatico";
 import { resumenDeError } from "@/lib/errores";
 import { esAvisoQueUsamos, mercadoPagoActivo, secretoDelWebhook } from "@/lib/mercadopago-config";
-import {
-  cancelarSuscripcionMp,
-  comprobarAviso,
-  ErrorDeMercadoPago,
-  obtenerCobroMp,
-  obtenerSuscripcionMp,
-} from "@/lib/mercadopago-cliente";
+import { comprobarAviso, ErrorDeMercadoPago, obtenerCobroMp } from "@/lib/mercadopago-cliente";
 import { avisarAAdmins } from "@/lib/queries/avisos";
-import { aplicarCobro, aplicarEstadoDeSuscripcion } from "@/lib/queries/suscripcion";
+import { aplicarCobro } from "@/lib/queries/suscripcion";
+import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
 
 // Se evalúa en cada pedido: es un aviso de Mercado Pago, nunca algo cacheable.
 export const dynamic = "force-dynamic";
@@ -70,29 +65,10 @@ export async function POST(request: Request) {
 
   try {
     if (tipo === "subscription_preapproval") {
-      const suscripcion = await obtenerSuscripcionMp(idDelRecurso);
-      const { resultado, reemplazada } = await aplicarEstadoDeSuscripcion(suscripcion);
-
-      if (resultado === "duplicada") {
-        // La institución ya tenía otra activa: esta es de más y no puede quedar cobrando.
-        await cancelarSuscripcionMp(suscripcion.id);
-        await avisarAAdmins(getDb(), {
-          titulo: "Suscripción duplicada de Mercado Pago",
-          texto: `Mercado Pago autorizó una segunda suscripción de una institución que ya tenía el débito activo (${suscripcion.id}). Se canceló la duplicada.`,
-          enlace: "/backoffice/cobros",
-        });
-      } else if (resultado === "desconocida" && suscripcion.estado === "authorized") {
-        // No hay a quién ligarla: se avisa SIN cancelar (puede ser legítima, p. ej. un reintento con otra tarjeta). Que la mire el equipo.
-        await avisarAAdmins(getDb(), {
-          titulo: "Suscripción de Mercado Pago sin registrar",
-          texto: `Mercado Pago avisó de una suscripción autorizada que no está anotada (${suscripcion.id}). Revisala en Mercado Pago: si no corresponde, cancelala.`,
-          enlace: "/backoffice/cobros",
-        });
-      } else if (resultado === "adoptada" && reemplazada) {
-        // La que había quedado pendiente se reemplazó por esta: la vieja no tiene que poder cobrar.
-        await cancelarSuscripcionMp(reemplazada).catch((e) => console.error("[mercadopago] no se pudo cancelar la suscripción reemplazada", resumenDeError(e)));
-      }
-      console.info("[mercadopago] suscripción", { id: suscripcion.id, estado: suscripcion.estado, resultado });
+      // Qué se hace con cada resultado (duplicada, sin atribuir, reemplazada) está en `procesarSuscripcionDeMp`, igual para los tres caminos.
+      const procesada = await procesarSuscripcionDeMp(idDelRecurso);
+      const resultado = procesada?.resultado ?? "sin-cambios";
+      console.info("[mercadopago] suscripción", { id: idDelRecurso, estado: procesada?.suscripcion.estado, resultado });
       return NextResponse.json({ ok: true, resultado }, { headers: SIN_CACHE });
     }
 

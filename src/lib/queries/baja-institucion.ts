@@ -21,6 +21,7 @@ import {
   postulaciones,
   referidosInstituciones,
   suscripcionesMp,
+  planesMp,
   solicitudesPlan,
   usuarios,
 } from "@/db/schema";
@@ -253,6 +254,9 @@ export async function borrarDatosDeLaInstitucion(
   // La suscripción de débito automático (lleva el mail de pago). Ya se canceló en Mercado Pago antes de llegar acá; el historial de cobros
   // (`cobros_mp`) queda con las facturas como registro fiscal.
   await tx.delete(suscripcionesMp).where(eq(suscripcionesMp.institucionId, institucionId));
+  // Los planes de Mercado Pago de la institución (solo relacionan un plan con ella). Si alguien tenía abierto el enlace de uno y se suscribe
+  // después de la baja, la suscripción queda sin dueño y salta la alerta al equipo: nunca se le atribuye a una institución dada de baja.
+  await tx.delete(planesMp).where(eq(planesMp.institucionId, institucionId));
   await tx.delete(institucionMiembros).where(eq(institucionMiembros.institucionId, institucionId));
   // De las sedes queda solo la principal, con el domicilio (el de los comprobantes): sin ubicación en el mapa ni CUE.
   await tx.delete(institucionSedes).where(and(eq(institucionSedes.institucionId, institucionId), eq(institucionSedes.esPrincipal, false)));

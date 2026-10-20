@@ -673,8 +673,8 @@ export const suscripcionesMp = pgTable("suscripciones_mp", {
   plan: text("plan").notNull(),
   /** Pesos por mes que cobra Mercado Pago hoy. */
   monto: integer("monto").notNull(),
-  /** Con qué mail paga la persona en Mercado Pago (dato personal: se borra con la baja). */
-  email: text("email").notNull(),
+  /** Con qué mail paga la persona en Mercado Pago (dato personal: se borra con la baja). Puede faltar: por el enlace de un plan Mercado Pago no siempre lo informa. */
+  email: text("email"),
   proximoCobro: date("proximo_cobro"),
   creadaEn: timestamp("creada_en", { withTimezone: true }).notNull().defaultNow(),
   actualizadaEn: timestamp("actualizada_en", { withTimezone: true }).notNull().defaultNow(),
@@ -705,7 +705,31 @@ export const cobrosMp = pgTable(
   (t) => [index("cobros_mp_institucion_idx").on(t.institucionId)],
 );
 
+/**
+ * Qué plan de Mercado Pago es de qué institución. Cuando la persona se suscribe por el enlace de un plan, Mercado Pago descarta nuestra
+ * referencia y no informa quién es: lo único que viaja con la suscripción es el plan. Por eso hay UN plan por institución y esta tabla
+ * dice de quién es cada uno cuando llega el aviso. No se borra al crear otro plan (alguien puede tener abierta la pestaña del viejo y
+ * terminar suscribiéndose ahí): se va con la institución. Tabla agregada a mano con `pnpm db:mercadopago` (con RLS).
+ */
+export const planesMp = pgTable(
+  "planes_mp",
+  {
+    /** El número del plan en Mercado Pago (lo que viaja en la suscripción: `preapproval_plan_id`). */
+    mpPlanId: text("mp_plan_id").primaryKey(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** La clave del plan de UNIDOAR (colegio, deportiva…) para el que se creó. */
+    plan: text("plan").notNull(),
+    /** Pesos por mes del plan de Mercado Pago. */
+    monto: integer("monto").notNull(),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("planes_mp_institucion_idx").on(t.institucionId)],
+);
+
 export type SuscripcionMp = typeof suscripcionesMp.$inferSelect;
+export type PlanMp = typeof planesMp.$inferSelect;
 export type CobroMp = typeof cobrosMp.$inferSelect;
 
 /* ───────────────────────────── Paquete A2 · Acceso y altas ───────────────────────────── */

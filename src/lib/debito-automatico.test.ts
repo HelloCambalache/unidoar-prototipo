@@ -3,16 +3,17 @@ import { describe, it } from "node:test";
 import {
   accionSobreLaFactura,
   cuerpoDeNuevoMonto,
-  cuerpoDeSuscripcion,
+  cuerpoDePlan,
+  decidirAltaDeSuscripcion,
   decidirSincronizacion,
   detalleDeRechazo,
-  esEmailDePago,
   esPlanDebitable,
   esUrlDeMercadoPago,
   estadoDeSuscripcion,
   leerCobro,
   montoCobrable,
   motivoDeSuscripcion,
+  puedeReutilizarPlan,
   suscripcionVigente,
 } from "@/lib/debito-automatico";
 
@@ -45,23 +46,30 @@ describe("estado de la suscripción", () => {
   });
 });
 
-describe("armado de la suscripción", () => {
+describe("armado del plan de la institución", () => {
   const datos = {
-    institucionId: "3f2b8c1e-5d4a-4c7b-9e0a-1b2c3d4e5f60",
     institucion: "Colegio San Andrés del Norte",
     planLabel: "Plan Colegios",
     monto: 59000,
-    email: "pagos@colegio.edu.ar",
     volverA: "https://www.unidoar.com.ar/institucion/plan",
   };
 
-  it("pide una suscripción mensual en pesos, pendiente de que la persona la autorice", () => {
-    const c = cuerpoDeSuscripcion(datos);
-    assert.equal(c.status, "pending");
+  it("pide un plan mensual en pesos, sin mail de quien paga ni referencia (Mercado Pago los descarta o los valida contra cuentas reales)", () => {
+    const c = cuerpoDePlan(datos);
     assert.deepEqual(c.auto_recurring, { frequency: 1, frequency_type: "months", transaction_amount: 59000, currency_id: "ARS" });
-    assert.equal(c.external_reference, datos.institucionId);
-    assert.equal(c.payer_email, "pagos@colegio.edu.ar");
     assert.equal(c.back_url, "https://www.unidoar.com.ar/institucion/plan");
+    assert.equal(c.reason, "UNIDOAR · Plan Colegios · Colegio San Andrés del Norte");
+    assert.equal("payer_email" in c, false);
+    assert.equal("external_reference" in c, false);
+  });
+
+  it("el plan se reutiliza solo si sigue siendo el mismo plan y el mismo monto", () => {
+    const guardado = { plan: "colegio", monto: 59000 };
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "colegio", monto: 59000 }), true);
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "colegio", monto: 65000 }), false);
+    assert.equal(puedeReutilizarPlan(guardado, { plan: "multisede", monto: 59000 }), false);
+    assert.equal(puedeReutilizarPlan(null, { plan: "colegio", monto: 59000 }), false);
+    assert.equal(puedeReutilizarPlan(undefined, { plan: "colegio", monto: 59000 }), false);
   });
 
   it("el motivo es corto y no tiene espacios de más", () => {
@@ -103,10 +111,45 @@ describe("a dónde mandamos a la persona", () => {
       assert.equal(esUrlDeMercadoPago(u), false, String(u));
     }
   });
+});
 
-  it("el mail de pago tiene forma de mail", () => {
-    assert.equal(esEmailDePago("a@b.co"), true);
-    for (const e of ["", "a@b", "a b@c.com", "@c.com", "a@", `${"x".repeat(120)}@c.com`, null, undefined]) assert.equal(esEmailDePago(e), false, String(e));
+describe("una suscripción nueva que no teníamos anotada", () => {
+  const nueva = { idNuevo: "NUEVA" };
+  const vieja = (estado: string) => ({ estado, suscripcionId: "VIEJA" });
+
+  it("una cancelada o de estado desconocido no crea nada", () => {
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "cancelada", propia: null }), "ignorar");
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: null, propia: null }), "ignorar");
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "cancelada", propia: vieja("pendiente") }), "ignorar");
+  });
+
+  it("sin nada anotado, o con una cancelada, se crea (la persona acaba de suscribirse)", () => {
+    for (const estadoNuevo of ["pendiente", "autorizada", "pausada"] as const) {
+      assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo, propia: null }), "crear", estadoNuevo);
+      assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo, propia: vieja("cancelada") }), "crear", estadoNuevo);
+    }
+  });
+
+  it("con una activa o en pausa, la nueva es una duplicada (Mercado Pago cobraría las dos)", () => {
+    for (const estado of ["autorizada", "pausada"]) {
+      assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "autorizada", propia: vieja(estado) }), "duplicada", estado);
+      assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "pendiente", propia: vieja(estado) }), "duplicada", estado);
+    }
+  });
+
+  it("con una pendiente, solo una autorizada la reemplaza", () => {
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "autorizada", propia: vieja("pendiente") }), "reemplazar");
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "pendiente", propia: vieja("pendiente") }), "ignorar");
+    assert.equal(decidirAltaDeSuscripcion({ ...nueva, estadoNuevo: "pausada", propia: vieja("pendiente") }), "ignorar");
+  });
+
+  it("si la fila ya es esta misma suscripción (otro camino la anotó un instante antes), no es un duplicado de sí misma", () => {
+    // Es el caso de la carrera entre el aviso de Mercado Pago y la vuelta de la persona: nunca se cancela la suscripción buena.
+    for (const estado of ["pendiente", "autorizada", "pausada", "cancelada"]) {
+      for (const estadoNuevo of ["pendiente", "autorizada", "pausada", "cancelada", null] as const) {
+        assert.equal(decidirAltaDeSuscripcion({ idNuevo: "X", estadoNuevo, propia: { estado, suscripcionId: "X" } }), "misma", `${estado} / ${estadoNuevo}`);
+      }
+    }
   });
 });
 

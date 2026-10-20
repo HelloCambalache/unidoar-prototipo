@@ -65,7 +65,7 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
             enlace: `/backoffice/cobros/${inst.id}`,
           });
         } else if (decision.accion === "cambiar-monto") {
-          await cambiarMontoMp(susc.suscripcionId, decision.monto);
+          const { estado: estadoTrasElCambio } = await cambiarMontoMp(susc.suscripcionId, decision.monto);
           await db.update(suscripcionesMp).set({ monto: decision.monto, actualizadaEn: new Date() }).where(inArray(suscripcionesMp.institucionId, [inst.id]));
           resultado.montosActualizados++;
           await registrarAuditoria({
@@ -81,6 +81,15 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
             texto: `el débito automático pasa de ${pesos(susc.monto)} a ${pesos(decision.monto)} por mes desde el próximo cobro, por el cambio en tu plan.`,
             enlace: "/institucion/plan",
           });
+          // Un aumento puede sacar la suscripción de "autorizada" hasta que la persona apruebe el monto nuevo en Mercado Pago: no se da por
+          // hecho que siga cobrando. Si quedó en otro estado, lo ve el equipo (el aviso de cambio de estado de Mercado Pago actualiza el resto).
+          if (estadoTrasElCambio && estadoTrasElCambio !== "authorized" && estadoTrasElCambio !== "paused") {
+            await avisarAAdmins(db, {
+              titulo: "Débito automático: monto por aprobar",
+              texto: `${inst.nombre}: se actualizó el monto a ${pesos(decision.monto)} y Mercado Pago dejó la suscripción en estado «${estadoTrasElCambio}». Puede estar esperando que la institución apruebe el monto nuevo: revisala en Mercado Pago.`,
+              enlace: `/backoffice/cobros/${inst.id}`,
+            });
+          }
         }
       } catch (e) {
         resultado.fallidas++;

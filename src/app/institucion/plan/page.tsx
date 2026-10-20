@@ -11,14 +11,20 @@ import { datosDeDebito } from "@/lib/queries/suscripcion-vista";
 
 export const metadata: Metadata = { title: "Plan y facturación" };
 
+/** Un número de recurso de Mercado Pago: letras, números, guion y guion bajo. */
+const ID_DE_MERCADO_PAGO = /^[0-9A-Za-z_-]{1,64}$/;
+
 export default async function PlanYFacturacion({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const [datos, catalogo, debito, { debito: volvio }] = await Promise.all([
+  const [datos, catalogo, debito, { preapproval_id: preapprovalId }] = await Promise.all([
     datosDePlan(institucion, usuario.id),
     catalogoDePlanes(),
-    datosDeDebito(institucion, usuario.id, usuario.email),
+    datosDeDebito(institucion, usuario.id),
     searchParams,
   ]);
+  // Mercado Pago agrega `preapproval_id` al volver de suscribirse: es la señal de que la persona viene de ahí. El número no se cree: la
+  // acción solo lo usa si su plan es de esta institución.
+  const vuelta = typeof preapprovalId === "string" && ID_DE_MERCADO_PAGO.test(preapprovalId) ? preapprovalId : null;
 
   return (
     <>
@@ -35,7 +41,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
         solicitud={datos.solicitud}
         puedeCambiar={datos.puedeCambiar}
       />
-      <PlanDebito datos={debito} volvioDeMercadoPago={volvio === "1"} />
+      <PlanDebito datos={debito} suscripcionDeLaVuelta={vuelta} />
       <PlanHistorial facturas={datos.facturas} />
     </>
   );
