@@ -2,7 +2,7 @@ import "server-only";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
-import { esPlanDebitable, estadoDeSuscripcion, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import { esPlanDebitable, estadoGuardado, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { mercadoPagoActivo } from "@/lib/mercadopago-config";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
@@ -51,7 +51,9 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     ultimoPlanDe(institucion.id),
   ]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
-  const estado = susc ? (estadoDeSuscripcion(susc.estado) ?? "cancelada") : null;
+  // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
+  // Mercado Pago, una suscripción autorizada se mostraba como cancelada.
+  const estado = susc ? (estadoGuardado(susc.estado) ?? "cancelada") : null;
   const cobro = ultimo[0];
   const sinSuscripcionViva = !estado || estado === "cancelada";
   const planReciente = !!plan && sinSuscripcionViva && Date.now() - plan.creadoEn.getTime() < HORAS_DE_PLAN_RECIENTE * 60 * 60 * 1000;

@@ -10,6 +10,7 @@ import {
   esPlanDebitable,
   esUrlDeMercadoPago,
   estadoDeSuscripcion,
+  estadoGuardado,
   leerCobro,
   montoCobrable,
   motivoDeSuscripcion,
@@ -38,6 +39,15 @@ describe("estado de la suscripción", () => {
     assert.equal(estadoDeSuscripcion(undefined), null);
     assert.equal(estadoDeSuscripcion(null), null);
     assert.equal(estadoDeSuscripcion(""), null);
+  });
+
+  it("los estados guardados son los nuestros y no pasan por el traductor de Mercado Pago", () => {
+    for (const e of ["pendiente", "autorizada", "pausada", "cancelada"] as const) {
+      assert.equal(estadoGuardado(e), e, e);
+      // El error que mostraba "cancelado" una suscripción autorizada: el traductor solo entiende los estados de Mercado Pago.
+      assert.equal(estadoDeSuscripcion(e), null, e);
+    }
+    for (const e of ["authorized", "algo", "", null, undefined]) assert.equal(estadoGuardado(e as string), null, String(e));
   });
 
   it("pendiente, activa y en pausa impiden crear otra; cancelada no", () => {

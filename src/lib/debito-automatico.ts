@@ -30,6 +30,14 @@ export function estadoDeSuscripcion(estadoMp: string | null | undefined): Estado
   }
 }
 
+/**
+ * Los cuatro estados tal como los GUARDAMOS en `suscripciones_mp.estado`. No confundir con `estadoDeSuscripcion`, que traduce los que
+ * informa Mercado Pago ("authorized"): pasarle un estado guardado ("autorizada") devuelve null. Un valor desconocido devuelve null.
+ */
+export function estadoGuardado(valor: string | null | undefined): EstadoSuscripcion | null {
+  return valor === "pendiente" || valor === "autorizada" || valor === "pausada" || valor === "cancelada" ? valor : null;
+}
+
 /** Mientras exista (pendiente, activa o en pausa) no se crea otra: una institución tiene una sola suscripción. */
 export const suscripcionVigente = (estado: string | null | undefined) =>
   estado === "pendiente" || estado === "autorizada" || estado === "pausada";
