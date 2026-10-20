@@ -1,6 +1,6 @@
 import "server-only";
 import { and, between, eq, ne } from "drizzle-orm";
-import { facturas, instituciones } from "@/db/schema";
+import { facturas, instituciones, suscripcionesMp } from "@/db/schema";
 import { hoyAR } from "@/lib/cobros";
 import { DIAS_ANTES_DEL_VENCIMIENTO, DIAS_MAXIMOS_DE_ATRASO, planificarRecordatorios, sumarDias } from "@/lib/correo/claves";
 import { correoDeRecordatorio } from "@/lib/correo/eventos";
@@ -35,7 +35,11 @@ export async function encolarRecordatoriosDeFactura(ejecutor: EjecutorBo, ahora 
       ),
     );
 
-  const recordatorios = planificarRecordatorios(filas, hoy);
+  // Quien tiene el débito automático activo no recibe recordatorios: Mercado Pago cobra solo (y un cobro rechazado ya tiene su aviso).
+  const conDebito = new Set(
+    (await ejecutor.select({ id: suscripcionesMp.institucionId }).from(suscripcionesMp).where(eq(suscripcionesMp.estado, "autorizada"))).map((fila) => fila.id),
+  );
+  const recordatorios = planificarRecordatorios(filas, hoy, conDebito);
   const destinatarios = new Map<string, string[]>();
   for (const r of recordatorios) {
     const f = filas.find((x) => x.id === r.facturaId)!;

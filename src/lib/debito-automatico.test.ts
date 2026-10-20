@@ -7,6 +7,7 @@ import {
   decidirAltaDeSuscripcion,
   decidirSincronizacion,
   detalleDeRechazo,
+  diaDeCobroDelDebito,
   esPlanDebitable,
   esUrlDeMercadoPago,
   estadoDeSuscripcion,
@@ -17,6 +18,21 @@ import {
   puedeReutilizarPlan,
   suscripcionVigente,
 } from "@/lib/debito-automatico";
+
+describe("el día en que cobra el débito", () => {
+  it("es el día en que se suscribió, en hora de Argentina", () => {
+    assert.equal(diaDeCobroDelDebito({ creada: "2026-10-20T18:50:47.000-03:00", proximoCobro: "2026-11-20T00:00:00.000-03:00" }), 20);
+    // 01:30 UTC del 21 todavía es el 20 en Argentina (UTC-3).
+    assert.equal(diaDeCobroDelDebito({ creada: "2026-10-21T01:30:00.000Z", proximoCobro: null }), 20);
+  });
+
+  it("sin fecha de alta usa el próximo cobro, y sin ninguna válida, null", () => {
+    assert.equal(diaDeCobroDelDebito({ creada: null, proximoCobro: "2026-11-20T00:00:00.000-03:00" }), 20);
+    assert.equal(diaDeCobroDelDebito({ creada: "no es una fecha", proximoCobro: "2026-12-05T12:00:00.000-03:00" }), 5);
+    assert.equal(diaDeCobroDelDebito({ creada: undefined, proximoCobro: undefined }), null);
+    assert.equal(diaDeCobroDelDebito({ creada: "", proximoCobro: "basura" }), null);
+  });
+});
 
 describe("planes que se pueden debitar", () => {
   it("todos los mensuales sí y el anual no", () => {

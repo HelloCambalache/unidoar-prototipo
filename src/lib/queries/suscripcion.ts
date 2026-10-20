@@ -5,7 +5,15 @@ import { cobrosMp, facturas, instituciones, suscripcionesMp, type SuscripcionMp 
 import { registrarAuditoria } from "@/lib/auditoria";
 import { etiquetaPeriodo, fechaCobroDelPeriodo, hoyAR, periodoActual } from "@/lib/cobros";
 import { correoDePagoRegistrado } from "@/lib/correo/eventos";
-import { accionSobreLaFactura, decidirAltaDeSuscripcion, estadoDeSuscripcion, montoCobrable, type CobroLeido, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import {
+  accionSobreLaFactura,
+  decidirAltaDeSuscripcion,
+  diaDeCobroDelDebito,
+  estadoDeSuscripcion,
+  montoCobrable,
+  type CobroLeido,
+  type EstadoSuscripcion,
+} from "@/lib/debito-automatico";
 import type { SuscripcionDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { pesos } from "@/lib/planes";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
@@ -85,6 +93,21 @@ async function avisarCambioDeEstado(tx: Tx, institucionId: string, antes: string
 }
 
 /**
+ * Alinea el día de cobro de la institución con el día en que Mercado Pago le va a cobrar (el de la suscripción): las facturas vencen el día
+ * de cobro de la institución (por defecto el 10) y el débito sale otro día; sin esto, la factura del mes se vería "vencida" (y saldrían los
+ * recordatorios) hasta que el débito la cobre. Se hace una sola vez, cuando la suscripción pasa a autorizada: después el equipo puede
+ * cambiarlo a mano. Devuelve el cambio (para la auditoría) o null si no hubo nada que cambiar.
+ */
+async function alinearDiaDeCobro(tx: Tx, institucionId: string, mp: SuscripcionDeMercadoPago): Promise<{ antes: number | null; despues: number } | null> {
+  const dia = diaDeCobroDelDebito({ creada: mp.creadaEn, proximoCobro: mp.proximoCobro });
+  if (dia === null) return null;
+  const [inst] = await tx.select({ dia: instituciones.diaCobro }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+  if (!inst || inst.dia === dia) return null;
+  await tx.update(instituciones).set({ diaCobro: dia }).where(eq(instituciones.id, institucionId));
+  return { antes: inst.dia, despues: dia };
+}
+
+/**
  * Espeja el estado de la suscripción que informa Mercado Pago (aviso `subscription_preapproval`).
  *
  * Una suscripción que NO tenemos anotada se atribuye por su **plan** (`preapproval_plan_id`): cuando la persona se suscribe por el enlace del
@@ -108,7 +131,8 @@ export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): 
         .update(suscripcionesMp)
         .set({ estado, proximoCobro, monto, actualizadaEn: new Date() })
         .where(eq(suscripcionesMp.institucionId, fila.institucionId));
-      if (estado !== fila.estado) await avisarCambioDeEstado(tx, fila.institucionId, fila.estado, estado as EstadoSuscripcion, monto);
+      const dia = estado === "autorizada" && fila.estado !== "autorizada" ? await alinearDiaDeCobro(tx, fila.institucionId, mp) : null;
+      if (estado !== fila.estado) await avisarCambioDeEstado(tx, fila.institucionId, fila.estado, estado as EstadoSuscripcion, monto, dia ? { diaDeCobro: dia } : {});
       return { resultado: "actualizada" };
     };
 
@@ -136,7 +160,8 @@ export async function aplicarEstadoDeSuscripcion(mp: SuscripcionDeMercadoPago): 
     } else {
       await tx.insert(suscripcionesMp).values({ institucionId: inst.id, ...valores });
     }
-    await avisarCambioDeEstado(tx, inst.id, propia?.estado ?? null, estadoMp, monto, { plan: mapeo.plan });
+    const dia = estadoMp === "autorizada" ? await alinearDiaDeCobro(tx, inst.id, mp) : null;
+    await avisarCambioDeEstado(tx, inst.id, propia?.estado ?? null, estadoMp, monto, { plan: mapeo.plan, ...(dia ? { diaDeCobro: dia } : {}) });
     return decision === "reemplazar" ? { resultado: "adoptada", reemplazada: propia?.suscripcionId } : { resultado: "creada" };
   });
 }

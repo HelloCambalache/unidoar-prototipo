@@ -79,6 +79,8 @@ export type SuscripcionDeMercadoPago = {
    * enlace de un plan: Mercado Pago deja vacíos la referencia y el mail.
    */
   planId: string | null;
+  /** Cuándo se creó la suscripción en Mercado Pago (ISO): de ahí sale el día del mes en que cobra. */
+  creadaEn: string | null;
 };
 
 type RespuestaDeSuscripcion = {
@@ -90,6 +92,7 @@ type RespuestaDeSuscripcion = {
   payer_email?: string;
   external_reference?: string;
   preapproval_plan_id?: string;
+  date_created?: string;
 };
 
 function leerSuscripcion(r: RespuestaDeSuscripcion): SuscripcionDeMercadoPago {
@@ -105,6 +108,7 @@ function leerSuscripcion(r: RespuestaDeSuscripcion): SuscripcionDeMercadoPago {
     email: r.payer_email ? r.payer_email : null,
     referencia: r.external_reference ? String(r.external_reference) : null,
     planId: r.preapproval_plan_id ? String(r.preapproval_plan_id) : null,
+    creadaEn: r.date_created ? String(r.date_created) : null,
   };
 }
 

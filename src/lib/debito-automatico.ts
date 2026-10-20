@@ -42,6 +42,21 @@ export function estadoGuardado(valor: string | null | undefined): EstadoSuscripc
 export const suscripcionVigente = (estado: string | null | undefined) =>
   estado === "pendiente" || estado === "autorizada" || estado === "pausada";
 
+/**
+ * El día del mes en que Mercado Pago le va a cobrar a la institución: el día en que se suscribió (el primer cobro sale al suscribirse y los
+ * demás el mismo día de cada mes). Se toma de la fecha de alta y, si falta, del próximo cobro; siempre en hora de Argentina. Devuelve null si
+ * no hay ninguna fecha válida. Sirve para que la factura de cada mes venza el día en que el débito va a cobrar y no se vea "vencida" antes.
+ */
+export function diaDeCobroDelDebito(entrada: { creada: string | null | undefined; proximoCobro: string | null | undefined }): number | null {
+  for (const iso of [entrada.creada, entrada.proximoCobro]) {
+    if (!iso) continue;
+    const fecha = new Date(iso);
+    if (Number.isNaN(fecha.getTime())) continue;
+    return Number(hoyAR(fecha).slice(8, 10));
+  }
+  return null;
+}
+
 /** Una suscripción cobra solo con un monto entero y positivo. */
 export const montoCobrable = (monto: unknown): monto is number => typeof monto === "number" && Number.isInteger(monto) && monto > 0;
 

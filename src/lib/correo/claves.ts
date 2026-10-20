@@ -53,12 +53,14 @@ export function diasEntre(desde: string, hasta: string): number {
 
 /**
  * Qué recordatorios corresponden hoy. Cada factura recibe como mucho uno por etapa (la clave lo garantiza aunque el
- * cron corra todos los días): uno cuando falta poco, uno cuando vence y uno más a la semana. Las pagadas no reciben nada.
+ * cron corra todos los días): uno cuando falta poco, uno cuando vence y uno más a la semana. Las pagadas no reciben nada, y tampoco las
+ * instituciones con el débito automático activo (`conDebitoActivo`): Mercado Pago cobra solo, y si un cobro se rechaza ya sale su propio aviso.
  */
-export function planificarRecordatorios(facturas: FacturaParaRecordar[], hoy: string): Recordatorio[] {
+export function planificarRecordatorios(facturas: FacturaParaRecordar[], hoy: string, conDebitoActivo: ReadonlySet<string> = new Set()): Recordatorio[] {
   const lista: Recordatorio[] = [];
   for (const f of facturas) {
     if (f.estado === "pagada") continue;
+    if (conDebitoActivo.has(f.institucionId)) continue;
     const dias = diasEntre(hoy, f.fechaCobro);
     if (dias >= 0 && dias <= DIAS_ANTES_DEL_VENCIMIENTO) {
       lista.push({ facturaId: f.id, institucionId: f.institucionId, plantilla: "M51", segundoAviso: false, clave: `M51:${f.id}` });

@@ -78,6 +78,13 @@ describe("recordatorios de factura", () => {
     assert.equal(planificarRecordatorios([], hoy).length, 0);
   });
 
+  it("no recuerda nada a quien tiene el débito automático activo, pero sí a los demás", () => {
+    const facturas = [f("a", "2026-10-21"), { id: "b", institucionId: "i2", estado: "vencida", fechaCobro: "2026-10-15" }];
+    assert.deepEqual(planificarRecordatorios(facturas, "2026-10-20", new Set(["i1"])).map((x) => x.clave), ["M52:b:1"]);
+    assert.deepEqual(planificarRecordatorios(facturas, "2026-10-20", new Set(["i1", "i2"])), []);
+    assert.deepEqual(planificarRecordatorios(facturas, "2026-10-20").map((x) => x.clave), ["M51:a", "M52:b:1"]);
+  });
+
   it("varias facturas generan un recordatorio cada una", () => {
     const r = planificarRecordatorios([f("a", "2026-10-21"), f("b", "2026-10-15", "vencida"), f("c", "2026-11-30")], "2026-10-20");
     assert.deepEqual(r.map((x) => x.clave), ["M51:a", "M52:b:1"]);
