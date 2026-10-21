@@ -232,21 +232,31 @@ async function demo() {
   const cursos = await db
     .insert(s.cursos)
     .values(
-      CURSOS.map((c) => ({
-        institucionId: instId.get(c.inst)!,
-        titulo: c.titulo,
-        subtitulo: c.subtitulo,
-        descripcion: c.descripcion,
-        modalidad: c.modalidad,
-        profesor: c.profesor,
-        fechaInicio: c.fechaInicio,
-        fechaFinal: c.fechaFinal,
-        horario: c.horario,
-        link: c.link,
-        certifica: c.certifica,
-        puntaje: c.puntaje,
-        fotoUrl: c.fotoUrl,
-      })),
+      CURSOS.map((c) => {
+        // Un curso presencial se dicta en la sede de la institución (y se ve así: el lugar es obligatorio).
+        const sede = c.modalidad === "Presencial" ? INSTITUCIONES.find((i) => i.slug === c.inst) : undefined;
+        const punto = sede ? coordsZona.get(sede.zona) : undefined;
+        return {
+          institucionId: instId.get(c.inst)!,
+          titulo: c.titulo,
+          subtitulo: c.subtitulo,
+          descripcion: c.descripcion,
+          modalidad: c.modalidad,
+          profesor: c.profesor,
+          fechaInicio: c.fechaInicio,
+          fechaFinal: c.fechaFinal,
+          horario: c.horario,
+          direccion: sede?.direccion,
+          partido: sede?.partido,
+          provincia: sede ? "Buenos Aires" : undefined,
+          lat: punto?.lat,
+          lng: punto?.lng,
+          link: c.link,
+          certifica: c.certifica,
+          puntaje: c.puntaje,
+          fotoUrl: c.fotoUrl,
+        };
+      }),
     )
     .returning({ id: s.cursos.id });
   const inscripciones = CURSOS.flatMap((c, i) =>
