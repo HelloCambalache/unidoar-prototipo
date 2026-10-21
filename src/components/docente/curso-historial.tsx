@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Insignia } from "@/components/ui/insignia";
+import { lugarDeCurso } from "@/lib/cursos";
 import { etiquetaFechas, fechaLarga } from "@/lib/fechas-curso";
 import type { CursoHistorial, EstadoCursado } from "@/lib/queries/cursos";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,7 @@ export function CursoHistorialLista({ cursos }: { cursos: CursoHistorial[] }) {
                   <Insignia tono={estado.tono}>{estado.texto}</Insignia>
                 </div>
                 <div className="text-[13px] leading-[1.4] text-apagado">
-                  {[c.institucion.nombre, etiquetaFechas(c.fechaInicio, c.fechaFinal)].join(" · ")}
+                  {[c.institucion.nombre, etiquetaFechas(c.fechaInicio, c.fechaFinal), lugarDeCurso(c) ?? "Dirección a confirmar"].join(" · ")}
                 </div>
               </div>
               <span className="text-[13px] leading-none font-semibold text-tinta-2">{progreso(c)}</span>

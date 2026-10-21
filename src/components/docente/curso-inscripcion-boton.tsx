@@ -12,9 +12,12 @@ import { useToast } from "@/components/ui/toast";
 export function CursoInscripcionBoton({
   cursoId,
   inscripto,
+  lugar,
 }: {
   cursoId: string;
   inscripto: boolean;
+  /** Dónde se dicta un curso presencial: se repite en el aviso de "quedaste inscripto/a". */
+  lugar?: string | null;
 }) {
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
@@ -23,7 +26,8 @@ export function CursoInscripcionBoton({
     empezar(async () => {
       const r = inscripto ? await cancelarInscripcion(cursoId) : await inscribirseCurso(cursoId);
       if (!r.ok) toast(r.error, "error");
-      else toast(inscripto ? "Cancelamos tu inscripción" : "Listo, quedaste inscripto/a en el curso");
+      else if (inscripto) toast("Cancelamos tu inscripción");
+      else toast(lugar ? `Listo, quedaste inscripto/a. Se dicta en ${lugar}.` : "Listo, quedaste inscripto/a en el curso");
     });
 
   if (inscripto) {

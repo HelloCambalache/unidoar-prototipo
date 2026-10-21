@@ -64,9 +64,14 @@ export function MenuMovil({ conSesion }: { conSesion: boolean }) {
               </BotonLink>
             ) : (
               <>
-                <Link href="/ingresar" className={enlace}>
+                <BotonLink
+                  href="/ingresar"
+                  variante="fantasma"
+                  bloque
+                  className="rounded-full border-white/60 text-white hover:border-white hover:bg-white/10 hover:text-white focus-visible:ring-celeste"
+                >
                   Ingresar
-                </Link>
+                </BotonLink>
                 <BotonLink href="/registro" variante="cta" bloque className="rounded-full">
                   Crear cuenta
                 </BotonLink>

@@ -14,6 +14,7 @@ import {
 import type { Docente } from "@/db/schema";
 import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirDocente } from "@/lib/auth";
+import { FOTOS_DNI_SE_ELIMINAN } from "@/lib/documentos";
 import { CONSTANCIA, esEstudiante, situacionDeEstudio } from "@/lib/estudiantes";
 import { CATEGORIA_ALTA } from "@/lib/onboarding";
 import { pendientesDePerfil } from "@/lib/perfil";
@@ -83,16 +84,19 @@ export default async function PerfilDocentePage() {
       editable: abierta && docente.verificacion !== "verificado",
       detalle:
         dniEstado === "verificado"
-          ? "Ya lo verificamos."
+          ? // Las verificaciones de ahora borran las fotos; si a una anterior todavía le quedan, no se afirma lo que no es.
+            docs.dniFrente || docs.dniDorso
+            ? "Ya lo verificamos."
+            : "Ya lo verificamos y eliminamos las fotos: solo conservamos el número de tu DNI."
           : !abierta
             ? RECHAZADA
             : dniEstado === "revision"
-            ? "Lo recibimos y lo estamos revisando."
+            ? `Lo recibimos y lo estamos revisando. ${FOTOS_DNI_SE_ELIMINAN}`
             : docs.dniFrente
               ? "Falta el dorso."
               : docs.dniDorso
                 ? "Falta el frente."
-                : "Subí una foto o un PDF de cada lado. Sin esto no podemos verificar tu perfil.",
+                : `Subí una foto o un PDF de cada lado. Sin esto no podemos verificar tu perfil. ${FOTOS_DNI_SE_ELIMINAN}`,
     },
     credencial: {
       nombre: credencial.nombre,

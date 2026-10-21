@@ -152,7 +152,7 @@ export function FormularioBusqueda({
       className="flex items-start gap-6 max-[1000px]:flex-wrap max-[860px]:flex-col max-[860px]:gap-4"
     >
       <div className="flex w-full max-w-[980px] min-w-0 flex-1 flex-col gap-4 rounded-tarjeta border border-linea bg-white p-6 max-[560px]:p-4">
-        {/* Común o urgente: a la vista, arriba de todo. Urgente es el tipo "Suplencia rápida". */}
+        {/* Planificada o urgente: a la vista, arriba de todo. Urgente es el tipo "Suplencia rápida" y va en rojo (el del botón de Buscar profesionales). */}
         <fieldset className="m-0 grid grid-cols-2 gap-3 border-0 p-0 max-[640px]:grid-cols-1">
           <legend className="mb-2 p-0 text-[13px] font-semibold text-tinta">¿Qué tipo de búsqueda es?</legend>
           <button
@@ -164,7 +164,7 @@ export function FormularioBusqueda({
               !esRapida ? "border-navy-700 bg-navy-50" : "border-borde bg-white hover:border-borde-fuerte",
             )}
           >
-            <span className="text-[15px] font-semibold text-tinta">Búsqueda común</span>
+            <span className="text-[15px] font-semibold text-tinta">Búsqueda planificada</span>
             <span className="text-[13px] leading-snug text-apagado">Titular, suplencia, temporada o freelance. Recibe postulaciones hasta que la cierres.</span>
           </button>
           <button
@@ -176,15 +176,17 @@ export function FormularioBusqueda({
               set("tipo", "Suplencia rápida");
             }}
             className={cn(
-              "flex flex-col items-start gap-1 rounded-interno border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-naranja/40 focus-visible:outline-none",
-              esRapida ? "border-naranja bg-naranja-tint" : "border-borde bg-white hover:border-naranja/60",
+              "flex flex-col items-start gap-1 rounded-interno border-[1.5px] p-4 text-left transition-colors focus-visible:ring-[3px] focus-visible:ring-[#C62828]/40 focus-visible:outline-none",
+              esRapida
+                ? "border-[#C62828] bg-[#FDECEA] shadow-[0_0_0_3px_rgba(198,40,40,.14)]"
+                : "border-[#F0C3BE] bg-white hover:border-[#C62828]/60 hover:bg-[#FDECEA]/60",
             )}
           >
-            <span className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-naranja-ink">
-              <Icono nombre="rayo" tamano={15} trazo={2} />
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-bold text-[#B71C1C]">
+              <Icono nombre="rayo" tamano={15} trazo={2.2} />
               Búsqueda urgente
             </span>
-            <span className="text-[13px] leading-snug text-apagado">
+            <span className="text-[13px] leading-snug text-[#6E2A25]">
               Para cubrir rápido: avisamos al momento a los profesionales que encajan y vence en el plazo que elijas.
             </span>
           </button>
@@ -290,7 +292,7 @@ export function FormularioBusqueda({
             <div className="flex flex-col gap-1.5">
               <span className="text-[13px] font-semibold text-tinta">Tipo</span>
               <input type="hidden" name="tipo" value={v.tipo} />
-              <span className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-naranja-tint px-3.5 text-[14px] font-semibold text-naranja-ink">
+              <span className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-[#FDECEA] px-3.5 text-[14px] font-bold text-[#B71C1C]">
                 <Icono nombre="rayo" tamano={15} trazo={2} />
                 Suplencia rápida
               </span>

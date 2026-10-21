@@ -56,9 +56,14 @@ export async function CabeceraPublica() {
           </BotonLink>
         ) : (
           <>
-            <Link href="/ingresar" className={`${ENLACE} px-3 py-2 hover:text-white`}>
+            {/* Ingresar y Crear cuenta son las dos opciones destacadas: mismo tamaño y forma, uno con borde y el otro lleno. */}
+            <BotonLink
+              href="/ingresar"
+              variante="fantasma"
+              className="rounded-full border-white/60 text-white hover:border-white hover:bg-white/10 hover:text-white focus-visible:ring-celeste"
+            >
               Ingresar
-            </Link>
+            </BotonLink>
             <BotonLink href="/registro" variante="cta" className="rounded-full">
               Crear cuenta
             </BotonLink>

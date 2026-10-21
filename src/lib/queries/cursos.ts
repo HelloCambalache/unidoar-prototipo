@@ -18,6 +18,9 @@ export type CursoBase = {
   fechaFinal: string | null;
   horario: string | null;
   direccion: string | null;
+  /** Dónde quedó ubicada la dirección (se completan solos al guardar el curso); sirven para decir en qué localidad se dicta. */
+  partido: string | null;
+  provincia: string | null;
   link: string | null;
   /** Contraseña de la sala; en la vista del docente solo viene si está inscripto (ver `consultar`). */
   linkClave: string | null;
@@ -64,6 +67,8 @@ function base(f: typeof cursos.$inferSelect, inst: CursoBase["institucion"]): Cu
     fechaFinal: f.fechaFinal,
     horario: f.horario,
     direccion: f.direccion,
+    partido: f.partido,
+    provincia: f.provincia,
     link: f.link,
     linkClave: f.linkClave,
     certifica: f.certifica,

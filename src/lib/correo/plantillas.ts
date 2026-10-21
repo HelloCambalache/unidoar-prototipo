@@ -121,6 +121,7 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       parrafos: [
         ["Hola ", n(d.nombre), ": revisamos tu documentación y tu perfil ya tiene el sello de verificado."],
         ["Las instituciones lo ven en tu perfil y en tus postulaciones."],
+        ["Ya eliminamos las fotos de tu DNI: solo conservamos el número, como constancia de lo que verificamos."],
       ],
       boton: { texto: "Ver mi perfil", ruta: "/docente/perfil" },
     }),

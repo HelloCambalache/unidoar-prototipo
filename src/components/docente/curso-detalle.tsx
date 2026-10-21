@@ -3,7 +3,8 @@ import { Insignia } from "@/components/ui/insignia";
 import { CursoFoto } from "@/components/docente/curso-foto";
 import { CursoInscripcionBoton } from "@/components/docente/curso-inscripcion-boton";
 import { etiquetaPuntos } from "@/components/docente/curso-tarjeta";
-import { esEnlaceWeb } from "@/lib/cursos";
+import { Icono } from "@/components/icons";
+import { esEnlaceWeb, lugarDeCurso } from "@/lib/cursos";
 import { etiquetaFechas, hoyArgentina } from "@/lib/fechas-curso";
 import { kmLegible } from "@/lib/geo";
 import type { CursoVista } from "@/lib/queries/cursos";
@@ -21,6 +22,8 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 export function CursoDetalle({ c }: { c: CursoVista }) {
   const terminado = !!c.fechaFinal && c.fechaFinal < hoyArgentina();
   const completado = !!c.terminoEn;
+  const online = c.modalidad === "Online";
+  const lugar = lugarDeCurso(c);
 
   return (
     <>
@@ -56,38 +59,68 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
             <Dato etiqueta="Horario" valor={c.horario || "A confirmar"} />
           </div>
 
-          {c.modalidad === "Online" ? (
-            <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
-              <b className="font-semibold">Link: </b>
-              {c.inscripto && c.link ? (
-                esEnlaceWeb(c.link) ? (
-                  <a href={c.link} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline">
-                    {c.link}
-                  </a>
-                ) : (
-                  // Un valor que no es http(s) se muestra como texto, nunca como enlace.
-                  <span className="break-all font-medium">{c.link}</span>
-                )
-              ) : (
-                <span className="text-apagado">te lo mostramos cuando te inscribís.</span>
-              )}
-              {c.inscripto && c.link && c.linkClave && (
+          {/* El lugar va siempre, destacado y antes de inscribirse: un curso presencial sin dirección lo avisa en vez de callarse. */}
+          <section
+            aria-labelledby="curso-lugar"
+            className="mb-6 flex items-start gap-3.5 rounded-tarjeta border border-linea bg-white p-4"
+          >
+            <span className="flex size-10 flex-none items-center justify-center rounded-caja bg-navy-50 text-navy-700">
+              <Icono nombre={online ? "videollamada" : "ubicacion"} tamano={20} trazo={1.8} />
+            </span>
+            <div className="min-w-0 flex-1 text-sm leading-normal text-tinta-2">
+              <h2
+                id="curso-lugar"
+                className="m-0 mb-1.5 text-[11px] leading-none font-semibold tracking-[.05em] text-sutil uppercase"
+              >
+                Dónde se dicta
+              </h2>
+              {online ? (
                 <>
-                  <br />
-                  <b className="font-semibold">Contraseña o código: </b>
-                  <code className="rounded-md bg-lienzo px-1.5 py-0.5 font-medium text-tinta select-all">{c.linkClave}</code>
+                  <div className="text-base leading-[1.35] font-semibold text-tinta">Online</div>
+                  <p className="m-0 mt-1">
+                    <b className="font-semibold">Link: </b>
+                    {c.inscripto ? (
+                      c.link ? (
+                        esEnlaceWeb(c.link) ? (
+                          <a href={c.link} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline">
+                            {c.link}
+                          </a>
+                        ) : (
+                          // Un valor que no es http(s) se muestra como texto, nunca como enlace.
+                          <span className="break-all font-medium">{c.link}</span>
+                        )
+                      ) : (
+                        <span className="text-apagado">la institución todavía no lo cargó; lo vas a ver acá apenas lo cargue.</span>
+                      )
+                    ) : (
+                      <span className="text-apagado">te lo mostramos cuando te inscribís.</span>
+                    )}
+                    {c.inscripto && c.link && c.linkClave && (
+                      <>
+                        <br />
+                        <b className="font-semibold">Contraseña o código: </b>
+                        <code className="rounded-md bg-lienzo px-1.5 py-0.5 font-medium text-tinta select-all">{c.linkClave}</code>
+                      </>
+                    )}
+                  </p>
                 </>
+              ) : lugar ? (
+                <>
+                  <div className="text-base leading-[1.35] font-semibold text-tinta">{lugar}</div>
+                  {kmLegible(c.distanciaKm) && <div className="mt-0.5 text-apagado">{kmLegible(c.distanciaKm)} de tus zonas</div>}
+                </>
+              ) : (
+                <p className="m-0">
+                  <span className="font-semibold text-tinta">La institución todavía no cargó la dirección de este curso.</span>{" "}
+                  Podés consultarla en el{" "}
+                  <Link href={`/docente/instituciones/${c.institucion.slug}`} className="font-medium text-navy-700 underline">
+                    perfil de {c.institucion.nombre}
+                  </Link>
+                  .
+                </p>
               )}
-            </p>
-          ) : (
-            c.direccion && (
-              <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
-                <b className="font-semibold">Dónde: </b>
-                {c.direccion}
-                {kmLegible(c.distanciaKm) && <span className="text-apagado"> · {kmLegible(c.distanciaKm)} de tus zonas</span>}
-              </p>
-            )
-          )}
+            </div>
+          </section>
 
           <p className="m-0 mb-6 max-w-[70ch] text-[15px] leading-[1.6] text-tinta-2">
             {c.descripcion || "La institución todavía no cargó una descripción de este curso."}
@@ -98,7 +131,7 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
           ) : terminado && !c.inscripto ? (
             <p className="m-0 text-sm text-apagado">Este curso ya terminó y no admite inscripciones.</p>
           ) : (
-            <CursoInscripcionBoton cursoId={c.id} inscripto={c.inscripto} />
+            <CursoInscripcionBoton cursoId={c.id} inscripto={c.inscripto} lugar={online ? null : lugar} />
           )}
         </div>
       </div>

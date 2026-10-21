@@ -229,9 +229,12 @@ export function CursoFormulario({
       {v.modalidad === "Presencial" ? (
         <CampoDireccion
           proposito="curso"
+          etiqueta="Dónde se dicta"
+          requerido
+          required
           defaultValue={v.direccion}
           onCambioTexto={(t) => set("direccion", t)}
-          ayuda="Escribí calle, número y localidad: ubicamos el curso para mostrarles a los profesionales a cuántos km queda."
+          ayuda="Escribí calle, número y localidad: es lo que ven los profesionales al inscribirse, y con eso mostramos a cuántos km queda."
           error={errores.direccion}
         />
       ) : (

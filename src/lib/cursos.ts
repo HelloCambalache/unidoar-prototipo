@@ -178,6 +178,29 @@ export function diasIniciales(inicio: string | null | undefined, fin: string | n
  */
 export const esEnlaceWeb = (valor: string | null | undefined): valor is string => Boolean(valor && /^https?:\/\//i.test(valor.trim()));
 
+/**
+ * Dónde se dicta un curso, en una línea, para mostrarlo siempre (tarjeta, agenda, detalle, Mis cursos). Online: "Online".
+ * Presencial: la dirección que cargó la institución con el partido y la provincia que se ubicaron, salvo que ya estén escritos
+ * en la dirección ("Maipú 1234, Vicente López" no repite el partido). `null` si es presencial y todavía no hay dirección: la
+ * pantalla lo avisa con su propio texto en vez de dejar el lugar en blanco.
+ */
+export function lugarDeCurso(c: {
+  modalidad: string;
+  direccion: string | null;
+  partido?: string | null;
+  provincia?: string | null;
+}): string | null {
+  if (c.modalidad === "Online") return "Online";
+  const direccion = c.direccion?.trim();
+  if (!direccion) return null;
+  const clave = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  const escrita = clave(direccion);
+  const faltan = [c.partido, c.provincia]
+    .map((t) => t?.trim())
+    .filter((t): t is string => !!t && !escrita.includes(clave(t)));
+  return [direccion, ...faltan].join(", ");
+}
+
 export function normalizarLink(valor: string): string | null {
   const v = valor.trim();
   if (!v) return null;
@@ -261,6 +284,10 @@ export const cursoSchema = z
     fotoUrl: textoOpcional(500),
   })
   .superRefine((d, ctx) => {
+    // Un curso presencial sin lugar no le sirve a quien se inscribe: sin dirección no se publica.
+    if (d.modalidad === "Presencial" && !d.direccion) {
+      ctx.addIssue({ code: "custom", path: ["direccion"], message: "Indicá dónde se dicta el curso" });
+    }
     if (d.fechaInicio && d.fechaFinal && d.fechaFinal < d.fechaInicio) {
       ctx.addIssue({ code: "custom", path: ["fechaFinal"], message: "No puede ser anterior a la fecha de inicio" });
     }

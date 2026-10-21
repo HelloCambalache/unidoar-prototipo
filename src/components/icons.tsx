@@ -52,6 +52,7 @@ import {
   User,
   UserCog,
   Users,
+  Video,
   WavesLadder,
   Whistle,
   X,
@@ -107,6 +108,7 @@ const ICONOS = {
   circuloCheck: CircleCheck,
   // Datos
   ubicacion: MapPin,
+  videollamada: Video,
   reloj: Clock,
   cronometro: Timer,
   calendario: Calendar,

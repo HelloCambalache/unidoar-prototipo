@@ -7,6 +7,7 @@ import { Boton } from "@/components/ui/button";
 import { AvisoSinAlmacenamiento, SubirArchivo } from "@/components/ui/subir-archivo";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
 import { AlertaError, EnlaceVolver, TituloPaso } from "@/components/onboarding/elementos";
+import { FOTOS_DNI_SE_ELIMINAN } from "@/lib/documentos";
 import { CONSTANCIA } from "@/lib/estudiantes";
 import { CATEGORIA_ALTA, ID_FORMULARIO_ONBOARDING, type SituacionEstudio } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
@@ -166,6 +167,10 @@ export function PasoDocumentacion({
           </Fila>
         )}
       </div>
+      <p className="m-0 mt-3 flex items-start gap-2 rounded-caja bg-[#F7F6F2] px-3.5 py-3 text-[13px] leading-[1.45] text-apagado">
+        <Icono nombre="escudo" tamano={16} trazo={1.8} className="mt-px text-navy-700" />
+        <span>{FOTOS_DNI_SE_ELIMINAN}</span>
+      </p>
       {Object.values(campos).length > 0 && (
         <p role="alert" className="mt-2.5 text-xs text-[#b91c1c]">
           {Object.values(campos)[0]}

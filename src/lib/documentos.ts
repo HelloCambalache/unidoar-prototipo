@@ -8,6 +8,13 @@ export const soloDigitos = (v: string) => v.replace(/[\s.\-]/g, "");
 
 export const esDniValido = (v: string) => /^\d{7,8}$/.test(soloDigitos(v));
 
+/**
+ * Lo que se le dice al profesional sobre las fotos de su DNI (alta, Mi perfil y mail de verificado). Es lo que hace
+ * `aplicarVerificacion`: al verificar se borran las fotos y queda solo el número. Si esa regla cambia, cambiar esto y `/privacidad`.
+ */
+export const FOTOS_DNI_SE_ELIMINAN =
+  "Las fotos de tu DNI se eliminan apenas validamos tu identidad: solo conservamos el número, como constancia de lo que verificamos.";
+
 const PESOS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2] as const;
 
 /** ¿Son 11 números con el dígito verificador correcto? Sirve igual para un CUIT que para un CUIL. */
