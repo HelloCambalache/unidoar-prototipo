@@ -71,7 +71,7 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
   const debito = await debitoParaBackoffice(i.id);
   const debitoVigente = !deBaja && suscripcionVigente(debito.suscripcion?.estado);
   const ahora = new Date();
-  const plan = esClavePlan(i.plan) ? i.plan : "fundador";
+  const plan = esClavePlan(i.plan) ? i.plan : "colegio";
   const contacto = [i.contactoNombre, i.contactoRol].filter(Boolean).join(" · ");
   const direccion = [i.direccion, i.partido, i.provincia].filter(Boolean).join(", ");
   const whatsapp = enlaceWhatsappConTexto(

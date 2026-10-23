@@ -23,7 +23,7 @@ export function ReferidoBeneficio({
   aplicado: boolean;
   /** Meses que se bonifican por recomendación según Planes (0: no se ofrecen). */
   mesesPorRecomendacion: number;
-  /** Por qué no se puede bonificar meses a esta institución (por ejemplo, plan anual); null si se puede. */
+  /** Por qué no se puede bonificar meses a esta institución (por ejemplo, búsqueda puntual); null si se puede. */
   motivoSinMeses: string | null;
   /** La institución que recomendó tiene un débito automático autorizado: cada mes bonificado hay que devolverlo a mano en Mercado Pago. */
   conDebito: boolean;

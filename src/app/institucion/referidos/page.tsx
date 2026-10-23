@@ -40,9 +40,9 @@ export default async function Referidos() {
   const url = `${origen}${rutaDeReferido(codigo)}`;
   const b = beneficioDeReferido(P.condiciones.pack);
   const resumen = resumenDeReferidos(referidos.map((r) => r.estado));
-  // Los meses sin cargo para quien paga mes a mes: no se ofrecen con el plan anual ni con la búsqueda puntual (no tienen mensualidad).
+  // Los meses sin cargo para quien paga mes a mes: no se ofrecen con la búsqueda puntual (no tiene mensualidad).
   const mesesMensual = P.condiciones.referidoMesesMensual;
-  const ofreceMeses = mesesMensual > 0 && puedeBonificarMeses(institucion.plan, P.esPuntual(institucion.plan));
+  const ofreceMeses = mesesMensual > 0 && puedeBonificarMeses(P.esPuntual(institucion.plan));
 
   return (
     <>

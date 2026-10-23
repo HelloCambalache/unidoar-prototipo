@@ -104,7 +104,7 @@ export function fechaBreve(fecha: string) {
 
 /* ───────────────────────────── Semestre al contado ─────────────────────────────
    Una factura paga puede cubrir varios meses (`facturas.meses_cubiertos`): el semestre pagado por adelantado (pagás 5, usás 6) es UNA factura
-   que cubre 6 meses desde su período y no deja facturas para los siguientes, igual que la anual cubre 12. Acá viven las reglas puras. */
+   que cubre 6 meses desde su período y no deja facturas para los siguientes. Acá viven las reglas puras. */
 
 /** Una factura con lo que hace falta para saber qué meses cubre. Sin `mesesCubiertos`, cubre solo su mes. */
 export type FacturaConCobertura = { periodo: string; estado: string; mesesCubiertos?: number | null };
@@ -213,17 +213,15 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" | "bonificada" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" | "bonificada" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
- * (`aplicarPlanAlPeriodoActual`): una por institución y mes, nace pendiente, el monto sale del plan, y una factura
- * anual cubre los 12 meses desde su período. Sin acceso a base: `recientes` trae las facturas de los últimos 12 períodos.
+ * (`aplicarPlanAlPeriodoActual`): una por institución y mes, nace pendiente y el monto sale del plan. Sin acceso a base: `recientes` trae
+ * las facturas de los últimos 12 períodos.
  *
  *  - plan de búsqueda puntual: no tiene abono mensual, nunca se factura;
  *  - ya tiene factura de ese mes → no se toca;
- *  - plan anual: si ya hay una factura anual en la ventana (paga o por pagar) no se genera otra hasta que venza el año;
- *  - plan mensual: si una factura anual paga todavía cubre el mes, no se cobra;
  *  - si un semestre pagado al contado (una factura paga que cubre varios meses) cubre el mes, no se cobra;
  *  - si el mes ya quedó bonificado por recomendar, no se factura (y no se gasta otro mes bonificado);
  *  - si tiene meses bonificados sin gastar y no tiene un débito automático autorizado, este mes se bonifica: no se factura y se devuelve en
@@ -258,14 +256,11 @@ export function planificarFacturas(
     // La búsqueda puntual no tiene abono: se paga cada búsqueda (ver src/lib/puntual.ts), así que no hay factura mensual.
     else if (planes.esPuntual(inst.plan)) omitir("sin_abono");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
-    else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
-    else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
-      omitir("cubierta_por_anual");
-    } else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
+    else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
       omitir("cubierta_por_semestre");
     } else if (bonificados.some((b) => b.institucionId === inst.id && b.periodo === periodo)) {
       omitir("bonificada");
-    } else if (inst.plan !== "anual" && !inst.conDebitoActivo && (inst.mesesBonificados ?? 0) > 0) {
+    } else if (!inst.conDebitoActivo && (inst.mesesBonificados ?? 0) > 0) {
       omitir("bonificada");
       bonificar.push({ institucionId: inst.id, periodo });
     } else {

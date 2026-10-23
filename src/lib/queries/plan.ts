@@ -144,7 +144,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
     .find((f) => estadoDeFactura(f.estado) === "pendiente");
 
   return {
-    plan: esClavePlan(institucion.plan) ? institucion.plan : "fundador",
+    plan: esClavePlan(institucion.plan) ? institucion.plan : "colegio",
     sedes: sedes.get(institucion.id) ?? 1,
     acuerdo,
     semestrePagoHasta: semestreHasta ? etiquetaPeriodo(semestreHasta).toLowerCase() : null,

@@ -1,6 +1,6 @@
 import type { CategoriaDocente } from "@/db/schema";
 
-/** Cupos del plan Fundador: pasados estos, el precio es el de lista (ver PLANES). */
+/** Cupos de institución fundadora: las primeras que se suman (por antigüedad, no por plan). El precio de fundadora se acuerda con cada una. */
 export const CUPOS_FUNDADOR = 20;
 
 /** Paso 1 del alta de cada rol (el registro de la cuenta). */

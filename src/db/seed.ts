@@ -9,6 +9,7 @@
 import { count, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { planesPorDefecto } from "@/lib/planes";
 import { urlMigraciones } from "./conexion";
 import * as s from "./schema";
 import {
@@ -96,7 +97,8 @@ async function demo() {
           vision: i.vision,
           valores: i.valores ?? [],
           horarioAdministracion: i.horarioAdministracion,
-          plan: i.plan ?? "fundador",
+          // El plan sale del tipo de institución (los colegios de relleno de la landing no lo fijan).
+          plan: i.plan ?? planesPorDefecto.planPorTipo(i.tipo),
           medioPago: i.medioPago,
           diaCobro: i.diaCobro,
           condicionFiscal: i.condicionFiscal,

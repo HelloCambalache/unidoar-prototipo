@@ -267,8 +267,8 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
 }
 
 /**
- * El precio acordado de la institución, SOLO si se factura con su plan: un abono acordado es sobre su plan, y aplicado a otro (por ejemplo el
- * Anual) daría un monto sin sentido. Con otro plan, ese plan va a su precio de lista.
+ * El precio acordado de la institución, SOLO si se factura con su plan: un abono acordado es sobre su plan, y aplicado a otro (por ejemplo la
+ * búsqueda puntual) daría un monto sin sentido. Con otro plan, ese plan va a su precio de lista.
  */
 async function acuerdoParaPlan(ejecutor: Ejecutor, institucionId: string, plan: string) {
   const [inst] = await ejecutor.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
@@ -663,8 +663,7 @@ function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
   }
   if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
   if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
-  if (r.motivo === "sin_abono") return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
-  return " Tu plan anual ya cubre este mes: no hay nada para pagar ahora.";
+  return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   crearPlanes,
   describirCambioDePlanes,
   edicionDePlanesSchema,
+  esClavePlan,
   edicionDesdeCatalogo,
   huellaDePlanes,
   planesPorDefecto as P,
@@ -46,40 +47,45 @@ const condicionesDeLanzamiento = (): FilaDeCondiciones => {
 };
 
 describe("planes vigentes y heredados", () => {
-  it("ofrece los de hoy (con la búsqueda puntual al final) y deja afuera los que ya no se venden", () => {
+  const sinMultisede = crearPlanes({
+    ...CATALOGO_POR_DEFECTO,
+    planes: { ...CATALOGO_POR_DEFECTO.planes, multisede: { ...CATALOGO_POR_DEFECTO.planes.multisede, vigente: false } },
+  });
+
+  it("hay cuatro planes (los de Fundador, Estándar y Anual se retiraron) y todos se ofrecen de lanzamiento", () => {
+    assert.deepEqual([...CLAVES_PLAN], ["colegio", "deportiva", "multisede", "puntual"]);
     assert.deepEqual(P.vigentes, ["colegio", "deportiva", "multisede", "puntual"]);
-    for (const clave of ["fundador", "estandar", "anual"] as const) {
-      assert.equal(P.planes[clave].vigente, false, `${clave} no debería ofrecerse`);
-    }
+    for (const retirado of ["fundador", "estandar", "anual"]) assert.equal(esClavePlan(retirado), false, retirado);
   });
 
-  it("sigue sabiendo el precio de un plan heredado, para las facturas ya emitidas", () => {
-    assert.equal(P.planDe("fundador").precio, 54_000);
-    assert.equal(P.planDe("anual").precio, 720_000);
+  it("sigue sabiendo el precio de un plan que el equipo dejó de ofrecer, para las facturas ya emitidas", () => {
+    assert.equal(sinMultisede.planDe("multisede").precio, 15_000);
+    assert.deepEqual(sinMultisede.vigentes, ["colegio", "deportiva", "puntual"]);
   });
 
-  it("ante una clave desconocida cae en el plan de colegios", () => {
+  it("ante una clave desconocida (o de un plan retirado) cae en el plan de colegios", () => {
     assert.equal(P.planDe("lo-que-sea").label, P.planes.colegio.label);
+    assert.equal(P.planDe("fundador").label, P.planes.colegio.label);
   });
 
-  it("un selector ofrece los vigentes y, si la institución está en uno heredado, también el suyo", () => {
+  it("un selector ofrece los vigentes y, si la institución está en uno apagado, también el suyo", () => {
     assert.deepEqual(P.clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede", "puntual"]);
-    assert.deepEqual(P.clavesParaElegir("fundador"), ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
-    assert.ok(!P.clavesParaElegir("colegio").includes("fundador"));
+    assert.deepEqual(sinMultisede.clavesParaElegir("colegio"), ["colegio", "deportiva", "puntual"]);
+    assert.deepEqual(sinMultisede.clavesParaElegir("multisede"), ["colegio", "deportiva", "puntual", "multisede"]);
     assert.deepEqual(P.clavesParaElegir(undefined), ["colegio", "deportiva", "multisede", "puntual"]);
     assert.deepEqual(P.clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede", "puntual"]);
   });
 
-  it("el anual aporta un doceavo al MRR y el resto su precio mensual", () => {
-    assert.equal(P.equivalenteMensual("anual"), 60_000);
-    assert.equal(P.equivalenteMensual("fundador"), 54_000);
+  it("cada plan aporta al MRR lo que paga por mes (la búsqueda puntual no es recurrente)", () => {
+    assert.equal(P.equivalenteMensual("colegio"), 50_000);
+    assert.equal(P.equivalenteMensual("deportiva"), 30_000);
+    assert.equal(P.equivalenteMensual("puntual"), 0);
   });
 
   it("escribe el precio y el nombre corto como se ven en las pantallas", () => {
     assert.equal(P.precioDePlan("deportiva"), "$ 30.000/mes");
     assert.equal(P.precioDePlan("multisede"), "$ 15.000/mes por sede");
-    assert.equal(P.precioDePlan("anual"), "$ 720.000/año");
-    assert.equal(P.nombreDePlan("fundador"), "Fundador");
+    assert.equal(P.nombreDePlan("multisede"), "Multisede");
     assert.equal(P.montoDePlan("multisede"), 15_000);
   });
 
@@ -95,7 +101,6 @@ describe("planes vigentes y heredados", () => {
     assert.equal(P.montoDePlan("colegio", 4), 125_000);
     assert.equal(P.montoDePlan("deportiva", 3), 60_000);
     assert.equal(P.equivalenteMensual("colegio", 3), 100_000);
-    assert.equal(P.equivalenteMensual("anual", 2), 90_000, "el anual suma la mitad del año por sede, y vale un doceavo por mes");
   });
 
   it("una cantidad rara de sedes no rompe la cuenta", () => {
@@ -252,7 +257,7 @@ describe("el piso del rango de precio", () => {
   it("los planes de colegios y clubes arrancan con el piso del esquema; el resto, sin piso", () => {
     assert.equal(P.planes.colegio.precioMinimo, 48_000);
     assert.equal(P.planes.deportiva.precioMinimo, 28_000);
-    for (const clave of ["multisede", "fundador", "estandar", "anual"] as const) assert.equal(P.planes[clave].precioMinimo, null);
+    assert.equal(P.planes.multisede.precioMinimo, null);
   });
 
   it("de la base toma el piso que cargó el equipo, y null es 'sin piso' (no vuelve al de lanzamiento)", () => {
@@ -416,10 +421,10 @@ describe("del dato guardado al catálogo", () => {
 
   it("un plan que falta o una fila rota se reemplaza campo por campo, sin dejar la app sin precios", () => {
     const filas = filasDeLanzamiento()
-      .filter((f) => f.clave !== "anual")
+      .filter((f) => f.clave !== "multisede")
       .map((f) => (f.clave === "colegio" ? { ...f, precio: 0, etiqueta: "   " } : f));
     const c = catalogoDesdeLaBase(filas, condicionesDeLanzamiento());
-    assert.equal(c.planes.anual.precio, 720_000);
+    assert.equal(c.planes.multisede.precio, 15_000);
     assert.equal(c.planes.colegio.precio, 50_000);
     assert.equal(c.planes.colegio.label, "Plan Colegios");
   });
@@ -471,7 +476,7 @@ describe("la edición del backoffice", () => {
   it("sí deja apagar o prender los que se venden de más", () => {
     const e = edicion();
     e.planes.multisede.vigente = false;
-    e.planes.fundador.vigente = true;
+    e.planes.puntual.vigente = false;
     assert.equal(validar(e).success, true);
   });
 
@@ -580,7 +585,7 @@ describe("cómo se cuentan los cambios", () => {
     const base = edicion();
     const otra = edicion();
     assert.equal(huellaDePlanes(base), huellaDePlanes(otra));
-    otra.planes.anual.detalle = "otro";
+    otra.planes.multisede.detalle = "otro";
     assert.notEqual(huellaDePlanes(base), huellaDePlanes(otra));
   });
 });
@@ -595,7 +600,6 @@ describe("el plan sigue al tipo de institución", () => {
 
   it("un plan que el equipo cambió a mano no se toca", () => {
     assert.equal(P.planTrasCambiarElTipo("multisede", "Colegio privado", "Club o gimnasio"), "multisede");
-    assert.equal(P.planTrasCambiarElTipo("fundador", "Otro", "Colegio privado"), "fundador");
     assert.equal(P.planTrasCambiarElTipo("colegio", "Otro", "Club o gimnasio"), "colegio", "uno que no era el derivado de su tipo anterior");
   });
 
@@ -649,7 +653,7 @@ describe("meses bonificados por recomendación (mes a mes)", () => {
 describe("la búsqueda puntual", () => {
   it("es un plan por evento: se paga cada búsqueda, sin abono ni ingreso mensual", () => {
     assert.equal(P.esPuntual("puntual"), true);
-    for (const clave of ["colegio", "deportiva", "multisede", "fundador", "estandar", "anual"]) assert.equal(P.esPuntual(clave), false, clave);
+    for (const clave of ["colegio", "deportiva", "multisede"]) assert.equal(P.esPuntual(clave), false, clave);
     assert.equal(P.equivalenteMensual("puntual"), 0, "no entra en el MRR");
     assert.equal(P.planDe("puntual").precio, 110_000);
     assert.equal(P.planDe("puntual").precioMinimo, 95_000);
@@ -659,7 +663,6 @@ describe("la búsqueda puntual", () => {
     assert.equal(P.precioDePlan("puntual"), "$ 110.000 por búsqueda");
     assert.equal(P.sufijoDePrecio("puntual"), " por búsqueda");
     assert.equal(P.sufijoDePrecio("colegio"), "/mes");
-    assert.equal(P.sufijoDePrecio("anual"), "/año");
   });
 
   it("los planes con abono incluyen todo y la búsqueda puntual solo lo que se tildó", () => {

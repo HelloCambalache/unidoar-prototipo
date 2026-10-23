@@ -7,9 +7,8 @@ import { fechaCobroDelPeriodo, hoyAR, sumarMeses } from "@/lib/cobros";
 
 export const MONEDA = "ARS";
 
-/** Planes que se cobran con débito automático: los mensuales. El Anual es un pago por adelantado y queda manual. */
-/** El débito es mensual: el plan anual se paga por adelantado y la búsqueda puntual se paga cada búsqueda (ninguno tiene abono mensual). */
-export const esPlanDebitable = (clave: string) => clave !== "anual" && clave !== "puntual";
+/** Planes que se cobran con débito automático: los mensuales. La búsqueda puntual se paga cada búsqueda (no tiene abono mensual) y queda manual. */
+export const esPlanDebitable = (clave: string) => clave !== "puntual";
 
 /** En qué está la suscripción de una institución. Lo informa Mercado Pago; acá solo se espeja. */
 export type EstadoSuscripcion = "pendiente" | "autorizada" | "pausada" | "cancelada";
@@ -65,7 +64,7 @@ export type DecisionDeSincronizacion = { accion: "nada" } | { accion: "cambiar-m
 
 /**
  * Qué hacer con una suscripción ya creada cuando el plan, las sedes o el precio pueden haber cambiado (lo revisa el cron diario). `esperado`
- * es lo que hoy cobraría el plan (plan × sedes). Si el plan ya no se debita (pasó al Anual) se cancela; si el monto cambió, se actualiza;
+ * es lo que hoy cobraría el plan (plan × sedes). Si el plan ya no se debita (pasó a la búsqueda puntual) se cancela; si el monto cambió, se actualiza;
  * si no se pudo calcular un monto válido, no se toca nada (mejor cobrar el de antes que uno raro).
  */
 export function decidirSincronizacion(s: { plan: string; monto: number; esperado: number | null }): DecisionDeSincronizacion {

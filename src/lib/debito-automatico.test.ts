@@ -106,9 +106,8 @@ describe("el día en que cobra el débito", () => {
 });
 
 describe("planes que se pueden debitar", () => {
-  it("todos los mensuales sí; el anual y la búsqueda puntual no", () => {
-    for (const c of ["colegio", "deportiva", "multisede", "fundador", "estandar"]) assert.equal(esPlanDebitable(c), true, c);
-    assert.equal(esPlanDebitable("anual"), false);
+  it("todos los mensuales sí y la búsqueda puntual no", () => {
+    for (const c of ["colegio", "deportiva", "multisede"]) assert.equal(esPlanDebitable(c), true, c);
     assert.equal(esPlanDebitable("puntual"), false, "no hay abono que debitar");
   });
 });
@@ -355,9 +354,9 @@ describe("poner al día el monto de una suscripción", () => {
     assert.deepEqual(decidirSincronizacion({ plan: "multisede", monto: 60000, esperado: 90000 }), { accion: "cambiar-monto", monto: 90000 });
   });
 
-  it("si pasó al plan anual, la suscripción mensual se cancela (aunque el monto coincida)", () => {
-    assert.deepEqual(decidirSincronizacion({ plan: "anual", monto: 59000, esperado: 590000 }), { accion: "cancelar" });
-    assert.deepEqual(decidirSincronizacion({ plan: "anual", monto: 59000, esperado: null }), { accion: "cancelar" });
+  it("si pasó a la búsqueda puntual, la suscripción mensual se cancela (aunque el monto coincida)", () => {
+    assert.deepEqual(decidirSincronizacion({ plan: "puntual", monto: 110000, esperado: 110000 }), { accion: "cancelar" });
+    assert.deepEqual(decidirSincronizacion({ plan: "puntual", monto: 59000, esperado: null }), { accion: "cancelar" });
   });
 
   it("sin un monto válido no se toca nada (mejor cobrar el de antes que uno raro)", () => {

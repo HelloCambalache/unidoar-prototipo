@@ -6,11 +6,13 @@ import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
 import { requerirInstitucion } from "@/lib/auth";
 import { esRolGestor } from "@/lib/equipo";
 import { getDb } from "@/db";
-import { pesos } from "@/lib/planes";
+import { avisoDeSedes } from "@/lib/aviso-sedes";
+import { periodoActual } from "@/lib/cobros";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { planes } from "@/lib/queries/planes";
 import { sedesParaEditar } from "@/lib/queries/sedes";
+import { estadoDePago } from "@/lib/queries/suscripcion-planes";
 import { aSedePublica, huellaDeSedes } from "@/lib/sedes";
 
 export const metadata: Metadata = { title: "Sedes" };
@@ -21,17 +23,18 @@ export const metadata: Metadata = { title: "Sedes" };
  */
 export default async function SedesPage() {
   const { usuario, institucion: i } = await requerirInstitucion();
-  const [sedes, rol, P, acuerdo] = await Promise.all([sedesParaEditar(i), rolEnInstitucion(i, usuario.id), planes(), acuerdoDe(getDb(), i.id)]);
+  const [sedes, rol, P, acuerdo, pago] = await Promise.all([
+    sedesParaEditar(i),
+    rolEnInstitucion(i, usuario.id),
+    planes(),
+    acuerdoDe(getDb(), i.id),
+    estadoDePago(i.id),
+  ]);
   const gestor = esRolGestor(rol);
-  // Cada sede adicional se suma al abono (con descuento): se avisa acá, antes de agregarla, no recién en la factura. Con un convenio a
-  // medida el monto es fijo: se avisa que sumar sedes no lo cambia.
-  const plan = P.planDe(i.plan);
-  const avisoDeSedes =
-    acuerdo?.modalidad === "total"
-      ? "Tu convenio con UNIDOAR es un monto fijo por mes: sumar sedes no cambia lo que pagás."
-      : plan.porSede || P.condiciones.descuentoSedeExtra >= 100
-        ? null
-        : `Cada sede adicional se suma a tu abono: ${pesos(P.precioDeSedeExtra(i.plan, acuerdo))} por mes${P.condiciones.descuentoSedeExtra > 0 ? ` (${P.condiciones.descuentoSedeExtra} % menos que la primera)` : ""}. Se cobra desde la próxima factura.`;
+  // Cada sede adicional se suma al abono (con descuento): se avisa acá, antes de agregarla, no recién en la factura. El texto depende del plan, del
+  // precio acordado y de si hay un semestre pago por delante (reglas en `avisoDeSedes`).
+  const semestrePagoHasta = pago.pagoHasta && pago.pagoHasta > periodoActual() ? pago.pagoHasta : null;
+  const aviso = avisoDeSedes({ plan: i.plan, acuerdo, P, semestrePagoHasta });
 
   return (
     <>
@@ -39,9 +42,7 @@ export default async function SedesPage() {
         titulo="Sedes"
         bajada="Los lugares donde trabaja tu institución. Se numeran solas (la principal es la 1) y los profesionales las ven en tu perfil. Al publicar una búsqueda elegís en qué sedes es."
       />
-      {avisoDeSedes && (
-        <p className="mt-0 mb-4 max-w-[980px] rounded-caja bg-navy-50 px-3.5 py-2.5 text-[13px] leading-normal text-navy-700">{avisoDeSedes}</p>
-      )}
+      {aviso && <p className="mt-0 mb-4 max-w-[980px] rounded-caja bg-navy-50 px-3.5 py-2.5 text-[13px] leading-normal text-navy-700">{aviso}</p>}
       {gestor ? (
         <SedesFormulario sedes={sedes} huella={huellaDeSedes(sedes, { conCue: false })} />
       ) : sedes.length > 0 ? (

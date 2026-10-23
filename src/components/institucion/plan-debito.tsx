@@ -108,7 +108,7 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
 
       {!datos.planDebitable && (
         <p className="m-0 text-[13.5px] leading-normal text-apagado">
-          Tu plan se paga por adelantado (anual) o por búsqueda (búsqueda puntual), así que no tiene débito automático.
+          Tu plan se paga por búsqueda (búsqueda puntual), así que no tiene débito automático.
         </p>
       )}
 

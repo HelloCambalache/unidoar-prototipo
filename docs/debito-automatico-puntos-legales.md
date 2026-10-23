@@ -4,7 +4,7 @@ Este documento no es texto legal: reúne **qué hace hoy el sistema** y **qué d
 
 ## Cómo funciona (hechos)
 
-- **Quién:** instituciones con un plan **mensual**. El plan Anual se paga por adelantado y queda fuera.
+- **Quién:** instituciones con un plan **mensual**. La búsqueda puntual (se paga cada búsqueda) y el semestre pagado al contado quedan fuera.
 - **Autorización:** la institución (dueño o administradores) se suscribe una sola vez en la página de Mercado Pago, con su propia cuenta. **UNIDOAR nunca ve ni guarda los datos de la tarjeta.**
 - **Monto:** el del plan de la institución por la cantidad de sedes (si el plan es por sede). Se cobra en pesos, una vez por mes.
 - **Cuándo:** el primer cobro sale **al suscribirse** y los siguientes el mismo día de cada mes. Si el mes en curso ya estaba pago (por ejemplo, la institución canceló y quiere volver a suscribirse en el mismo mes), no puede activar el débito hasta el mes siguiente, para no cobrar dos veces el mismo mes. UNIDOAR hace que la factura de cada mes venza el día del débito.

@@ -95,7 +95,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
-  const plan = esClavePlan(i.plan) ? i.plan : "fundador";
+  const plan = esClavePlan(i.plan) ? i.plan : "colegio";
   const esPuntual = P.esPuntual(plan);
   // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
   const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
@@ -219,11 +219,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
           <Seccion titulo="Medio de pago">
             <div className="text-sm leading-normal font-medium text-tinta">{i.medioPago ?? "Sin medio cargado"}</div>
             <div className="text-[13px] leading-normal text-apagado">
-              {P.planDe(plan).periodo === "año"
-                ? "Pago anual por adelantado"
-                : esPuntual
-                  ? "Se paga cada búsqueda, por adelantado"
-                  : i.diaCobro
+              {esPuntual
+                ? "Se paga cada búsqueda, por adelantado"
+                : i.diaCobro
                   ? `Se cobra el día ${i.diaCobro} de cada mes`
                   : "Sin día de cobro definido"}
             </div>

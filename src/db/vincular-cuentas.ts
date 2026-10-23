@@ -100,7 +100,7 @@ async function vincularInstitucion(email: string) {
     { usuarioId: id, tipo: "postulacion", titulo: "Luciana Prieto", texto: "fue invitada a Maestra Nivel Inicial.", enlace: inicial && `/institucion/postulantes?busqueda=${inicial}`, leida: false, creadoEn: hace(40 * MIN) },
     { usuarioId: id, tipo: "urgente", titulo: "Suplencia Matemática", texto: "vence en 18 hs. Revisá los postulantes.", enlace: mate && `/institucion/postulantes?busqueda=${mate}`, leida: false, creadoEn: hace(2 * HORA) },
     { usuarioId: id, tipo: "verificacion", titulo: "Nicolás Bravo", texto: "subió su título docente.", enlace: null, leida: true, creadoEn: hace(1 * DIA) },
-    { usuarioId: id, tipo: "sistema", titulo: "UNIDOAR", texto: "tu plan Fundador está activo.", enlace: "/institucion/plan", leida: true, creadoEn: hace(1 * DIA + HORA) },
+    { usuarioId: id, tipo: "sistema", titulo: "UNIDOAR", texto: "tu plan Colegios está activo.", enlace: "/institucion/plan", leida: true, creadoEn: hace(1 * DIA + HORA) },
   ]);
 
   console.log(`✓ institución: ${email} → dueña de "${inst.nombre}" (+ equipo y 5 notificaciones)`);

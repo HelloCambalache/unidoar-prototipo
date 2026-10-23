@@ -1,6 +1,6 @@
 # Mercado Pago: débito automático mensual
 
-Cada institución con un plan mensual puede activar el débito automático: se suscribe una vez en Mercado Pago (inicia sesión y carga su tarjeta ahí, nosotros nunca la vemos) y Mercado Pago cobra el plan todos los meses. Cada cobro aprobado marca como **paga** la factura de ese mes. El plan **Anual** no entra: se paga por adelantado y sigue manual.
+Cada institución con un plan mensual puede activar el débito automático: se suscribe una vez en Mercado Pago (inicia sesión y carga su tarjeta ahí, nosotros nunca la vemos) y Mercado Pago cobra el plan todos los meses. Cada cobro aprobado marca como **paga** la factura de ese mes. La **búsqueda puntual** no entra (no tiene abono: se paga cada búsqueda) y un **semestre pagado al contado** tampoco mientras dure.
 
 Cómo funciona por dentro, para quien toque el código: `CLAUDE.md`, sección "Mercado Pago".
 
@@ -99,7 +99,7 @@ Mientras el token sea de **prueba**, solo las instituciones de ejemplo ven el d�
 - **La persona se suscribe dos veces (otro plan o otra tarjeta):** si ya tenía el débito activo, la segunda se cancela y se avisa al equipo. Si la primera había quedado pendiente y la nueva está autorizada, la nueva pasa a ser la vigente y la pendiente se cancela. Una suscripción que no se puede atribuir a ninguna institución **no se cancela**: se avisa al equipo para que la mire.
 - **La institución cancela o se da de baja:** se cancela primero en Mercado Pago; si no se pudiera, la baja no sigue.
 - **El equipo suspende una institución con débito activo:** suspender no cancela el débito por sí solo, así que el diálogo de suspender trae la casilla **"Cancelar también el débito automático"**, tildada por defecto. Si se deja tildada, primero se cancela en Mercado Pago y después se suspende; si Mercado Pago no responde, no se suspende nada y se puede reintentar (o destildar la casilla para una suspensión urgente). La institución recibe el aviso y el mail de la suspensión con esa aclaración, y al reactivarla se le recuerda que el débito sigue cancelado y que lo active de nuevo desde Plan y facturación.
-- **Cambia el precio del plan, las sedes o el plan de la institución:** el cron diario compara lo que cobra cada suscripción con lo que hoy cuesta el plan y, si difiere, actualiza el monto en Mercado Pago **desde el próximo cobro** y avisa a la institución. Un aumento puede sacar la suscripción de "autorizada" hasta que la persona apruebe el monto nuevo: si pasa, se avisa al equipo. Si pasó al plan Anual, se cancela la suscripción mensual.
+- **Cambia el precio del plan, las sedes o el plan de la institución:** el cron diario compara lo que cobra cada suscripción con lo que hoy cuesta el plan y, si difiere, actualiza el monto en Mercado Pago **desde el próximo cobro** y avisa a la institución. Un aumento puede sacar la suscripción de "autorizada" hasta que la persona apruebe el monto nuevo: si pasa, se avisa al equipo. Si pasó a la búsqueda puntual, se cancela la suscripción mensual.
 - **Mercado Pago o la base caídas al llegar un aviso:** respondemos 500 y Mercado Pago reintenta cada 15 minutos hasta que salga.
 
 ## Qué falta comprobar contra Mercado Pago real

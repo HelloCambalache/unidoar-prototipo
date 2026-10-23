@@ -95,7 +95,7 @@ export const instituciones = pgTable(
     turnos: text("turnos"),
     docentesPlanta: integer("docentes_planta"),
     verificada: boolean("verificada").notNull().default(false),
-    plan: text("plan").notNull().default("fundador"),
+    plan: text("plan").notNull().default("colegio"),
     /* Vitrina pública */
     mision: text("mision"),
     vision: text("vision"),
@@ -937,7 +937,7 @@ export type Factura = typeof facturas.$inferSelect;
 export const planes = pgTable("planes", {
   clave: text("clave").primaryKey(),
   etiqueta: text("etiqueta").notNull(),
-  /** Pesos por mes (por año en el plan Anual; por sede en Multisede). Los meses ya facturados no cambian: `facturas.monto` guarda lo cobrado. */
+  /** Pesos por mes (por sede en Multisede; por búsqueda en la búsqueda puntual). Los meses ya facturados no cambian: `facturas.monto` guarda lo cobrado. */
   precio: integer("precio").notNull(),
   /**
    * Piso del rango de precio (el precio es el tope, la "lista"): hasta dónde puede bajar el equipo el abono de una institución al acordar un

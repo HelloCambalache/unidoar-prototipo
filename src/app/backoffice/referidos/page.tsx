@@ -132,9 +132,9 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {lista.map((r) => {
             const info = INFO_ESTADO_REFERIDO[r.estado];
-            const motivoSinMeses = puedeBonificarMeses(r.referidor.plan, P.esPuntual(r.referidor.plan))
+            const motivoSinMeses = puedeBonificarMeses(P.esPuntual(r.referidor.plan))
               ? null
-              : "Esta institución no paga mes a mes (plan anual o búsqueda puntual): el beneficio se aplica como pack por adelantado.";
+              : "Esta institución no paga mes a mes (búsqueda puntual): el beneficio se aplica como pack por adelantado.";
             return (
               <Tarjeta como="li" key={r.id} className="p-[18px]">
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">

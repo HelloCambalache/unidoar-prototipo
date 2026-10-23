@@ -4,7 +4,7 @@ import { CUPOS_FUNDADOR, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { BandaCTA } from "./banda-cta";
 import { estiloBotonAcento } from "./categorias";
 
-/** Cierre de las landings: invita al plan Fundador mientras queden cupos (el conteo sale de la base). */
+/** Cierre de las landings: invita a ser institución fundadora mientras queden cupos (el conteo sale de la base). */
 export function BandaFundador({ cupos, categoria }: { cupos: number; categoria?: CategoriaDocente }) {
   const hayCupos = cupos > 0;
   return (
@@ -13,7 +13,7 @@ export function BandaFundador({ cupos, categoria }: { cupos: number; categoria?:
         <span
           className="inline-flex items-center rounded-full bg-ambar/20 px-2.5 py-[5px] text-xs leading-none font-semibold text-[#FDD9AE]"
         >
-          {hayCupos ? `Plan Fundador · quedan ${cupos} de ${CUPOS_FUNDADOR} cupos` : "Plan Fundador · cupos completos"}
+          {hayCupos ? `Institución fundadora · quedan ${cupos} de ${CUPOS_FUNDADOR} cupos` : "Institución fundadora · cupos completos"}
         </span>
       }
       titulo={hayCupos ? "Entrá con precio de fundador y quedátelo" : "Sumá tu institución y cubrí tus búsquedas en días"}
@@ -26,7 +26,7 @@ export function BandaFundador({ cupos, categoria }: { cupos: number; categoria?:
             style={categoria ? estiloBotonAcento(categoria) : undefined}
             className="hover:brightness-95"
           >
-            {hayCupos ? "Quiero el plan Fundador" : "Crear cuenta de institución"}
+            {hayCupos ? "Quiero ser fundadora" : "Crear cuenta de institución"}
           </BotonLink>
           <BotonLink
             href="/planes"

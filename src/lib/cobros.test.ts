@@ -101,7 +101,7 @@ describe("pago de una búsqueda puntual", () => {
 });
 
 describe("pago en efectivo en un solo paso", () => {
-  const base = { periodo: "2026-10", plan: "estandar", fecha: "2026-10-03", avisar: true };
+  const base = { periodo: "2026-10", plan: "deportiva", fecha: "2026-10-03", avisar: true };
 
   it("acepta un pago completo y recorta la nota", () => {
     const r = pagoEfectivoSchema.parse({ ...base, nota: "  Recibo 0001  " });
@@ -307,62 +307,48 @@ describe("facturas automáticas (planificarFacturas)", () => {
   });
 
   it("crea la del mes con el monto del plan y el día de cobro por defecto", () => {
-    const r = una(inst("a", "fundador", null, "Transferencia"), [f("a", "2026-09", "fundador", "pagada")]);
+    const r = una(inst("a", "colegio", null, "Transferencia"), [f("a", "2026-09", "colegio", "pagada")]);
     assert.deepEqual(r.crear, [
-      { institucionId: "a", plan: "fundador", monto: 54_000, periodo: P, fechaCobro: "2026-10-10", medio: "Transferencia" },
+      { institucionId: "a", plan: "colegio", monto: 50_000, periodo: P, fechaCobro: "2026-10-10", medio: "Transferencia" },
     ]);
     assert.deepEqual(r.omitidas, []);
   });
 
   it("usa el monto de cada plan", () => {
-    assert.equal(una(inst("a", "estandar"), []).crear[0]!.monto, 89_000);
-    assert.equal(una(inst("a", "anual"), []).crear[0]!.monto, 720_000);
+    assert.equal(una(inst("a", "colegio"), []).crear[0]!.monto, 50_000);
+    assert.equal(una(inst("a", "deportiva"), []).crear[0]!.monto, 30_000);
+    assert.equal(una(inst("a", "multisede"), []).crear[0]!.monto, 15_000, "una sede");
   });
 
   it("el monto sale de los planes vigentes: si el equipo cambió el precio, la factura del mes sale con el nuevo", () => {
     const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
-    catalogo.planes.fundador.precio = 58_000;
-    const r = planificarFacturas([inst("a", "fundador")], [], P, HOY, crearPlanes(catalogo));
+    catalogo.planes.colegio.precio = 58_000;
+    const r = planificarFacturas([inst("a", "colegio")], [], P, HOY, crearPlanes(catalogo));
     assert.equal(r.crear[0]!.monto, 58_000);
-    assert.equal(planificarFacturas([inst("a", "fundador")], [], P, HOY).crear[0]!.monto, 54_000, "sin planes, los de lanzamiento");
+    assert.equal(planificarFacturas([inst("a", "colegio")], [], P, HOY).crear[0]!.monto, 50_000, "sin planes, los de lanzamiento");
   });
 
   it("respeta el día de cobro de la institución, y si ya pasó cobra hoy (no nace vencida)", () => {
-    assert.equal(una(inst("a", "fundador", 25), []).crear[0]!.fechaCobro, "2026-10-25");
-    assert.equal(una(inst("a", "fundador", 3), []).crear[0]!.fechaCobro, HOY);
+    assert.equal(una(inst("a", "colegio", 25), []).crear[0]!.fechaCobro, "2026-10-25");
+    assert.equal(una(inst("a", "colegio", 3), []).crear[0]!.fechaCobro, HOY);
   });
 
   it("acota el día de cobro al largo del mes", () => {
-    assert.equal(una(inst("a", "fundador", 31), [], "2027-02", "2027-02-01").crear[0]!.fechaCobro, "2027-02-28");
+    assert.equal(una(inst("a", "colegio", 31), [], "2027-02", "2027-02-01").crear[0]!.fechaCobro, "2027-02-28");
   });
 
   it("no toca un mes que ya tiene factura, en cualquier estado", () => {
     for (const estado of ["pagada", "pendiente", "vencida"]) {
-      const r = una(inst("a", "fundador"), [f("a", P, "fundador", estado)]);
+      const r = una(inst("a", "colegio"), [f("a", P, "colegio", estado)]);
       assert.equal(r.crear.length, 0, estado);
       assert.equal(r.omitidas[0]!.motivo, "ya_tiene", estado);
     }
   });
 
-  it("plan anual: con una factura anual en la ventana (paga o por pagar) no genera otra", () => {
-    for (const estado of ["pagada", "pendiente", "vencida"]) {
-      const r = una(inst("a", "anual"), [f("a", "2026-05", "anual", estado)]);
-      assert.equal(r.crear.length, 0, estado);
-      assert.equal(r.omitidas[0]!.motivo, "anual_vigente", estado);
-    }
-  });
-
-  it("plan anual: cuando la anterior salió de la ventana de 12 meses, genera la del año nuevo", () => {
-    const r = una(inst("a", "anual"), [f("a", "2026-03", "fundador", "pagada")]);
+  it("una factura vieja con un plan que ya no existe (de los retirados) no frena la del mes", () => {
+    const r = una(inst("a", "colegio"), [f("a", "2026-06", "anual", "pagada")]);
     assert.equal(r.crear.length, 1);
-    assert.equal(r.crear[0]!.plan, "anual");
-    assert.equal(r.crear[0]!.monto, 720_000);
-  });
-
-  it("plan mensual: una anual paga que todavía cubre el mes evita el cobro; una impaga no", () => {
-    const cubierta = una(inst("a", "fundador"), [f("a", "2026-06", "anual", "pagada")]);
-    assert.deepEqual([cubierta.crear.length, cubierta.omitidas[0]!.motivo], [0, "cubierta_por_anual"]);
-    assert.equal(una(inst("a", "fundador"), [f("a", "2026-06", "anual", "pendiente")]).crear.length, 1);
+    assert.deepEqual(r.omitidas, []);
   });
 
   it("no factura el plan de búsqueda puntual: no tiene abono, se paga cada búsqueda", () => {
@@ -422,10 +408,7 @@ describe("facturas automáticas (planificarFacturas)", () => {
       assert.deepEqual(cubierto.bonificar, []);
     });
 
-    it("no aplica al plan anual ni a la búsqueda puntual: no tienen mensualidad de la que descontar", () => {
-      const anual = planificarFacturas([conMeses(2, { plan: "anual" })], [], P, HOY);
-      assert.equal(anual.crear.length, 1, "al anual se le factura su año");
-      assert.deepEqual(anual.bonificar, []);
+    it("no aplica a la búsqueda puntual: no tiene mensualidad de la que descontar", () => {
       const puntual = planificarFacturas([conMeses(2, { plan: "puntual" })], previa(), P, HOY);
       assert.deepEqual(puntual.omitidas, [{ institucionId: "a", motivo: "sin_abono" }]);
       assert.deepEqual(puntual.bonificar, []);
@@ -449,7 +432,7 @@ describe("facturas automáticas (planificarFacturas)", () => {
   });
 
   it("las facturas de una institución no afectan a otra", () => {
-    const r = planificarFacturas([inst("a", "fundador"), inst("b", "fundador")], [f("a", P, "fundador", "pagada")], P, HOY);
+    const r = planificarFacturas([inst("a", "colegio"), inst("b", "colegio")], [f("a", P, "colegio", "pagada")], P, HOY);
     assert.deepEqual(r.crear.map((x) => x.institucionId), ["b"]);
     assert.deepEqual(r.omitidas.map((x) => x.institucionId), ["a"]);
   });

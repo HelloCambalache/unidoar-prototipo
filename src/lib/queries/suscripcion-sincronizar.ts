@@ -19,8 +19,8 @@ export type ResultadoDeSincronizacion = { revisadas: number; montosActualizados:
 
 /**
  * Pone al día las suscripciones de débito automático con lo que hoy cuesta el plan (precio de lista o acordado, y sedes): si cambió el precio, las
- * sedes o el plan de la institución, el monto que cobra Mercado Pago cada mes cambia desde el próximo cobro; si el plan pasó a Anual (que
- * no se debita), la suscripción se cancela. Es UNA sola revisión que cubre todos los caminos por los que puede cambiar un monto (el equipo
+ * sedes o el plan de la institución, el monto que cobra Mercado Pago cada mes cambia desde el próximo cobro; si el plan pasó a la búsqueda
+ * puntual (que no se debita), la suscripción se cancela. Es UNA sola revisión que cubre todos los caminos por los que puede cambiar un monto (el equipo
  * edita Planes, aprueba un cambio de plan, la institución suma una sede…), a costa de que el cambio llegue a Mercado Pago en el cron del
  * día siguiente. La corre el cron diario de facturas. Nunca lanza: cada suscripción se revisa por separado y lo que falle se reintenta mañana.
  */
@@ -52,15 +52,13 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
         const decision = decidirSincronizacion({ plan: inst.plan, monto: susc.monto, esperado });
 
         if (decision.accion === "cancelar") {
-          const cancelada = await cancelarSuscripcion(inst.id, { usuarioId: null, motivo: "plan-anual" });
+          const cancelada = await cancelarSuscripcion(inst.id, { usuarioId: null, motivo: "plan-puntual" });
           if (!cancelada.ok) throw new Error(cancelada.error);
           resultado.canceladas++;
           await avisarAVarios(db, await destinatariosDeInstitucion(db, inst.id), {
             tipo: "sistema",
             titulo: "UNIDOAR",
-            texto: P.esPuntual(inst.plan)
-              ? "tu plan pasó a ser de búsqueda puntual (se paga cada búsqueda, sin abono mensual), así que cancelamos el débito automático mensual."
-              : "tu plan pasó a ser anual y se paga por adelantado, así que cancelamos el débito automático mensual.",
+            texto: "tu plan pasó a ser de búsqueda puntual (se paga cada búsqueda, sin abono mensual), así que cancelamos el débito automático mensual.",
             enlace: "/institucion/plan",
           });
           await avisarAAdmins(db, {

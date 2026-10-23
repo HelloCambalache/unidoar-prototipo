@@ -90,8 +90,8 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
 
 /*
  * Cupos de institución fundadora que quedan. Son las primeras CUPOS_FUNDADOR instituciones reales
- * que se suman, sin contar las de ejemplo: se cuenta por antigüedad y no por plan, porque desde que
- * el arancel sale del tipo de institución ninguna cuenta nueva queda con el plan "fundador".
+ * que se suman, sin contar las de ejemplo: se cuenta por antigüedad y no por plan, porque el arancel sale
+ * del tipo de institución (no existe un plan «fundador»: el precio de fundadora se acuerda con cada una).
  */
 export const cuposFundadorRestantes = cache(async (): Promise<number> => {
   const [{ n }] = await getDb()

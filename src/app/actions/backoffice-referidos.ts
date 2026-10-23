@@ -65,7 +65,7 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
       // Los meses se descuentan de una mensualidad: solo tiene sentido para quien paga mes a mes.
       const [referidora] = await tx.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, fila.referidorId)).limit(1);
       if (!referidora) return fallo(NO_ENCONTRADO);
-      if (!puedeBonificarMeses(referidora.plan, P.esPuntual(referidora.plan))) {
+      if (!puedeBonificarMeses(P.esPuntual(referidora.plan))) {
         return fallo("Esta institución no paga mes a mes: aplicale el beneficio como pack por adelantado.");
       }
       meses = P.condiciones.referidoMesesMensual;

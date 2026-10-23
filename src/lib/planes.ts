@@ -13,14 +13,15 @@ import { TIPOS_INSTITUCION } from "@/lib/catalogo";
  * El precio sale del TIPO de institución, no de lo que elija: un colegio paga lo mismo que cualquier otro colegio. Por eso
  * `planPorTipo()` decide el plan y el selector del backoffice solo confirma lo que el tipo ya decide.
  *
- * Los planes marcados `vigente: false` son los que vendíamos antes. Siguen acá porque las facturas guardan la clave del plan al
- * momento del cobro (`facturas.plan`) y hay cuentas que todavía los tienen: sin ellos, una factura vieja no sabría qué nombre ni qué
- * precio mostrar. No se ofrecen a nadie nuevo. Las claves son fijas (no se crean ni se borran planes desde el backoffice): una
- * factura o una institución las referencian.
+ * Un plan marcado `vigente: false` es uno que el equipo dejó de ofrecer (Multisede o la búsqueda puntual se pueden apagar): sigue acá
+ * porque las facturas guardan la clave del plan al momento del cobro (`facturas.plan`) y puede haber cuentas que lo tienen. No se ofrece a
+ * nadie nuevo. Las claves son fijas (no se crean ni se borran planes desde el backoffice): una factura o una institución las referencian.
+ * Los planes de antes del esquema de 2026-10 (Fundador, Estándar y Anual) se retiraron: las cuentas que los tenían pasaron al plan de su
+ * tipo y el precio de fundadora se acuerda por institución (ver «Precio acordado por institución» en CLAUDE.md).
  */
 
-/** Cada cuánto se cobra un plan: por mes, por año o por evento (la búsqueda puntual: se paga cada búsqueda, sin abono). */
-export type Periodo = "mes" | "año" | "evento";
+/** Cada cuánto se cobra un plan: por mes o por evento (la búsqueda puntual: se paga cada búsqueda, sin abono). */
+export type Periodo = "mes" | "evento";
 
 export type Plan = {
   label: string;
@@ -40,7 +41,7 @@ export type Plan = {
   porSede: boolean;
 };
 
-export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "fundador", "estandar", "anual", "puntual"] as const;
+export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "puntual"] as const;
 export type PlanClave = (typeof CLAVES_PLAN)[number];
 
 export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && (CLAVES_PLAN as readonly string[]).includes(v);
@@ -129,36 +130,6 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
     vigente: true,
     porSede: true,
   },
-  fundador: {
-    label: "Plan Fundador",
-    precio: 54_000,
-    precioMinimo: null,
-    periodo: "mes",
-    resumen: "Búsquedas ilimitadas. Precio fijo mientras sigas suscripto.",
-    detalle: "Plan anterior: precio congelado para las instituciones que entraron en el lanzamiento.",
-    vigente: false,
-    porSede: false,
-  },
-  estandar: {
-    label: "Plan Estándar",
-    precio: 89_000,
-    precioMinimo: null,
-    periodo: "mes",
-    resumen: "Búsquedas ilimitadas.",
-    detalle: "Plan anterior: precio de lista único, antes de separar por tipo de institución.",
-    vigente: false,
-    porSede: false,
-  },
-  anual: {
-    label: "Plan Anual",
-    precio: 720_000,
-    precioMinimo: null,
-    periodo: "año",
-    resumen: "Búsquedas ilimitadas, pago anual.",
-    detalle: "Plan anterior: dos meses bonificados pagando el año completo por adelantado.",
-    vigente: false,
-    porSede: false,
-  },
   puntual: {
     label: "Búsqueda puntual",
     precio: 110_000,
@@ -211,7 +182,7 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   const planPorTipo = (tipo: string): PlanClave => (tiposColegio.includes(tipo) ? "colegio" : "deportiva");
   /**
    * El plan que le toca a una institución cuando cambia su tipo. Solo se mueve si el plan que tiene era el que le correspondía por su tipo
-   * anterior (el que se le asignó solo al crearla): uno que el equipo cambió a mano (Multisede, Fundador…) no se toca. Sin esto, alguien
+   * anterior (el que se le asignó solo al crearla): uno que el equipo cambió a mano (Multisede…) no se toca. Sin esto, alguien
    * podía elegir "Otro" (arancel deportivo), cambiar después a "Colegio" antes de verificarse y quedarse con el plan más barato.
    */
   const planTrasCambiarElTipo = (planActual: string, tipoAnterior: string, tipoNuevo: string): string =>
@@ -237,7 +208,7 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return { lista: mensual * meses, anticipado: mensual * mesesQueSePagan, conReferido: mensual * mesesConReferido };
   };
 
-  /** Lo que va detrás del precio: "/mes", "/año" o " por búsqueda" (la búsqueda puntual no tiene abono). */
+  /** Lo que va detrás del precio: "/mes" o " por búsqueda" (la búsqueda puntual no tiene abono). */
   const sufijoDePrecio = (clave: string) => {
     const p = planDe(clave);
     return p.periodo === "evento" ? " por búsqueda" : `/${p.periodo}`;
@@ -332,16 +303,14 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return null;
   };
 
-  /** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
+  /** "Plan Multisede" → "Multisede" (para tablas y filtros, donde "Plan" sobra). */
   const nombreDePlan = (clave: string) => planDe(clave).label.replace(/^Plan /, "");
 
-  /** Lo que aporta una institución al MRR: el anual cuenta como precio / 12 y un plan por sede, el precio por la cantidad de sedes. */
+  /** Lo que aporta una institución al MRR: lo que paga por mes (un plan por sede, el precio por la cantidad de sedes). */
   const equivalenteMensual = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
-    const p = planDe(clave);
     // La búsqueda puntual no es un ingreso recurrente: no entra en el MRR.
-    if (p.periodo === "evento") return 0;
-    const monto = montoDePlan(clave, sedes, acuerdo);
-    return p.periodo === "año" ? Math.round(monto / 12) : monto;
+    if (planDe(clave).periodo === "evento") return 0;
+    return montoDePlan(clave, sedes, acuerdo);
   };
 
   return {

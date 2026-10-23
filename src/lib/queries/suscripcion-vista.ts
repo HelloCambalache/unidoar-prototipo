@@ -21,7 +21,7 @@ const HORAS_DE_PLAN_RECIENTE = 3;
 export type DebitoVista = {
   /** Mercado Pago está configurado (hay token): sin eso la tarjeta ni se muestra. */
   disponible: boolean;
-  /** El plan se cobra mes a mes (el Anual no). */
+  /** El plan se cobra mes a mes (la búsqueda puntual no). */
   planDebitable: boolean;
   puedeGestionar: boolean;
   /** Lo que cobraría Mercado Pago hoy por mes (plan × sedes), o null si no se pudo calcular. */

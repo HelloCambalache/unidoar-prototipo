@@ -21,6 +21,7 @@
     "db:curso-clave": "dotenv -e .env.local -- tsx src/db/curso-clave-base.ts",
     "db:referidos": "dotenv -e .env.local -- tsx src/db/referidos-base.ts",
     "db:semestral": "dotenv -e .env.local -- tsx src/db/semestral-base.ts",
+    "db:planes-retirar": "dotenv -e .env.local -- tsx src/db/planes-retirar.ts",
     "db:mercadopago": "dotenv -e .env.local -- tsx src/db/mercadopago-base.ts",
     "db:mercadopago-limpiar": "dotenv -e .env.local -- tsx src/db/mercadopago-limpiar.ts",
     "db:storage": "dotenv -e .env.local -- tsx src/db/storage.ts",

@@ -31,9 +31,6 @@ const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
   colegio: "Lo reciben las instituciones nuevas cuyo tipo está tildado más abajo, en «Arancel de colegios».",
   deportiva: "Lo reciben las instituciones nuevas de cualquier otro tipo.",
   multisede: "Se asigna a mano desde la ficha de la institución (redes de varias sedes: valor a convenir). El precio es por sede.",
-  fundador: "Es el plan de las instituciones fundadoras: el precio queda congelado mientras sigan suscriptas. Ya no se asigna a cuentas nuevas (el arancel sale del tipo de institución).",
-  estandar: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
-  anual: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
   puntual:
     "Se asigna a mano desde la ficha de la institución (o al aprobar un pedido de cambio de plan). No tiene abono: se paga cada búsqueda, y el pago lo registra el equipo en la ficha de cobros.",
 };
@@ -44,10 +41,6 @@ const SIEMPRE_VIGENTES: readonly PlanClave[] = ["colegio", "deportiva"];
 /** Los planes con abono que se ofrecen hoy: los de la tarjeta «Instituciones». La búsqueda puntual (sin abono) tiene su propio bloque. */
 const VIGENTES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => PLANES_POR_DEFECTO[c].vigente && PLANES_POR_DEFECTO[c].periodo !== "evento");
 const PUNTUAL: readonly PlanClave[] = ["puntual"];
-/** La tarjeta "Fundadoras" de la landing: el plan que tienen las instituciones que entraron primero. */
-const FUNDADORAS: readonly PlanClave[] = ["fundador"];
-/** Lo que ya no se vende y no tiene tarjeta en la landing (Estándar y Anual): va plegado al final. */
-const ANTERIORES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => !PLANES_POR_DEFECTO[c].vigente && !FUNDADORAS.includes(c));
 
 const aNumero = (texto: string) => {
   const n = Number(texto);
@@ -94,7 +87,6 @@ export function PlanesFormulario({
   const [confirmando, setConfirmando] = useState(false);
   const [intento, setIntento] = useState(false);
   const [errorDelServidor, setErrorDelServidor] = useState<{ error: string; campos: Record<string, string> } | null>(null);
-  const [anterioresAbiertas, setAnterioresAbiertas] = useState(false);
 
   const cambios = cambiosDePlanes(inicial, datos);
   const hayCambios = huellaDePlanes(datos) !== huella;
@@ -105,9 +97,6 @@ export function PlanesFormulario({
   };
   // Los errores de lo que todavía no se tocó no se muestran hasta intentar guardar.
   const verError = (ruta: string) => (intento || errorDelServidor ? errores[ruta] : undefined);
-  // Si un plan anterior tiene un error, no puede quedar escondido adentro del bloque plegado.
-  const errorEnAnteriores =
-    (intento || !!errorDelServidor) && ANTERIORES.some((c) => Object.keys(errores).some((ruta) => ruta.startsWith("planes." + c + ".")));
   const nombreDe = (clave: PlanClave) => datos.planes[clave].etiqueta.trim() || PLANES_POR_DEFECTO[clave].label;
 
   const cambiarPlan = <K extends keyof EdicionDePlanes["planes"][PlanClave]>(clave: PlanClave, campo: K, valor: EdicionDePlanes["planes"][PlanClave][K]) => {
@@ -199,7 +188,7 @@ export function PlanesFormulario({
     const p = datos.planes[clave];
     const base = PLANES_POR_DEFECTO[clave];
     const rutaPrecio = `planes.${clave}.precio`;
-    const unidad = base.periodo === "año" ? "por año" : base.periodo === "evento" ? "por búsqueda" : base.porSede ? "por mes y por sede" : "por mes";
+    const unidad = base.periodo === "evento" ? "por búsqueda" : base.porSede ? "por mes y por sede" : "por mes";
     const cuantas = cantidades[clave] ?? 0;
     return (
       <Tarjeta key={clave} como="section" className="p-[22px]" aria-labelledby={`plan-${clave}`}>
@@ -237,26 +226,24 @@ export function PlanesFormulario({
               onChange={(e) => cambiarPrecio(clave, e.target.value)}
             />
           </Campo>
-          {base.periodo !== "año" && (
-            <Campo
-              etiqueta="Precio mínimo ($, optativo)"
-              error={verError(`planes.${clave}.precioMinimo`)}
-              ayuda={
-                p.precioMinimo !== null && p.precioMinimo < p.precio
-                  ? `Desde la ficha de cobros se puede acordar con cada institución un abono entre ${pesos(p.precioMinimo)} y ${pesos(p.precio)}.`
-                  : "Sin piso, el abono no se negocia. Con un piso se puede acordar un precio entre el piso y la lista, institución por institución."
-              }
-              className="min-[761px]:col-start-2"
-            >
-              <Input
-                inputMode="numeric"
-                autoComplete="off"
-                value={pisos[clave]}
-                aria-invalid={!!verError(`planes.${clave}.precioMinimo`)}
-                onChange={(e) => cambiarPiso(clave, e.target.value)}
-              />
-            </Campo>
-          )}
+          <Campo
+            etiqueta="Precio mínimo ($, optativo)"
+            error={verError(`planes.${clave}.precioMinimo`)}
+            ayuda={
+              p.precioMinimo !== null && p.precioMinimo < p.precio
+                ? `Desde la ficha de cobros se puede acordar con cada institución un abono entre ${pesos(p.precioMinimo)} y ${pesos(p.precio)}.`
+                : "Sin piso, el abono no se negocia. Con un piso se puede acordar un precio entre el piso y la lista, institución por institución."
+            }
+            className="min-[761px]:col-start-2"
+          >
+            <Input
+              inputMode="numeric"
+              autoComplete="off"
+              value={pisos[clave]}
+              aria-invalid={!!verError(`planes.${clave}.precioMinimo`)}
+              onChange={(e) => cambiarPiso(clave, e.target.value)}
+            />
+          </Campo>
           <Campo etiqueta="Resumen" ayuda="Una línea, debajo del nombre." error={verError(`planes.${clave}.resumen`)} className="min-[761px]:col-span-2">
             <Input
               value={p.resumen}
@@ -567,30 +554,10 @@ export function PlanesFormulario({
             ? "La página pública muestra «Las primeras " + totalCupos + "» y «Quedan " + cupos + " de " + totalCupos + "»."
             : "Hoy no quedan cupos de fundadoras, así que la página pública no muestra esta tarjeta."}{" "}
           Los cupos se cuentan por antigüedad entre las instituciones reales, no por plan, y el total ({totalCupos}) está fijo en el sistema. Esta tarjeta
-          no muestra precio: el que se cobra a las fundadoras es el del plan de abajo.
+          no muestra precio, y no hay un plan aparte para las fundadoras: su precio de fundadora se acuerda con cada una desde su ficha de cobros
+          («Precio» → «Acordar un precio»), con un abono entre el piso y la lista de su plan, o un convenio a medida.
         </p>
-        {FUNDADORAS.map(tarjetaDePlan)}
       </div>
-
-      <details
-        open={anterioresAbiertas || errorEnAnteriores}
-        onToggle={(e) => setAnterioresAbiertas(e.currentTarget.open)}
-        className="mb-6 rounded-tarjeta border border-linea bg-white"
-      >
-        <summary className="cursor-pointer px-[22px] py-4 text-[15px] leading-tight font-semibold text-tinta">
-          Planes anteriores (Estándar y Anual) ·{" "}
-          <span className="font-normal text-apagado">
-            {plural((cantidades.estandar ?? 0) + (cantidades.anual ?? 0), "institución", "instituciones")} los tienen hoy
-          </span>
-        </summary>
-        <div className="flex flex-col gap-4 px-[22px] pt-1 pb-[22px]">
-          <p className="m-0 text-[13px] leading-normal text-apagado">
-            Ya no se venden y no tienen tarjeta en la página pública, pero las facturas viejas y algunas cuentas todavía los usan. Cambiar su precio
-            cambia lo que se les factura de ahora en más.
-          </p>
-          {ANTERIORES.map(tarjetaDePlan)}
-        </div>
-      </details>
 
       <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-tarjeta border border-linea bg-white/95 px-5 py-3.5 shadow-[0_-4px_14px_rgba(31,36,33,.06)] backdrop-blur">
         <span className="text-[13.5px] leading-normal text-apagado" aria-live="polite">

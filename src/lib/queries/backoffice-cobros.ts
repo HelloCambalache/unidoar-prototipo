@@ -42,7 +42,7 @@ export type FilaCobro = {
 };
 
 export type ResumenCobros = {
-  /** Suma mensual equivalente de los planes de las instituciones no suspendidas (el anual cuenta como precio / 12). */
+  /** Suma mensual equivalente de los planes de las instituciones no suspendidas (la búsqueda puntual no cuenta: no es recurrente). */
   mrr: number;
   suscripcionesActivas: number;
   vencidos: { cantidad: number; monto: number };
@@ -277,13 +277,13 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
  *  - si ya está paga, no se toca (el nuevo plan rige desde el próximo período);
  *  - si está impaga, se le cambia plan y monto;
- *  - si no existe, se crea (salvo que un plan anual pago cubra este mes).
+ *  - si no existe, se crea (salvo que un semestre pago cubra este mes).
  * Corre dentro de la transacción de la acción que aprueba el pedido.
  */
 export async function aplicarPlanAlPeriodoActual(
@@ -311,22 +311,6 @@ export async function aplicarPlanAlPeriodoActual(
     await tx.update(facturas).set({ plan, monto }).where(eq(facturas.id, existente.id));
     return { resultado: "actualizada", periodo, monto };
   }
-
-  // Una factura anual paga cubre los 12 meses desde su período: no se vuelve a cobrar este mes.
-  const [anual] = await tx
-    .select({ id: facturas.id })
-    .from(facturas)
-    .where(
-      and(
-        eq(facturas.institucionId, institucion.id),
-        eq(facturas.plan, "anual"),
-        eq(facturas.estado, "pagada"),
-        gte(facturas.periodo, sumarMeses(periodo, -11)),
-        lte(facturas.periodo, periodo),
-      ),
-    )
-    .limit(1);
-  if (anual) return { resultado: "sin_cambios", motivo: "cubierta_por_anual" };
 
   // Un semestre pagado al contado (una factura paga que cubre varios meses) tampoco se vuelve a cobrar mes a mes.
   const semestres = await tx

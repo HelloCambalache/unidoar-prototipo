@@ -13,15 +13,15 @@ import {
   textoDeBeneficioAplicado,
   textoDeMesBonificado,
 } from "@/lib/bonificacion";
+import { planesPorDefecto } from "@/lib/planes";
 
 describe("a quién se le pueden bonificar meses", () => {
   it("a quien paga mes a mes, sea cual sea su plan mensual", () => {
-    for (const plan of ["colegio", "deportiva", "multisede", "fundador", "estandar"]) assert.equal(puedeBonificarMeses(plan, false), true, plan);
+    for (const plan of ["colegio", "deportiva", "multisede"]) assert.equal(puedeBonificarMeses(planesPorDefecto.esPuntual(plan)), true, plan);
   });
 
-  it("no a quien no tiene una mensualidad de la que descontar: plan anual o búsqueda puntual", () => {
-    assert.equal(puedeBonificarMeses("anual", false), false);
-    assert.equal(puedeBonificarMeses("puntual", true), false);
+  it("no a quien no tiene una mensualidad de la que descontar: la búsqueda puntual", () => {
+    assert.equal(puedeBonificarMeses(planesPorDefecto.esPuntual("puntual")), false);
   });
 });
 

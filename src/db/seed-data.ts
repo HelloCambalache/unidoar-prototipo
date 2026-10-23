@@ -300,8 +300,8 @@ export const NOVEDADES: { inst: string; fecha: string; titulo: string; texto: st
   { inst: "sanandres", fecha: "2026-07-28", titulo: "Terminamos la refacción del natatorio", texto: "Vuelve a funcionar la escuela de natación de contraturno, con dos profes y una guardavidas por turno." },
 ];
 
-/** Montos mensuales de src/lib/planes.ts (el anual es un solo pago). */
-const MONTO = { fundador: 54_000, estandar: 89_000, anual: 720_000 } as const;
+/** Montos mensuales de lista de src/lib/planes.ts. */
+const MONTO = { colegio: 50_000, deportiva: 30_000 } as const;
 
 type FacturaBase = {
   inst: string;
@@ -313,16 +313,16 @@ type FacturaBase = {
 };
 
 const FACTURAS_BASE: FacturaBase[] = [
-  ...["2026-07", "2026-08", "2026-09"].map((p) => ({ inst: "sanandres", plan: "fundador" as const, periodo: p, fechaCobro: `${p}-10`, estado: "pagada" as const, medio: "Débito automático" })),
-  { inst: "sanandres", plan: "fundador", periodo: "2026-10", fechaCobro: "2026-10-10", estado: "pendiente", medio: "Débito automático" },
-  ...["2026-06", "2026-07", "2026-08", "2026-09"].map((p) => ({ inst: "ribera", plan: "estandar" as const, periodo: p, fechaCobro: `${p}-05`, estado: "pagada" as const, medio: "Transferencia" })),
-  { inst: "ribera", plan: "estandar", periodo: "2026-10", fechaCobro: "2026-10-05", estado: "vencida", medio: "Transferencia" },
-  ...["2026-07", "2026-08"].map((p) => ({ inst: "vicentelopez", plan: "estandar" as const, periodo: p, fechaCobro: `${p}-12`, estado: "pagada" as const, medio: "Tarjeta" })),
-  { inst: "vicentelopez", plan: "estandar", periodo: "2026-09", fechaCobro: "2026-09-12", estado: "vencida", medio: "Tarjeta" },
-  { inst: "vicentelopez", plan: "estandar", periodo: "2026-10", fechaCobro: "2026-10-12", estado: "pendiente", medio: "Tarjeta" },
-  ...["2026-08", "2026-09"].map((p) => ({ inst: "fullbody", plan: "fundador" as const, periodo: p, fechaCobro: `${p}-08`, estado: "pagada" as const, medio: "Tarjeta" })),
-  { inst: "fullbody", plan: "fundador", periodo: "2026-10", fechaCobro: "2026-10-08", estado: "pendiente", medio: "Tarjeta" },
-  { inst: "aromos", plan: "anual", periodo: "2026-03", fechaCobro: "2026-03-01", estado: "pagada", medio: "Transferencia" },
+  ...["2026-07", "2026-08", "2026-09"].map((p) => ({ inst: "sanandres", plan: "colegio" as const, periodo: p, fechaCobro: `${p}-10`, estado: "pagada" as const, medio: "Débito automático" })),
+  { inst: "sanandres", plan: "colegio", periodo: "2026-10", fechaCobro: "2026-10-10", estado: "pendiente", medio: "Débito automático" },
+  ...["2026-06", "2026-07", "2026-08", "2026-09"].map((p) => ({ inst: "ribera", plan: "deportiva" as const, periodo: p, fechaCobro: `${p}-05`, estado: "pagada" as const, medio: "Transferencia" })),
+  { inst: "ribera", plan: "deportiva", periodo: "2026-10", fechaCobro: "2026-10-05", estado: "vencida", medio: "Transferencia" },
+  ...["2026-07", "2026-08"].map((p) => ({ inst: "vicentelopez", plan: "colegio" as const, periodo: p, fechaCobro: `${p}-12`, estado: "pagada" as const, medio: "Tarjeta" })),
+  { inst: "vicentelopez", plan: "colegio", periodo: "2026-09", fechaCobro: "2026-09-12", estado: "vencida", medio: "Tarjeta" },
+  { inst: "vicentelopez", plan: "colegio", periodo: "2026-10", fechaCobro: "2026-10-12", estado: "pendiente", medio: "Tarjeta" },
+  ...["2026-08", "2026-09"].map((p) => ({ inst: "fullbody", plan: "deportiva" as const, periodo: p, fechaCobro: `${p}-08`, estado: "pagada" as const, medio: "Tarjeta" })),
+  { inst: "fullbody", plan: "deportiva", periodo: "2026-10", fechaCobro: "2026-10-08", estado: "pendiente", medio: "Tarjeta" },
+  { inst: "aromos", plan: "colegio", periodo: "2026-09", fechaCobro: "2026-09-01", estado: "pagada", medio: "Transferencia" },
 ];
 
 export const FACTURAS = FACTURAS_BASE.map((f) => ({ ...f, monto: MONTO[f.plan] }));

@@ -25,10 +25,10 @@ export const mesesTexto = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 export const mesesBonificadosTexto = (n: number) => `${mesesTexto(n)} ${n === 1 ? "bonificado" : "bonificados"}`;
 
 /**
- * ¿Se le pueden bonificar meses a una institución con este plan? Solo a quien paga mes a mes: el plan Anual y la búsqueda puntual no tienen
- * una mensualidad de la que descontar (a esas se les aplica el beneficio como pack por adelantado, a mano).
+ * ¿Se le pueden bonificar meses a una institución con este plan? Solo a quien paga mes a mes: la búsqueda puntual no tiene una mensualidad
+ * de la que descontar (a esa se le aplica el beneficio como pack por adelantado, a mano). `esPuntual` sale de `Planes.esPuntual(plan)`.
  */
-export const puedeBonificarMeses = (plan: string, esPuntual: boolean) => plan !== "anual" && !esPuntual;
+export const puedeBonificarMeses = (esPuntual: boolean) => !esPuntual;
 
 /** En qué está un mes bonificado, para mostrarlo. */
 export type EstadoDeMes = "disponible" | "usado" | "a-devolver" | "devuelto";

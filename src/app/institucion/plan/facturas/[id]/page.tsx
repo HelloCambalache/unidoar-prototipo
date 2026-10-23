@@ -107,7 +107,7 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
             <div>
               <div className="text-[15px] leading-[1.3] font-semibold">{plan.label}</div>
               <div className="text-[13px] leading-[1.4] text-apagado">
-                Período: {periodoTexto} · {plan.periodo === "año" ? "por año" : prepago ? "pago por adelantado" : "por mes"}
+                Período: {periodoTexto} · {prepago ? "pago por adelantado" : "por mes"}
               </div>
             </div>
             <div className="text-[15px] leading-none font-semibold whitespace-nowrap">{pesos(factura.monto)}</div>
