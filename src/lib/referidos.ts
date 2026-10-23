@@ -1,11 +1,12 @@
 /*
  * Referidos de instituciones. Una institución recomienda UNIDOAR a otra con su enlace personal (`/referido/<código>`): la persona
- * entra, crea la cuenta de institución y queda anotada como recomendada. Cuando el equipo la verifica, la que recomendó ya tiene
- * su beneficio (el mismo que antes se mostraba en la página de precios: en el pack por adelantado, paga menos meses); el equipo
- * lo aplica a mano al facturar y lo marca. Código puro (sin base ni Next): lo usan las pantallas, las acciones y las pruebas.
+ * entra, crea la cuenta de institución y queda anotada como recomendada. Cuando la recomendada abona su membresía (paga su primera
+ * factura), la que recomendó tiene su beneficio (el mismo que antes se mostraba en la página de precios: en el pack por adelantado,
+ * paga menos meses); el equipo lo aplica a mano al facturar y lo marca. Código puro (sin base ni Next): lo usan las pantallas, las
+ * acciones y las pruebas.
  */
 
-export const ESTADOS_REFERIDO = ["registrada", "verificada", "beneficio"] as const;
+export const ESTADOS_REFERIDO = ["registrada", "verificada", "pago", "beneficio"] as const;
 export type EstadoReferido = (typeof ESTADOS_REFERIDO)[number];
 
 /** Cómo se llama cada paso, qué significa para quien recomendó y con qué color se marca. */
@@ -17,7 +18,12 @@ export const INFO_ESTADO_REFERIDO: Record<EstadoReferido, { etiqueta: string; si
   },
   verificada: {
     etiqueta: "Verificada",
-    significado: "Ya es parte de la red: tu beneficio está listo para aplicarse.",
+    significado: "Ya está verificada. Tu beneficio se activa cuando pague su primera factura.",
+    tono: "neutro",
+  },
+  pago: {
+    etiqueta: "Ya pagó",
+    significado: "Pagó su membresía: tu beneficio está listo para aplicarse.",
     tono: "verde",
   },
   beneficio: {
@@ -28,16 +34,23 @@ export const INFO_ESTADO_REFERIDO: Record<EstadoReferido, { etiqueta: string; si
 };
 
 /**
- * En qué paso está un referido. No se guarda: sale de si la institución recomendada está verificada (así nunca queda desfasado
- * de la verificación) y de si el equipo ya aplicó el beneficio, que es lo único que se anota.
+ * En qué paso está un referido. No se guarda: sale de si la institución recomendada está verificada y de si tiene alguna factura paga
+ * (así nunca queda desfasado de la verificación ni de un pago que se anula) y de si el equipo ya aplicó el beneficio, que es lo único
+ * que se anota.
  */
-export function estadoDeReferido(r: { verificada: boolean; beneficioEn: Date | string | null | undefined }): EstadoReferido {
+export function estadoDeReferido(r: {
+  verificada: boolean;
+  /** Tiene al menos una factura paga: abonó su membresía. */
+  pagada: boolean;
+  beneficioEn: Date | string | null | undefined;
+}): EstadoReferido {
   if (r.beneficioEn) return "beneficio";
+  if (r.pagada) return "pago";
   return r.verificada ? "verificada" : "registrada";
 }
 
-/** El equipo solo puede aplicar el beneficio de una recomendación ya verificada (o devolverlo a "verificada" si se aplicó por error). */
-export const puedeAplicarBeneficio = (estado: EstadoReferido) => estado === "verificada";
+/** El equipo solo puede aplicar el beneficio de una recomendación cuya institución ya pagó (o devolverlo a "pago" si se aplicó por error). */
+export const puedeAplicarBeneficio = (estado: EstadoReferido) => estado === "pago";
 export const puedeDeshacerBeneficio = (estado: EstadoReferido) => estado === "beneficio";
 
 /** Cuántos hay en cada paso y cuántos esperan que el equipo les aplique el beneficio. */
@@ -47,9 +60,12 @@ export function resumenDeReferidos(estados: readonly EstadoReferido[]) {
     total: estados.length,
     registradas: cuenta("registrada"),
     verificadas: cuenta("verificada"),
+    pagaron: cuenta("pago"),
     conBeneficio: cuenta("beneficio"),
-    /** Las verificadas sin beneficio: lo que el equipo tiene para aplicar. */
-    paraAplicar: cuenta("verificada"),
+    /** Las que ya pagaron y todavía no tienen el beneficio aplicado: lo que el equipo tiene para aplicar. */
+    paraAplicar: cuenta("pago"),
+    /** Las que ya pasaron la verificación (con o sin pago): "ya son parte de la red". */
+    enLaRed: estados.filter((x) => x !== "registrada").length,
   };
 }
 

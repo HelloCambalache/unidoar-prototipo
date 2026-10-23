@@ -16,8 +16,10 @@ import {
 } from "@/lib/debito-automatico";
 import type { SuscripcionDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { pesos } from "@/lib/planes";
+import { resumenDeError } from "@/lib/errores";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { avisarReferidorDePago } from "@/lib/queries/referidos";
 import { institucionDelPlan } from "@/lib/queries/suscripcion-planes";
 
 /*
@@ -178,6 +180,25 @@ export type ResultadoDeCobro = "aprobado" | "repetido" | "rechazado" | "registra
  * cobro para devolver.
  */
 export async function aplicarCobro(cobro: CobroLeido): Promise<ResultadoDeCobro> {
+  const resultado = await aplicarCobroEnLaBase(cobro);
+  if (resultado === "aprobado") {
+    // Si la institución fue recomendada por otra y este es su primer cobro, se le avisa a quien la recomendó. Después de confirmar y sin
+    // frenar nada: el paso del referido se calcula de las facturas, no depende de que este aviso salga.
+    try {
+      const [susc] = await getDb()
+        .select({ institucionId: suscripcionesMp.institucionId })
+        .from(suscripcionesMp)
+        .where(eq(suscripcionesMp.suscripcionId, cobro.suscripcionId))
+        .limit(1);
+      if (susc) await avisarReferidorDePago(susc.institucionId);
+    } catch (e) {
+      console.error("No se pudo avisar el cobro a quien recomendó", resumenDeError(e));
+    }
+  }
+  return resultado;
+}
+
+async function aplicarCobroEnLaBase(cobro: CobroLeido): Promise<ResultadoDeCobro> {
   return transaccion(async (tx) => {
     const [susc] = await tx.select().from(suscripcionesMp).where(eq(suscripcionesMp.suscripcionId, cobro.suscripcionId)).limit(1);
     if (!susc) return "sin-suscripcion";

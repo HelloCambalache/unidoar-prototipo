@@ -80,7 +80,17 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           &nbsp;/ mes{plan.porSede ? " por sede" : ""}
         </span>
       </div>
-      <p className="relative mb-5 text-sm leading-normal text-white/65">{detalleDe(P, clave)}</p>
+      <p className="relative mb-5 text-sm leading-normal text-white/65">
+        {detalleDe(P, clave)}
+        {!plan.porSede && P.condiciones.descuentoSedeExtra > 0 && P.condiciones.descuentoSedeExtra < 100 && (
+          <>
+            {" "}
+            <span className="text-white/85">
+              Cada sede adicional: {pesos(P.precioDeSedeExtra(clave))} por mes ({P.condiciones.descuentoSedeExtra} % menos).
+            </span>
+          </>
+        )}
+      </p>
 
       <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-white/85">
         {beneficios.map((b) => (

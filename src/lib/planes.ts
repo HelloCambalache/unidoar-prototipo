@@ -48,8 +48,13 @@ export type PackDeLanzamiento = {
 };
 
 export type CondicionesDePlanes = {
-  /** Desde esta cantidad de sedes (incluida) corresponde el plan Multisede. */
+  /** Desde esta cantidad de sedes (incluida) corresponde el plan Multisede (redes: valor a convenir). */
   sedesMultisede: number;
+  /**
+   * Descuento, en porcentaje, sobre el abono del plan para cada sede adicional (de la segunda en adelante). 50 = cada sede extra paga la
+   * mitad; 0 = paga lo mismo que la primera; 100 = no se cobra. No se aplica a un plan por sede (Multisede), que ya cobra cada sede.
+   */
+  descuentoSedeExtra: number;
   pack: PackDeLanzamiento;
   /** Tipos de institución que pagan el arancel de colegios; el resto paga el deportivo. */
   tiposColegio: string[];
@@ -118,8 +123,9 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
 
 export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
   sedesMultisede: 5,
+  descuentoSedeExtra: 50,
   pack: { meses: 6, mesesQueSePagan: 5, mesesConReferido: 4 },
-  tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario"],
+  tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario", "Universidad"],
 };
 
 export const CATALOGO_POR_DEFECTO: CatalogoDePlanes = { planes: PLANES_POR_DEFECTO, condiciones: CONDICIONES_POR_DEFECTO };
@@ -182,10 +188,40 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return `${pesos(p.precio)}/${p.periodo}${p.porSede ? " por sede" : ""}`;
   };
 
-  /** Lo que se factura por período. En un plan por sede (Multisede) es el precio de una sede por la cantidad de sedes de la institución. */
+  /**
+   * Lo que paga cada sede adicional (de la segunda en adelante): el abono del plan con el descuento de `descuentoSedeExtra`. En un plan por
+   * sede (Multisede) cada sede paga el precio entero.
+   */
+  const precioDeSedeExtra = (clave: string) => {
+    const p = planDe(clave);
+    return p.porSede ? p.precio : Math.round((p.precio * (100 - condiciones.descuentoSedeExtra)) / 100);
+  };
+
+  /**
+   * Lo que se factura por período. En un plan por sede (Multisede) es el precio de una sede por la cantidad de sedes de la institución;
+   * en los demás, el abono del plan más cada sede adicional con su descuento (`precioDeSedeExtra`). Nunca menos de una sede.
+   */
   const montoDePlan = (clave: string, sedes = 1) => {
     const p = planDe(clave);
-    return p.porSede ? p.precio * Math.max(1, Math.floor(sedes)) : p.precio;
+    const n = Math.max(1, Math.floor(sedes));
+    return p.porSede ? p.precio * n : p.precio + (n - 1) * precioDeSedeExtra(clave);
+  };
+
+  /** El monto explicado: la primera sede, las adicionales y el total. Para mostrarlo ("$ 48.000 + 2 sedes adicionales de $ 24.000"). */
+  const desgloseDeMonto = (clave: string, sedes = 1) => {
+    const p = planDe(clave);
+    const n = Math.max(1, Math.floor(sedes));
+    const adicionales = p.porSede ? 0 : n - 1;
+    return {
+      /** Cuántas sedes tiene en total. */
+      sedes: n,
+      /** Lo que paga la primera sede (en un plan por sede, el precio por sede). */
+      base: p.precio,
+      adicionales,
+      /** Lo que paga cada sede adicional. */
+      precioAdicional: precioDeSedeExtra(clave),
+      total: montoDePlan(clave, n),
+    };
   };
 
   /** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
@@ -212,7 +248,9 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     precioMultisede,
     packDe,
     precioDePlan,
+    precioDeSedeExtra,
     montoDePlan,
+    desgloseDeMonto,
     nombreDePlan,
     equivalenteMensual,
   };
@@ -228,6 +266,8 @@ export const planesPorDefecto: Planes = crearPlanes(CATALOGO_POR_DEFECTO);
 export type FilaDePlan = { clave: string; etiqueta: string; precio: number; resumen: string; detalle: string; vigente: boolean };
 export type FilaDeCondiciones = {
   sedesMultisede: number;
+  /** Puede faltar en una base a la que todavía no se le agregó la columna: en ese caso vale el de lanzamiento. */
+  descuentoSedeExtra?: number;
   packMeses: number;
   packMesesPagos: number;
   packMesesReferido: number;
@@ -262,6 +302,7 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
   const packValido = !!c && entero(c.packMeses, 2, 24) && entero(c.packMesesPagos, 1, c.packMeses - 1) && entero(c.packMesesReferido, 1, c.packMesesPagos - 1);
   const condiciones: CondicionesDePlanes = {
     sedesMultisede: c && entero(c.sedesMultisede, 2, 100) ? c.sedesMultisede : defecto.sedesMultisede,
+    descuentoSedeExtra: c && entero(c.descuentoSedeExtra, 0, 100) ? c.descuentoSedeExtra : defecto.descuentoSedeExtra,
     pack: packValido ? { meses: c.packMeses, mesesQueSePagan: c.packMesesPagos, mesesConReferido: c.packMesesReferido } : defecto.pack,
     tiposColegio: c && Array.isArray(c.tiposColegio) && c.tiposColegio.length > 0 ? [...c.tiposColegio] : [...defecto.tiposColegio],
   };
@@ -303,6 +344,7 @@ export const edicionDePlanesSchema = z
     planes: z.object(Object.fromEntries(CLAVES_PLAN.map((c) => [c, edicionDePlanSchema])) as Record<PlanClave, typeof edicionDePlanSchema>),
     condiciones: z.object({
       sedesMultisede: numeroDePack(2, 100),
+      descuentoSedeExtra: numeroDePack(0, 100),
       pack: z.object({ meses: numeroDePack(2, 24), mesesQueSePagan: numeroDePack(1, 24), mesesConReferido: numeroDePack(1, 24) }),
       tiposColegio: z.array(z.enum(TIPOS_INSTITUCION)).min(1, "Elegí al menos un tipo de institución para el arancel de colegios."),
     }),
@@ -348,6 +390,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
     ) as EdicionDePlanes["planes"],
     condiciones: {
       sedesMultisede: c.condiciones.sedesMultisede,
+      descuentoSedeExtra: c.condiciones.descuentoSedeExtra,
       pack: { ...c.condiciones.pack },
       tiposColegio: TIPOS_INSTITUCION.filter((t) => c.condiciones.tiposColegio.includes(t)),
     },
@@ -382,6 +425,7 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
   }
   const campos: string[] = [];
   if (antes.condiciones.sedesMultisede !== despues.condiciones.sedesMultisede) campos.push("sedes para el plan Multisede");
+  if (antes.condiciones.descuentoSedeExtra !== despues.condiciones.descuentoSedeExtra) campos.push("descuento por sede adicional");
   const pa = antes.condiciones.pack;
   const pd = despues.condiciones.pack;
   if (pa.meses !== pd.meses || pa.mesesQueSePagan !== pd.mesesQueSePagan || pa.mesesConReferido !== pd.mesesConReferido) campos.push("pack por adelantado");

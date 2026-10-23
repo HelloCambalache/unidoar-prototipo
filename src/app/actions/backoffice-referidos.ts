@@ -10,12 +10,13 @@ import { requerirUsuario } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { institucionPago } from "@/lib/queries/referidos";
 import { estadoDeReferido, puedeAplicarBeneficio, puedeDeshacerBeneficio } from "@/lib/referidos";
 
 /*
  * Referidos, del lado del equipo. Solo admin. El equipo marca cuándo aplicó el beneficio a la institución que recomendó (al facturar:
  * hoy los cobros se cargan a mano), o lo deshace si se marcó por error. Queda en la actividad de la institución que recomendó y se le
- * avisa en la campanita (sin mail). No se puede aplicar el beneficio de una recomendación cuya institución todavía no está verificada.
+ * avisa en la campanita (sin mail). No se puede aplicar el beneficio de una recomendación cuya institución todavía no pagó una factura.
  */
 
 const NO_ENCONTRADO = "No encontramos esa recomendación.";
@@ -36,9 +37,13 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
       .limit(1);
     if (!recomendada) return fallo(NO_ENCONTRADO);
 
-    const estado = estadoDeReferido({ verificada: recomendada.verificada, beneficioEn: fila.beneficioEn });
+    const estado = estadoDeReferido({
+      verificada: recomendada.verificada,
+      pagada: await institucionPago(tx, fila.referidoId),
+      beneficioEn: fila.beneficioEn,
+    });
     if (aplicado && !puedeAplicarBeneficio(estado)) {
-      return fallo(estado === "beneficio" ? "El beneficio ya estaba aplicado." : "Todavía no se puede: la institución recomendada no está verificada.");
+      return fallo(estado === "beneficio" ? "El beneficio ya estaba aplicado." : "Todavía no se puede: la institución recomendada no pagó su primera factura.");
     }
     if (!aplicado && !puedeDeshacerBeneficio(estado)) return fallo("Ese beneficio no estaba aplicado.");
 

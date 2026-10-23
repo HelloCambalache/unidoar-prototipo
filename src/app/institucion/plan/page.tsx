@@ -35,6 +35,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
       <PlanPanel
         catalogo={catalogo}
         plan={datos.plan}
+        sedes={datos.sedes}
         proximoCobro={datos.proxima ? `${datos.proxima.fechaCobroLarga} · ${pesos(datos.proxima.monto)}` : null}
         medioPago={institucion.medioPago}
         vencidas={datos.vencidas}

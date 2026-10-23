@@ -8,6 +8,7 @@ import { fechaLarga } from "@/lib/fechas-curso";
 import { esClavePlan, type PlanClave } from "@/lib/planes";
 import { planes } from "@/lib/queries/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { cantidadDeSedes } from "@/lib/queries/sedes";
 
 /*
  * Plan y facturación de la institución. Todavía no hay pasarela de pago: el plan sale de
@@ -89,6 +90,8 @@ export type SolicitudVista = {
 
 export type DatosDePlan = {
   plan: PlanClave;
+  /** Cuántas sedes tiene la institución: el monto del plan suma las adicionales. */
+  sedes: number;
   puedeCambiar: boolean;
   facturas: FacturaVista[];
   /** La factura pendiente más próxima. */
@@ -101,7 +104,7 @@ export type DatosDePlan = {
 export async function datosDePlan(institucion: Institucion, usuarioId: string): Promise<DatosDePlan> {
   const db = getDb();
   const ahora = new Date();
-  const [P, rol, filas, pendiente] = await Promise.all([
+  const [P, rol, filas, pendiente, sedes] = await Promise.all([
     planes(),
     rolEnInstitucion(institucion, usuarioId),
     db
@@ -111,6 +114,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
       .orderBy(desc(facturas.fechaCobro))
       .limit(60),
     solicitudPendiente(institucion.id),
+    cantidadDeSedes(db, [institucion.id]),
   ]);
 
   const lista = filas.map(
@@ -132,6 +136,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
 
   return {
     plan: esClavePlan(institucion.plan) ? institucion.plan : "fundador",
+    sedes: sedes.get(institucion.id) ?? 1,
     puedeCambiar: puedeGestionarPlan(rol),
     facturas: lista,
     proxima: proxima ? (lista.find((f) => f.id === proxima.id) ?? null) : null,

@@ -625,7 +625,7 @@ export type MensajeContacto = typeof mensajesContacto.$inferSelect;
 /* ───────────────────────────── Referidos de instituciones ─────────────────────────────
    Una institución recomienda a otra con su enlace personal (`/referido/<código>`). El código vive aparte para no tocar
    `instituciones`. Tablas agregadas a mano con `pnpm db:referidos` (con RLS). En qué paso está cada referido NO se guarda: sale de
-   si la recomendada está verificada y de `beneficioEn` (ver `estadoDeReferido`, src/lib/referidos.ts). */
+   si la recomendada está verificada, si tiene una factura paga y de `beneficioEn` (ver `estadoDeReferido`, src/lib/referidos.ts). */
 
 export const codigosReferido = pgTable("codigos_referido", {
   institucionId: uuid("institucion_id")
@@ -906,6 +906,8 @@ export type PlanFila = typeof planes.$inferSelect;
 export const planesCondiciones = pgTable("planes_condiciones", {
   id: integer("id").primaryKey().default(1),
   sedesMultisede: integer("sedes_multisede").notNull(),
+  /** Descuento (%) sobre el abono para cada sede adicional. Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar el código que la lee). */
+  descuentoSedeExtra: integer("descuento_sede_extra").notNull().default(50),
   packMeses: integer("pack_meses").notNull(),
   packMesesPagos: integer("pack_meses_pagos").notNull(),
   packMesesReferido: integer("pack_meses_referido").notNull(),

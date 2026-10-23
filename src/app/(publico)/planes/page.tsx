@@ -71,6 +71,14 @@ export default async function Planes() {
       respuesta: `Depende del tipo. ${colegios.label.replace("Plan ", "")}: ${pesos(colegios.precio)} por mes (${P.tiposPorPlan.colegio.join(", ").toLowerCase()}). ${clubes.label.replace("Plan ", "")}: ${pesos(clubes.precio)} por mes. Desde ${P.condiciones.sedesMultisede} sedes se factura por sede: ${pesos(multisede.precio)} por mes cada una.`,
     },
     {
+      pregunta: "¿Y si mi institución tiene más de una sede?",
+      respuesta: `Pagás el abono de tu plan por la primera sede y ${
+        P.condiciones.descuentoSedeExtra >= 100
+          ? "las sedes adicionales no tienen costo"
+          : `cada sede adicional ${P.condiciones.descuentoSedeExtra > 0 ? `con ${P.condiciones.descuentoSedeExtra} % de descuento: ${pesos(P.precioDeSedeExtra("colegio"))} por mes en el plan de colegios y ${pesos(P.precioDeSedeExtra("deportiva"))} en el de clubes y academias` : "paga lo mismo que la primera"}`
+      }. Desde ${P.condiciones.sedesMultisede} sedes se factura por sede (plan Multisede).`,
+    },
+    {
       pregunta: "¿Cómo funciona el pago por adelantado?",
       respuesta: `Contratás el pack de ${mesesDelPack} meses y pagás ${mesesQueSePagan}: ${pesos(P.packDe("colegio").anticipado)} en lugar de ${pesos(P.packDe("colegio").lista)} en el plan de colegios, o ${pesos(P.packDe("deportiva").anticipado)} en lugar de ${pesos(P.packDe("deportiva").lista)} en el de clubes y academias.`,
     },

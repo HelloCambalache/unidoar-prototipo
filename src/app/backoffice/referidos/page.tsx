@@ -15,10 +15,10 @@ export const metadata: Metadata = { title: "Referidos · Backoffice" };
 export const dynamic = "force-dynamic";
 
 const FILTROS = [
-  { clave: "para-aplicar", etiqueta: "Para aplicar", estados: ["verificada"] },
-  { clave: "en-curso", etiqueta: "En curso", estados: ["registrada"] },
+  { clave: "para-aplicar", etiqueta: "Para aplicar", estados: ["pago"] },
+  { clave: "en-curso", etiqueta: "En curso", estados: ["registrada", "verificada"] },
   { clave: "aplicados", etiqueta: "Aplicados", estados: ["beneficio"] },
-  { clave: "todos", etiqueta: "Todos", estados: ["registrada", "verificada", "beneficio"] },
+  { clave: "todos", etiqueta: "Todos", estados: ["registrada", "verificada", "pago", "beneficio"] },
 ] as const satisfies readonly { clave: string; etiqueta: string; estados: readonly EstadoReferido[] }[];
 type ClaveFiltro = (typeof FILTROS)[number]["clave"];
 
@@ -33,7 +33,7 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
   const resumen = resumenDeReferidos(todos.map((r) => r.estado));
   const cantidades: Record<ClaveFiltro, number> = {
     "para-aplicar": resumen.paraAplicar,
-    "en-curso": resumen.registradas,
+    "en-curso": resumen.registradas + resumen.verificadas,
     aplicados: resumen.conBeneficio,
     todos: resumen.total,
   };
@@ -44,7 +44,7 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
     <>
       <EncabezadoPagina
         titulo="Referidos"
-        bajada="Instituciones que recomendaron a otras con su enlace. Cuando la recomendada se verifica, la que recomendó tiene su beneficio: lo aplicás al facturar y lo marcás acá."
+        bajada="Instituciones que recomendaron a otras con su enlace. Cuando la recomendada paga su primera factura, la que recomendó tiene su beneficio: lo aplicás al facturar y lo marcás acá."
       />
       <Pestanas
         className="mb-4"
@@ -63,7 +63,7 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
           }
           texto={
             filtro === "para-aplicar" && resumen.total > 0
-              ? "Todo lo que ya está verificado tiene su beneficio aplicado."
+              ? "Todo lo que ya pagó tiene su beneficio aplicado."
               : "Cuando una institución cree su cuenta con el enlace de otra, aparece acá."
           }
         />

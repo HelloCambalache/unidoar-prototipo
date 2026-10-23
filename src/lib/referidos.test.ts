@@ -15,41 +15,54 @@ import {
 } from "./referidos";
 
 describe("estado de un referido", () => {
+  const sin = { verificada: false, pagada: false, beneficioEn: null };
+
   it("recién registrada, todavía sin verificar", () => {
-    assert.equal(estadoDeReferido({ verificada: false, beneficioEn: null }), "registrada");
+    assert.equal(estadoDeReferido(sin), "registrada");
   });
 
   it("se vuelve verificada cuando el equipo verifica a la institución recomendada, sin tocar nada más", () => {
-    assert.equal(estadoDeReferido({ verificada: true, beneficioEn: null }), "verificada");
+    assert.equal(estadoDeReferido({ ...sin, verificada: true }), "verificada");
   });
 
-  it("con el beneficio aplicado queda así, aunque después se le quite la verificación", () => {
-    assert.equal(estadoDeReferido({ verificada: true, beneficioEn: new Date() }), "beneficio");
-    assert.equal(estadoDeReferido({ verificada: false, beneficioEn: "2026-10-19T12:00:00Z" }), "beneficio");
+  it("el beneficio se activa cuando la recomendada paga: antes de eso, verificada no alcanza", () => {
+    assert.equal(estadoDeReferido({ ...sin, verificada: true }), "verificada");
+    assert.equal(estadoDeReferido({ ...sin, verificada: true, pagada: true }), "pago");
+  });
+
+  it("si un pago se anula, vuelve al paso anterior mientras no se haya aplicado el beneficio", () => {
+    assert.equal(estadoDeReferido({ verificada: true, pagada: false, beneficioEn: null }), "verificada");
+  });
+
+  it("con el beneficio aplicado queda así, aunque después se le quite la verificación o se anule el pago", () => {
+    assert.equal(estadoDeReferido({ verificada: true, pagada: true, beneficioEn: new Date() }), "beneficio");
+    assert.equal(estadoDeReferido({ verificada: false, pagada: false, beneficioEn: "2026-10-19T12:00:00Z" }), "beneficio");
   });
 });
 
 describe("qué puede hacer el equipo", () => {
-  it("solo se aplica el beneficio de una verificada", () => {
-    assert.equal(puedeAplicarBeneficio("verificada"), true);
+  it("solo se aplica el beneficio de una recomendada que ya pagó", () => {
+    assert.equal(puedeAplicarBeneficio("pago"), true);
+    assert.equal(puedeAplicarBeneficio("verificada"), false);
     assert.equal(puedeAplicarBeneficio("registrada"), false);
     assert.equal(puedeAplicarBeneficio("beneficio"), false);
   });
 
   it("solo se deshace uno ya aplicado", () => {
     assert.equal(puedeDeshacerBeneficio("beneficio"), true);
+    assert.equal(puedeDeshacerBeneficio("pago"), false);
     assert.equal(puedeDeshacerBeneficio("verificada"), false);
   });
 });
 
 describe("resumen de referidos", () => {
   it("cuenta cada paso y lo que espera al equipo", () => {
-    const r = resumenDeReferidos(["registrada", "verificada", "verificada", "beneficio"]);
-    assert.deepEqual(r, { total: 4, registradas: 1, verificadas: 2, conBeneficio: 1, paraAplicar: 2 });
+    const r = resumenDeReferidos(["registrada", "verificada", "verificada", "pago", "beneficio"]);
+    assert.deepEqual(r, { total: 5, registradas: 1, verificadas: 2, pagaron: 1, conBeneficio: 1, paraAplicar: 1, enLaRed: 4 });
   });
 
   it("sin referidos, todo en cero", () => {
-    assert.deepEqual(resumenDeReferidos([]), { total: 0, registradas: 0, verificadas: 0, conBeneficio: 0, paraAplicar: 0 });
+    assert.deepEqual(resumenDeReferidos([]), { total: 0, registradas: 0, verificadas: 0, pagaron: 0, conBeneficio: 0, paraAplicar: 0, enLaRed: 0 });
   });
 });
 

@@ -41,7 +41,7 @@ export async function guardarPlanes(entrada: unknown, base: string): Promise<Res
     const inicial = CONDICIONES_POR_DEFECTO;
     await tx
       .insert(planesCondiciones)
-      .values({ id: 1, sedesMultisede: inicial.sedesMultisede, packMeses: inicial.pack.meses, packMesesPagos: inicial.pack.mesesQueSePagan, packMesesReferido: inicial.pack.mesesConReferido, tiposColegio: inicial.tiposColegio })
+      .values({ id: 1, sedesMultisede: inicial.sedesMultisede, descuentoSedeExtra: inicial.descuentoSedeExtra, packMeses: inicial.pack.meses, packMesesPagos: inicial.pack.mesesQueSePagan, packMesesReferido: inicial.pack.mesesConReferido, tiposColegio: inicial.tiposColegio })
       .onConflictDoNothing();
     await tx.select({ id: planesCondiciones.id }).from(planesCondiciones).where(eq(planesCondiciones.id, 1)).for("update");
     const actual = edicionDesdeCatalogo(await leerCatalogoDePlanes(tx));
@@ -65,6 +65,7 @@ export async function guardarPlanes(entrada: unknown, base: string): Promise<Res
       .update(planesCondiciones)
       .set({
         sedesMultisede: c.sedesMultisede,
+        descuentoSedeExtra: c.descuentoSedeExtra,
         packMeses: c.pack.meses,
         packMesesPagos: c.pack.mesesQueSePagan,
         packMesesReferido: c.pack.mesesConReferido,

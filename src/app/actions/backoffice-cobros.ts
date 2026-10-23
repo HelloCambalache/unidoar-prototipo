@@ -30,6 +30,7 @@ import { pesos } from "@/lib/planes";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { avisarAVarios } from "@/lib/queries/avisos";
+import { avisarReferidorDePago } from "@/lib/queries/referidos";
 import {
   aplicarPlanAlPeriodoActual,
   facturasPendientesVencidas,
@@ -127,7 +128,11 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
     return ok();
   });
 
-  if (resultado.ok) revalidarCobros(institucionId);
+  if (resultado.ok) {
+    revalidarCobros(institucionId);
+    // Si la institución fue recomendada por otra y esta es su primera factura paga, se avisa (nunca frena el pago).
+    if (institucionId) await avisarReferidorDePago(institucionId);
+  }
   return resultado;
 }
 
@@ -228,7 +233,10 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
       }
       return ok({ id: facturaId });
     });
-    if (resultado.ok) revalidarCobros(institucionId);
+    if (resultado.ok) {
+      revalidarCobros(institucionId);
+      await avisarReferidorDePago(institucionId);
+    }
     return resultado;
   } catch (e) {
     // El índice único (institución, período) es la red de seguridad si dos personas cargan el mismo mes a la vez.

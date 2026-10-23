@@ -42,6 +42,8 @@ async function main() {
         actualizado_en timestamptz not null default now(),
         constraint planes_condiciones_una_fila check (id = 1)
       )`;
+    // Agregada después de crear la tabla (descuento por sede adicional): en una base que ya la tenía se suma con el valor de lanzamiento.
+    await tx`alter table public.planes_condiciones add column if not exists descuento_sede_extra integer not null default 50`;
     await tx`alter table public.planes enable row level security`;
     await tx`alter table public.planes_condiciones enable row level security`;
 
@@ -57,8 +59,8 @@ async function main() {
     }
     const c = CONDICIONES_POR_DEFECTO;
     const cond = await tx`
-      insert into public.planes_condiciones (id, sedes_multisede, pack_meses, pack_meses_pagos, pack_meses_referido, tipos_colegio)
-      values (1, ${c.sedesMultisede}, ${c.pack.meses}, ${c.pack.mesesQueSePagan}, ${c.pack.mesesConReferido}, ${c.tiposColegio})
+      insert into public.planes_condiciones (id, sedes_multisede, descuento_sede_extra, pack_meses, pack_meses_pagos, pack_meses_referido, tipos_colegio)
+      values (1, ${c.sedesMultisede}, ${c.descuentoSedeExtra}, ${c.pack.meses}, ${c.pack.mesesQueSePagan}, ${c.pack.mesesConReferido}, ${c.tiposColegio})
       on conflict (id) do nothing
       returning id`;
 

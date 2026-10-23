@@ -28,6 +28,7 @@ export const TIPOS_INSTITUCION = [
   "Natatorio o colonia",
   "Instituto de idiomas",
   "Instituto terciario",
+  "Universidad",
   "Otro",
 ] as const;
 /** Tipos que tienen código CUE (establecimientos educativos). */

@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 const PASOS = [
   "Le mandás tu enlace a una institución que todavía no usa UNIDOAR.",
   "Crea su cuenta de institución con ese enlace: queda anotada como recomendada por la tuya.",
-  "El equipo la verifica: ahí tu beneficio queda listo.",
+  "El equipo la verifica y, cuando paga su primera factura, tu beneficio queda listo.",
   "Lo aplicamos cuando contratás el pack por adelantado.",
 ];
 
@@ -69,7 +69,7 @@ export default async function Referidos() {
             ))}
           </ol>
           <p className="m-0 mt-4 text-xs leading-normal text-apagado">
-            El beneficio se aplica una vez que la institución recomendada está verificada y lo carga el equipo al facturar. Una cuenta no puede
+            El beneficio se aplica una vez que la institución recomendada pagó su primera factura y lo carga el equipo al facturar. Una cuenta no puede
             recomendarse a sí misma ni a otra institución de la misma persona.
           </p>
         </Tarjeta>
@@ -79,7 +79,7 @@ export default async function Referidos() {
             <h2 className="m-0 text-base leading-tight font-semibold">Tus recomendaciones</h2>
             {resumen.total > 0 && (
               <span className="text-[13px] text-apagado">
-                {resumen.total} {resumen.total === 1 ? "recomendada" : "recomendadas"} · {resumen.verificadas + resumen.conBeneficio} en la red
+                {resumen.total} {resumen.total === 1 ? "recomendada" : "recomendadas"} · {resumen.enLaRed} en la red
               </span>
             )}
           </div>

@@ -28,7 +28,7 @@ import {
 const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
   colegio: "Lo reciben las instituciones nuevas cuyo tipo está tildado más abajo, en «Arancel de colegios».",
   deportiva: "Lo reciben las instituciones nuevas de cualquier otro tipo.",
-  multisede: "Se asigna a mano desde la ficha de la institución. El precio es por sede.",
+  multisede: "Se asigna a mano desde la ficha de la institución (redes de varias sedes: valor a convenir). El precio es por sede.",
   fundador: "Es el plan de las instituciones fundadoras: el precio queda congelado mientras sigan suscriptas. Ya no se asigna a cuentas nuevas (el arancel sale del tipo de institución).",
   estandar: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
   anual: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
@@ -111,7 +111,7 @@ export function PlanesFormulario({
     cambiarPlan(clave, "precio", aNumero(limpio));
   };
 
-  const cambiarCondicion = (campo: "sedesMultisede", valor: number) => {
+  const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
   };
@@ -308,12 +308,11 @@ export function PlanesFormulario({
           Condiciones
         </h3>
 
-        <div className="mb-5">
+        <div className="mb-5 grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
           <Campo
             etiqueta="Sedes para el plan Multisede"
-            ayuda={`Desde ${datos.condiciones.sedesMultisede} sedes (incluida) corresponde el plan Multisede.`}
+            ayuda={`Desde ${datos.condiciones.sedesMultisede} sedes (incluida) corresponde el plan Multisede (redes: valor a convenir).`}
             error={verError("condiciones.sedesMultisede")}
-            className="max-w-[260px]"
           >
             <Input
               type="number"
@@ -323,6 +322,21 @@ export function PlanesFormulario({
               value={datos.condiciones.sedesMultisede}
               aria-invalid={!!verError("condiciones.sedesMultisede")}
               onChange={(e) => cambiarCondicion("sedesMultisede", aNumero(e.target.value))}
+            />
+          </Campo>
+          <Campo
+            etiqueta="Descuento por sede adicional (%)"
+            ayuda={`Cada sede adicional (la 2.ª en adelante) paga el abono de su plan con ${datos.condiciones.descuentoSedeExtra} % de descuento: en Colegios, ${pesos(Math.round((datos.planes.colegio.precio * (100 - datos.condiciones.descuentoSedeExtra)) / 100))}; en Clubes y academias, ${pesos(Math.round((datos.planes.deportiva.precio * (100 - datos.condiciones.descuentoSedeExtra)) / 100))}. No cambia el plan Multisede, que ya cobra cada sede.`}
+            error={verError("condiciones.descuentoSedeExtra")}
+          >
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              value={datos.condiciones.descuentoSedeExtra}
+              aria-invalid={!!verError("condiciones.descuentoSedeExtra")}
+              onChange={(e) => cambiarCondicion("descuentoSedeExtra", aNumero(e.target.value))}
             />
           </Campo>
         </div>

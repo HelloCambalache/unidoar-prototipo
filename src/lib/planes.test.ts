@@ -30,7 +30,7 @@ const filasDeLanzamiento = (): FilaDePlan[] =>
 
 const condicionesDeLanzamiento = (): FilaDeCondiciones => {
   const c = CATALOGO_POR_DEFECTO.condiciones;
-  return { sedesMultisede: c.sedesMultisede, packMeses: c.pack.meses, packMesesPagos: c.pack.mesesQueSePagan, packMesesReferido: c.pack.mesesConReferido, tiposColegio: c.tiposColegio };
+  return { sedesMultisede: c.sedesMultisede, descuentoSedeExtra: c.descuentoSedeExtra, packMeses: c.pack.meses, packMesesPagos: c.pack.mesesQueSePagan, packMesesReferido: c.pack.mesesConReferido, tiposColegio: c.tiposColegio };
 };
 
 describe("planes vigentes y heredados", () => {
@@ -71,12 +71,81 @@ describe("planes vigentes y heredados", () => {
     assert.equal(P.montoDePlan("multisede"), 15_000);
   });
 
-  it("un plan por sede se factura por la cantidad de sedes; los demás, no", () => {
+  it("un plan por sede se factura por la cantidad de sedes", () => {
     assert.equal(P.montoDePlan("multisede", 6), 90_000);
     assert.equal(P.montoDePlan("multisede", 0), 15_000, "nunca menos de una sede");
-    assert.equal(P.montoDePlan("colegio", 6), 50_000);
     assert.equal(P.equivalenteMensual("multisede", 4), 60_000);
-    assert.equal(P.equivalenteMensual("anual", 6), 60_000, "el anual no es por sede");
+  });
+
+  it("en los demás, la primera sede paga el abono y cada adicional la mitad", () => {
+    assert.equal(P.montoDePlan("colegio", 1), 50_000);
+    assert.equal(P.montoDePlan("colegio", 2), 75_000);
+    assert.equal(P.montoDePlan("colegio", 4), 125_000);
+    assert.equal(P.montoDePlan("deportiva", 3), 60_000);
+    assert.equal(P.equivalenteMensual("colegio", 3), 100_000);
+    assert.equal(P.equivalenteMensual("anual", 2), 90_000, "el anual suma la mitad del año por sede, y vale un doceavo por mes");
+  });
+
+  it("una cantidad rara de sedes no rompe la cuenta", () => {
+    assert.equal(P.montoDePlan("colegio", 0), 50_000);
+    assert.equal(P.montoDePlan("colegio", -3), 50_000);
+    assert.equal(P.montoDePlan("colegio", 2.9), 75_000, "las sedes se cuentan enteras");
+  });
+});
+
+describe("sedes adicionales", () => {
+  const con = (descuento: number) => {
+    const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
+    catalogo.condiciones.descuentoSedeExtra = descuento;
+    return crearPlanes(catalogo);
+  };
+
+  it("el descuento lo decide el catálogo", () => {
+    assert.equal(con(0).montoDePlan("colegio", 3), 150_000, "sin descuento paga todo");
+    assert.equal(con(25).montoDePlan("colegio", 3), 50_000 + 2 * 37_500);
+    assert.equal(con(100).montoDePlan("colegio", 9), 50_000, "con descuento total se cobra como una sola");
+  });
+
+  it("redondea al peso", () => {
+    const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
+    catalogo.planes.colegio.precio = 48_001;
+    const otros = crearPlanes(catalogo);
+    assert.equal(otros.precioDeSedeExtra("colegio"), 24_001);
+    assert.equal(otros.montoDePlan("colegio", 2), 48_001 + 24_001);
+  });
+
+  it("un plan por sede no recibe el descuento: cobra cada sede entera", () => {
+    assert.equal(P.precioDeSedeExtra("multisede"), 15_000);
+    assert.equal(P.desgloseDeMonto("multisede", 6).adicionales, 0);
+  });
+
+  it("explica el monto: la primera sede, las adicionales y el total", () => {
+    assert.deepEqual(P.desgloseDeMonto("colegio", 3), { sedes: 3, base: 50_000, adicionales: 2, precioAdicional: 25_000, total: 100_000 });
+    assert.deepEqual(P.desgloseDeMonto("deportiva", 1), { sedes: 1, base: 30_000, adicionales: 0, precioAdicional: 15_000, total: 30_000 });
+    for (const sedes of [1, 2, 4, 7]) {
+      const d = P.desgloseDeMonto("colegio", sedes);
+      assert.equal(d.total, d.base + d.adicionales * d.precioAdicional, "el desglose siempre suma el total");
+    }
+  });
+
+  it("la edición acepta de 0 a 100 y rechaza el resto", () => {
+    for (const bien of [0, 50, 100]) {
+      const e = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
+      e.condiciones.descuentoSedeExtra = bien;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, true, `${bien} % debería pasar`);
+    }
+    for (const mal of [-1, 101, 12.5]) {
+      const e = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
+      e.condiciones.descuentoSedeExtra = mal;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, false, `${mal} % no debería pasar`);
+    }
+  });
+
+  it("si la base todavía no tiene la columna (o trae algo roto), vale el de lanzamiento", () => {
+    const sinColumna: FilaDeCondiciones = { ...condicionesDeLanzamiento(), descuentoSedeExtra: undefined };
+    assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), sinColumna).condiciones.descuentoSedeExtra, 50);
+    assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), descuentoSedeExtra: 150 }).condiciones.descuentoSedeExtra, 50);
+    assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), descuentoSedeExtra: 30 }).condiciones.descuentoSedeExtra, 30);
   });
 });
 
@@ -86,6 +155,7 @@ describe("el precio sale del tipo de institución", () => {
     assert.equal(P.planPorTipo("Colegio público"), "colegio");
     assert.equal(P.planPorTipo("Jardín de infantes"), "colegio");
     assert.equal(P.planPorTipo("Instituto terciario"), "colegio");
+    assert.equal(P.planPorTipo("Universidad"), "colegio");
   });
 
   it("cobra el arancel deportivo al resto", () => {
@@ -320,10 +390,14 @@ describe("qué cambió entre una edición y otra", () => {
   it("anota las condiciones que cambiaron", () => {
     const despues = edicion();
     despues.condiciones.sedesMultisede = 4;
+    despues.condiciones.descuentoSedeExtra = 40;
     despues.condiciones.pack = { meses: 12, mesesQueSePagan: 10, mesesConReferido: 9 };
     despues.condiciones.tiposColegio = ["Colegio privado"];
     assert.deepEqual(cambiosDePlanes(edicion(), despues), [
-      { tipo: "condiciones", campos: ["sedes para el plan Multisede", "pack por adelantado", "tipos que pagan el arancel de colegios"] },
+      {
+        tipo: "condiciones",
+        campos: ["sedes para el plan Multisede", "descuento por sede adicional", "pack por adelantado", "tipos que pagan el arancel de colegios"],
+      },
     ]);
   });
 

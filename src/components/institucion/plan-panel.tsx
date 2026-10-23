@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 export function PlanPanel({
   catalogo,
   plan,
+  sedes,
   proximoCobro,
   medioPago,
   vencidas,
@@ -26,6 +27,8 @@ export function PlanPanel({
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
+  /** Cuántas sedes tiene la institución: con más de una, el monto suma las adicionales. */
+  sedes: number;
   /** "10 de octubre de 2026 · $ 54.000" */
   proximoCobro: string | null;
   medioPago: string | null;
@@ -39,6 +42,10 @@ export function PlanPanel({
   const [abierto, setAbierto] = useState(false);
   const [pendiente, empezar] = useTransition();
   const actual = P.planDe(plan);
+  // Con más de una sede lo que se paga por período no es el precio del plan: se muestra el total y de dónde sale.
+  const desglose = P.desgloseDeMonto(plan, sedes);
+  const conVariasSedes = desglose.sedes > 1;
+  const sedesAdicionales = `${desglose.adicionales} ${desglose.adicionales === 1 ? "sede adicional" : "sedes adicionales"}`;
 
   const pedir = async (destino: PlanClave) => {
     const p = P.planDe(destino);
@@ -68,9 +75,16 @@ export function PlanPanel({
             <Insignia className="bg-white/[.14] text-navy-100">{actual.label}</Insignia>
           </div>
           <div className="text-[26px] leading-[1.2] font-semibold">
-            {pesos(actual.precio)}
+            {pesos(conVariasSedes ? desglose.total : actual.precio)}
             <span className="text-sm leading-none font-normal text-white/60">/{actual.periodo}</span>
           </div>
+          {conVariasSedes && (
+            <div className="mt-1 text-[13px] leading-normal text-white/65">
+              {actual.porSede
+                ? `${desglose.sedes} sedes × ${pesos(desglose.base)}`
+                : `Sede principal ${pesos(desglose.base)} + ${sedesAdicionales} de ${pesos(desglose.precioAdicional)}`}
+            </div>
+          )}
           <div className="mt-1.5 text-[13px] leading-normal text-white/65">
             {proximoCobro ? `Próximo cobro: ${proximoCobro}` : "No tenés cobros programados por ahora."}
           </div>
