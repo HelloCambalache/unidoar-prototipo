@@ -102,6 +102,65 @@ export function fechaBreve(fecha: string) {
   return anio && nombre && dia ? `${Number(dia)} ${nombre} ${anio}` : fecha;
 }
 
+/* ───────────────────────────── Semestre al contado ─────────────────────────────
+   Una factura paga puede cubrir varios meses (`facturas.meses_cubiertos`): el semestre pagado por adelantado (pagás 5, usás 6) es UNA factura
+   que cubre 6 meses desde su período y no deja facturas para los siguientes, igual que la anual cubre 12. Acá viven las reglas puras. */
+
+/** Una factura con lo que hace falta para saber qué meses cubre. Sin `mesesCubiertos`, cubre solo su mes. */
+export type FacturaConCobertura = { periodo: string; estado: string; mesesCubiertos?: number | null };
+
+/** Último mes que cubre una factura: el suyo si es mensual; "2027-03" para un semestre que empieza en "2026-10". */
+export const ultimoMesCubierto = (f: Pick<FacturaConCobertura, "periodo" | "mesesCubiertos">) =>
+  sumarMeses(f.periodo, Math.max(1, f.mesesCubiertos ?? 1) - 1);
+
+/**
+ * Hasta qué mes está pago `periodo`, mirando solo facturas PAGAS (la de ese mes o un semestre que lo cubre), o null si ninguna lo cubre.
+ * Con varias, el que llega más lejos. Los meses son "AAAA-MM", así que se comparan como texto.
+ */
+export function pagoHastaDeMes(periodo: string, facturas: readonly FacturaConCobertura[]): string | null {
+  let hasta: string | null = null;
+  for (const f of facturas) {
+    if (f.estado !== "pagada" || f.periodo > periodo) continue;
+    const fin = ultimoMesCubierto(f);
+    if (fin >= periodo && (!hasta || fin > hasta)) hasta = fin;
+  }
+  return hasta;
+}
+
+/** "Septiembre 2026" para una factura mensual; "6 meses (octubre 2026 a marzo 2027)" para un semestre. */
+export function etiquetaDeCobertura(periodo: string, meses?: number | null) {
+  const n = Math.max(1, meses ?? 1);
+  if (n === 1) return etiquetaPeriodo(periodo);
+  const bajo = (p: string) => etiquetaPeriodo(p).toLowerCase();
+  return `${n} meses (${bajo(periodo)} a ${bajo(sumarMeses(periodo, n - 1))})`;
+}
+
+/**
+ * Qué impide registrar un semestre que empieza en `inicio` y cubre `meses` meses: meses de esa ventana que ya están pagos (propios o cubiertos
+ * por otro semestre) y facturas impagas adentro (salvo la del primer mes, que se convierte en la del semestre). Lista de meses, sin repetir.
+ */
+export function conflictosDeSemestre(inicio: string, meses: number, facturas: readonly FacturaConCobertura[]) {
+  const fin = sumarMeses(inicio, meses - 1);
+  const pagos = new Set<string>();
+  const impagas = new Set<string>();
+  for (const f of facturas) {
+    if (f.periodo > fin || ultimoMesCubierto(f) < inicio) continue;
+    if (f.estado === "pagada") pagos.add(f.periodo);
+    else if (f.periodo !== inicio) impagas.add(f.periodo);
+  }
+  return { pagos: [...pagos].sort(), impagas: [...impagas].sort() };
+}
+
+/**
+ * El mes en que empieza un semestre se puede elegir de hace un año a dentro de dos meses (cubre un pago que se cargó tarde o uno por
+ * adelantado, no un error de tipeo). Devuelve el mensaje de error o null si está bien.
+ */
+export function errorDeInicioDeSemestre(inicio: string, actual: string) {
+  if (inicio < sumarMeses(actual, -11)) return "Revisá el mes: es de hace más de un año.";
+  if (inicio > sumarMeses(actual, 2)) return "El semestre no puede empezar dentro de más de dos meses.";
+  return null;
+}
+
 /** wa.me con el texto ya escrito. Null si el teléfono no se reconoce como argentino. */
 export function enlaceWhatsappConTexto(telefono: string | null | undefined, texto: string) {
   const base = enlaceWhatsapp(telefono);
@@ -137,7 +196,7 @@ export type InstitucionFacturable = {
   sedes?: number;
 };
 /** Una factura ya existente de la institución, de los últimos 12 períodos (el actual incluido). */
-export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string };
+export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string; mesesCubiertos?: number | null };
 export type FacturaPorCrear = {
   institucionId: string;
   plan: PlanClave;
@@ -146,7 +205,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -156,6 +215,7 @@ export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" 
  *  - ya tiene factura de ese mes → no se toca;
  *  - plan anual: si ya hay una factura anual en la ventana (paga o por pagar) no se genera otra hasta que venza el año;
  *  - plan mensual: si una factura anual paga todavía cubre el mes, no se cobra;
+ *  - si un semestre pagado al contado (una factura paga que cubre varios meses) cubre el mes, no se cobra;
  *  - si el día de cobro del mes ya pasó, se cobra hoy: no nace vencida.
  */
 export function planificarFacturas(
@@ -184,6 +244,8 @@ export function planificarFacturas(
     else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
     else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
       omitir("cubierta_por_anual");
+    } else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
+      omitir("cubierta_por_semestre");
     } else {
       const fecha = fechaCobroDelPeriodo(periodo, inst.diaCobro);
       crear.push({
@@ -264,6 +326,30 @@ export const pagoEfectivoSchema = z.object({
   avisar: z.boolean(),
 });
 export type PagoEfectivo = z.input<typeof pagoEfectivoSchema>;
+
+/** Cómo se paga un semestre: al contado y por adelantado, en mano o por transferencia (no hay débito: Mercado Pago cobra mes a mes). */
+export const MEDIOS_SEMESTRE = ["Efectivo", "Transferencia"] as const;
+
+/**
+ * Semestre al contado: la institución paga por adelantado los meses del pack (pagás 5, usás 6) y se registra UNA factura paga que los cubre
+ * desde `periodo`. El monto y los meses salen del plan de la institución y del pack del catálogo (nunca del cliente).
+ */
+export const semestreSchema = z.object({
+  /** Mes en que empieza el semestre ("2026-10"). */
+  periodo: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Elegí el mes en que empieza"),
+  medio: z.enum(MEDIOS_SEMESTRE, { error: "Elegí cómo pagó" }),
+  /** Cuándo llegó el pago. */
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí la fecha del pago")
+    .refine(esFechaReal, "La fecha no existe"),
+  nota: vacioAUndefined(z.string().trim().max(120, "Máximo 120 caracteres").optional()),
+  /** Si se le avisa a la institución (campanita y mail) que se registró su pago. */
+  avisar: z.boolean(),
+  /** Si tiene un débito automático vivo, se cancela antes de registrar (si no, Mercado Pago le cobraría los meses que ya pagó). */
+  cancelarDebito: z.boolean(),
+});
+export type SemestreAlContado = z.input<typeof semestreSchema>;
 
 /** Qué hay de un mes en la facturación de una institución: ya pago, con la factura impaga, o sin factura. */
 export type SituacionDelMes = "pagada" | "impaga" | "sinFactura";

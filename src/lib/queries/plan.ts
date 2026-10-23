@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { facturas, institucionMiembros, solicitudesPlan, type Institucion } from "@/db/schema";
+import { etiquetaDeCobertura, etiquetaPeriodo, pagoHastaDeMes, periodoActual } from "@/lib/cobros";
 import { estadoDeFactura, periodoLegible, type EstadoFactura } from "@/lib/facturacion";
 import { fechaDeInput, haceTiempo } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
@@ -92,6 +93,8 @@ export type DatosDePlan = {
   plan: PlanClave;
   /** Cuántas sedes tiene la institución: el monto del plan suma las adicionales. */
   sedes: number;
+  /** Si un semestre pagado al contado cubre el mes en curso, hasta qué mes ("marzo 2027"); null si no. */
+  semestrePagoHasta: string | null;
   puedeCambiar: boolean;
   facturas: FacturaVista[];
   /** La factura pendiente más próxima. */
@@ -121,7 +124,8 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
     (f): FacturaVista => ({
       id: f.id,
       planLabel: P.planDe(f.plan).label,
-      periodo: periodoLegible(f.periodo),
+      // Un semestre pagado al contado cubre varios meses con una sola factura: "6 meses (octubre 2026 a marzo 2027)".
+      periodo: f.mesesCubiertos > 1 ? etiquetaDeCobertura(f.periodo, f.mesesCubiertos) : periodoLegible(f.periodo),
       fechaCobro: fechaDeInput(f.fechaCobro),
       fechaCobroLarga: fechaLarga(f.fechaCobro),
       monto: f.monto,
@@ -129,6 +133,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
       medio: f.medio,
     }),
   );
+  const semestreHasta = pagoHastaDeMes(periodoActual(ahora), filas.filter((f) => f.mesesCubiertos > 1));
   // Las pendientes se cobran de la más próxima a la más lejana; `filas` viene de la más nueva a la más vieja.
   const proxima = [...filas]
     .reverse()
@@ -137,6 +142,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
   return {
     plan: esClavePlan(institucion.plan) ? institucion.plan : "fundador",
     sedes: sedes.get(institucion.id) ?? 1,
+    semestrePagoHasta: semestreHasta ? etiquetaPeriodo(semestreHasta).toLowerCase() : null,
     puedeCambiar: puedeGestionarPlan(rol),
     facturas: lista,
     proxima: proxima ? (lista.find((f) => f.id === proxima.id) ?? null) : null,

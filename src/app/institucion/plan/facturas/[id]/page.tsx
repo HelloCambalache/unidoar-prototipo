@@ -4,6 +4,7 @@ import { PlanFacturaAcciones } from "@/components/institucion/plan-factura-accio
 import { Insignia } from "@/components/ui/insignia";
 import { institucionActual, requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { etiquetaDeCobertura } from "@/lib/cobros";
 import { ESTADO_FACTURA, estadoDeFactura, periodoLegible } from "@/lib/facturacion";
 import { fechaCorta } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
@@ -61,6 +62,9 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
   const estado = ESTADO_FACTURA[estadoDeFactura(factura.estado)];
   const plan = (await planes()).planDe(factura.plan);
   const direccion = [institucion.direccion, institucion.partido, institucion.provincia].filter(Boolean).join(", ");
+  // Un semestre pagado al contado es una sola factura que cubre varios meses: se muestra el rango completo.
+  const prepago = factura.mesesCubiertos > 1;
+  const periodoTexto = prepago ? etiquetaDeCobertura(factura.periodo, factura.mesesCubiertos) : periodoLegible(factura.periodo);
 
   return (
     <>
@@ -78,7 +82,7 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
           <div className="sm:text-right">
             <h1 className="font-display m-0 text-xl leading-[1.2] font-bold tracking-[-0.01em]">Comprobante de facturación</h1>
             <div className="mt-1 text-[13px] leading-[1.4] text-apagado">
-              N.º {factura.id.slice(0, 8).toUpperCase()} · {periodoLegible(factura.periodo)}
+              N.º {factura.id.slice(0, 8).toUpperCase()} · {periodoTexto}
             </div>
           </div>
         </header>
@@ -103,7 +107,7 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
             <div>
               <div className="text-[15px] leading-[1.3] font-semibold">{plan.label}</div>
               <div className="text-[13px] leading-[1.4] text-apagado">
-                Período: {periodoLegible(factura.periodo)} · por {plan.periodo === "año" ? "año" : "mes"}
+                Período: {periodoTexto} · {plan.periodo === "año" ? "por año" : prepago ? "pago por adelantado" : "por mes"}
               </div>
             </div>
             <div className="text-[15px] leading-none font-semibold whitespace-nowrap">{pesos(factura.monto)}</div>

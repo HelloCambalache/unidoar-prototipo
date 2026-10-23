@@ -140,7 +140,8 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
               )}
               {datos.activarDesde ? (
                 <p className="m-0 max-w-[62ch] text-[13px] leading-normal text-tinta-2">
-                  Este mes ya figura pago: para no cobrarte dos veces, vas a poder activar el débito automático desde el {datos.activarDesde}.
+                  {datos.semestrePagoHasta ? `Tu semestre está pago hasta ${datos.semestrePagoHasta}` : "Este mes ya figura pago"}: para no cobrarte dos veces,
+                  vas a poder activar el débito automático desde el {datos.activarDesde}.
                 </p>
               ) : datos.puedeGestionar ? (
                 <div className="flex flex-wrap gap-2.5">

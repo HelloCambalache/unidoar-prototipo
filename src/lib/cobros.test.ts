@@ -1,16 +1,22 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  conflictosDeSemestre,
   errorDeFechaDePago,
+  errorDeInicioDeSemestre,
   estadoEfectivo,
+  etiquetaDeCobertura,
   etiquetaPeriodo,
   fechaCobroDelPeriodo,
   pagoEfectivoSchema,
+  pagoHastaDeMes,
   pagoSchema,
   planificarFacturas,
+  semestreSchema,
   situacionDelMes,
   sumarMeses,
   textoRecordatorio,
+  ultimoMesCubierto,
   type FacturaReciente,
   type InstitucionFacturable,
 } from "@/lib/cobros";
@@ -112,6 +118,85 @@ describe("pago en efectivo en un solo paso", () => {
   });
 });
 
+describe("semestre al contado (una factura paga que cubre varios meses)", () => {
+  const semestre = { periodo: "2026-10", estado: "pagada", mesesCubiertos: 6 };
+
+  it("cubre los meses desde su período, y una mensual solo el suyo", () => {
+    assert.equal(ultimoMesCubierto(semestre), "2027-03");
+    assert.equal(ultimoMesCubierto({ periodo: "2026-10", mesesCubiertos: 1 }), "2026-10");
+    assert.equal(ultimoMesCubierto({ periodo: "2026-10" }), "2026-10");
+    assert.equal(ultimoMesCubierto({ periodo: "2026-10", mesesCubiertos: 0 }), "2026-10", "nunca menos de un mes");
+  });
+
+  it("dice hasta qué mes está pago un mes, mirando solo facturas pagas", () => {
+    assert.equal(pagoHastaDeMes("2026-10", [semestre]), "2027-03");
+    assert.equal(pagoHastaDeMes("2027-03", [semestre]), "2027-03", "el último mes cubierto todavía cuenta");
+    assert.equal(pagoHastaDeMes("2027-04", [semestre]), null, "el mes siguiente ya no");
+    assert.equal(pagoHastaDeMes("2026-09", [semestre]), null, "ni uno anterior");
+    assert.equal(pagoHastaDeMes("2026-12", [{ ...semestre, estado: "pendiente" }]), null, "una impaga no cubre nada");
+    assert.equal(pagoHastaDeMes("2026-10", [{ periodo: "2026-10", estado: "pagada" }]), "2026-10", "una mensual paga cubre su mes");
+  });
+
+  it("con varias facturas que cubren el mes, vale la que llega más lejos", () => {
+    assert.equal(pagoHastaDeMes("2026-11", [{ periodo: "2026-11", estado: "pagada" }, semestre]), "2027-03");
+  });
+
+  it("cruza de año al contar los meses", () => {
+    assert.equal(ultimoMesCubierto({ periodo: "2026-08", mesesCubiertos: 6 }), "2027-01");
+    assert.equal(pagoHastaDeMes("2027-01", [{ periodo: "2026-08", estado: "pagada", mesesCubiertos: 6 }]), "2027-01");
+  });
+
+  it("etiqueta una mensual como siempre y un semestre con su rango", () => {
+    assert.equal(etiquetaDeCobertura("2026-10"), "Octubre 2026");
+    assert.equal(etiquetaDeCobertura("2026-10", 1), "Octubre 2026");
+    assert.equal(etiquetaDeCobertura("2026-10", 6), "6 meses (octubre 2026 a marzo 2027)");
+  });
+
+  it("detecta lo que impide registrar un semestre: meses ya pagos y facturas sin pagar adentro", () => {
+    assert.deepEqual(conflictosDeSemestre("2026-10", 6, []), { pagos: [], impagas: [] });
+    // Una factura del mes en que empieza, sin pagar, no estorba: se convierte en la del semestre.
+    assert.deepEqual(conflictosDeSemestre("2026-10", 6, [{ periodo: "2026-10", estado: "pendiente" }]), { pagos: [], impagas: [] });
+    assert.deepEqual(conflictosDeSemestre("2026-10", 6, [{ periodo: "2026-10", estado: "pagada" }]), { pagos: ["2026-10"], impagas: [] });
+    assert.deepEqual(conflictosDeSemestre("2026-10", 6, [{ periodo: "2026-12", estado: "vencida" }]), { pagos: [], impagas: ["2026-12"] });
+    // Otro semestre que ya cubre parte de la ventana también la bloquea.
+    assert.deepEqual(conflictosDeSemestre("2026-12", 6, [semestre]), { pagos: ["2026-10"], impagas: [] });
+    // Facturas de antes o de después de la ventana no cuentan.
+    assert.deepEqual(
+      conflictosDeSemestre("2026-10", 6, [
+        { periodo: "2026-09", estado: "pagada" },
+        { periodo: "2027-04", estado: "pendiente" },
+      ]),
+      { pagos: [], impagas: [] },
+    );
+  });
+
+  it("el mes de inicio se puede elegir de hace un año a dentro de dos meses", () => {
+    assert.equal(errorDeInicioDeSemestre("2026-10", "2026-10"), null);
+    assert.equal(errorDeInicioDeSemestre("2025-11", "2026-10"), null, "hace once meses todavía vale");
+    assert.equal(errorDeInicioDeSemestre("2026-12", "2026-10"), null);
+    assert.ok(errorDeInicioDeSemestre("2025-10", "2026-10"), "hace más de un año");
+    assert.ok(errorDeInicioDeSemestre("2027-01", "2026-10"), "demasiado adelante");
+  });
+
+  it("el formulario pide el mes, cómo pagó y la fecha; el monto nunca viene del cliente", () => {
+    const bien = { periodo: "2026-10", medio: "Transferencia", fecha: "2026-10-05", avisar: true, cancelarDebito: false };
+    assert.equal(semestreSchema.safeParse(bien).success, true);
+    assert.equal(semestreSchema.safeParse({ ...bien, medio: "Efectivo", nota: "Recibo 0042" }).success, true);
+    for (const malo of [
+      { ...bien, medio: "Tarjeta" },
+      { ...bien, medio: "Débito automático" },
+      { ...bien, periodo: "2026-13" },
+      { ...bien, fecha: "2026-02-30" },
+      { ...bien, nota: "x".repeat(121) },
+    ]) {
+      assert.equal(semestreSchema.safeParse(malo).success, false, JSON.stringify(malo));
+    }
+    const r = semestreSchema.safeParse({ ...bien, monto: 1 });
+    assert.equal(r.success, true);
+    assert.ok(!("monto" in r.data!), "un monto que venga del cliente se descarta");
+  });
+});
+
 describe("recordatorio de cobro", () => {
   const cobro = { periodo: "2026-10", monto: 54_000, fechaCobro: "2026-10-10" };
 
@@ -158,6 +243,23 @@ describe("facturas automáticas (planificarFacturas)", () => {
     assert.deepEqual(r.omitidas, []);
     const sinDato = planificarFacturas([inst("m", "multisede")], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
     assert.equal(sinDato.crear[0]!.monto, 15_000, "sin saber las sedes, una");
+  });
+
+  it("no factura los meses cubiertos por un semestre pagado al contado, y retoma al terminar", () => {
+    const semestre = (periodo: string, estado = "pagada"): FacturaReciente => ({ ...f("a", periodo, "colegio", estado), mesesCubiertos: 6 });
+    // El semestre empezó en agosto: cubre hasta enero, así que ni octubre ni noviembre se facturan.
+    const cubierto = planificarFacturas([inst("a", "colegio")], [semestre("2026-08")], "2026-10", HOY);
+    assert.deepEqual(cubierto.crear, []);
+    assert.deepEqual(cubierto.omitidas, [{ institucionId: "a", motivo: "cubierta_por_semestre" }]);
+    assert.equal(planificarFacturas([inst("a", "colegio")], [semestre("2026-08")], "2027-01", "2027-01-07").crear.length, 0, "el último mes cubierto tampoco");
+    // Terminado, vuelve a facturarse mes a mes.
+    const siguiente = planificarFacturas([inst("a", "colegio")], [semestre("2026-08")], "2027-02", "2027-02-07");
+    assert.equal(siguiente.crear.length, 1);
+    assert.equal(siguiente.crear[0]!.monto, 50_000);
+    // Un semestre sin pagar no cubre nada.
+    assert.equal(planificarFacturas([inst("a", "colegio")], [semestre("2026-08", "pendiente")], "2026-10", HOY).crear.length, 1);
+    // Una factura mensual común (sin meses cubiertos) sigue como antes: no cubre el mes siguiente.
+    assert.equal(planificarFacturas([inst("a", "colegio")], [f("a", "2026-09", "colegio", "pagada")], "2026-10", HOY).crear.length, 1);
   });
 
   it("factura las sedes adicionales de un colegio a la mitad del abono", () => {

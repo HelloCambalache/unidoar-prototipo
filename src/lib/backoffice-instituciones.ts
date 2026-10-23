@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { MENSAJE_CUIT, TIPOS_INSTITUCION } from "@/lib/catalogo";
-import { CLAVES_PLAN, esClavePlan, etiquetaPeriodo } from "@/lib/cobros";
+import { CLAVES_PLAN, esClavePlan, etiquetaDeCobertura, etiquetaPeriodo } from "@/lib/cobros";
 import { esCuitValido, formatearCuit } from "@/lib/documentos";
 import { planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
 
@@ -115,8 +115,12 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return "Rechazó un pedido de cambio de plan";
     case "factura.crear":
       return `Cargó la factura de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}`;
-    case "factura.pagar":
-      return `Registró el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
+    case "factura.pagar": {
+      // Un semestre pagado al contado cubre varios meses: se cuenta como tal ("el pago de 6 meses (octubre 2026 a marzo 2027)").
+      const meses = typeof d.mesesCubiertos === "number" && d.mesesCubiertos > 1 ? d.mesesCubiertos : 1;
+      const cuando = texto("periodo") ? etiquetaDeCobertura(texto("periodo")!, meses) : "una factura";
+      return `Registró el pago de ${cuando}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
+    }
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":

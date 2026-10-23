@@ -1,8 +1,8 @@
 import "server-only";
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { facturas, planesMp, type PlanMp } from "@/db/schema";
-import { periodoActual } from "@/lib/cobros";
+import { pagoHastaDeMes, periodoActual, sumarMeses } from "@/lib/cobros";
 import { cuerpoDePlan, puedeReutilizarPlan } from "@/lib/debito-automatico";
 import { crearPlanMp, ErrorDeMercadoPago, obtenerPlanMp, type PlanDeMercadoPago } from "@/lib/mercadopago-cliente";
 
@@ -36,14 +36,18 @@ export async function planesDe(institucionId: string, limite = 5): Promise<PlanM
   return getDb().select().from(planesMp).where(eq(planesMp.institucionId, institucionId)).orderBy(desc(planesMp.creadoEn)).limit(limite);
 }
 
-/** ¿La factura del mes en curso de la institución ya está paga? (por el débito, a mano o como sea). Define si el primer cobro se difiere. */
-export async function mesActualPago(institucionId: string, ejecutor: Lector = getDb()): Promise<boolean> {
-  const [f] = await ejecutor
-    .select({ estado: facturas.estado })
+/**
+ * ¿El mes en curso de la institución ya está pago? (por el débito, a mano o como sea), y hasta qué mes: la factura de este mes o un
+ * semestre pagado al contado que lo cubre (`pagoHasta` es el último mes cubierto, "2027-03"). Define si el primer cobro se difiere o si hay que esperar.
+ */
+export async function estadoDePago(institucionId: string, ejecutor: Lector = getDb()): Promise<{ mesActualPago: boolean; pagoHasta: string | null }> {
+  const actual = periodoActual();
+  const filas = await ejecutor
+    .select({ periodo: facturas.periodo, estado: facturas.estado, mesesCubiertos: facturas.mesesCubiertos })
     .from(facturas)
-    .where(and(eq(facturas.institucionId, institucionId), eq(facturas.periodo, periodoActual())))
-    .limit(1);
-  return f?.estado === "pagada";
+    .where(and(eq(facturas.institucionId, institucionId), gte(facturas.periodo, sumarMeses(actual, -11)), lte(facturas.periodo, actual)));
+  const pagoHasta = pagoHastaDeMes(actual, filas);
+  return { mesActualPago: pagoHasta !== null, pagoHasta };
 }
 
 export type DatosParaSuscribirse = {

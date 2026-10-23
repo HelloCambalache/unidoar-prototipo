@@ -2,7 +2,7 @@ import "server-only";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
-import { hoyAR } from "@/lib/cobros";
+import { etiquetaPeriodo, hoyAR } from "@/lib/cobros";
 import { decidirActivacion, esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { diferirPrimerCobroActivo } from "@/lib/mercadopago-config";
@@ -11,7 +11,7 @@ import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
-import { mesActualPago, ultimoPlanDe } from "@/lib/queries/suscripcion-planes";
+import { estadoDePago, ultimoPlanDe } from "@/lib/queries/suscripcion-planes";
 
 /** Cuánto tiempo después de mandar a la persona a Mercado Pago se le sigue ofreciendo "Ya me suscribí" (puede haber seguido sin volver). */
 const HORAS_DE_PLAN_RECIENTE = 3;
@@ -40,6 +40,8 @@ export type DebitoVista = {
    * ("1 de noviembre de 2026"): hasta entonces no se le ofrece, para no cobrarle dos veces el mismo mes. null si puede activarlo ahora.
    */
   activarDesde: string | null;
+  /** Si lo que impide activarlo es un semestre pagado al contado, hasta qué mes está pago ("marzo 2027"); null si es solo el mes en curso. */
+  semestrePagoHasta: string | null;
   suscripcion: null | {
     estado: EstadoSuscripcion;
     monto: number;
@@ -54,14 +56,14 @@ export type DebitoVista = {
 
 export async function datosDeDebito(institucion: Institucion, usuarioId: string): Promise<DebitoVista> {
   const db = getDb();
-  const [P, rol, susc, ultimo, sedes, plan, mesPago] = await Promise.all([
+  const [P, rol, susc, ultimo, sedes, plan, pago] = await Promise.all([
     planes(),
     rolEnInstitucion(institucion, usuarioId),
     suscripcionDe(institucion.id),
     db.select().from(cobrosMp).where(eq(cobrosMp.institucionId, institucion.id)).orderBy(desc(cobrosMp.actualizadoEn)).limit(1),
     cantidadDeSedes(db, [institucion.id]),
     ultimoPlanDe(institucion.id),
-    mesActualPago(institucion.id),
+    estadoDePago(institucion.id),
   ]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
   // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
@@ -71,7 +73,14 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
   const sinSuscripcionViva = !estado || estado === "cancelada";
   const planReciente = !!plan && sinSuscripcionViva && Date.now() - plan.creadoEn.getTime() < HORAS_DE_PLAN_RECIENTE * 60 * 60 * 1000;
   const decision = sinSuscripcionViva
-    ? decidirActivacion({ hoy: hoyAR(), diaDeCobro: institucion.diaCobro, mesActualPago: mesPago, diferirActivo: diferirPrimerCobroActivo(), esDemo: institucion.esDemo })
+    ? decidirActivacion({
+        hoy: hoyAR(),
+        diaDeCobro: institucion.diaCobro,
+        mesActualPago: pago.mesActualPago,
+        pagoHasta: pago.pagoHasta,
+        diferirActivo: diferirPrimerCobroActivo(),
+        esDemo: institucion.esDemo,
+      })
     : null;
 
   return {
@@ -83,6 +92,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     planReciente,
     primerCobro: decision?.accion === "con-prueba" ? fechaLarga(decision.fecha) : null,
     activarDesde: decision?.accion === "esperar" ? fechaLarga(decision.desde) : null,
+    semestrePagoHasta: decision?.accion === "esperar" && decision.hasta ? etiquetaPeriodo(decision.hasta).toLowerCase() : null,
     suscripcion:
       susc && estado
         ? { estado, monto: susc.monto, proximoCobro: susc.proximoCobro ? fechaLarga(susc.proximoCobro) : null, email: susc.email }
@@ -106,7 +116,7 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
   const decision = decidirActivacion({
     hoy: hoyAR(),
     diaDeCobro: institucion.diaCobro,
-    mesActualPago: await mesActualPago(institucion.id),
+    ...(await estadoDePago(institucion.id)),
     diferirActivo: diferirPrimerCobroActivo(),
     esDemo: institucion.esDemo,
   });

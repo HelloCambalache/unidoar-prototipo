@@ -175,11 +175,14 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   /** Lo que paga por mes una red con N sedes. */
   const precioMultisede = (sedes: number) => planes.multisede.precio * Math.max(sedes, 1);
 
-  /** Lo que sale el pack por adelantado de un plan, con y sin referido. */
-  const packDe = (clave: PlanClave) => {
-    const { precio } = planes[clave];
+  /**
+   * Lo que sale el pack por adelantado de un plan, con y sin referido. Con más de una sede (`sedes`), sobre lo que paga por mes
+   * (`montoDePlan`: las sedes adicionales con su descuento): el semestre de una institución con 2 sedes son 5 veces su monto mensual.
+   */
+  const packDe = (clave: PlanClave, sedes = 1) => {
+    const mensual = montoDePlan(clave, sedes);
     const { meses, mesesQueSePagan, mesesConReferido } = condiciones.pack;
-    return { lista: precio * meses, anticipado: precio * mesesQueSePagan, conReferido: precio * mesesConReferido };
+    return { lista: mensual * meses, anticipado: mensual * mesesQueSePagan, conReferido: mensual * mesesConReferido };
   };
 
   /** "$ 50.000/mes" · "$ 15.000/mes por sede" */

@@ -2,7 +2,7 @@ import "server-only";
 import { claveDePostulantes, type Recordatorio } from "./claves";
 import { encolarParaUsuarios } from "./cola";
 import type { EtapaPostulacion } from "@/db/schema";
-import { etiquetaPeriodo, fechaBreve } from "@/lib/cobros";
+import { etiquetaDeCobertura, etiquetaPeriodo, fechaBreve } from "@/lib/cobros";
 import { pesos } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -149,9 +149,13 @@ export async function correoDeCobroRechazado(ejecutor: Ejecutor, d: Factura & { 
   );
 }
 
-/** M53: el equipo registró el pago. */
-export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura) {
-  await encolarParaUsuarios(ejecutor, d.usuarioIds, "M53", { institucion: d.institucion, periodo: etiquetaPeriodo(d.periodo), monto: pesos(d.monto) });
+/** M53: el equipo registró el pago. Con `mesesCubiertos` > 1 (un semestre al contado) lo cuenta como tal: "6 meses (octubre 2026 a marzo 2027)". */
+export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura & { mesesCubiertos?: number }) {
+  await encolarParaUsuarios(ejecutor, d.usuarioIds, "M53", {
+    institucion: d.institucion,
+    periodo: etiquetaDeCobertura(d.periodo, d.mesesCubiertos),
+    monto: pesos(d.monto),
+  });
 }
 
 /** M54: el equipo anuló un pago registrado (solo si pidió avisarle a la institución). */

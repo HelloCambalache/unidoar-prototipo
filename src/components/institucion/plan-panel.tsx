@@ -18,6 +18,7 @@ export function PlanPanel({
   catalogo,
   plan,
   sedes,
+  semestrePagoHasta,
   proximoCobro,
   medioPago,
   vencidas,
@@ -29,6 +30,8 @@ export function PlanPanel({
   plan: PlanClave;
   /** Cuántas sedes tiene la institución: con más de una, el monto suma las adicionales. */
   sedes: number;
+  /** Si un semestre pagado al contado cubre el mes en curso, hasta qué mes ("marzo 2027"). */
+  semestrePagoHasta: string | null;
   /** "10 de octubre de 2026 · $ 54.000" */
   proximoCobro: string | null;
   medioPago: string | null;
@@ -86,7 +89,11 @@ export function PlanPanel({
             </div>
           )}
           <div className="mt-1.5 text-[13px] leading-normal text-white/65">
-            {proximoCobro ? `Próximo cobro: ${proximoCobro}` : "No tenés cobros programados por ahora."}
+            {semestrePagoHasta
+              ? `Semestre pago hasta ${semestrePagoHasta}: no se te cobra nada hasta entonces.`
+              : proximoCobro
+                ? `Próximo cobro: ${proximoCobro}`
+                : "No tenés cobros programados por ahora."}
           </div>
           {medioPago && <div className="mt-0.5 text-[13px] leading-normal text-white/65">Medio de pago: {medioPago}</div>}
         </div>

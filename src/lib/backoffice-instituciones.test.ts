@@ -57,6 +57,11 @@ describe("actividad del equipo al editar una institución", () => {
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", medio: "Efectivo", nota: "Recibo 0001" }), "Registró el pago de Octubre 2026 · Efectivo · Recibo 0001");
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", medio: "Efectivo" }), "Registró el pago de Octubre 2026 · Efectivo");
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10" }), "Registró el pago de Octubre 2026");
+    assert.equal(
+      describirAccion("factura.pagar", { periodo: "2026-10", medio: "Transferencia", mesesCubiertos: 6 }),
+      "Registró el pago de 6 meses (octubre 2026 a marzo 2027) · Transferencia",
+    );
+    assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", mesesCubiertos: 1 }), "Registró el pago de Octubre 2026");
   });
 
   it("sin lista de campos no deja un separador colgando", () => {

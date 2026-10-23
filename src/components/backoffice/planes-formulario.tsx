@@ -18,8 +18,10 @@ import {
   describirCambioDePlanes,
   edicionDePlanesSchema,
   huellaDePlanes,
+  crearPlanes,
   pesos,
   PLANES_POR_DEFECTO,
+  type CatalogoDePlanes,
   type EdicionDePlanes,
   type PlanClave,
 } from "@/lib/planes";
@@ -261,6 +263,20 @@ export function PlanesFormulario({
 
   const pack = datos.condiciones.pack;
 
+  // Vista previa de lo que va a ver la institución con lo que se está editando. Solo si lo editado es válido: con un pack roto no tiene sentido.
+  const vista = validacion.success
+    ? crearPlanes({
+        planes: Object.fromEntries(
+          CLAVES_PLAN.map((c) => {
+            const p = datos.planes[c];
+            return [c, { ...PLANES_POR_DEFECTO[c], label: p.etiqueta, precio: p.precio, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente }];
+          }),
+        ) as CatalogoDePlanes["planes"],
+        condiciones: { ...datos.condiciones, pack: { ...datos.condiciones.pack }, tiposColegio: [...datos.condiciones.tiposColegio] },
+      })
+    : null;
+  const sedesParaMostrar = Array.from({ length: Math.min(datos.condiciones.sedesMultisede - 1, 6) }, (_, i) => i + 1);
+
   return (
     <>
       {errorDelServidor && (
@@ -308,7 +324,8 @@ export function PlanesFormulario({
           Condiciones
         </h3>
 
-        <div className="mb-5 grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+        <h4 className="m-0 mb-2.5 text-sm leading-tight font-semibold text-tinta">Sedes y redes</h4>
+        <div className="mb-3 grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
           <Campo
             etiqueta="Sedes para el plan Multisede"
             ayuda={`Desde ${datos.condiciones.sedesMultisede} sedes (incluida) corresponde el plan Multisede (redes: valor a convenir).`}
@@ -340,8 +357,21 @@ export function PlanesFormulario({
             />
           </Campo>
         </div>
+        {vista && (
+          <ul className="m-0 mb-6 flex list-none flex-col gap-1 rounded-caja bg-superficie px-3.5 py-3 text-[13px] leading-normal text-tinta-2">
+            <li className="text-xs font-semibold tracking-[.04em] text-sutil uppercase">Así queda lo que paga por mes</li>
+            {(["colegio", "deportiva"] as const).map((c) => (
+              <li key={c}>
+                <b className="font-semibold text-tinta">{vista.nombreDePlan(c)}:</b>{" "}
+                {sedesParaMostrar.map((n) => `${n} ${n === 1 ? "sede" : "sedes"} ${pesos(vista.montoDePlan(c, n))}`).join(" · ")}
+              </li>
+            ))}
+            <li className="text-apagado">Desde {datos.condiciones.sedesMultisede} sedes: plan Multisede, que se asigna a mano (redes: valor a convenir).</li>
+          </ul>
+        )}
 
-        <fieldset className="m-0 mb-5 min-w-0 border-0 p-0">
+        <h4 className="m-0 mb-2.5 text-sm leading-tight font-semibold text-tinta">Semestre</h4>
+        <fieldset className="m-0 mb-6 min-w-0 border-0 p-0">
           <legend className="mb-2 p-0 text-xs font-semibold text-apagado">Pack por adelantado</legend>
           <div className="grid grid-cols-3 gap-4 max-[760px]:grid-cols-1">
             <Campo etiqueta="Meses del pack" error={verError("condiciones.pack.meses")}>
@@ -357,6 +387,25 @@ export function PlanesFormulario({
           <p className="mt-2 mb-0 text-xs leading-normal text-sutil">
             Hoy: contratando {pack.meses} meses por adelantado se pagan {pack.mesesQueSePagan}, y si recomienda a una institución que se suma, {pack.mesesConReferido}. Este último valor es el beneficio del módulo Referidos (lo ve cada institución en su menú y lo aplicás desde Referidos); ya no se muestra en la página de precios.
           </p>
+          <p className="mt-1.5 mb-0 text-xs leading-normal text-sutil">
+            El semestre al contado se registra desde la ficha de cobros de cada institución («Registrar semestre al contado»): queda una factura paga que
+            cubre los {pack.meses} meses y no se cobra mes a mes.
+          </p>
+          {vista && (
+            <ul className="m-0 mt-3 flex list-none flex-col gap-1 rounded-caja bg-superficie px-3.5 py-3 text-[13px] leading-normal text-tinta-2">
+              <li className="text-xs font-semibold tracking-[.04em] text-sutil uppercase">Así queda el semestre (una sede)</li>
+              {(["colegio", "deportiva"] as const).map((c) => {
+                const total = vista.packDe(c);
+                return (
+                  <li key={c}>
+                    <b className="font-semibold text-tinta">{vista.nombreDePlan(c)}</b> ({pesos(datos.planes[c].precio)} por mes): al contado{" "}
+                    <b className="font-semibold text-tinta">{pesos(total.anticipado)}</b> en lugar de {pesos(total.lista)}; con referido{" "}
+                    <b className="font-semibold text-tinta">{pesos(total.conReferido)}</b>.
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </fieldset>
 
         <fieldset className="m-0 min-w-0 border-0 p-0" aria-describedby="tipos-ayuda">

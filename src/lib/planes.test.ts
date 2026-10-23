@@ -230,6 +230,15 @@ describe("pack de lanzamiento", () => {
     assert.equal(club.anticipado - club.conReferido, P.planes.deportiva.precio);
   });
 
+  it("con más de una sede, el semestre es el monto mensual (con sus sedes adicionales) por los meses que se pagan", () => {
+    const dos = P.packDe("colegio", 2);
+    assert.equal(dos.lista, 450_000, "6 meses de $ 75.000");
+    assert.equal(dos.anticipado, 375_000, "se pagan 5");
+    assert.equal(dos.conReferido, 300_000, "con referido, 4");
+    assert.deepEqual(P.packDe("colegio", 1), P.packDe("colegio"), "sin sedes, como siempre");
+    assert.equal(P.packDe("multisede", 6).anticipado, 90_000 * 5, "un plan por sede cobra cada sede entera");
+  });
+
   it("los meses bonificados no tocan el precio mensual", () => {
     assert.equal(pack.meses - pack.mesesQueSePagan, 1);
     assert.equal(pack.meses - pack.mesesConReferido, 2);

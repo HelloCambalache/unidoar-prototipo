@@ -6,7 +6,7 @@ import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirInstitucion } from "@/lib/auth";
 import { origenDeLosMails } from "@/lib/correo/config";
-import { hoyAR } from "@/lib/cobros";
+import { etiquetaPeriodo, hoyAR } from "@/lib/cobros";
 import { decidirActivacion, esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { resumenDeError } from "@/lib/errores";
@@ -20,7 +20,7 @@ import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
-import { mesActualPago, planesDe, planParaSuscribirse } from "@/lib/queries/suscripcion-planes";
+import { estadoDePago, planesDe, planParaSuscribirse } from "@/lib/queries/suscripcion-planes";
 
 /*
  * Débito automático con Mercado Pago, del lado de la institución (ver CLAUDE.md, "Mercado Pago"). Las tres acciones exigen que la cuenta sea
@@ -66,15 +66,21 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, activarlo ahora lo cobraría dos veces. Según el interruptor,
   // el plan lleva una prueba hasta el próximo día de cobro o la institución espera al mes que viene (ver `decidirActivacion`). Si el mes no está
   // pago, el primer cobro sale enseguida y lo paga.
+  const pago = await estadoDePago(institucion.id);
   const decision = decidirActivacion({
     hoy: hoyAR(),
     diaDeCobro: institucion.diaCobro,
-    mesActualPago: await mesActualPago(institucion.id),
+    mesActualPago: pago.mesActualPago,
+    pagoHasta: pago.pagoHasta,
     diferirActivo: diferirPrimerCobroActivo(),
     esDemo: institucion.esDemo,
   });
   if (decision.accion === "esperar") {
-    return fallo(`Este mes ya figura pago: para no cobrarte dos veces, podés activar el débito automático desde el ${fechaLarga(decision.desde)}.`);
+    return fallo(
+      decision.hasta
+        ? `Tu semestre está pago hasta ${etiquetaPeriodo(decision.hasta).toLowerCase()}: para no cobrarte dos veces, podés activar el débito automático desde el ${fechaLarga(decision.desde)}.`
+        : `Este mes ya figura pago: para no cobrarte dos veces, podés activar el débito automático desde el ${fechaLarga(decision.desde)}.`,
+    );
   }
   const diasDePrueba = decision.accion === "con-prueba" ? decision.dias : 0;
 

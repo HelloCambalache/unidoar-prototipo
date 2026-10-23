@@ -7,6 +7,7 @@ import {
   estadoEfectivo,
   fechaCobroDelPeriodo,
   hoyAR,
+  pagoHastaDeMes,
   periodoActual,
   planificarFacturas,
   sumarMeses,
@@ -167,6 +168,8 @@ export type FacturaBo = {
   estado: EstadoFactura;
   pagadaEn: Date | null;
   medio: string | null;
+  /** Meses que cubre (1 las mensuales; 6 un semestre pagado al contado). */
+  mesesCubiertos: number;
 };
 
 export type DetalleCobros = {
@@ -240,6 +243,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
       estado: estadoEfectivo(f.estado, f.fechaCobro, hoy),
       pagadaEn: f.pagadaEn,
       medio: f.medio,
+      mesesCubiertos: f.mesesCubiertos,
     }),
   );
 
@@ -268,7 +272,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_anual" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_anual" | "cubierta_por_semestre" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
@@ -317,6 +321,13 @@ export async function aplicarPlanAlPeriodoActual(
     .limit(1);
   if (anual) return { resultado: "sin_cambios", motivo: "cubierta_por_anual" };
 
+  // Un semestre pagado al contado (una factura paga que cubre varios meses) tampoco se vuelve a cobrar mes a mes.
+  const semestres = await tx
+    .select({ periodo: facturas.periodo, estado: facturas.estado, mesesCubiertos: facturas.mesesCubiertos })
+    .from(facturas)
+    .where(and(eq(facturas.institucionId, institucion.id), eq(facturas.estado, "pagada"), gte(facturas.mesesCubiertos, 2), gte(facturas.periodo, sumarMeses(periodo, -11)), lte(facturas.periodo, periodo)));
+  if (pagoHastaDeMes(periodo, semestres)) return { resultado: "sin_cambios", motivo: "cubierta_por_semestre" };
+
   // Si el día de cobro de este mes ya pasó, se cobra hoy: no nace vencida.
   const fecha = fechaCobroDelPeriodo(periodo, institucion.diaCobro);
   await tx.insert(facturas).values({
@@ -363,7 +374,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
   const [conFacturas, recientes] = await Promise.all([
     ejecutor.select({ institucionId: facturas.institucionId }).from(facturas).where(inArray(facturas.institucionId, ids)).groupBy(facturas.institucionId),
     ejecutor
-      .select({ institucionId: facturas.institucionId, periodo: facturas.periodo, plan: facturas.plan, estado: facturas.estado })
+      .select({ institucionId: facturas.institucionId, periodo: facturas.periodo, plan: facturas.plan, estado: facturas.estado, mesesCubiertos: facturas.mesesCubiertos })
       .from(facturas)
       .where(and(inArray(facturas.institucionId, ids), gte(facturas.periodo, sumarMeses(periodo, -11)), lte(facturas.periodo, periodo))),
   ]);

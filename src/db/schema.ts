@@ -838,6 +838,11 @@ export const facturas = pgTable(
     pagadaEn: timestamp("pagada_en", { withTimezone: true }),
     /** "Transferencia", "Tarjeta", "Débito automático"… */
     medio: text("medio"),
+    /**
+     * Cuántos meses cubre la factura, contando desde `periodo`: 1 las mensuales; 6 el semestre pagado al contado (pagás 5, usás 6), que no
+     * deja facturas para los meses siguientes. Agregada a mano con `pnpm db:semestral` (correrlo ANTES de desplegar el código que la lee).
+     */
+    mesesCubiertos: integer("meses_cubiertos").notNull().default(1),
     creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("facturas_inst_periodo_uq").on(t.institucionId, t.periodo), index("facturas_estado_idx").on(t.estado)],

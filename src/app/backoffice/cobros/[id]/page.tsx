@@ -7,6 +7,7 @@ import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
 import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
+import { CobroSemestre } from "@/components/backoffice/cobro-semestre";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
 import { VolverBo } from "@/components/backoffice/inst-volver";
@@ -19,19 +20,23 @@ import { esUuid } from "@/lib/busquedas";
 import {
   enlaceWhatsappConTexto,
   esClavePlan,
+  etiquetaDeCobertura,
   etiquetaPeriodo,
   fechaBreve,
   fechaDeColumna,
+  pagoHastaDeMes,
   periodoActual,
   sumarMeses,
   textoRecordatorio,
   type EstadoCobro,
 } from "@/lib/cobros";
+import { suscripcionVigente } from "@/lib/debito-automatico";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
+import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { getDb } from "@/db";
 
 export const metadata: Metadata = { title: "Cobros de una institución · Backoffice" };
@@ -72,10 +77,14 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   if (!d) notFound();
   // Para un plan por sede (Multisede): cuántas sedes tiene, que es por lo que se multiplica el precio.
   const sedes = (await cantidadDeSedes(getDb(), [id])).get(id) ?? 1;
+  // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
+  const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "fundador";
+  // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
+  const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
   const estado: EstadoCobro = d.vencidas > 0 ? "vencida" : proximo ? "pendiente" : "aldia";
 
   const impagas = facturas.filter((f) => f.estado !== "pagada").sort((a, b) => a.fechaCobro.localeCompare(b.fechaCobro));
@@ -102,6 +111,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               <div className="text-sm leading-[1.4] text-apagado">
                 {P.planDe(plan).label} · {P.precioDePlan(plan)}
               </div>
+              {semestrePagoHasta && (
+                <div className="mt-1 text-[13px] leading-[1.4] font-medium text-verde">
+                  Semestre pago hasta {etiquetaPeriodo(semestrePagoHasta).toLowerCase()}
+                </div>
+              )}
             </div>
             <Link href={`/backoffice/instituciones/${i.id}`} className="text-[13px] leading-none font-medium">
               Ver institución →
@@ -150,7 +164,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 <tbody>
                   {facturas.map((f) => (
                     <tr key={f.id}>
-                      <td className="font-semibold whitespace-nowrap">{etiquetaPeriodo(f.periodo)}</td>
+                      <td className="font-semibold">{etiquetaDeCobertura(f.periodo, f.mesesCubiertos)}</td>
                       <td className="whitespace-nowrap text-apagado">{fechaDeColumna(f.fechaCobro)}</td>
                       <td className="whitespace-nowrap">
                         {pesos(f.monto)}
@@ -214,6 +228,17 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               periodoSugerido={impagas[0]?.periodo ?? sugerido}
               facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
             />
+            {P.planDe(plan).periodo === "mes" && (
+              <CobroSemestre
+                institucionId={i.id}
+                sedes={sedes}
+                catalogo={P.catalogo}
+                plan={plan}
+                periodoSugerido={impagas[0]?.periodo ?? sugerido}
+                facturas={facturas.map((f) => ({ periodo: f.periodo, estado: f.estado, mesesCubiertos: f.mesesCubiertos }))}
+                debitoVigente={debitoVigente}
+              />
+            )}
             <CobroNuevaFactura
               institucionId={i.id}
               sedes={sedes}

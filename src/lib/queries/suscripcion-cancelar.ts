@@ -18,7 +18,7 @@ export type ResultadoDeCancelacion = { ok: true; habiaVigente: boolean } | { ok:
  */
 export async function cancelarSuscripcion(
   institucionId: string,
-  quien: { usuarioId: string | null; motivo: "institucion" | "baja" | "plan-anual" | "suspension" },
+  quien: { usuarioId: string | null; motivo: "institucion" | "baja" | "plan-anual" | "suspension" | "semestre" },
 ): Promise<ResultadoDeCancelacion> {
   const susc = await suscripcionDe(institucionId);
   if (!susc || !suscripcionVigente(susc.estado)) return { ok: true, habiaVigente: false };

@@ -147,7 +147,11 @@ export function primerCobroDiferido(e: { hoy: string; diaDeCobro: number | null;
   return dias > 0 && dias <= MAX_DIAS_DE_PRUEBA ? { dias, fecha } : null;
 }
 
-export type DecisionDeActivacion = { accion: "ahora" } | { accion: "con-prueba"; dias: number; fecha: string } | { accion: "esperar"; desde: string };
+export type DecisionDeActivacion =
+  | { accion: "ahora" }
+  | { accion: "con-prueba"; dias: number; fecha: string }
+  /** `hasta`: último mes pago ("2027-03") cuando lo cubre un semestre al contado; ausente si solo está pago el mes en curso. */
+  | { accion: "esperar"; desde: string; hasta?: string };
 
 /**
  * Qué hacer cuando una institución quiere activar el débito y el mes en curso YA está pago: Mercado Pago cobra el primer mes al suscribirse,
@@ -156,6 +160,8 @@ export type DecisionDeActivacion = { accion: "ahora" } | { accion: "con-prueba";
  *  - Sin eso, una institución real espera: puede activarlo desde el 1.º del mes que viene (`esperar`). Las de ejemplo (`esDemo`) activan igual,
  *    con cobro inmediato: son las que prueban, y el "Posible doble cobro" que sale ahí no importa.
  * Si el mes todavía no está pago, se activa ya (`ahora`): el primer cobro sale enseguida y paga la factura de este mes.
+ * Con un semestre pagado al contado (`pagoHasta`, el último mes cubierto, más allá del mes en curso) no se difiere el primer cobro (seguiría
+ * cobrando meses ya pagos): una institución real espera hasta el mes siguiente al último cubierto.
  */
 export function decidirActivacion(e: {
   hoy: string;
@@ -163,14 +169,18 @@ export function decidirActivacion(e: {
   mesActualPago: boolean;
   diferirActivo: boolean;
   esDemo: boolean;
+  pagoHasta?: string | null;
 }): DecisionDeActivacion {
   if (!e.mesActualPago) return { accion: "ahora" };
-  if (e.diferirActivo) {
+  const mesEnCurso = e.hoy.slice(0, 7);
+  const cubiertoMasAlla = !!e.pagoHasta && e.pagoHasta > mesEnCurso;
+  if (e.diferirActivo && !cubiertoMasAlla) {
     const diferido = primerCobroDiferido({ hoy: e.hoy, diaDeCobro: e.diaDeCobro, mesActualPago: true });
     if (diferido) return { accion: "con-prueba", ...diferido };
   }
   if (e.esDemo) return { accion: "ahora" };
-  return { accion: "esperar", desde: `${sumarMeses(e.hoy.slice(0, 7), 1)}-01` };
+  if (cubiertoMasAlla) return { accion: "esperar", desde: `${sumarMeses(e.pagoHasta!, 1)}-01`, hasta: e.pagoHasta! };
+  return { accion: "esperar", desde: `${sumarMeses(mesEnCurso, 1)}-01` };
 }
 
 export type DecisionDeAlta = "ignorar" | "misma" | "crear" | "duplicada" | "reemplazar";
