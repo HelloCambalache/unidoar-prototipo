@@ -64,6 +64,8 @@ async function main() {
     await tx`alter table public.planes_condiciones add column if not exists puntual_busquedas_abiertas integer not null default 1`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_cursos boolean not null default false`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_buscador boolean not null default false`;
+    // Referidos, opción B: cuántos meses se bonifican por recomendación a quien paga mes a mes (0: no se ofrece).
+    await tx`alter table public.planes_condiciones add column if not exists referido_meses_mensual integer not null default 2`;
     // Búsquedas puntuales pagadas: una fila por búsqueda que la institución pagó. Disponible mientras usado_en es null; al publicar se consume.
     await tx`
       create table if not exists public.creditos_busqueda (

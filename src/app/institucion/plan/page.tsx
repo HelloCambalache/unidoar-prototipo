@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
+import { MesesBonificados } from "@/components/institucion/meses-bonificados";
 import { PlanDebito } from "@/components/institucion/plan-debito";
 import { PlanHistorial } from "@/components/institucion/plan-historial";
 import { PlanPanel } from "@/components/institucion/plan-panel";
@@ -8,6 +9,7 @@ import { getDb } from "@/db";
 import { requerirInstitucion } from "@/lib/auth";
 import { crearPlanes, pesos } from "@/lib/planes";
 import { datosDePlan } from "@/lib/queries/plan";
+import { mesesDe } from "@/lib/queries/bonificaciones";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { datosDeDebito } from "@/lib/queries/suscripcion-vista";
@@ -19,13 +21,14 @@ const ID_DE_MERCADO_PAGO = /^[0-9A-Za-z_-]{1,64}$/;
 
 export default async function PlanYFacturacion({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin }, saldo, creditos] = await Promise.all([
+  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin }, saldo, creditos, mesesGanados] = await Promise.all([
     datosDePlan(institucion, usuario.id),
     catalogoDePlanes(),
     datosDeDebito(institucion, usuario.id),
     searchParams,
     saldoDeBusquedas(getDb(), institucion.id),
     creditosDe(getDb(), institucion.id),
+    mesesDe(institucion.id),
   ]);
   const P = crearPlanes(catalogo);
   const esPuntual = P.esPuntual(datos.plan);
@@ -69,6 +72,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
           incluyeBuscador={P.incluye(datos.plan, "buscador")}
         />
       )}
+      <MesesBonificados meses={mesesGanados} className="mt-5 max-w-[980px] p-[22px]" />
       <PlanDebito datos={debito} suscripcionDeLaVuelta={vuelta} />
       <PlanHistorial facturas={datos.facturas} />
     </>

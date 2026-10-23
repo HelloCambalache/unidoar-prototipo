@@ -19,6 +19,7 @@ import {
   mensajesContacto,
   notificaciones,
   postulaciones,
+  mesesBonificados,
   referidosInstituciones,
   suscripcionesMp,
   planesMp,
@@ -251,6 +252,8 @@ export async function borrarDatosDeLaInstitucion(
     .delete(referidosInstituciones)
     .where(or(eq(referidosInstituciones.referidorId, institucionId), eq(referidosInstituciones.referidoId, institucionId)));
   await tx.delete(codigosReferido).where(eq(codigosReferido.institucionId, institucionId));
+  // Los meses bonificados que había ganado por recomendar (los de quien recomendó a esta quedan: solo pierden la recomendación).
+  await tx.delete(mesesBonificados).where(eq(mesesBonificados.institucionId, institucionId));
   // La suscripción de débito automático (lleva el mail de pago). Ya se canceló en Mercado Pago antes de llegar acá; el historial de cobros
   // (`cobros_mp`) queda con las facturas como registro fiscal.
   await tx.delete(suscripcionesMp).where(eq(suscripcionesMp.institucionId, institucionId));

@@ -34,6 +34,12 @@ export async function GET(request: Request) {
         revalidatePath(`/backoffice/instituciones/${institucionId}`);
       }
     }
+    // Los meses bonificados por recomendar que se gastaron hoy: la institución los ve en Plan y facturación y en Referidos.
+    for (const institucionId of resultado.bonificadas) {
+      revalidatePath("/institucion/plan");
+      revalidatePath("/institucion/referidos");
+      revalidatePath(`/backoffice/cobros/${institucionId}`);
+    }
     // Débito automático (ninguna de las dos lanza: si algo falla, queda en el log y se reintenta mañana). Primero se pone al día lo que
     // Mercado Pago cobró o cambió sin que llegara el aviso, y después los montos siguen al plan y a las sedes.
     const reconciliacion = await reconciliarSuscripciones();
@@ -47,9 +53,10 @@ export async function GET(request: Request) {
       revalidatePath("/docente/oportunidades");
       revalidatePath("/docente/dashboard");
     }
-    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, reconciliacion, suscripciones, puntuales });
+    const bonificadas = resultado.bonificadas.length;
+    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, bonificadas, omitidas: resultado.omitidas, reconciliacion, suscripciones, puntuales });
     return NextResponse.json(
-      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones, puntuales },
+      { periodo: resultado.periodo, creadas: resultado.creadas.length, bonificadas, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones, puntuales },
       { headers: SIN_CACHE },
     );
   } catch (e) {

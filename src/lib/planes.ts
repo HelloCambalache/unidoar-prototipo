@@ -75,6 +75,11 @@ export type CondicionesDePlanes = {
    */
   descuentoSedeExtra: number;
   pack: PackDeLanzamiento;
+  /**
+   * Meses que se bonifican por cada institución recomendada a quien paga mes a mes (opción B de Referidos, ver src/lib/bonificacion.ts).
+   * 0 = no se ofrece: el beneficio solo se aplica como pack por adelantado.
+   */
+  referidoMesesMensual: number;
   /** La búsqueda puntual: vigencia, tope de búsquedas abiertas y qué incluye. */
   puntual: CondicionesDePuntual;
   /** Tipos de institución que pagan el arancel de colegios; el resto paga el deportivo. */
@@ -170,6 +175,7 @@ export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
   sedesMultisede: 5,
   descuentoSedeExtra: 50,
   pack: { meses: 6, mesesQueSePagan: 5, mesesConReferido: 4 },
+  referidoMesesMensual: 2,
   puntual: { vigenciaDias: 30, busquedasAbiertas: 1, incluyeCursos: false, incluyeBuscador: false },
   tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario", "Universidad"],
 };
@@ -392,6 +398,8 @@ export type FilaDeCondiciones = {
   puntualBusquedasAbiertas?: number;
   puntualIncluyeCursos?: boolean;
   puntualIncluyeBuscador?: boolean;
+  /** Meses bonificados por recomendación para quien paga mes a mes: puede faltar en una base sin la columna (vale el de lanzamiento). */
+  referidoMesesMensual?: number;
   packMeses: number;
   packMesesPagos: number;
   packMesesReferido: number;
@@ -437,6 +445,7 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
       incluyeBuscador: c && typeof c.puntualIncluyeBuscador === "boolean" ? c.puntualIncluyeBuscador : defecto.puntual.incluyeBuscador,
     },
     pack: packValido ? { meses: c.packMeses, mesesQueSePagan: c.packMesesPagos, mesesConReferido: c.packMesesReferido } : defecto.pack,
+    referidoMesesMensual: c && entero(c.referidoMesesMensual, 0, 12) ? c.referidoMesesMensual : defecto.referidoMesesMensual,
     tiposColegio: c && Array.isArray(c.tiposColegio) && c.tiposColegio.length > 0 ? [...c.tiposColegio] : [...defecto.tiposColegio],
   };
   return { planes, condiciones };
@@ -485,6 +494,7 @@ export const edicionDePlanesSchema = z
     condiciones: z.object({
       sedesMultisede: numeroDePack(2, 100),
       descuentoSedeExtra: numeroDePack(0, 100),
+      referidoMesesMensual: numeroDePack(0, 12),
       puntual: z.object({
         vigenciaDias: numeroDePack(1, 365),
         busquedasAbiertas: numeroDePack(1, 20),
@@ -543,6 +553,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
     condiciones: {
       sedesMultisede: c.condiciones.sedesMultisede,
       descuentoSedeExtra: c.condiciones.descuentoSedeExtra,
+      referidoMesesMensual: c.condiciones.referidoMesesMensual,
       puntual: { ...c.condiciones.puntual },
       pack: { ...c.condiciones.pack },
       tiposColegio: TIPOS_INSTITUCION.filter((t) => c.condiciones.tiposColegio.includes(t)),
@@ -580,6 +591,7 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
   const campos: string[] = [];
   if (antes.condiciones.sedesMultisede !== despues.condiciones.sedesMultisede) campos.push("sedes para el plan Multisede");
   if (antes.condiciones.descuentoSedeExtra !== despues.condiciones.descuentoSedeExtra) campos.push("descuento por sede adicional");
+  if (antes.condiciones.referidoMesesMensual !== despues.condiciones.referidoMesesMensual) campos.push("meses bonificados por recomendación");
   const ua = antes.condiciones.puntual;
   const ud = despues.condiciones.puntual;
   if (ua.vigenciaDias !== ud.vigenciaDias || ua.busquedasAbiertas !== ud.busquedasAbiertas || ua.incluyeCursos !== ud.incluyeCursos || ua.incluyeBuscador !== ud.incluyeBuscador) {

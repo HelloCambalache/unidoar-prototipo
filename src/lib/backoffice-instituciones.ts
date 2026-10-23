@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { describirCambioDeAcuerdo, paraCalcular } from "@/lib/acuerdos";
+import { mesesBonificadosTexto } from "@/lib/bonificacion";
 import { MENSAJE_CUIT, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { CLAVES_PLAN, esClavePlan, etiquetaDeCobertura, etiquetaPeriodo } from "@/lib/cobros";
 import { esCuitValido, formatearCuit } from "@/lib/documentos";
@@ -76,6 +77,10 @@ const listaDeCampos = (campos: unknown) => {
   return nombres.length > 0 ? ` · ${nombres.join(", ")}` : "";
 };
 
+/** " · 2 meses bonificados" / " · pack por adelantado": cómo se aplicó un beneficio de referidos (lo anotado antes de la opción de meses no dice, y era pack). */
+const beneficioEnPalabras = (d: Record<string, unknown>) =>
+  d.tipo === "meses" && typeof d.meses === "number" ? ` · ${mesesBonificadosTexto(d.meses)}` : d.tipo === "pack" ? " · pack por adelantado" : "";
+
 /** Una línea legible para el registro de actividad de la ficha ("Cambió el plan de Fundador a Estándar"). */
 export function describirAccion(accion: string, detalle: Record<string, unknown> | null, planes: Planes = planesPorDefecto) {
   const d = detalle ?? {};
@@ -99,9 +104,15 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
     case "institucion.reactivar":
       return "Reactivó la cuenta";
     case "referido.beneficio_aplicado":
-      return `Aplicó el beneficio de referidos${texto("nombre") ? ` por recomendar a ${texto("nombre")}` : ""}`;
+      return `Aplicó el beneficio de referidos${texto("nombre") ? ` por recomendar a ${texto("nombre")}` : ""}${beneficioEnPalabras(d)}`;
     case "referido.beneficio_deshecho":
       return `Deshizo el beneficio de referidos${texto("nombre") ? ` por recomendar a ${texto("nombre")}` : ""}`;
+    case "referido.mes_bonificado":
+      return `Se bonificó ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un mes"} por recomendar${d.conDebito === true ? " (a devolver desde Mercado Pago)" : " (sin facturar)"}`;
+    case "referido.devolucion_hecha":
+      return `Devolvió el cobro bonificado de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un mes"}${typeof d.monto === "number" ? ` · ${pesos(d.monto)}` : ""}`;
+    case "referido.devolucion_deshecha":
+      return `Desmarcó la devolución del cobro de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un mes"}`;
     case "cuenta.baja_solicitada":
       return "Pidió la baja de la cuenta";
     case "cuenta.baja_retirada":

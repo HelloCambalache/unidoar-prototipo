@@ -19,6 +19,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { describirAcuerdo } from "@/lib/acuerdos";
+import { ETIQUETA_DE_MES, resumenDeMeses } from "@/lib/bonificacion";
 import { ETIQUETA_DE_CREDITO } from "@/lib/puntual";
 import { esUuid } from "@/lib/busquedas";
 import {
@@ -39,6 +40,7 @@ import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
+import { mesesDe } from "@/lib/queries/bonificaciones";
 import { planes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -87,7 +89,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const acordado = await acuerdoConNota(getDb(), id);
   const acuerdo = acordado?.acuerdo ?? null;
   // Una institución con búsqueda puntual no tiene abono ni facturas mensuales: paga cada búsqueda (ver src/lib/puntual.ts).
-  const [creditos, saldo] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id)]);
+  const [creditos, saldo, mesesGanados] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id), mesesDe(id)]);
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
   const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
 
@@ -261,6 +263,32 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                   </div>
                 ) : (
                   <p className="m-0 text-xs leading-normal text-sutil">Esta institución ya no tiene el plan de búsqueda puntual: no se registran pagos nuevos.</p>
+                )}
+              </div>
+            </Seccion>
+          )}
+
+          {mesesGanados.length > 0 && (
+            <Seccion titulo="Meses bonificados">
+              <div className="flex flex-col gap-2">
+                <Dato k="Sin usar">{resumenDeMeses(mesesGanados).disponibles}</Dato>
+                <Dato k="Usados">{resumenDeMeses(mesesGanados).usados}</Dato>
+                <ul className="m-0 mt-1 flex list-none flex-col gap-2 border-t border-linea p-0 pt-2.5">
+                  {mesesGanados.map((m) => (
+                    <li key={m.id} className="text-[13px] leading-[1.4] text-tinta">
+                      <b className="font-semibold">{m.periodo ? etiquetaPeriodo(m.periodo) : "Mes sin usar"}</b> · {ETIQUETA_DE_MES[m.estado]}
+                      <span className="block text-xs text-apagado">
+                        {m.recomendada ? `Por recomendar a ${m.recomendada}` : "Recomendación ya borrada"}
+                        {m.estado === "a-devolver" ? ` · hay que devolver ${m.monto ? pesos(m.monto) : "el cobro"} desde Mercado Pago` : ""}
+                        {m.estado === "devuelto" && m.devueltoEn ? ` · devuelto el ${fechaCorta(m.devueltoEn)}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {resumenDeMeses(mesesGanados).aDevolver > 0 && (
+                  <Link href="/backoffice/referidos?estado=devoluciones" className="text-[13px] font-semibold text-navy-700 hover:underline">
+                    Ver devoluciones pendientes
+                  </Link>
                 )}
               </div>
             </Seccion>

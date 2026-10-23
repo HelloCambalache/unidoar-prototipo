@@ -605,6 +605,47 @@ describe("el plan sigue al tipo de institución", () => {
   });
 });
 
+describe("meses bonificados por recomendación (mes a mes)", () => {
+  const con = (referidoMesesMensual: number | undefined) =>
+    catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), referidoMesesMensual }).condiciones.referidoMesesMensual;
+
+  it("de lanzamiento son 2 meses", () => {
+    assert.equal(CATALOGO_POR_DEFECTO.condiciones.referidoMesesMensual, 2);
+  });
+
+  it("se lee lo que guardó el equipo, incluido 0 (no se ofrece)", () => {
+    assert.equal(con(3), 3);
+    assert.equal(con(1), 1);
+    assert.equal(con(12), 12);
+    assert.equal(con(0), 0);
+  });
+
+  it("un valor roto o una base sin la columna vuelve al de lanzamiento", () => {
+    for (const roto of [-1, 13, 1.5, undefined]) assert.equal(con(roto), 2, `${roto}`);
+  });
+
+  it("la edición acepta de 0 a 12 y rechaza lo demás", () => {
+    for (const valor of [0, 1, 2, 12]) {
+      const e = edicion();
+      e.condiciones.referidoMesesMensual = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, true, `${valor}`);
+    }
+    for (const valor of [-1, 13, 2.5]) {
+      const e = edicion();
+      e.condiciones.referidoMesesMensual = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, false, `${valor}`);
+    }
+  });
+
+  it("un cambio queda anotado en los últimos cambios", () => {
+    const antes = edicion();
+    const despues = edicion();
+    despues.condiciones.referidoMesesMensual = 3;
+    assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["meses bonificados por recomendación"] }]);
+    assert.deepEqual(cambiosDePlanes(antes, edicion()), []);
+  });
+});
+
 describe("la búsqueda puntual", () => {
   it("es un plan por evento: se paga cada búsqueda, sin abono ni ingreso mensual", () => {
     assert.equal(P.esPuntual("puntual"), true);

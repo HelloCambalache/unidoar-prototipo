@@ -19,6 +19,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { correoDeFacturaNueva } from "@/lib/correo/eventos";
 import type { PlanClave, Planes } from "@/lib/planes";
 import { acuerdoDe, acuerdosDePrecio } from "@/lib/queries/acuerdos";
+import { conDebitoAutorizado, disponiblesPorInstitucion, gastarMesSinCobro, mesesYaBonificados } from "@/lib/queries/bonificaciones";
 import { planes as cargarPlanes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
@@ -355,6 +356,8 @@ export type ResultadoGeneracion = {
   omitidas: Partial<Record<MotivoOmision, number>>;
   /** Cuentas activas sin ninguna factura: la primera la carga el equipo a mano, no se cobra sola. */
   sinFacturaPrevia: number;
+  /** Instituciones a las que este mes no se les facturó porque gastaron un mes bonificado por recomendar (ver src/lib/bonificacion.ts). */
+  bonificadas: string[];
 };
 
 /**
@@ -373,10 +376,16 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
     .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })
     .from(instituciones)
     .where(and(eq(instituciones.suspendida, false), eq(instituciones.esDemo, false)));
-  if (activas.length === 0) return { periodo, creadas: [], omitidas: {}, sinFacturaPrevia: 0 };
+  if (activas.length === 0) return { periodo, creadas: [], omitidas: {}, sinFacturaPrevia: 0, bonificadas: [] };
 
   const ids = activas.map((i) => i.id);
-  const [sedesPor, acuerdosPor] = await Promise.all([cantidadDeSedes(ejecutor, ids), acuerdosDePrecio(ejecutor, ids)]);
+  const [sedesPor, acuerdosPor, disponiblesPor, bonificadosYa, conDebito] = await Promise.all([
+    cantidadDeSedes(ejecutor, ids),
+    acuerdosDePrecio(ejecutor, ids),
+    disponiblesPorInstitucion(ejecutor, ids),
+    mesesYaBonificados(ejecutor, ids, periodo),
+    conDebitoAutorizado(ejecutor, ids),
+  ]);
   const [conFacturas, recientes] = await Promise.all([
     ejecutor.select({ institucionId: facturas.institucionId }).from(facturas).where(inArray(facturas.institucionId, ids)).groupBy(facturas.institucionId),
     ejecutor
@@ -386,13 +395,26 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
   ]);
 
   const conHistorial = new Set(conFacturas.map((f) => f.institucionId));
-  const { crear, omitidas } = planificarFacturas(
-    activas.filter((i) => conHistorial.has(i.id)).map((i) => ({ ...i, sedes: sedesPor.get(i.id) ?? 1, acuerdo: acuerdosPor.get(i.id) ?? null })),
+  const { crear, omitidas, bonificar } = planificarFacturas(
+    activas.filter((i) => conHistorial.has(i.id)).map((i) => ({
+      ...i,
+      sedes: sedesPor.get(i.id) ?? 1,
+      acuerdo: acuerdosPor.get(i.id) ?? null,
+      mesesBonificados: disponiblesPor.get(i.id) ?? 0,
+      conDebitoActivo: conDebito.has(i.id),
+    })),
     recientes,
     periodo,
     hoy,
     P,
+    bonificadosYa,
   );
+
+  // Los meses bonificados por recomendar: este mes no se factura y se anota cuál fue (ver src/lib/bonificacion.ts).
+  const bonificadas: string[] = [];
+  for (const b of bonificar) {
+    if (await gastarMesSinCobro(ejecutor, b.institucionId, b.periodo)) bonificadas.push(b.institucionId);
+  }
 
   const creadas = crear.length
     ? await ejecutor
@@ -448,6 +470,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
     creadas: creadas.map((f) => ({ id: f.id, institucionId: f.institucionId })),
     omitidas: porMotivo,
     sinFacturaPrevia: activas.length - conHistorial.size,
+    bonificadas,
   };
 }
 

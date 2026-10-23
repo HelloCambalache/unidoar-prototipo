@@ -64,6 +64,34 @@ describe("actividad del equipo al editar una institución", () => {
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", mesesCubiertos: 1 }), "Registró el pago de Octubre 2026");
   });
 
+  it("el beneficio de referidos dice cómo se aplicó: meses bonificados o pack (lo anterior no lo decía)", () => {
+    assert.equal(
+      describirAccion("referido.beneficio_aplicado", { nombre: "Colegio Norte", tipo: "meses", meses: 2 }),
+      "Aplicó el beneficio de referidos por recomendar a Colegio Norte · 2 meses bonificados",
+    );
+    assert.equal(
+      describirAccion("referido.beneficio_aplicado", { nombre: "Colegio Norte", tipo: "meses", meses: 1 }),
+      "Aplicó el beneficio de referidos por recomendar a Colegio Norte · 1 mes bonificado",
+    );
+    assert.equal(
+      describirAccion("referido.beneficio_aplicado", { nombre: "Colegio Norte", tipo: "pack" }),
+      "Aplicó el beneficio de referidos por recomendar a Colegio Norte · pack por adelantado",
+    );
+    assert.equal(describirAccion("referido.beneficio_aplicado", { nombre: "Colegio Norte" }), "Aplicó el beneficio de referidos por recomendar a Colegio Norte");
+    assert.equal(describirAccion("referido.beneficio_deshecho", { nombre: "Colegio Norte", tipo: "meses" }), "Deshizo el beneficio de referidos por recomendar a Colegio Norte");
+  });
+
+  it("un mes bonificado dice si se factura o si hay que devolver el cobro; y la devolución, el mes y el monto", () => {
+    assert.equal(describirAccion("referido.mes_bonificado", { periodo: "2026-11", conDebito: false }), "Se bonificó Noviembre 2026 por recomendar (sin facturar)");
+    assert.equal(
+      describirAccion("referido.mes_bonificado", { periodo: "2026-11", conDebito: true }),
+      "Se bonificó Noviembre 2026 por recomendar (a devolver desde Mercado Pago)",
+    );
+    assert.equal(describirAccion("referido.devolucion_hecha", { periodo: "2026-11", monto: 50_000 }), "Devolvió el cobro bonificado de Noviembre 2026 · $ 50.000");
+    assert.equal(describirAccion("referido.devolucion_hecha", { periodo: "2026-11" }), "Devolvió el cobro bonificado de Noviembre 2026");
+    assert.equal(describirAccion("referido.devolucion_deshecha", { periodo: "2026-11" }), "Desmarcó la devolución del cobro de Noviembre 2026");
+  });
+
   it("el pago de una búsqueda puntual muestra el monto, el medio y la nota; y anularlo, el motivo", () => {
     assert.equal(
       describirAccion("busqueda_puntual.pago", { monto: 110_000, medio: "Transferencia", nota: "Comprobante 55" }),

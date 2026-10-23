@@ -3,9 +3,11 @@ import { and, count, desc, eq, isNull, sql, type AnyColumn } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { cookies } from "next/headers";
 import { getDb, transaccion } from "@/db";
-import { codigosReferido, facturas, instituciones, referidosInstituciones } from "@/db/schema";
+import { codigosReferido, facturas, instituciones, referidosInstituciones, suscripcionesMp } from "@/db/schema";
+import type { TipoDeBeneficio } from "@/lib/bonificacion";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
-import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
+import { resumenDeMesesPorReferido, type ResumenDeMesesDeReferido } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { COOKIE_REFERIDO, estadoDeReferido, generarCodigo, normalizarCodigo, sePuedeAnotar, type EstadoReferido } from "@/lib/referidos";
 import { resumenDeError } from "@/lib/errores";
@@ -167,17 +169,25 @@ export async function avisarReferidorDePago(institucionId: string) {
   }
 }
 
+/** Cómo se aplicó un beneficio ya aplicado: lo guardado, y «pack» si es de antes de que existiera la opción. */
+const tipoAplicado = (beneficioEn: Date | null, tipo: string | null): TipoDeBeneficio | null =>
+  beneficioEn ? (tipo === "meses" ? "meses" : "pack") : null;
+
 export type ReferidoDeInstitucion = {
   id: string;
   institucion: { nombre: string; slug: string };
   estado: EstadoReferido;
   creadoEn: Date;
   beneficioEn: Date | null;
+  /** Cómo se aplicó el beneficio (null si todavía no). */
+  beneficioTipo: TipoDeBeneficio | null;
+  /** Si se aplicó como meses bonificados: cuántos generó y cuántos ya se gastaron. */
+  meses: ResumenDeMesesDeReferido | null;
 };
 
 /** Las instituciones que recomendó una institución, de la más nueva a la más vieja. */
-export async function referidosDe(institucionId: string): Promise<ReferidoDeInstitucion[]> {
-  const filas = await getDb()
+export async function referidosDe(institucionId: string, ejecutor: EjecutorBo = getDb()): Promise<ReferidoDeInstitucion[]> {
+  const filas = await ejecutor
     .select({
       id: referidosInstituciones.id,
       nombre: instituciones.nombre,
@@ -186,18 +196,25 @@ export async function referidosDe(institucionId: string): Promise<ReferidoDeInst
       pagada: tienePago(instituciones.id),
       creadoEn: referidosInstituciones.creadoEn,
       beneficioEn: referidosInstituciones.beneficioEn,
+      beneficioTipo: referidosInstituciones.beneficioTipo,
     })
     .from(referidosInstituciones)
     .innerJoin(instituciones, eq(instituciones.id, referidosInstituciones.referidoId))
     .where(eq(referidosInstituciones.referidorId, institucionId))
     .orderBy(desc(referidosInstituciones.creadoEn));
-  return filas.map((f) => ({
-    id: f.id,
-    institucion: { nombre: f.nombre, slug: f.slug },
-    estado: estadoDeReferido(f),
-    creadoEn: f.creadoEn,
-    beneficioEn: f.beneficioEn,
-  }));
+  const meses = await resumenDeMesesPorReferido(ejecutor, filas.map((f) => f.id));
+  return filas.map((f) => {
+    const tipo = tipoAplicado(f.beneficioEn, f.beneficioTipo);
+    return {
+      id: f.id,
+      institucion: { nombre: f.nombre, slug: f.slug },
+      estado: estadoDeReferido(f),
+      creadoEn: f.creadoEn,
+      beneficioEn: f.beneficioEn,
+      beneficioTipo: tipo,
+      meses: tipo === "meses" ? (meses.get(f.id) ?? { total: 0, usados: 0 }) : null,
+    };
+  });
 }
 
 export type ReferidoBackoffice = {
@@ -205,20 +222,26 @@ export type ReferidoBackoffice = {
   estado: EstadoReferido;
   creadoEn: Date;
   beneficioEn: Date | null;
-  referidor: { id: string; nombre: string };
+  beneficioTipo: TipoDeBeneficio | null;
+  meses: ResumenDeMesesDeReferido | null;
+  /** `plan` y `conDebito` ayudan a elegir cómo aplicarle el beneficio: con un débito autorizado, cada mes bonificado hay que devolverlo a mano. */
+  referidor: { id: string; nombre: string; plan: string; conDebito: boolean };
   referido: { id: string; nombre: string; verificada: boolean; pagada: boolean };
 };
 
 /** Todas las recomendaciones, de la más nueva a la más vieja (el equipo las ve y aplica los beneficios). */
-export async function listarReferidosBackoffice(): Promise<ReferidoBackoffice[]> {
+export async function listarReferidosBackoffice(ejecutor: EjecutorBo = getDb()): Promise<ReferidoBackoffice[]> {
   const referidora = alias(instituciones, "referidora");
-  const filas = await getDb()
+  const filas = await ejecutor
     .select({
       id: referidosInstituciones.id,
       creadoEn: referidosInstituciones.creadoEn,
       beneficioEn: referidosInstituciones.beneficioEn,
+      beneficioTipo: referidosInstituciones.beneficioTipo,
       referidorId: referidora.id,
       referidorNombre: referidora.nombre,
+      referidorPlan: referidora.plan,
+      referidorConDebito: sql<boolean>`exists (select 1 from ${suscripcionesMp} where ${suscripcionesMp.institucionId} = ${referidora.id} and ${suscripcionesMp.estado} = 'autorizada')`,
       referidoId: instituciones.id,
       referidoNombre: instituciones.nombre,
       referidoVerificada: instituciones.verificada,
@@ -228,12 +251,18 @@ export async function listarReferidosBackoffice(): Promise<ReferidoBackoffice[]>
     .innerJoin(referidora, eq(referidora.id, referidosInstituciones.referidorId))
     .innerJoin(instituciones, eq(instituciones.id, referidosInstituciones.referidoId))
     .orderBy(desc(referidosInstituciones.creadoEn));
-  return filas.map((f) => ({
-    id: f.id,
-    estado: estadoDeReferido({ verificada: f.referidoVerificada, pagada: f.referidoPagada, beneficioEn: f.beneficioEn }),
-    creadoEn: f.creadoEn,
-    beneficioEn: f.beneficioEn,
-    referidor: { id: f.referidorId, nombre: f.referidorNombre },
-    referido: { id: f.referidoId, nombre: f.referidoNombre, verificada: f.referidoVerificada, pagada: f.referidoPagada },
-  }));
+  const meses = await resumenDeMesesPorReferido(ejecutor, filas.map((f) => f.id));
+  return filas.map((f) => {
+    const tipo = tipoAplicado(f.beneficioEn, f.beneficioTipo);
+    return {
+      id: f.id,
+      estado: estadoDeReferido({ verificada: f.referidoVerificada, pagada: f.referidoPagada, beneficioEn: f.beneficioEn }),
+      creadoEn: f.creadoEn,
+      beneficioEn: f.beneficioEn,
+      beneficioTipo: tipo,
+      meses: tipo === "meses" ? (meses.get(f.id) ?? { total: 0, usados: 0 }) : null,
+      referidor: { id: f.referidorId, nombre: f.referidorNombre, plan: f.referidorPlan, conDebito: f.referidorConDebito },
+      referido: { id: f.referidoId, nombre: f.referidoNombre, verificada: f.referidoVerificada, pagada: f.referidoPagada },
+    };
+  });
 }

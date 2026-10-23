@@ -132,7 +132,7 @@ export function PlanesFormulario({
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, puntual: { ...d.condiciones.puntual, [campo]: valor } } }));
   };
 
-  const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra", valor: number) => {
+  const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra" | "referidoMesesMensual", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
   };
@@ -448,6 +448,29 @@ export function PlanesFormulario({
               })}
             </ul>
           )}
+        </fieldset>
+
+        <h4 className="m-0 mb-2.5 text-sm leading-tight font-semibold text-tinta">Referidos, pagando mes a mes</h4>
+        <fieldset className="m-0 mb-6 min-w-0 border-0 p-0">
+          <legend className="mb-2 p-0 text-xs font-semibold text-apagado">Meses bonificados por recomendación</legend>
+          <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+            <Campo etiqueta="Meses bonificados por cada institución recomendada" error={verError("condiciones.referidoMesesMensual")}>
+              <Input
+                type="number"
+                min={0}
+                max={12}
+                step={1}
+                value={datos.condiciones.referidoMesesMensual}
+                aria-invalid={!!verError("condiciones.referidoMesesMensual")}
+                onChange={(e) => cambiarCondicion("referidoMesesMensual", aNumero(e.target.value))}
+              />
+            </Campo>
+          </div>
+          <p className="mt-2 mb-0 text-xs leading-normal text-sutil">
+            {datos.condiciones.referidoMesesMensual > 0
+              ? `Cuando la institución recomendada paga su primera factura, desde Referidos podés bonificarle ${datos.condiciones.referidoMesesMensual} ${datos.condiciones.referidoMesesMensual === 1 ? "mes" : "meses"} a quien la recomendó (si paga mes a mes). Esos meses se descuentan solos de las próximas facturas; con débito automático, Mercado Pago cobra igual y Referidos te avisa para devolverlo a mano.`
+              : "En 0 no se ofrecen meses bonificados: el beneficio solo se aplica como pack por adelantado."}
+          </p>
         </fieldset>
 
         <fieldset className="m-0 min-w-0 border-0 p-0" aria-describedby="tipos-ayuda">

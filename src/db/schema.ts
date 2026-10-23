@@ -650,6 +650,11 @@ export const referidosInstituciones = pgTable(
     creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
     /** Cuándo el equipo aplicó el beneficio a quien recomendó (null: todavía no). */
     beneficioEn: timestamp("beneficio_en", { withTimezone: true }),
+    /**
+     * Cómo se aplicó: `pack` (por adelantado, se carga al facturar) o `meses` (meses bonificados que se descuentan solos, ver
+     * `meses_bonificados`). Null en los que se aplicaron antes de que existiera la opción: eran pack. Agregada con `pnpm db:referidos`.
+     */
+    beneficioTipo: text("beneficio_tipo"),
   },
   (t) => [index("referidos_instituciones_referidor_idx").on(t.referidorId)],
 );
@@ -733,9 +738,43 @@ export const planesMp = pgTable(
   (t) => [index("planes_mp_institucion_idx").on(t.institucionId)],
 );
 
+/**
+ * Meses bonificados por recomendar (opción B de Referidos, reglas en src/lib/bonificacion.ts): una fila por mes. Se crean al aplicar el
+ * beneficio como «meses» y están **disponibles mientras `periodo` es null**; el cron (sin débito) o el cobro del débito automático los gastan
+ * y les ponen el mes. Si se gastó sobre un cobro del débito (`cobro_id`), hay que devolver ese cobro a mano en Mercado Pago y se marca con
+ * `devuelto_en`. Si la recomendación se borra (la recomendada se dio de baja) el mes ya ganado queda (`referido_id` pasa a null). Creada con
+ * `pnpm db:referidos`, con RLS.
+ */
+export const mesesBonificados = pgTable(
+  "meses_bonificados",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** La institución que recomendó y tiene el mes bonificado. */
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** La recomendación que lo generó (null si esa recomendación se borró). */
+    referidoId: uuid("referido_id").references(() => referidosInstituciones.id, { onDelete: "set null" }),
+    /** El mes que se bonificó ("2026-11"); null mientras esté disponible. */
+    periodo: text("periodo"),
+    usadoEn: timestamp("usado_en", { withTimezone: true }),
+    /** El cobro del débito automático de ese mes, si se gastó sobre un cobro ya hecho (hay que devolverlo). */
+    cobroId: text("cobro_id").references(() => cobrosMp.id, { onDelete: "set null" }),
+    /** Cuándo el equipo devolvió ese cobro desde Mercado Pago. */
+    devueltoEn: timestamp("devuelto_en", { withTimezone: true }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("meses_bonificados_institucion_idx").on(t.institucionId),
+    // Un mes de una institución se bonifica una sola vez (los disponibles tienen periodo null y no entran).
+    uniqueIndex("meses_bonificados_inst_periodo_uq").on(t.institucionId, t.periodo).where(sql`${t.periodo} is not null`),
+  ],
+);
+
 export type SuscripcionMp = typeof suscripcionesMp.$inferSelect;
 export type PlanMp = typeof planesMp.$inferSelect;
 export type CobroMp = typeof cobrosMp.$inferSelect;
+export type MesBonificado = typeof mesesBonificados.$inferSelect;
 
 /* ───────────────────────────── Paquete A2 · Acceso y altas ───────────────────────────── */
 
@@ -978,6 +1017,8 @@ export const planesCondiciones = pgTable("planes_condiciones", {
   puntualBusquedasAbiertas: integer("puntual_busquedas_abiertas").notNull().default(1),
   puntualIncluyeCursos: boolean("puntual_incluye_cursos").notNull().default(false),
   puntualIncluyeBuscador: boolean("puntual_incluye_buscador").notNull().default(false),
+  /** Meses bonificados por recomendación para quien paga mes a mes (0: no se ofrece). Agregada con `pnpm db:planes` (correrlo ANTES de desplegar). */
+  referidoMesesMensual: integer("referido_meses_mensual").notNull().default(2),
   packMeses: integer("pack_meses").notNull(),
   packMesesPagos: integer("pack_meses_pagos").notNull(),
   packMesesReferido: integer("pack_meses_referido").notNull(),

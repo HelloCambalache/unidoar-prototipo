@@ -370,6 +370,79 @@ describe("facturas automáticas (planificarFacturas)", () => {
     assert.deepEqual([r.crear.length, r.omitidas[0]!.motivo], [0, "sin_abono"]);
   });
 
+  describe("meses bonificados por recomendar", () => {
+    const previa = (id = "a") => [f(id, "2026-09", "colegio", "pagada")];
+    const conMeses = (n: number, extra: Partial<InstitucionFacturable> = {}): InstitucionFacturable => ({ ...inst("a", "colegio"), mesesBonificados: n, ...extra });
+
+    it("sin débito automático y con meses sin usar, el mes no se factura y se gasta uno", () => {
+      const r = planificarFacturas([conMeses(2)], previa(), P, HOY, undefined, []);
+      assert.equal(r.crear.length, 0);
+      assert.deepEqual(r.omitidas, [{ institucionId: "a", motivo: "bonificada" }]);
+      assert.deepEqual(r.bonificar, [{ institucionId: "a", periodo: P }]);
+    });
+
+    it("gasta un mes por pasada: con el mes ya bonificado no vuelve a gastar otro (el cron corre todos los días)", () => {
+      const r = planificarFacturas([conMeses(1)], previa(), P, HOY, undefined, [{ institucionId: "a", periodo: P }]);
+      assert.equal(r.crear.length, 0);
+      assert.deepEqual(r.omitidas, [{ institucionId: "a", motivo: "bonificada" }]);
+      assert.deepEqual(r.bonificar, [], "el mes ya estaba anotado");
+    });
+
+    it("el mes bonificado de otro período no frena la factura de este", () => {
+      const r = planificarFacturas([conMeses(0)], previa(), P, HOY, undefined, [{ institucionId: "a", periodo: "2026-09" }]);
+      assert.equal(r.crear.length, 1);
+      assert.deepEqual(r.bonificar, []);
+    });
+
+    it("con un débito automático autorizado el cron factura como siempre: el mes se gasta al llegar el cobro", () => {
+      const r = planificarFacturas([conMeses(2, { conDebitoActivo: true })], previa(), P, HOY, undefined, []);
+      assert.equal(r.crear.length, 1);
+      assert.deepEqual(r.bonificar, []);
+    });
+
+    it("pero si ese mes ya había quedado bonificado antes de activar el débito, no se factura", () => {
+      const r = planificarFacturas([conMeses(0, { conDebitoActivo: true })], previa(), P, HOY, undefined, [{ institucionId: "a", periodo: P }]);
+      assert.equal(r.crear.length, 0);
+      assert.deepEqual(r.omitidas, [{ institucionId: "a", motivo: "bonificada" }]);
+    });
+
+    it("sin meses bonificados todo sigue igual", () => {
+      assert.equal(planificarFacturas([conMeses(0)], previa(), P, HOY).crear.length, 1);
+      assert.equal(planificarFacturas([inst("a", "colegio")], previa(), P, HOY).crear.length, 1);
+    });
+
+    it("no se gasta un mes que otra regla ya resuelve: una factura que ya existe o un semestre pagado", () => {
+      const existente = planificarFacturas([conMeses(2)], [f("a", P, "colegio", "pendiente")], P, HOY);
+      assert.deepEqual(existente.omitidas, [{ institucionId: "a", motivo: "ya_tiene" }]);
+      assert.deepEqual(existente.bonificar, []);
+
+      const semestre: FacturaReciente = { ...f("a", "2026-09", "colegio", "pagada"), mesesCubiertos: 6 };
+      const cubierto = planificarFacturas([conMeses(2)], [semestre], P, HOY);
+      assert.deepEqual(cubierto.omitidas, [{ institucionId: "a", motivo: "cubierta_por_semestre" }]);
+      assert.deepEqual(cubierto.bonificar, []);
+    });
+
+    it("no aplica al plan anual ni a la búsqueda puntual: no tienen mensualidad de la que descontar", () => {
+      const anual = planificarFacturas([conMeses(2, { plan: "anual" })], [], P, HOY);
+      assert.equal(anual.crear.length, 1, "al anual se le factura su año");
+      assert.deepEqual(anual.bonificar, []);
+      const puntual = planificarFacturas([conMeses(2, { plan: "puntual" })], previa(), P, HOY);
+      assert.deepEqual(puntual.omitidas, [{ institucionId: "a", motivo: "sin_abono" }]);
+      assert.deepEqual(puntual.bonificar, []);
+    });
+
+    it("cada institución gasta los suyos", () => {
+      const r = planificarFacturas(
+        [conMeses(1), { ...inst("b", "colegio"), mesesBonificados: 0 }],
+        [...previa("a"), ...previa("b")],
+        P,
+        HOY,
+      );
+      assert.deepEqual(r.bonificar, [{ institucionId: "a", periodo: P }]);
+      assert.deepEqual(r.crear.map((c) => c.institucionId), ["b"]);
+    });
+  });
+
   it("no factura un plan que no existe", () => {
     const r = una(inst("a", "inventado"), []);
     assert.deepEqual([r.crear.length, r.omitidas[0]!.motivo], [0, "plan_desconocido"]);

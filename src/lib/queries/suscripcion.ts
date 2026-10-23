@@ -19,6 +19,7 @@ import { pesos } from "@/lib/planes";
 import { resumenDeError } from "@/lib/errores";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { gastarMesEnCobro } from "@/lib/queries/bonificaciones";
 import { avisarReferidorDePago } from "@/lib/queries/referidos";
 import { institucionDelPlan } from "@/lib/queries/suscripcion-planes";
 
@@ -316,12 +317,16 @@ async function aplicarCobroEnLaBase(cobro: CobroLeido): Promise<ResultadoDeCobro
       });
     }
 
-    await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
-      tipo: "sistema",
-      titulo: "UNIDOAR",
-      texto: `recibimos tu débito automático de ${etiquetaPeriodo(periodo)} (${pesos(monto)}). ¡Gracias!`,
-      enlace: "/institucion/plan",
-    });
+    // Si ese mes está bonificado por recomendar, se anota para devolverlo a mano y el aviso es otro (ver src/lib/bonificacion.ts).
+    const bonificado = await gastarMesEnCobro(tx, { institucionId: inst.id, institucion: inst.nombre, periodo, cobroId: cobro.id, monto, pagoId: cobro.pagoId });
+    if (!bonificado) {
+      await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
+        tipo: "sistema",
+        titulo: "UNIDOAR",
+        texto: `recibimos tu débito automático de ${etiquetaPeriodo(periodo)} (${pesos(monto)}). ¡Gracias!`,
+        enlace: "/institucion/plan",
+      });
+    }
     await correoDePagoRegistrado(tx, {
       usuarioIds: await destinatariosDeFacturacion(tx, inst.id),
       institucion: inst.nombre,

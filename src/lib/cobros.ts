@@ -196,7 +196,13 @@ export type InstitucionFacturable = {
   sedes?: number;
   /** El precio acordado con ella (abono o convenio), si tiene uno; sin acuerdo paga el de lista. */
   acuerdo?: AcuerdoDePrecio | null;
+  /** Cuántos meses bonificados por recomendar tiene sin gastar (ver src/lib/bonificacion.ts). */
+  mesesBonificados?: number;
+  /** Tiene un débito automático autorizado: ahí el mes bonificado se gasta al llegar el cobro (y se devuelve), no acá. */
+  conDebitoActivo?: boolean;
 };
+/** Un mes que ya quedó bonificado (anotado en `meses_bonificados`): no se vuelve a gastar otro ni se factura. */
+export type MesBonificadoYa = { institucionId: string; periodo: string };
 /** Una factura ya existente de la institución, de los últimos 12 períodos (el actual incluido). */
 export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string; mesesCubiertos?: number | null };
 export type FacturaPorCrear = {
@@ -207,7 +213,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" | "bonificada" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -219,6 +225,9 @@ export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" 
  *  - plan anual: si ya hay una factura anual en la ventana (paga o por pagar) no se genera otra hasta que venza el año;
  *  - plan mensual: si una factura anual paga todavía cubre el mes, no se cobra;
  *  - si un semestre pagado al contado (una factura paga que cubre varios meses) cubre el mes, no se cobra;
+ *  - si el mes ya quedó bonificado por recomendar, no se factura (y no se gasta otro mes bonificado);
+ *  - si tiene meses bonificados sin gastar y no tiene un débito automático autorizado, este mes se bonifica: no se factura y se devuelve en
+ *    `bonificar` para que quien llama anote cuál mes se gastó (con débito, el mes se gasta al llegar el cobro y se devuelve a mano);
  *  - si el día de cobro del mes ya pasó, se cobra hoy: no nace vencida.
  */
 export function planificarFacturas(
@@ -228,7 +237,9 @@ export function planificarFacturas(
   hoy: string,
   /** Los planes vigentes (de dónde salen el monto y si se cobra por sede); sin pasarlos, los valores de lanzamiento. */
   planes: Planes = planesPorDefecto,
-): { crear: FacturaPorCrear[]; omitidas: { institucionId: string; motivo: MotivoOmision }[] } {
+  /** Los meses que ya quedaron bonificados (de cualquier período). */
+  bonificados: readonly MesBonificadoYa[] = [],
+): { crear: FacturaPorCrear[]; omitidas: { institucionId: string; motivo: MotivoOmision }[]; bonificar: { institucionId: string; periodo: string }[] } {
   const porInstitucion = new Map<string, FacturaReciente[]>();
   for (const f of recientes) {
     const lista = porInstitucion.get(f.institucionId) ?? [];
@@ -238,6 +249,7 @@ export function planificarFacturas(
 
   const crear: FacturaPorCrear[] = [];
   const omitidas: { institucionId: string; motivo: MotivoOmision }[] = [];
+  const bonificar: { institucionId: string; periodo: string }[] = [];
   for (const inst of instituciones) {
     const propias = porInstitucion.get(inst.id) ?? [];
     const omitir = (motivo: MotivoOmision) => omitidas.push({ institucionId: inst.id, motivo });
@@ -251,6 +263,11 @@ export function planificarFacturas(
       omitir("cubierta_por_anual");
     } else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
       omitir("cubierta_por_semestre");
+    } else if (bonificados.some((b) => b.institucionId === inst.id && b.periodo === periodo)) {
+      omitir("bonificada");
+    } else if (inst.plan !== "anual" && !inst.conDebitoActivo && (inst.mesesBonificados ?? 0) > 0) {
+      omitir("bonificada");
+      bonificar.push({ institucionId: inst.id, periodo });
     } else {
       const fecha = fechaCobroDelPeriodo(periodo, inst.diaCobro);
       crear.push({
@@ -264,7 +281,7 @@ export function planificarFacturas(
       });
     }
   }
-  return { crear, omitidas };
+  return { crear, omitidas, bonificar };
 }
 
 /* ───────── Esquemas de formularios (los reusan cliente y server actions) ───────── */

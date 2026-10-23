@@ -5,6 +5,7 @@ import { facturas, planesMp, type PlanMp } from "@/db/schema";
 import { pagoHastaDeMes, periodoActual, sumarMeses } from "@/lib/cobros";
 import { cuerpoDePlan, puedeReutilizarPlan } from "@/lib/debito-automatico";
 import { crearPlanMp, ErrorDeMercadoPago, obtenerPlanMp, type PlanDeMercadoPago } from "@/lib/mercadopago-cliente";
+import { mesBonificado } from "@/lib/queries/bonificaciones";
 
 /*
  * El plan de Mercado Pago de cada institución (ver CLAUDE.md, "Mercado Pago"). La persona se suscribe entrando al enlace de ese plan, y como
@@ -47,6 +48,8 @@ export async function estadoDePago(institucionId: string, ejecutor: Lector = get
     .from(facturas)
     .where(and(eq(facturas.institucionId, institucionId), gte(facturas.periodo, sumarMeses(actual, -11)), lte(facturas.periodo, actual)));
   const pagoHasta = pagoHastaDeMes(actual, filas);
+  // Un mes bonificado por recomendar cuenta como ya pago: activar el débito ahora lo cobraría para tener que devolverlo.
+  if (pagoHasta === null && (await mesBonificado(ejecutor, institucionId, actual))) return { mesActualPago: true, pagoHasta: actual };
   return { mesActualPago: pagoHasta !== null, pagoHasta };
 }
 

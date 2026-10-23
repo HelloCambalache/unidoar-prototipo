@@ -41,7 +41,7 @@ export async function guardarPlanes(entrada: unknown, base: string): Promise<Res
     const inicial = CONDICIONES_POR_DEFECTO;
     await tx
       .insert(planesCondiciones)
-      .values({ id: 1, sedesMultisede: inicial.sedesMultisede, descuentoSedeExtra: inicial.descuentoSedeExtra, puntualVigenciaDias: inicial.puntual.vigenciaDias, puntualBusquedasAbiertas: inicial.puntual.busquedasAbiertas, puntualIncluyeCursos: inicial.puntual.incluyeCursos, puntualIncluyeBuscador: inicial.puntual.incluyeBuscador, packMeses: inicial.pack.meses, packMesesPagos: inicial.pack.mesesQueSePagan, packMesesReferido: inicial.pack.mesesConReferido, tiposColegio: inicial.tiposColegio })
+      .values({ id: 1, sedesMultisede: inicial.sedesMultisede, descuentoSedeExtra: inicial.descuentoSedeExtra, puntualVigenciaDias: inicial.puntual.vigenciaDias, puntualBusquedasAbiertas: inicial.puntual.busquedasAbiertas, puntualIncluyeCursos: inicial.puntual.incluyeCursos, puntualIncluyeBuscador: inicial.puntual.incluyeBuscador, referidoMesesMensual: inicial.referidoMesesMensual, packMeses: inicial.pack.meses, packMesesPagos: inicial.pack.mesesQueSePagan, packMesesReferido: inicial.pack.mesesConReferido, tiposColegio: inicial.tiposColegio })
       .onConflictDoNothing();
     await tx.select({ id: planesCondiciones.id }).from(planesCondiciones).where(eq(planesCondiciones.id, 1)).for("update");
     const actual = edicionDesdeCatalogo(await leerCatalogoDePlanes(tx));
@@ -78,6 +78,7 @@ export async function guardarPlanes(entrada: unknown, base: string): Promise<Res
         puntualBusquedasAbiertas: c.puntual.busquedasAbiertas,
         puntualIncluyeCursos: c.puntual.incluyeCursos,
         puntualIncluyeBuscador: c.puntual.incluyeBuscador,
+        referidoMesesMensual: c.referidoMesesMensual,
         packMeses: c.pack.meses,
         packMesesPagos: c.pack.mesesQueSePagan,
         packMesesReferido: c.pack.mesesConReferido,

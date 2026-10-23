@@ -3,10 +3,13 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CompartirReferido } from "@/components/institucion/compartir-referido";
+import { MesesBonificados } from "@/components/institucion/meses-bonificados";
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { requerirInstitucion } from "@/lib/auth";
+import { mesesBonificadosTexto, mesesTexto, puedeBonificarMeses } from "@/lib/bonificacion";
 import { fechaCorta } from "@/lib/fechas";
+import { mesesDe } from "@/lib/queries/bonificaciones";
 import { codigoDeInstitucion, referidosDe } from "@/lib/queries/referidos";
 import { planes } from "@/lib/queries/planes";
 import { beneficioDeReferido, INFO_ESTADO_REFERIDO, resumenDeReferidos, rutaDeReferido } from "@/lib/referidos";
@@ -19,18 +22,27 @@ const PASOS = [
   "Le mandás tu enlace a una institución que todavía no usa UNIDOAR.",
   "Crea su cuenta de institución con ese enlace: queda anotada como recomendada por la tuya.",
   "El equipo la verifica y, cuando paga su primera factura, tu beneficio queda listo.",
-  "Lo aplicamos cuando contratás el pack por adelantado.",
+  "Lo aplicamos nosotros: en tu pack por adelantado, o con meses sin cargo si pagás mes a mes.",
 ];
 
 /** "1 mes" · "2 meses" */
-const meses = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
+const meses = mesesTexto;
 
 export default async function Referidos() {
   const { institucion } = await requerirInstitucion();
-  const [codigo, referidos, P, origen] = await Promise.all([codigoDeInstitucion(institucion.id), referidosDe(institucion.id), planes(), origenSitio()]);
+  const [codigo, referidos, P, origen, mesesGanados] = await Promise.all([
+    codigoDeInstitucion(institucion.id),
+    referidosDe(institucion.id),
+    planes(),
+    origenSitio(),
+    mesesDe(institucion.id),
+  ]);
   const url = `${origen}${rutaDeReferido(codigo)}`;
   const b = beneficioDeReferido(P.condiciones.pack);
   const resumen = resumenDeReferidos(referidos.map((r) => r.estado));
+  // Los meses sin cargo para quien paga mes a mes: no se ofrecen con el plan anual ni con la búsqueda puntual (no tienen mensualidad).
+  const mesesMensual = P.condiciones.referidoMesesMensual;
+  const ofreceMeses = mesesMensual > 0 && puedeBonificarMeses(institucion.plan, P.esPuntual(institucion.plan));
 
   return (
     <>
@@ -50,11 +62,17 @@ export default async function Referidos() {
 
         <Tarjeta como="section" className="p-[22px]">
           <h2 className="m-0 mb-1 text-base leading-tight font-semibold">Qué ganás</h2>
-          <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
+          <p className={`m-0 text-sm leading-normal text-tinta-2 ${ofreceMeses ? "mb-2" : "mb-4"}`}>
             Por cada institución que recomendás y se suma a la red, en el pack de {b.mesesDelPack} meses por adelantado pagás{" "}
             <b className="font-semibold text-tinta">{b.pagaConReferido}</b> en lugar de {b.pagaSinReferido}
             {b.mesesDeMenos > 0 ? `: ${meses(b.mesesDeMenos)} menos` : ""}.
           </p>
+          {ofreceMeses && (
+            <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
+              Si en cambio pagás mes a mes, ganás <b className="font-semibold text-tinta">{meses(mesesMensual)} sin cargo</b> por cada institución que recomendás: se descuentan de tus
+              próximas facturas (si pagás con débito automático, te devolvemos lo cobrado de cada mes).
+            </p>
+          )}
           <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
             {PASOS.map((paso, i) => (
               <li key={paso} className="flex items-start gap-3 text-sm leading-normal text-tinta-2">
@@ -69,10 +87,13 @@ export default async function Referidos() {
             ))}
           </ol>
           <p className="m-0 mt-4 text-xs leading-normal text-apagado">
-            El beneficio se aplica una vez que la institución recomendada pagó su primera factura y lo carga el equipo al facturar. Una cuenta no puede
+            El beneficio se aplica una vez que la institución recomendada pagó su primera factura y lo carga el equipo. Una cuenta no puede
             recomendarse a sí misma ni a otra institución de la misma persona.
           </p>
         </Tarjeta>
+
+        <MesesBonificados meses={mesesGanados} />
+
 
         <Tarjeta como="section" className="p-[22px]">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -103,6 +124,11 @@ export default async function Referidos() {
                       </div>
                       <p className="m-0 mt-1 text-[13px] leading-snug text-apagado">
                         {info.significado} · Se registró el {fechaCorta(r.creadoEn)}
+                        {r.beneficioTipo === "meses" && r.meses
+                          ? ` · ${mesesBonificadosTexto(r.meses.total)} (${r.meses.usados} ${r.meses.usados === 1 ? "usado" : "usados"})`
+                          : r.beneficioTipo === "pack"
+                            ? " · aplicado en tu pack por adelantado"
+                            : ""}
                       </p>
                     </div>
                     <Insignia tono={info.tono} className="flex-none">
