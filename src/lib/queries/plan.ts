@@ -6,7 +6,8 @@ import { etiquetaDeCobertura, etiquetaPeriodo, pagoHastaDeMes, periodoActual } f
 import { estadoDeFactura, periodoLegible, type EstadoFactura } from "@/lib/facturacion";
 import { fechaDeInput, haceTiempo } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
-import { esClavePlan, type PlanClave } from "@/lib/planes";
+import { esClavePlan, type AcuerdoDePrecio, type PlanClave } from "@/lib/planes";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes } from "@/lib/queries/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -93,6 +94,8 @@ export type DatosDePlan = {
   plan: PlanClave;
   /** Cuántas sedes tiene la institución: el monto del plan suma las adicionales. */
   sedes: number;
+  /** El precio acordado con la institución (abono o convenio), o null si paga el de lista. */
+  acuerdo: AcuerdoDePrecio | null;
   /** Si un semestre pagado al contado cubre el mes en curso, hasta qué mes ("marzo 2027"); null si no. */
   semestrePagoHasta: string | null;
   puedeCambiar: boolean;
@@ -107,7 +110,7 @@ export type DatosDePlan = {
 export async function datosDePlan(institucion: Institucion, usuarioId: string): Promise<DatosDePlan> {
   const db = getDb();
   const ahora = new Date();
-  const [P, rol, filas, pendiente, sedes] = await Promise.all([
+  const [P, rol, filas, pendiente, sedes, acuerdo] = await Promise.all([
     planes(),
     rolEnInstitucion(institucion, usuarioId),
     db
@@ -118,6 +121,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
       .limit(60),
     solicitudPendiente(institucion.id),
     cantidadDeSedes(db, [institucion.id]),
+    acuerdoDe(db, institucion.id),
   ]);
 
   const lista = filas.map(
@@ -142,6 +146,7 @@ export async function datosDePlan(institucion: Institucion, usuarioId: string): 
   return {
     plan: esClavePlan(institucion.plan) ? institucion.plan : "fundador",
     sedes: sedes.get(institucion.id) ?? 1,
+    acuerdo,
     semestrePagoHasta: semestreHasta ? etiquetaPeriodo(semestreHasta).toLowerCase() : null,
     puedeCambiar: puedeGestionarPlan(rol),
     facturas: lista,

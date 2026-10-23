@@ -5,7 +5,9 @@ import { SedesFormulario } from "@/components/institucion/sedes-formulario";
 import { ListaDeSedes } from "@/components/instituciones/lista-de-sedes";
 import { requerirInstitucion } from "@/lib/auth";
 import { esRolGestor } from "@/lib/equipo";
+import { getDb } from "@/db";
 import { pesos } from "@/lib/planes";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { planes } from "@/lib/queries/planes";
 import { sedesParaEditar } from "@/lib/queries/sedes";
@@ -19,14 +21,17 @@ export const metadata: Metadata = { title: "Sedes" };
  */
 export default async function SedesPage() {
   const { usuario, institucion: i } = await requerirInstitucion();
-  const [sedes, rol, P] = await Promise.all([sedesParaEditar(i), rolEnInstitucion(i, usuario.id), planes()]);
+  const [sedes, rol, P, acuerdo] = await Promise.all([sedesParaEditar(i), rolEnInstitucion(i, usuario.id), planes(), acuerdoDe(getDb(), i.id)]);
   const gestor = esRolGestor(rol);
-  // Cada sede adicional se suma al abono (con descuento): se avisa acá, antes de agregarla, no recién en la factura.
+  // Cada sede adicional se suma al abono (con descuento): se avisa acá, antes de agregarla, no recién en la factura. Con un convenio a
+  // medida el monto es fijo: se avisa que sumar sedes no lo cambia.
   const plan = P.planDe(i.plan);
   const avisoDeSedes =
-    plan.porSede || P.condiciones.descuentoSedeExtra >= 100
-      ? null
-      : `Cada sede adicional se suma a tu abono: ${pesos(P.precioDeSedeExtra(i.plan))} por mes${P.condiciones.descuentoSedeExtra > 0 ? ` (${P.condiciones.descuentoSedeExtra} % menos que la primera)` : ""}. Se cobra desde la próxima factura.`;
+    acuerdo?.modalidad === "total"
+      ? "Tu convenio con UNIDOAR es un monto fijo por mes: sumar sedes no cambia lo que pagás."
+      : plan.porSede || P.condiciones.descuentoSedeExtra >= 100
+        ? null
+        : `Cada sede adicional se suma a tu abono: ${pesos(P.precioDeSedeExtra(i.plan, acuerdo))} por mes${P.condiciones.descuentoSedeExtra > 0 ? ` (${P.condiciones.descuentoSedeExtra} % menos que la primera)` : ""}. Se cobra desde la próxima factura.`;
 
   return (
     <>

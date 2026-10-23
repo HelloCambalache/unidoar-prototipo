@@ -7,7 +7,7 @@ import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
-import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
+import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
 /**
@@ -18,6 +18,7 @@ export function PlanPanel({
   catalogo,
   plan,
   sedes,
+  acuerdo,
   semestrePagoHasta,
   proximoCobro,
   medioPago,
@@ -30,6 +31,8 @@ export function PlanPanel({
   plan: PlanClave;
   /** Cuántas sedes tiene la institución: con más de una, el monto suma las adicionales. */
   sedes: number;
+  /** El precio acordado con la institución (abono o convenio a medida), si lo tiene; sin acuerdo paga el de lista. */
+  acuerdo: AcuerdoDePrecio | null;
   /** Si un semestre pagado al contado cubre el mes en curso, hasta qué mes ("marzo 2027"). */
   semestrePagoHasta: string | null;
   /** "10 de octubre de 2026 · $ 54.000" */
@@ -46,7 +49,9 @@ export function PlanPanel({
   const [pendiente, empezar] = useTransition();
   const actual = P.planDe(plan);
   // Con más de una sede lo que se paga por período no es el precio del plan: se muestra el total y de dónde sale.
-  const desglose = P.desgloseDeMonto(plan, sedes);
+  const desglose = P.desgloseDeMonto(plan, sedes, acuerdo);
+  // Con un precio acordado (o varias sedes) lo que se paga por período no es el precio de lista del plan: se muestra el total y de dónde sale.
+  const mostrarTotal = desglose.sedes > 1 || desglose.acordado;
   const conVariasSedes = desglose.sedes > 1;
   const sedesAdicionales = `${desglose.adicionales} ${desglose.adicionales === 1 ? "sede adicional" : "sedes adicionales"}`;
 
@@ -78,10 +83,17 @@ export function PlanPanel({
             <Insignia className="bg-white/[.14] text-navy-100">{actual.label}</Insignia>
           </div>
           <div className="text-[26px] leading-[1.2] font-semibold">
-            {pesos(conVariasSedes ? desglose.total : actual.precio)}
+            {pesos(mostrarTotal ? desglose.total : actual.precio)}
             <span className="text-sm leading-none font-normal text-white/60">/{actual.periodo}</span>
           </div>
-          {conVariasSedes && (
+          {desglose.acordado && (
+            <div className="mt-1 text-[13px] leading-normal text-white/65">
+              {desglose.convenio
+                ? `Convenio acordado con UNIDOAR: un monto fijo, sin importar las sedes${conVariasSedes ? ` (${desglose.sedes} sedes)` : ""}.`
+                : `Precio acordado con UNIDOAR${conVariasSedes ? "" : " (el de lista era " + pesos(actual.precio) + ")"}.`}
+            </div>
+          )}
+          {conVariasSedes && !desglose.convenio && (
             <div className="mt-1 text-[13px] leading-normal text-white/65">
               {actual.porSede
                 ? `${desglose.sedes} sedes × ${pesos(desglose.base)}`

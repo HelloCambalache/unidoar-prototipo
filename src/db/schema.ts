@@ -900,12 +900,37 @@ export const planes = pgTable("planes", {
   etiqueta: text("etiqueta").notNull(),
   /** Pesos por mes (por año en el plan Anual; por sede en Multisede). Los meses ya facturados no cambian: `facturas.monto` guarda lo cobrado. */
   precio: integer("precio").notNull(),
+  /**
+   * Piso del rango de precio (el precio es el tope, la "lista"): hasta dónde puede bajar el equipo el abono de una institución al acordar un
+   * precio con ella (`acuerdos_precio`). null: sin piso, el abono no se negocia. Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar).
+   */
+  precioMinimo: integer("precio_minimo"),
   resumen: text("resumen").notNull().default(""),
   detalle: text("detalle").notNull().default(""),
   vigente: boolean("vigente").notNull().default(true),
   ...marcasDeTiempo,
 });
 export type PlanFila = typeof planes.$inferSelect;
+
+/**
+ * Precio acordado con una institución (a lo sumo uno por institución; sin fila, paga el de lista). Lo carga el equipo desde la ficha de cobros:
+ * `abono` es un abono propio dentro del rango del plan (entre el piso y la lista) y `total` un monto mensual fijo a medida (convenio de una red).
+ * Rige desde la próxima factura; las ya emitidas guardan su monto. Tabla aparte de `instituciones` a propósito (agregarle una columna rompe las
+ * consultas hasta correr el script). Creada a mano con `pnpm db:planes`, con RLS.
+ */
+export const acuerdosPrecio = pgTable("acuerdos_precio", {
+  institucionId: uuid("institucion_id")
+    .primaryKey()
+    .references(() => instituciones.id, { onDelete: "cascade" }),
+  /** abono | total */
+  modalidad: text("modalidad").notNull(),
+  /** Pesos por mes. */
+  monto: integer("monto").notNull(),
+  /** Qué se acordó y con quién (interno del equipo: la institución no lo ve). */
+  nota: text("nota"),
+  ...marcasDeTiempo,
+});
+export type AcuerdoPrecioFila = typeof acuerdosPrecio.$inferSelect;
 
 /** Condiciones de los planes (una sola fila, `id = 1`): desde cuántas sedes es Multisede, el pack por adelantado y qué tipos pagan el arancel de colegios. */
 export const planesCondiciones = pgTable("planes_condiciones", {

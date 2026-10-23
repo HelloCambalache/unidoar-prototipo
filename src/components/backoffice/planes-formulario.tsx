@@ -83,6 +83,10 @@ export function PlanesFormulario({
   const [precios, setPrecios] = useState<Record<PlanClave, string>>(
     () => Object.fromEntries(CLAVES_PLAN.map((c) => [c, String(inicial.planes[c].precio)])) as Record<PlanClave, string>,
   );
+  // El piso del rango también se escribe como texto: vacío es "sin piso".
+  const [pisos, setPisos] = useState<Record<PlanClave, string>>(
+    () => Object.fromEntries(CLAVES_PLAN.map((c) => [c, inicial.planes[c].precioMinimo === null ? "" : String(inicial.planes[c].precioMinimo)])) as Record<PlanClave, string>,
+  );
   const [confirmando, setConfirmando] = useState(false);
   const [intento, setIntento] = useState(false);
   const [errorDelServidor, setErrorDelServidor] = useState<{ error: string; campos: Record<string, string> } | null>(null);
@@ -113,6 +117,12 @@ export function PlanesFormulario({
     cambiarPlan(clave, "precio", aNumero(limpio));
   };
 
+  const cambiarPiso = (clave: PlanClave, texto: string) => {
+    const limpio = soloDigitos(texto).slice(0, 8);
+    setPisos((p) => ({ ...p, [clave]: limpio }));
+    cambiarPlan(clave, "precioMinimo", limpio ? Number(limpio) : null);
+  };
+
   const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
@@ -138,6 +148,9 @@ export function PlanesFormulario({
   const descartar = () => {
     setDatos(inicial);
     setPrecios(Object.fromEntries(CLAVES_PLAN.map((c) => [c, String(inicial.planes[c].precio)])) as Record<PlanClave, string>);
+    setPisos(
+      Object.fromEntries(CLAVES_PLAN.map((c) => [c, inicial.planes[c].precioMinimo === null ? "" : String(inicial.planes[c].precioMinimo)])) as Record<PlanClave, string>,
+    );
     setErrorDelServidor(null);
     setIntento(false);
   };
@@ -202,7 +215,7 @@ export function PlanesFormulario({
             />
           </Campo>
           <Campo
-            etiqueta={`Precio ($ ${unidad})`}
+            etiqueta={`Precio de lista ($ ${unidad})`}
             error={verError(rutaPrecio)}
             ayuda={p.precio > 0 ? `Se ve como ${pesos(p.precio)}` : undefined}
             requerido
@@ -215,6 +228,26 @@ export function PlanesFormulario({
               onChange={(e) => cambiarPrecio(clave, e.target.value)}
             />
           </Campo>
+          {base.periodo === "mes" && (
+            <Campo
+              etiqueta="Precio mínimo ($, optativo)"
+              error={verError(`planes.${clave}.precioMinimo`)}
+              ayuda={
+                p.precioMinimo !== null && p.precioMinimo < p.precio
+                  ? `Desde la ficha de cobros se puede acordar con cada institución un abono entre ${pesos(p.precioMinimo)} y ${pesos(p.precio)}.`
+                  : "Sin piso, el abono no se negocia. Con un piso se puede acordar un precio entre el piso y la lista, institución por institución."
+              }
+              className="min-[761px]:col-start-2"
+            >
+              <Input
+                inputMode="numeric"
+                autoComplete="off"
+                value={pisos[clave]}
+                aria-invalid={!!verError(`planes.${clave}.precioMinimo`)}
+                onChange={(e) => cambiarPiso(clave, e.target.value)}
+              />
+            </Campo>
+          )}
           <Campo etiqueta="Resumen" ayuda="Una línea, debajo del nombre." error={verError(`planes.${clave}.resumen`)} className="min-[761px]:col-span-2">
             <Input
               value={p.resumen}
@@ -269,7 +302,7 @@ export function PlanesFormulario({
         planes: Object.fromEntries(
           CLAVES_PLAN.map((c) => {
             const p = datos.planes[c];
-            return [c, { ...PLANES_POR_DEFECTO[c], label: p.etiqueta, precio: p.precio, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente }];
+            return [c, { ...PLANES_POR_DEFECTO[c], label: p.etiqueta, precio: p.precio, precioMinimo: p.precioMinimo, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente }];
           }),
         ) as CatalogoDePlanes["planes"],
         condiciones: { ...datos.condiciones, pack: { ...datos.condiciones.pack }, tiposColegio: [...datos.condiciones.tiposColegio] },

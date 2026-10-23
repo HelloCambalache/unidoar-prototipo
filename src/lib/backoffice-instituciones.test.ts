@@ -64,6 +64,18 @@ describe("actividad del equipo al editar una institución", () => {
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", mesesCubiertos: 1 }), "Registró el pago de Octubre 2026");
   });
 
+  it("cuenta el precio acordado con los montos de antes y de después, sin la nota", () => {
+    assert.equal(
+      describirAccion("institucion.precio_acordado", { antes: null, despues: { modalidad: "abono", monto: 48_000 }, nota: "secreta" }),
+      "Cambió el precio acordado: precio de lista → abono acordado $ 48.000",
+    );
+    assert.equal(
+      describirAccion("institucion.precio_acordado", { antes: { modalidad: "total", monto: 180_000 }, despues: null }),
+      "Cambió el precio acordado: convenio $ 180.000 → precio de lista",
+    );
+    assert.equal(describirAccion("institucion.precio_acordado", null), "Cambió el precio acordado: precio de lista → precio de lista", "un detalle roto no rompe la lectura");
+  });
+
   it("sin lista de campos no deja un separador colgando", () => {
     assert.equal(describirAccion("institucion.editar_perfil", {}), "Editó el perfil público");
     assert.equal(describirAccion("institucion.editar_perfil", null), "Editó el perfil público");

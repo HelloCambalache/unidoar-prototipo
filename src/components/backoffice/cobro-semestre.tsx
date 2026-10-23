@@ -17,7 +17,7 @@ import {
   MEDIOS_SEMESTRE,
   periodoActual,
 } from "@/lib/cobros";
-import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
+import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -32,6 +32,7 @@ export type FacturaDelSemestre = { periodo: string; estado: string; mesesCubiert
 export function CobroSemestre({
   institucionId,
   sedes,
+  acuerdo = null,
   catalogo,
   plan,
   periodoSugerido,
@@ -41,6 +42,8 @@ export function CobroSemestre({
   institucionId: string;
   /** Cuántas sedes tiene (el semestre es el monto mensual, con sus sedes adicionales, por los meses que se pagan). */
   sedes: number;
+  /** El precio acordado con la institución: el semestre se calcula con él. */
+  acuerdo?: AcuerdoDePrecio | null;
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
@@ -74,7 +77,7 @@ export function CobroSemestre({
     setAbierto(true);
   };
 
-  const mensual = P.montoDePlan(plan, sedes);
+  const mensual = P.montoDePlan(plan, sedes, acuerdo);
   const total = mensual * mesesQueSePagan;
   const bonificado = mensual * (meses - mesesQueSePagan);
 

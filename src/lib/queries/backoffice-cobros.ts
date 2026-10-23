@@ -18,6 +18,7 @@ import {
 import { registrarAuditoria } from "@/lib/auditoria";
 import { correoDeFacturaNueva } from "@/lib/correo/eventos";
 import type { PlanClave, Planes } from "@/lib/planes";
+import { acuerdoDe, acuerdosDePrecio } from "@/lib/queries/acuerdos";
 import { planes as cargarPlanes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
@@ -78,9 +79,12 @@ export async function tablaDeCobros(): Promise<{ resumen: ResumenCobros; filas: 
   }
 
   const activas = insts.filter((i) => !i.suspendida);
-  const sedesPor = await cantidadDeSedes(db, activas.map((i) => i.id));
+  const [sedesPor, acuerdosPor] = await Promise.all([
+    cantidadDeSedes(db, activas.map((i) => i.id)),
+    acuerdosDePrecio(db, activas.map((i) => i.id)),
+  ]);
   const resumen: ResumenCobros = {
-    mrr: activas.reduce((suma, i) => suma + P.equivalenteMensual(i.plan, sedesPor.get(i.id) ?? 1), 0),
+    mrr: activas.reduce((suma, i) => suma + P.equivalenteMensual(i.plan, sedesPor.get(i.id) ?? 1, acuerdosPor.get(i.id) ?? null), 0),
     suscripcionesActivas: activas.length,
     vencidos: { cantidad: 0, monto: 0 },
     sinMarcar: 0,
@@ -291,7 +295,7 @@ export async function aplicarPlanAlPeriodoActual(
 ): Promise<ResultadoFacturaDelPeriodo> {
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
-  const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1);
+  const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, await acuerdoDe(tx, institucion.id));
 
   const [existente] = await tx
     .select()
@@ -370,7 +374,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
   if (activas.length === 0) return { periodo, creadas: [], omitidas: {}, sinFacturaPrevia: 0 };
 
   const ids = activas.map((i) => i.id);
-  const sedesPor = await cantidadDeSedes(ejecutor, ids);
+  const [sedesPor, acuerdosPor] = await Promise.all([cantidadDeSedes(ejecutor, ids), acuerdosDePrecio(ejecutor, ids)]);
   const [conFacturas, recientes] = await Promise.all([
     ejecutor.select({ institucionId: facturas.institucionId }).from(facturas).where(inArray(facturas.institucionId, ids)).groupBy(facturas.institucionId),
     ejecutor
@@ -381,7 +385,7 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
 
   const conHistorial = new Set(conFacturas.map((f) => f.institucionId));
   const { crear, omitidas } = planificarFacturas(
-    activas.filter((i) => conHistorial.has(i.id)).map((i) => ({ ...i, sedes: sedesPor.get(i.id) ?? 1 })),
+    activas.filter((i) => conHistorial.has(i.id)).map((i) => ({ ...i, sedes: sedesPor.get(i.id) ?? 1, acuerdo: acuerdosPor.get(i.id) ?? null })),
     recientes,
     periodo,
     hoy,

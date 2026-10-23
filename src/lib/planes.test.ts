@@ -14,6 +14,7 @@ import {
   edicionDesdeCatalogo,
   huellaDePlanes,
   planesPorDefecto as P,
+  type AcuerdoDePrecio,
   type EdicionDePlanes,
   type FilaDeCondiciones,
   type FilaDePlan,
@@ -25,7 +26,7 @@ const edicion = (): EdicionDePlanes => structuredClone(edicionDesdeCatalogo(CATA
 const filasDeLanzamiento = (): FilaDePlan[] =>
   CLAVES_PLAN.map((clave) => {
     const p = CATALOGO_POR_DEFECTO.planes[clave];
-    return { clave, etiqueta: p.label, precio: p.precio, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente };
+    return { clave, etiqueta: p.label, precio: p.precio, precioMinimo: p.precioMinimo, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente };
   });
 
 const condicionesDeLanzamiento = (): FilaDeCondiciones => {
@@ -120,8 +121,8 @@ describe("sedes adicionales", () => {
   });
 
   it("explica el monto: la primera sede, las adicionales y el total", () => {
-    assert.deepEqual(P.desgloseDeMonto("colegio", 3), { sedes: 3, base: 50_000, adicionales: 2, precioAdicional: 25_000, total: 100_000 });
-    assert.deepEqual(P.desgloseDeMonto("deportiva", 1), { sedes: 1, base: 30_000, adicionales: 0, precioAdicional: 15_000, total: 30_000 });
+    assert.deepEqual(P.desgloseDeMonto("colegio", 3), { sedes: 3, base: 50_000, adicionales: 2, precioAdicional: 25_000, total: 100_000, convenio: false, acordado: false });
+    assert.deepEqual(P.desgloseDeMonto("deportiva", 1), { sedes: 1, base: 30_000, adicionales: 0, precioAdicional: 15_000, total: 30_000, convenio: false, acordado: false });
     for (const sedes of [1, 2, 4, 7]) {
       const d = P.desgloseDeMonto("colegio", sedes);
       assert.equal(d.total, d.base + d.adicionales * d.precioAdicional, "el desglose siempre suma el total");
@@ -146,6 +147,136 @@ describe("sedes adicionales", () => {
     assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), sinColumna).condiciones.descuentoSedeExtra, 50);
     assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), descuentoSedeExtra: 150 }).condiciones.descuentoSedeExtra, 50);
     assert.equal(catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), descuentoSedeExtra: 30 }).condiciones.descuentoSedeExtra, 30);
+  });
+});
+
+describe("precio acordado con una institución", () => {
+  const abono = (monto: number): AcuerdoDePrecio => ({ modalidad: "abono", monto });
+  const convenio = (monto: number): AcuerdoDePrecio => ({ modalidad: "total", monto });
+
+  it("sin acuerdo paga el de lista, como siempre", () => {
+    assert.equal(P.montoDePlan("colegio", 3, null), P.montoDePlan("colegio", 3));
+    assert.equal(P.abonoDe("colegio"), 50_000);
+  });
+
+  it("un abono acordado reemplaza al de lista, y las sedes adicionales siguen con su descuento sobre ESE abono", () => {
+    assert.equal(P.montoDePlan("colegio", 1, abono(48_000)), 48_000);
+    assert.equal(P.montoDePlan("colegio", 2, abono(48_000)), 48_000 + 24_000);
+    assert.equal(P.montoDePlan("colegio", 4, abono(48_000)), 48_000 + 3 * 24_000);
+    assert.equal(P.precioDeSedeExtra("deportiva", abono(28_000)), 14_000);
+  });
+
+  it("un convenio a medida es un monto fijo: no depende de las sedes", () => {
+    for (const sedes of [1, 4, 9, 30]) assert.equal(P.montoDePlan("colegio", sedes, convenio(180_000)), 180_000);
+    assert.equal(P.montoDePlan("multisede", 12, convenio(95_000)), 95_000, "tampoco en un plan por sede");
+  });
+
+  it("en un plan por sede, un abono acordado es el precio de cada sede", () => {
+    assert.equal(P.montoDePlan("multisede", 6, abono(12_000)), 72_000);
+  });
+
+  it("un abono acordado nunca cobra más que la lista (cambió el plan o bajó la lista)", () => {
+    assert.equal(P.montoDePlan("deportiva", 1, abono(48_000)), 30_000, "un abono de colegio aplicado a un club");
+    assert.equal(P.abonoDe("colegio", abono(60_000)), 50_000);
+  });
+
+  it("explica el monto con un acuerdo: abono, convenio y sedes", () => {
+    assert.deepEqual(P.desgloseDeMonto("colegio", 3, abono(48_000)), {
+      sedes: 3,
+      base: 48_000,
+      adicionales: 2,
+      precioAdicional: 24_000,
+      total: 96_000,
+      convenio: false,
+      acordado: true,
+    });
+    assert.deepEqual(P.desgloseDeMonto("colegio", 5, convenio(200_000)), {
+      sedes: 5,
+      base: 200_000,
+      adicionales: 0,
+      precioAdicional: 0,
+      total: 200_000,
+      convenio: true,
+      acordado: true,
+    });
+  });
+
+  it("el MRR y el semestre siguen el acuerdo", () => {
+    assert.equal(P.equivalenteMensual("colegio", 1, abono(48_000)), 48_000);
+    assert.equal(P.equivalenteMensual("colegio", 1, convenio(180_000)), 180_000);
+    assert.equal(P.packDe("colegio", 1, abono(48_000)).anticipado, 240_000, "el ejemplo del esquema: 5 meses de $ 48.000");
+    assert.equal(P.packDe("colegio", 1, abono(48_000)).conReferido, 192_000, "y con referido, 4");
+    assert.equal(P.packDe("deportiva", 1, abono(28_000)).anticipado, 140_000);
+    assert.equal(P.packDe("deportiva", 1, abono(28_000)).conReferido, 112_000);
+  });
+
+  it("el rango de un abono va del piso a la lista; sin piso es un solo valor", () => {
+    assert.deepEqual(P.rangoDeAbono("colegio"), { minimo: 48_000, maximo: 50_000 });
+    assert.deepEqual(P.rangoDeAbono("deportiva"), { minimo: 28_000, maximo: 30_000 });
+    assert.deepEqual(P.rangoDeAbono("multisede"), { minimo: 15_000, maximo: 15_000 });
+  });
+
+  it("acepta un abono dentro del rango y rechaza el que se sale", () => {
+    assert.equal(P.errorDeAcuerdo("colegio", abono(48_000)), null);
+    assert.equal(P.errorDeAcuerdo("colegio", abono(49_000)), null);
+    assert.equal(P.errorDeAcuerdo("colegio", abono(50_000)), null);
+    assert.match(P.errorDeAcuerdo("colegio", abono(47_999))!, /entre \$ 48\.000 y \$ 50\.000/);
+    assert.match(P.errorDeAcuerdo("colegio", abono(50_001))!, /entre \$ 48\.000 y \$ 50\.000/);
+  });
+
+  it("sin piso no hay abono para acordar: hace falta un piso o un convenio", () => {
+    assert.match(P.errorDeAcuerdo("multisede", abono(14_000))!, /no tiene un piso/);
+    assert.equal(P.errorDeAcuerdo("multisede", abono(15_000)), null);
+    assert.equal(P.errorDeAcuerdo("multisede", convenio(14_000)), null, "un convenio no tiene rango");
+  });
+
+  it("un convenio puede estar por arriba o por debajo del rango, pero tiene que ser un monto válido", () => {
+    assert.equal(P.errorDeAcuerdo("colegio", convenio(400_000)), null);
+    assert.equal(P.errorDeAcuerdo("colegio", convenio(20_000)), null);
+    for (const mal of [0, -5, 1000.5, 99_000_000]) assert.ok(P.errorDeAcuerdo("colegio", convenio(mal)), `${mal} no debería pasar`);
+  });
+});
+
+describe("el piso del rango de precio", () => {
+  it("los planes de colegios y clubes arrancan con el piso del esquema; el resto, sin piso", () => {
+    assert.equal(P.planes.colegio.precioMinimo, 48_000);
+    assert.equal(P.planes.deportiva.precioMinimo, 28_000);
+    for (const clave of ["multisede", "fundador", "estandar", "anual"] as const) assert.equal(P.planes[clave].precioMinimo, null);
+  });
+
+  it("de la base toma el piso que cargó el equipo, y null es 'sin piso' (no vuelve al de lanzamiento)", () => {
+    const con = (clave: string, precioMinimo: number | null | undefined) =>
+      filasDeLanzamiento().map((f) => (f.clave === clave ? { ...f, precioMinimo } : f));
+    assert.equal(catalogoDesdeLaBase(con("colegio", 45_000), condicionesDeLanzamiento()).planes.colegio.precioMinimo, 45_000);
+    assert.equal(catalogoDesdeLaBase(con("colegio", null), condicionesDeLanzamiento()).planes.colegio.precioMinimo, null, "el equipo lo sacó");
+    assert.equal(catalogoDesdeLaBase(con("colegio", undefined), condicionesDeLanzamiento()).planes.colegio.precioMinimo, 48_000, "sin el dato vale el de lanzamiento");
+  });
+
+  it("un piso que no tiene sentido (más alto que la lista, cero o con centavos) se descarta", () => {
+    for (const roto of [60_000, 0, -1, 1000.5]) {
+      const filas = filasDeLanzamiento().map((f) => (f.clave === "colegio" ? { ...f, precioMinimo: roto } : f));
+      assert.equal(catalogoDesdeLaBase(filas, condicionesDeLanzamiento()).planes.colegio.precioMinimo, null, `${roto}`);
+    }
+  });
+
+  it("la edición acepta un piso igual o menor a la lista y no uno más alto", () => {
+    const e = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
+    e.planes.colegio.precioMinimo = 50_000;
+    assert.equal(edicionDePlanesSchema.safeParse(e).success, true);
+    e.planes.colegio.precioMinimo = null;
+    assert.equal(edicionDePlanesSchema.safeParse(e).success, true, "sin piso");
+    e.planes.colegio.precioMinimo = 50_001;
+    const r = edicionDePlanesSchema.safeParse(e);
+    assert.equal(r.success, false);
+    if (!r.success) assert.ok(camposDeErrorDePlanes(r.error)["planes.colegio.precioMinimo"]);
+    e.planes.colegio.precioMinimo = 0;
+    assert.equal(edicionDePlanesSchema.safeParse(e).success, false);
+  });
+
+  it("cambiar el piso queda anotado como cambio del plan", () => {
+    const despues = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
+    despues.planes.deportiva.precioMinimo = 25_000;
+    assert.deepEqual(cambiosDePlanes(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO), despues), [{ tipo: "plan", plan: "deportiva", campos: ["precio mínimo"] }]);
   });
 });
 

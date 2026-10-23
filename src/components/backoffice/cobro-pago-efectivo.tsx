@@ -7,7 +7,7 @@ import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
 import { DIAS_MAXIMOS_PAGO_ATRASADO, errorDeFechaDePago, etiquetaPeriodo, hoyAR, situacionDelMes } from "@/lib/cobros";
-import { CLAVES_PLAN, crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
+import { CLAVES_PLAN, crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -22,6 +22,7 @@ export type FacturaDelMes = { periodo: string; pagada: boolean; monto: number };
 export function CobroPagoEfectivo({
   institucionId,
   sedes,
+  acuerdo = null,
   catalogo,
   plan,
   periodoSugerido,
@@ -30,6 +31,8 @@ export function CobroPagoEfectivo({
   institucionId: string;
   /** Cuántas sedes tiene la institución (el monto de un plan por sede se multiplica por esto). */
   sedes: number;
+  /** El precio acordado con la institución: vale solo para su plan (con otro plan se factura el de lista). */
+  acuerdo?: AcuerdoDePrecio | null;
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
@@ -60,7 +63,7 @@ export function CobroPagoEfectivo({
 
   const factura = PERIODO_VALIDO.test(periodo) ? facturas.find((f) => f.periodo === periodo) : undefined;
   const situacion = situacionDelMes(factura ? { estado: factura.pagada ? "pagada" : "pendiente" } : null);
-  const monto = factura ? factura.monto : P.montoDePlan(planElegido, sedes);
+  const monto = factura ? factura.monto : P.montoDePlan(planElegido, sedes, planElegido === plan ? acuerdo : null);
 
   const guardar = () => {
     const falloFecha = fecha ? errorDeFechaDePago(fecha, hoyAR()) : "Elegí la fecha del pago.";

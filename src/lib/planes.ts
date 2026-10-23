@@ -23,7 +23,13 @@ export type Periodo = "mes" | "año";
 
 export type Plan = {
   label: string;
+  /** Precio de lista (el tope del rango). */
   precio: number;
+  /**
+   * Precio mínimo (el piso del rango): hasta dónde puede bajar el equipo el abono de una institución al acordar un precio con ella. Sin piso
+   * (null) el abono no se negocia: vale el de lista.
+   */
+  precioMinimo: number | null;
   periodo: Periodo;
   resumen: string;
   detalle: string;
@@ -62,12 +68,21 @@ export type CondicionesDePlanes = {
 
 export type CatalogoDePlanes = { planes: Record<PlanClave, Plan>; condiciones: CondicionesDePlanes };
 
+/**
+ * Un precio acordado con una institución (lo carga el equipo desde su ficha de cobros). Tiene dos modalidades:
+ *  - "abono": un abono propio dentro del rango del plan (entre el piso y la lista). Reemplaza al precio de lista como abono de la primera sede,
+ *    y las sedes adicionales siguen con su descuento sobre ESE abono.
+ *  - "total": un monto mensual fijo a medida (el convenio de una red): es lo que paga por mes sin importar cuántas sedes tenga.
+ */
+export type AcuerdoDePrecio = { modalidad: "abono" | "total"; monto: number };
+
 /* ───────────────────────────── Valores de lanzamiento (respaldo) ───────────────────────────── */
 
 export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   colegio: {
     label: "Plan Colegios",
     precio: 50_000,
+    precioMinimo: 48_000,
     periodo: "mes",
     resumen: "Búsquedas ilimitadas, sin comisión por contratación.",
     detalle: "Jardines, primarias, secundarias y terciarios, privados o públicos.",
@@ -77,6 +92,7 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   deportiva: {
     label: "Plan Clubes y academias",
     precio: 30_000,
+    precioMinimo: 28_000,
     periodo: "mes",
     resumen: "Búsquedas ilimitadas, sin comisión por contratación.",
     detalle: "Clubes, gimnasios, academias, escuelas deportivas, natatorios y centros de formación.",
@@ -86,6 +102,7 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   multisede: {
     label: "Plan Multisede",
     precio: 15_000,
+    precioMinimo: null,
     periodo: "mes",
     resumen: "Para redes de 5 sedes o más: el precio es por sede.",
     detalle: "Desde la quinta sede se factura por sede, no por institución.",
@@ -95,6 +112,7 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   fundador: {
     label: "Plan Fundador",
     precio: 54_000,
+    precioMinimo: null,
     periodo: "mes",
     resumen: "Búsquedas ilimitadas. Precio fijo mientras sigas suscripto.",
     detalle: "Plan anterior: precio congelado para las instituciones que entraron en el lanzamiento.",
@@ -104,6 +122,7 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   estandar: {
     label: "Plan Estándar",
     precio: 89_000,
+    precioMinimo: null,
     periodo: "mes",
     resumen: "Búsquedas ilimitadas.",
     detalle: "Plan anterior: precio de lista único, antes de separar por tipo de institución.",
@@ -113,6 +132,7 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
   anual: {
     label: "Plan Anual",
     precio: 720_000,
+    precioMinimo: null,
     periodo: "año",
     resumen: "Búsquedas ilimitadas, pago anual.",
     detalle: "Plan anterior: dos meses bonificados pagando el año completo por adelantado.",
@@ -179,8 +199,8 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
    * Lo que sale el pack por adelantado de un plan, con y sin referido. Con más de una sede (`sedes`), sobre lo que paga por mes
    * (`montoDePlan`: las sedes adicionales con su descuento): el semestre de una institución con 2 sedes son 5 veces su monto mensual.
    */
-  const packDe = (clave: PlanClave, sedes = 1) => {
-    const mensual = montoDePlan(clave, sedes);
+  const packDe = (clave: PlanClave, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
+    const mensual = montoDePlan(clave, sedes, acuerdo);
     const { meses, mesesQueSePagan, mesesConReferido } = condiciones.pack;
     return { lista: mensual * meses, anticipado: mensual * mesesQueSePagan, conReferido: mensual * mesesConReferido };
   };
@@ -192,48 +212,85 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   };
 
   /**
-   * Lo que paga cada sede adicional (de la segunda en adelante): el abono del plan con el descuento de `descuentoSedeExtra`. En un plan por
-   * sede (Multisede) cada sede paga el precio entero.
+   * El abono de la primera sede: el de lista o, si la institución tiene un abono acordado, ese. Un abono acordado nunca cobra más que la lista:
+   * si el plan cambió o la lista bajó por debajo de lo acordado, vale la lista (la ficha avisa que el acuerdo quedó fuera de rango).
    */
-  const precioDeSedeExtra = (clave: string) => {
-    const p = planDe(clave);
-    return p.porSede ? p.precio : Math.round((p.precio * (100 - condiciones.descuentoSedeExtra)) / 100);
+  const abonoDe = (clave: string, acuerdo: AcuerdoDePrecio | null = null) => {
+    const lista = planDe(clave).precio;
+    return acuerdo?.modalidad === "abono" ? Math.min(acuerdo.monto, lista) : lista;
   };
 
   /**
-   * Lo que se factura por período. En un plan por sede (Multisede) es el precio de una sede por la cantidad de sedes de la institución;
-   * en los demás, el abono del plan más cada sede adicional con su descuento (`precioDeSedeExtra`). Nunca menos de una sede.
+   * Lo que paga cada sede adicional (de la segunda en adelante): el abono (el de lista o el acordado) con el descuento de `descuentoSedeExtra`.
+   * En un plan por sede (Multisede) cada sede paga el precio entero.
    */
-  const montoDePlan = (clave: string, sedes = 1) => {
-    const p = planDe(clave);
+  const precioDeSedeExtra = (clave: string, acuerdo: AcuerdoDePrecio | null = null) => {
+    const abono = abonoDe(clave, acuerdo);
+    return planDe(clave).porSede ? abono : Math.round((abono * (100 - condiciones.descuentoSedeExtra)) / 100);
+  };
+
+  /**
+   * Lo que se factura por período. Con un convenio a medida ("total") es ese monto, sean cuantas sean las sedes. Si no: en un plan por sede
+   * (Multisede) es el precio de una sede por la cantidad de sedes; en los demás, el abono (el de lista o el acordado) más cada sede adicional
+   * con su descuento (`precioDeSedeExtra`). Nunca menos de una sede.
+   */
+  const montoDePlan = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
+    if (acuerdo?.modalidad === "total") return acuerdo.monto;
     const n = Math.max(1, Math.floor(sedes));
-    return p.porSede ? p.precio * n : p.precio + (n - 1) * precioDeSedeExtra(clave);
+    const abono = abonoDe(clave, acuerdo);
+    return planDe(clave).porSede ? abono * n : abono + (n - 1) * precioDeSedeExtra(clave, acuerdo);
   };
 
   /** El monto explicado: la primera sede, las adicionales y el total. Para mostrarlo ("$ 48.000 + 2 sedes adicionales de $ 24.000"). */
-  const desgloseDeMonto = (clave: string, sedes = 1) => {
-    const p = planDe(clave);
+  const desgloseDeMonto = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
     const n = Math.max(1, Math.floor(sedes));
-    const adicionales = p.porSede ? 0 : n - 1;
+    const convenio = acuerdo?.modalidad === "total";
     return {
       /** Cuántas sedes tiene en total. */
       sedes: n,
-      /** Lo que paga la primera sede (en un plan por sede, el precio por sede). */
-      base: p.precio,
-      adicionales,
+      /** Lo que paga la primera sede (en un plan por sede, el precio por sede). Con un convenio a medida, el total. */
+      base: convenio ? acuerdo.monto : abonoDe(clave, acuerdo),
+      adicionales: convenio || planDe(clave).porSede ? 0 : n - 1,
       /** Lo que paga cada sede adicional. */
-      precioAdicional: precioDeSedeExtra(clave),
-      total: montoDePlan(clave, n),
+      precioAdicional: convenio ? 0 : precioDeSedeExtra(clave, acuerdo),
+      total: montoDePlan(clave, n, acuerdo),
+      /** El monto es un convenio a medida (un total fijo), no un abono por sede. */
+      convenio,
+      /** Tiene un precio acordado (abono o convenio) en lugar del de lista. */
+      acordado: !!acuerdo,
     };
+  };
+
+  /**
+   * Entre qué valores puede estar un abono acordado: del piso del plan a su precio de lista. Sin piso, solo el de lista (el abono no se
+   * negocia), así que el rango es un solo valor.
+   */
+  const rangoDeAbono = (clave: string) => {
+    const p = planDe(clave);
+    return { minimo: Math.min(p.precioMinimo ?? p.precio, p.precio), maximo: p.precio };
+  };
+
+  /** Por qué un precio acordado no se puede guardar (null si está bien): un abono tiene que caer dentro del rango del plan. */
+  const errorDeAcuerdo = (clave: string, acuerdo: AcuerdoDePrecio): string | null => {
+    if (!Number.isInteger(acuerdo.monto) || acuerdo.monto < 1 || acuerdo.monto > 10_000_000) return "Escribí un monto en pesos, entero y mayor que cero.";
+    if (acuerdo.modalidad === "abono") {
+      const { minimo, maximo } = rangoDeAbono(clave);
+      if (acuerdo.monto < minimo || acuerdo.monto > maximo) {
+        return minimo === maximo
+          ? `Este plan no tiene un piso, así que el abono es el de lista (${pesos(maximo)}). Para otro monto usá un convenio a medida o cargá un precio mínimo en Planes.`
+          : `El abono tiene que estar entre ${pesos(minimo)} y ${pesos(maximo)}, el rango del plan. Para otro monto usá un convenio a medida.`;
+      }
+    }
+    return null;
   };
 
   /** "Plan Fundador" → "Fundador" (para tablas y filtros, donde "Plan" sobra). */
   const nombreDePlan = (clave: string) => planDe(clave).label.replace(/^Plan /, "");
 
   /** Lo que aporta una institución al MRR: el anual cuenta como precio / 12 y un plan por sede, el precio por la cantidad de sedes. */
-  const equivalenteMensual = (clave: string, sedes = 1) => {
+  const equivalenteMensual = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
     const p = planDe(clave);
-    const monto = montoDePlan(clave, sedes);
+    const monto = montoDePlan(clave, sedes, acuerdo);
     return p.periodo === "año" ? Math.round(monto / 12) : monto;
   };
 
@@ -252,8 +309,11 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     packDe,
     precioDePlan,
     precioDeSedeExtra,
+    abonoDe,
     montoDePlan,
     desgloseDeMonto,
+    rangoDeAbono,
+    errorDeAcuerdo,
     nombreDePlan,
     equivalenteMensual,
   };
@@ -266,7 +326,16 @@ export const planesPorDefecto: Planes = crearPlanes(CATALOGO_POR_DEFECTO);
 
 /* ───────────────────────────── De la base al catálogo ───────────────────────────── */
 
-export type FilaDePlan = { clave: string; etiqueta: string; precio: number; resumen: string; detalle: string; vigente: boolean };
+export type FilaDePlan = {
+  clave: string;
+  etiqueta: string;
+  precio: number;
+  /** El piso del rango. `null`: sin piso, el abono no se negocia. Sin el dato (undefined) vale el de lanzamiento. */
+  precioMinimo?: number | null;
+  resumen: string;
+  detalle: string;
+  vigente: boolean;
+};
 export type FilaDeCondiciones = {
   sedesMultisede: number;
   /** Puede faltar en una base a la que todavía no se le agregó la columna: en ese caso vale el de lanzamiento. */
@@ -290,10 +359,13 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
     const base = PLANES_POR_DEFECTO[clave];
     const fila = filasDePlanes.find((f) => f.clave === clave);
     if (!fila) continue;
+    const precio = entero(fila.precio, 1, 10_000_000) ? fila.precio : base.precio;
     planes[clave] = {
       ...base,
       label: typeof fila.etiqueta === "string" && fila.etiqueta.trim() ? fila.etiqueta.trim() : base.label,
-      precio: entero(fila.precio, 1, 10_000_000) ? fila.precio : base.precio,
+      precio,
+      // Un piso que no tiene sentido (más alto que la lista) se descarta: sin piso, el abono no se negocia.
+      precioMinimo: fila.precioMinimo === undefined ? base.precioMinimo : entero(fila.precioMinimo, 1, precio) ? fila.precioMinimo : null,
       resumen: typeof fila.resumen === "string" ? fila.resumen.trim() : base.resumen,
       detalle: typeof fila.detalle === "string" ? fila.detalle.trim() : base.detalle,
       vigente: typeof fila.vigente === "boolean" ? fila.vigente : base.vigente,
@@ -328,6 +400,13 @@ const edicionDePlanSchema = z.object({
     .int("El precio tiene que ser un número entero, sin centavos.")
     .min(1, "El precio tiene que ser mayor que cero.")
     .max(10_000_000, "Revisá el precio: es demasiado alto."),
+  /** El piso del rango (null: sin piso, el abono no se negocia). */
+  precioMinimo: z
+    .number({ error: "Escribí el precio mínimo en pesos." })
+    .int("El precio mínimo tiene que ser un número entero, sin centavos.")
+    .min(1, "El precio mínimo tiene que ser mayor que cero.")
+    .max(10_000_000, "Revisá el precio mínimo: es demasiado alto.")
+    .nullable(),
   resumen: texto(0, 160, "el resumen"),
   detalle: texto(0, 300, "el detalle"),
   vigente: z.boolean(),
@@ -353,6 +432,12 @@ export const edicionDePlanesSchema = z
     }),
   })
   .superRefine((d, ctx) => {
+    for (const clave of CLAVES_PLAN) {
+      const { precio, precioMinimo } = d.planes[clave];
+      if (precioMinimo !== null && precioMinimo > precio) {
+        ctx.addIssue({ code: "custom", path: ["planes", clave, "precioMinimo"], message: "El mínimo no puede ser más alto que el precio de lista." });
+      }
+    }
     for (const clave of ["colegio", "deportiva"] as const) {
       if (!d.planes[clave].vigente) {
         ctx.addIssue({ code: "custom", path: ["planes", clave, "vigente"], message: "Este plan tiene que seguir ofreciéndose: lo reciben las instituciones nuevas según su tipo." });
@@ -387,8 +472,8 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
   return {
     planes: Object.fromEntries(
       CLAVES_PLAN.map((k) => {
-        const { label, precio, resumen, detalle, vigente } = c.planes[k];
-        return [k, { etiqueta: label, precio, resumen, detalle, vigente }];
+        const { label, precio, precioMinimo, resumen, detalle, vigente } = c.planes[k];
+        return [k, { etiqueta: label, precio, precioMinimo, resumen, detalle, vigente }];
       }),
     ) as EdicionDePlanes["planes"],
     condiciones: {
@@ -403,6 +488,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
 const ETIQUETAS_DE_CAMPO: Record<keyof EdicionDePlan, string> = {
   etiqueta: "nombre",
   precio: "precio",
+  precioMinimo: "precio mínimo",
   resumen: "resumen",
   detalle: "detalle",
   vigente: "si se ofrece",
@@ -423,7 +509,7 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
     const a = antes.planes[clave];
     const d = despues.planes[clave];
     if (a.precio !== d.precio) cambios.push({ tipo: "precio", plan: clave, antes: a.precio, despues: d.precio });
-    const otros = (["etiqueta", "resumen", "detalle", "vigente"] as const).filter((c) => a[c] !== d[c]);
+    const otros = (["etiqueta", "precioMinimo", "resumen", "detalle", "vigente"] as const).filter((c) => a[c] !== d[c]);
     if (otros.length > 0) cambios.push({ tipo: "plan", plan: clave, campos: otros.map((c) => ETIQUETAS_DE_CAMPO[c]) });
   }
   const campos: string[] = [];

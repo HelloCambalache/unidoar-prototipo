@@ -11,6 +11,7 @@ import { decidirActivacion, esPlanDebitable, montoCobrable } from "@/lib/debito-
 import { fechaLarga } from "@/lib/fechas-curso";
 import { resumenDeError } from "@/lib/errores";
 import { diferirPrimerCobroActivo, mercadoPagoActivo } from "@/lib/mercadopago-config";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { buscarSuscripcionesDelPlanMp, ErrorDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { DEMASIADOS_PEDIDOS, permitirActivarDebito } from "@/lib/pedidos";
@@ -60,7 +61,7 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
 
   const P = await planes();
   const sedes = (await cantidadDeSedes(getDb(), [institucion.id])).get(institucion.id) ?? 1;
-  const monto = P.montoDePlan(institucion.plan, sedes);
+  const monto = P.montoDePlan(institucion.plan, sedes, await acuerdoDe(getDb(), institucion.id));
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
 
   // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, activarlo ahora lo cobraría dos veces. Según el interruptor,

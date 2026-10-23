@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { describirCambioDeAcuerdo, paraCalcular } from "@/lib/acuerdos";
 import { MENSAJE_CUIT, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { CLAVES_PLAN, esClavePlan, etiquetaDeCobertura, etiquetaPeriodo } from "@/lib/cobros";
 import { esCuitValido, formatearCuit } from "@/lib/documentos";
@@ -120,6 +121,11 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       const meses = typeof d.mesesCubiertos === "number" && d.mesesCubiertos > 1 ? d.mesesCubiertos : 1;
       const cuando = texto("periodo") ? etiquetaDeCobertura(texto("periodo")!, meses) : "una factura";
       return `Registró el pago de ${cuando}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
+    }
+    case "institucion.precio_acordado": {
+      // Solo montos (la nota del acuerdo es interna y no se anota): "precio de lista → abono acordado $ 48.000".
+      const acuerdo = (v: unknown) => (typeof v === "object" && v !== null ? paraCalcular(v as { modalidad: string; monto: number }) : null);
+      return `Cambió el precio acordado: ${describirCambioDeAcuerdo(acuerdo(d.antes), acuerdo(d.despues))}`;
     }
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;

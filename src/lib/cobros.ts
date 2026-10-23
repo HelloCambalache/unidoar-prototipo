@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { enlaceWhatsapp } from "@/lib/pipeline";
-import { CLAVES_PLAN, esClavePlan, pesos, planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
+import { CLAVES_PLAN, esClavePlan, pesos, planesPorDefecto, type AcuerdoDePrecio, type PlanClave, type Planes } from "@/lib/planes";
 
 // Las claves de plan son fijas (las referencian instituciones y facturas): se re-exportan acá porque los formularios de cobros las usan.
 export { CLAVES_PLAN, esClavePlan };
@@ -194,6 +194,8 @@ export type InstitucionFacturable = {
   medioPago: string | null;
   /** Cuántas sedes tiene (cuenta en un plan por sede como Multisede; sin dato, una). */
   sedes?: number;
+  /** El precio acordado con ella (abono o convenio), si tiene uno; sin acuerdo paga el de lista. */
+  acuerdo?: AcuerdoDePrecio | null;
 };
 /** Una factura ya existente de la institución, de los últimos 12 períodos (el actual incluido). */
 export type FacturaReciente = { institucionId: string; periodo: string; plan: string; estado: string; mesesCubiertos?: number | null };
@@ -252,7 +254,7 @@ export function planificarFacturas(
         institucionId: inst.id,
         plan: inst.plan,
         // En un plan por sede (Multisede), el precio de una sede por las sedes que tiene la institución.
-        monto: planes.montoDePlan(inst.plan, inst.sedes),
+        monto: planes.montoDePlan(inst.plan, inst.sedes, inst.acuerdo),
         periodo,
         fechaCobro: fecha < hoy ? hoy : fecha,
         medio: inst.medioPago,

@@ -38,6 +38,7 @@ import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, corr
 import { suscripcionVigente } from "@/lib/debito-automatico";
 import { pesos, type Planes } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes } from "@/lib/queries/planes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
@@ -200,7 +201,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
         monto = existente.monto;
         await tx.update(facturas).set({ estado: "pagada", pagadaEn, medio: MEDIO }).where(eq(facturas.id, existente.id));
       } else {
-        monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1);
+        monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1, await acuerdoParaPlan(tx, institucionId, plan));
         const [nueva] = await tx
           .insert(facturas)
           .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
@@ -261,6 +262,15 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
     console.error("No se pudo registrar el pago en efectivo", resumenDeError(e));
     return fallo("No pudimos registrar el pago. Probá de nuevo.");
   }
+}
+
+/**
+ * El precio acordado de la institución, SOLO si se factura con su plan: un abono acordado es sobre su plan, y aplicado a otro (por ejemplo el
+ * Anual) daría un monto sin sentido. Con otro plan, ese plan va a su precio de lista.
+ */
+async function acuerdoParaPlan(ejecutor: Ejecutor, institucionId: string, plan: string) {
+  const [inst] = await ejecutor.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+  return inst && inst.plan === plan ? acuerdoDe(ejecutor, institucionId) : null;
 }
 
 /** Si un semestre pago ya cubre el mes (que por eso no tiene factura propia), el mensaje para no cobrarlo dos veces; null si no. */
@@ -355,7 +365,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
       if (impedido) return fallo(impedido.error, impedido.campos);
 
       const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
-      const monto = P.montoDePlan(inst.plan, sedes) * mesesQueSePagan;
+      const monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesQueSePagan;
       const existente = cercanas.find((f) => f.periodo === periodo);
       let facturaId: string;
       if (existente) {
@@ -526,7 +536,11 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fechaCobro, medio } = datos.data;
   // En un plan por sede (Multisede) el monto es el precio de una sede por las sedes que tiene la institución.
-  const monto = (await planes()).montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1);
+  const monto = (await planes()).montoDePlan(
+    plan,
+    (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1,
+    await acuerdoParaPlan(getDb(), institucionId, plan),
+  );
 
   try {
     const resultado = await transaccion(async (tx) => {

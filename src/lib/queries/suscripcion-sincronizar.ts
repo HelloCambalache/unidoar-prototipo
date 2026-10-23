@@ -9,6 +9,7 @@ import { cambiarMontoMp } from "@/lib/mercadopago-cliente";
 import { mercadoPagoActivo } from "@/lib/mercadopago-config";
 import { pesos } from "@/lib/planes";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
+import { acuerdosDePrecio } from "@/lib/queries/acuerdos";
 import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -17,7 +18,7 @@ import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 export type ResultadoDeSincronizacion = { revisadas: number; montosActualizados: number; canceladas: number; fallidas: number };
 
 /**
- * Pone al día las suscripciones de débito automático con lo que hoy cuesta el plan (plan × sedes del catálogo): si cambió el precio, las
+ * Pone al día las suscripciones de débito automático con lo que hoy cuesta el plan (precio de lista o acordado, y sedes): si cambió el precio, las
  * sedes o el plan de la institución, el monto que cobra Mercado Pago cada mes cambia desde el próximo cobro; si el plan pasó a Anual (que
  * no se debita), la suscripción se cancela. Es UNA sola revisión que cubre todos los caminos por los que puede cambiar un monto (el equipo
  * edita Planes, aprueba un cambio de plan, la institución suma una sede…), a costa de que el cambio llegue a Mercado Pago en el cron del
@@ -34,9 +35,10 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
     if (filas.length === 0) return resultado;
 
     const ids = filas.map((f) => f.institucionId);
-    const [P, sedes, insts] = await Promise.all([
+    const [P, sedes, acuerdos, insts] = await Promise.all([
       planes(),
       cantidadDeSedes(db, ids),
+      acuerdosDePrecio(db, ids),
       db.select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan }).from(instituciones).where(inArray(instituciones.id, ids)),
     ]);
     const porId = new Map(insts.map((i) => [i.id, i]));
@@ -46,7 +48,7 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
       const inst = porId.get(susc.institucionId);
       if (!inst) continue;
       try {
-        const esperado = P.montoDePlan(inst.plan, sedes.get(inst.id) ?? 1);
+        const esperado = P.montoDePlan(inst.plan, sedes.get(inst.id) ?? 1, acuerdos.get(inst.id) ?? null);
         const decision = decidirSincronizacion({ plan: inst.plan, monto: susc.monto, esperado });
 
         if (decision.accion === "cancelar") {

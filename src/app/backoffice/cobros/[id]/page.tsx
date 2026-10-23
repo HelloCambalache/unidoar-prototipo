@@ -7,6 +7,7 @@ import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
 import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
+import { CobroAcuerdo } from "@/components/backoffice/cobro-acuerdo";
 import { CobroSemestre } from "@/components/backoffice/cobro-semestre";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
@@ -16,6 +17,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { describirAcuerdo } from "@/lib/acuerdos";
 import { esUuid } from "@/lib/busquedas";
 import {
   enlaceWhatsappConTexto,
@@ -34,6 +36,7 @@ import { suscripcionVigente } from "@/lib/debito-automatico";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
+import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
@@ -77,6 +80,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   if (!d) notFound();
   // Para un plan por sede (Multisede): cuántas sedes tiene, que es por lo que se multiplica el precio.
   const sedes = (await cantidadDeSedes(getDb(), [id])).get(id) ?? 1;
+  // El precio acordado con la institución (abono o convenio), si lo tiene: con él se calculan los montos que se muestran y se facturan.
+  const acordado = await acuerdoConNota(getDb(), id);
+  const acuerdo = acordado?.acuerdo ?? null;
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
   const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
 
@@ -111,6 +117,12 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               <div className="text-sm leading-[1.4] text-apagado">
                 {P.planDe(plan).label} · {P.precioDePlan(plan)}
               </div>
+              {acuerdo && (
+                <div className="mt-1 text-[13px] leading-[1.4] font-medium text-navy-700">
+                  {acuerdo.modalidad === "total" ? "Convenio a medida" : "Precio acordado"}: {pesos(P.montoDePlan(plan, sedes, acuerdo))} por mes
+                  {acuerdo.modalidad === "abono" && sedes > 1 ? ` (${sedes} sedes)` : ""}
+                </div>
+              )}
               {semestrePagoHasta && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-verde">
                   Semestre pago hasta {etiquetaPeriodo(semestrePagoHasta).toLowerCase()}
@@ -204,6 +216,24 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             </div>
           </Seccion>
 
+          <Seccion titulo="Precio">
+            {(() => {
+              const { minimo, maximo } = P.rangoDeAbono(plan);
+              return (
+                <div className="flex flex-col gap-2">
+                  <Dato k="De lista">{pesos(maximo)} por mes</Dato>
+                  <Dato k="Piso del plan">{minimo < maximo ? pesos(minimo) : "Sin piso"}</Dato>
+                  <Dato k="Acordado">{acuerdo ? describirAcuerdo(acuerdo) : "Paga el de lista"}</Dato>
+                  {acordado?.nota && <Dato k="Nota">{acordado.nota}</Dato>}
+                  {sedes > 1 && <Dato k="Sedes">{sedes}</Dato>}
+                  <div className="mt-1.5">
+                    <CobroAcuerdo institucionId={i.id} catalogo={P.catalogo} plan={plan} sedes={sedes} acuerdo={acuerdo} nota={acordado?.nota ?? null} />
+                  </div>
+                </div>
+              );
+            })()}
+          </Seccion>
+
           <Seccion titulo="Facturación">
             <div className="flex flex-col gap-2">
               <Dato k="Razón social">{i.nombre}</Dato>
@@ -223,6 +253,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             <CobroPagoEfectivo
               institucionId={i.id}
               sedes={sedes}
+              acuerdo={acuerdo}
               catalogo={P.catalogo}
               plan={plan}
               periodoSugerido={impagas[0]?.periodo ?? sugerido}
@@ -232,6 +263,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               <CobroSemestre
                 institucionId={i.id}
                 sedes={sedes}
+                acuerdo={acuerdo}
                 catalogo={P.catalogo}
                 plan={plan}
                 periodoSugerido={impagas[0]?.periodo ?? sugerido}
@@ -242,6 +274,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             <CobroNuevaFactura
               institucionId={i.id}
               sedes={sedes}
+              acuerdo={acuerdo}
               catalogo={P.catalogo}
               plan={plan}
               diaCobro={i.diaCobro}

@@ -7,7 +7,7 @@ import { Campo, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
 import { etiquetaPeriodo, fechaCobroDelPeriodo, MEDIOS_PAGO } from "@/lib/cobros";
-import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
+import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -18,6 +18,7 @@ const PERIODO_VALIDO = /^\d{4}-(0[1-9]|1[0-2])$/;
 export function CobroNuevaFactura({
   institucionId,
   sedes,
+  acuerdo = null,
   catalogo,
   plan,
   diaCobro,
@@ -27,6 +28,8 @@ export function CobroNuevaFactura({
   institucionId: string;
   /** Cuántas sedes tiene la institución (el monto de un plan por sede se multiplica por esto). */
   sedes: number;
+  /** El precio acordado con la institución: vale solo para su plan (con otro plan se factura el de lista). */
+  acuerdo?: AcuerdoDePrecio | null;
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
@@ -134,7 +137,7 @@ export function CobroNuevaFactura({
           </Campo>
         </div>
         <p className="m-0 mb-4 rounded-caja bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
-          Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido, sedes))}</b>
+          Monto de la factura: <b className="font-semibold">{pesos(P.montoDePlan(planElegido, sedes, planElegido === plan ? acuerdo : null))}</b>
           {P.planDe(planElegido).porSede && ` (${sedes} ${sedes === 1 ? "sede" : "sedes"} × ${pesos(P.planDe(planElegido).precio)})`}
         </p>
         {errores._ && (

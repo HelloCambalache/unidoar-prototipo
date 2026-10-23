@@ -6,6 +6,7 @@ import { etiquetaPeriodo, hoyAR } from "@/lib/cobros";
 import { decidirActivacion, esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { diferirPrimerCobroActivo } from "@/lib/mercadopago-config";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
@@ -56,7 +57,7 @@ export type DebitoVista = {
 
 export async function datosDeDebito(institucion: Institucion, usuarioId: string): Promise<DebitoVista> {
   const db = getDb();
-  const [P, rol, susc, ultimo, sedes, plan, pago] = await Promise.all([
+  const [P, rol, susc, ultimo, sedes, plan, pago, acuerdo] = await Promise.all([
     planes(),
     rolEnInstitucion(institucion, usuarioId),
     suscripcionDe(institucion.id),
@@ -64,8 +65,9 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     cantidadDeSedes(db, [institucion.id]),
     ultimoPlanDe(institucion.id),
     estadoDePago(institucion.id),
+    acuerdoDe(db, institucion.id),
   ]);
-  const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
+  const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
   // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
   // Mercado Pago, una suscripción autorizada se mostraba como cancelada.
   const estado = susc ? (estadoGuardado(susc.estado) ?? "cancelada") : null;
@@ -121,7 +123,7 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
     esDemo: institucion.esDemo,
   });
   if (decision.accion === "esperar") return null;
-  const [P, sedes] = await Promise.all([planes(), cantidadDeSedes(getDb(), [institucion.id])]);
-  const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1);
+  const [P, sedes, acuerdo] = await Promise.all([planes(), cantidadDeSedes(getDb(), [institucion.id]), acuerdoDe(getDb(), institucion.id)]);
+  const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
   return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };
 }

@@ -262,6 +262,18 @@ describe("facturas automáticas (planificarFacturas)", () => {
     assert.equal(planificarFacturas([inst("a", "colegio")], [f("a", "2026-09", "colegio", "pagada")], "2026-10", HOY).crear.length, 1);
   });
 
+  it("factura con el precio acordado: un abono dentro del rango o un convenio a medida", () => {
+    const base = [f("a", "2026-09", "colegio", "pagada")];
+    const abono = planificarFacturas([{ ...inst("a", "colegio"), acuerdo: { modalidad: "abono", monto: 48_000 } }], base, P, HOY);
+    assert.equal(abono.crear[0]!.monto, 48_000);
+    const conSedes = planificarFacturas([{ ...inst("a", "colegio"), sedes: 3, acuerdo: { modalidad: "abono", monto: 48_000 } }], base, P, HOY);
+    assert.equal(conSedes.crear[0]!.monto, 48_000 + 2 * 24_000, "las sedes adicionales, a la mitad del abono acordado");
+    const red = planificarFacturas([{ ...inst("a", "colegio"), sedes: 8, acuerdo: { modalidad: "total", monto: 300_000 } }], base, P, HOY);
+    assert.equal(red.crear[0]!.monto, 300_000, "un convenio es un monto fijo, sean cuantas sean las sedes");
+    const sin = planificarFacturas([{ ...inst("a", "colegio"), acuerdo: null }], base, P, HOY);
+    assert.equal(sin.crear[0]!.monto, 50_000, "sin acuerdo, el de lista");
+  });
+
   it("factura las sedes adicionales de un colegio a la mitad del abono", () => {
     const dos = planificarFacturas([{ ...inst("a", "colegio"), sedes: 2 }], [f("a", "2026-09", "colegio", "pagada")], P, HOY);
     assert.equal(dos.crear[0]!.monto, 75_000, "$ 50.000 la primera + $ 25.000 la segunda");
