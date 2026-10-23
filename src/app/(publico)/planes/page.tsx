@@ -5,10 +5,8 @@ import { BandaCTA } from "@/components/publico/banda-cta";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { BotonLink } from "@/components/ui/button";
 import { crearPlanes, pesos } from "@/lib/planes";
-import { CUPOS_FUNDADOR, RUTA_REGISTRO_DOCENTE, RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
+import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { catalogoDePlanes } from "@/lib/queries/planes";
-import { cuposFundadorRestantes } from "@/lib/queries/publico";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Planes y aranceles",
@@ -16,7 +14,7 @@ export const metadata: Metadata = {
     "Para los profesionales UNIDOAR es gratis, siempre. Las instituciones pagan una suscripción mensual según su tipo o una tarifa por búsqueda, sin comisión por contratación.",
 };
 
-// Los cupos de institución fundadora salen de la base: no se prerenderiza (en el build puede no haber DATABASE_URL).
+// Los precios salen de la base: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
 
 const BENEFICIOS_DOCENTE = [
@@ -35,19 +33,11 @@ const BENEFICIOS_INSTITUCION = [
   "Cupos de equipo para invitar a quien contrata con vos",
 ];
 
-const BENEFICIOS_FUNDADORA = [
-  "Tarifa de fundador congelada mientras sigas suscripto",
-  "Insignia de Institución Fundadora en tu perfil público",
-  "Tu logo en la portada del sitio",
-  "Las promociones de lanzamiento, acumulables",
-];
-
 /** Lo que el banner resume de un vistazo: son las mismas promesas de las tarjetas, dichas cortas. */
 const PROMESAS = ["Gratis para profesionales", "Sin comisión por contratación", "Búsquedas ilimitadas con el abono"];
 
 export default async function Planes() {
-  const [cupos, catalogo] = await Promise.all([cuposFundadorRestantes(), catalogoDePlanes()]);
-  const hayCupos = cupos > 0;
+  const catalogo = await catalogoDePlanes();
   const P = crearPlanes(catalogo);
 
   const colegios = P.planDe("colegio");
@@ -92,10 +82,6 @@ export default async function Planes() {
     },
   ];
 
-  const columnas = hayCupos
-    ? "grid-cols-3 max-[1179px]:grid-cols-2 max-[700px]:grid-cols-1"
-    : "grid-cols-2 max-[800px]:grid-cols-1";
-
   return (
     <>
       <div className="mx-auto flex w-full max-w-[1296px] flex-col gap-10 px-12 pt-10 pb-4 max-[900px]:px-6 max-[560px]:gap-8 max-[560px]:pt-6">
@@ -124,7 +110,7 @@ export default async function Planes() {
           </ul>
         </section>
 
-        <section aria-label="Planes" className={cn("grid items-stretch gap-6", columnas)}>
+        <section aria-label="Planes" className="grid grid-cols-2 items-stretch gap-6 max-[800px]:grid-cols-1">
           <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
             <span
               aria-hidden
@@ -170,53 +156,6 @@ export default async function Planes() {
           </article>
 
           <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogo} />
-
-          {hayCupos && (
-            <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-navy-700/10 bg-celeste px-8 py-9 text-navy-700 max-[1179px]:col-span-2 max-[700px]:col-span-1 max-[560px]:px-6">
-              <span
-                aria-hidden
-                className="pointer-events-none absolute -top-[70px] -right-[60px] size-[230px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.7),transparent_70%)]"
-              />
-              <div className="relative flex flex-wrap items-center justify-between gap-2">
-                <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-700/70 uppercase">
-                  Fundadoras
-                </h2>
-                <span className="rounded-full bg-navy-700 px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
-                  Quedan {cupos} de {CUPOS_FUNDADOR}
-                </span>
-              </div>
-              <div className="relative flex flex-1 flex-col min-[701px]:max-[1179px]:grid min-[701px]:max-[1179px]:grid-cols-2 min-[701px]:max-[1179px]:gap-x-10">
-                <div>
-                  <div className="mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] max-[560px]:text-[34px]">
-                    Las primeras {CUPOS_FUNDADOR}
-                  </div>
-                  <p className="mb-5 text-sm leading-normal text-navy-700/75">
-                    Las que entran ahora quedan como fundadoras: tarifa preferencial y el reconocimiento de haber estado
-                    desde el día uno.
-                  </p>
-                </div>
-                <ul className="m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-navy-700 min-[701px]:max-[1179px]:mt-4">
-                  {BENEFICIOS_FUNDADORA.map((b) => (
-                    <li key={b} className="flex items-start gap-2.5">
-                      <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-navy-700/12">
-                        <Icono nombre="tilde" tamano={11} trazo={2.6} />
-                      </span>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <BotonLink
-                href={RUTA_REGISTRO_INSTITUCION}
-                variante="cta"
-                tamano="lg"
-                bloque
-                className="relative mt-[26px] h-[50px] bg-navy-700 text-white shadow-[0_4px_10px_rgba(22,33,79,.25)] hover:bg-navy-700 hover:text-white hover:brightness-125"
-              >
-                Quiero ser fundadora
-              </BotonLink>
-            </article>
-          )}
         </section>
 
         <section

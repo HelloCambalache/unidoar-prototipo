@@ -81,7 +81,7 @@ const listaDeCampos = (campos: unknown) => {
 const beneficioEnPalabras = (d: Record<string, unknown>) =>
   d.tipo === "meses" && typeof d.meses === "number" ? ` · ${mesesBonificadosTexto(d.meses)}` : d.tipo === "pack" ? " · pack por adelantado" : "";
 
-/** Una línea legible para el registro de actividad de la ficha ("Cambió el plan de Fundador a Estándar"). */
+/** Una línea legible para el registro de actividad de la ficha ("Cambió el plan de Colegios a Multisede"). */
 export function describirAccion(accion: string, detalle: Record<string, unknown> | null, planes: Planes = planesPorDefecto) {
   const d = detalle ?? {};
   const nombreDePlan = planes.nombreDePlan;

@@ -4,8 +4,6 @@ import { PlanesFormulario } from "@/components/backoffice/planes-formulario";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { requerirUsuario } from "@/lib/auth";
 import { fechaHoraCorta } from "@/lib/calendario";
-import { CUPOS_FUNDADOR } from "@/lib/publico";
-import { cuposFundadorRestantes } from "@/lib/queries/publico";
 import { CLAVES_PLAN, cambiosDeAuditoria, describirCambioDePlanes, edicionDesdeCatalogo, huellaDePlanes, type PlanClave } from "@/lib/planes";
 import { cambiosRecientesDePlanes, institucionesPorPlan, leerCatalogoDePlanes, planes } from "@/lib/queries/planes";
 
@@ -16,13 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function PlanesBackoffice() {
   // El layout ya lo exige, pero acá se editan los precios: se vuelve a verificar en cada página.
   await requerirUsuario("admin");
-  const [catalogo, conteo, recientes, P, cupos] = await Promise.all([
-    leerCatalogoDePlanes(),
-    institucionesPorPlan(),
-    cambiosRecientesDePlanes(8),
-    planes(),
-    cuposFundadorRestantes(),
-  ]);
+  const [catalogo, conteo, recientes, P] = await Promise.all([leerCatalogoDePlanes(), institucionesPorPlan(), cambiosRecientesDePlanes(8), planes()]);
   const inicial = edicionDesdeCatalogo(catalogo);
   const cantidades = Object.fromEntries(CLAVES_PLAN.map((c) => [c, conteo.get(c) ?? 0])) as Record<PlanClave, number>;
 
@@ -48,8 +40,6 @@ export default async function PlanesBackoffice() {
         inicial={inicial}
         huella={huellaDePlanes(inicial)}
         cantidades={cantidades}
-        cupos={cupos}
-        totalCupos={CUPOS_FUNDADOR}
       />
 
       <section className="mt-8" aria-labelledby="ultimos-cambios">

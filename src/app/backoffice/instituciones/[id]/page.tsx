@@ -9,6 +9,7 @@ import { InstProcesarBaja } from "@/components/backoffice/inst-procesar-baja";
 import { InsigniaCuenta, InsigniaFactura, InsigniaVerificada } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
 import { InstPlan } from "@/components/backoffice/inst-plan";
+import { RegistrarPagos } from "@/components/backoffice/registrar-pagos";
 import { VolverBo } from "@/components/backoffice/inst-volver";
 import { LogoInstitucion } from "@/components/docente/logo-institucion";
 import { BotonLink } from "@/components/ui/button";
@@ -154,6 +155,8 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
               <InstPlan institucionId={i.id} nombre={i.nombre} catalogo={P.catalogo} plan={plan} proximoCobro={proximoTexto} />
             </Tarjeta>
           )}
+
+          {!deBaja && <RegistrarPagos institucionId={i.id} plan={plan} P={P} debitoVigente={debitoVigente} />}
 
           <section aria-labelledby="busquedas-titulo">
             <EtiquetaSeccion className="mb-3" id="busquedas-titulo">

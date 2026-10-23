@@ -10,11 +10,10 @@ import { num, PAGINA_TESTIMONIOS, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { RUTA_PUBLICAR_BUSQUEDA, RUTA_PUBLICAR_URGENTE } from "@/lib/publicar-busqueda";
 import {
   busquedasUrgentes,
-  cuposFundadorRestantes,
   resumenPublico,
   testimoniosDe,
 } from "@/lib/queries/publico";
-import { BandaFundador } from "./banda-fundador";
+import { BandaInstituciones } from "./banda-instituciones";
 import { CarruselTestimonios } from "./carrusel-testimonios";
 import { CATEGORIAS_PUBLICAS, estiloBotonAcento, estiloCategoria } from "./categorias";
 import { ListaUrgentes } from "./lista-urgentes";
@@ -38,11 +37,10 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
   const pub = CATEGORIAS_PUBLICAS[categoria];
   const info = CATEGORIA_INFO[categoria];
 
-  const [resumen, urgentes, testimonios, cupos, sesion] = await Promise.all([
+  const [resumen, urgentes, testimonios, sesion] = await Promise.all([
     resumenPublico(),
     busquedasUrgentes({ categoria, limite: 3 }),
     testimoniosDe(PAGINA_TESTIMONIOS[categoria]),
-    cuposFundadorRestantes(),
     sesionPublica(),
   ]);
   const n = resumen.categorias[categoria];
@@ -275,7 +273,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
         className="border-b-0 bg-transparent px-12 pt-16 pb-2 max-[900px]:px-6 max-[560px]:px-6 max-[560px]:pt-12"
       />
 
-      <BandaFundador cupos={cupos} categoria={categoria} />
+      <BandaInstituciones categoria={categoria} />
     </div>
   );
 }

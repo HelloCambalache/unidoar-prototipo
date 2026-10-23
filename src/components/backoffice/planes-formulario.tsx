@@ -59,18 +59,12 @@ export function PlanesFormulario({
   inicial,
   huella,
   cantidades,
-  cupos,
-  totalCupos,
 }: {
   inicial: EdicionDePlanes;
   /** Huella de lo guardado cuando se abrió la pantalla (`huellaDePlanes`): el servidor no pisa lo que otra persona cambió mientras tanto. */
   huella: string;
   /** Cuántas instituciones tiene hoy cada plan. */
   cantidades: Record<PlanClave, number>;
-  /** Cupos de fundadoras que quedan (lo que dice la landing: «Quedan N de M»). */
-  cupos: number;
-  /** Cuántos cupos de fundadoras hay en total. */
-  totalCupos: number;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -323,8 +317,8 @@ export function PlanesFormulario({
       )}
 
       <p className="mt-0 mb-5 max-w-[78ch] text-[13.5px] leading-normal text-apagado">
-        Esta pantalla está ordenada como la página pública de aranceles, que tiene tres tarjetas: <b className="font-semibold">Profesionales</b>,{" "}
-        <b className="font-semibold">Instituciones</b> y <b className="font-semibold">Fundadoras</b>. Lo que cambies en cada bloque cambia esa tarjeta.
+        Esta pantalla está ordenada como la página pública de aranceles, que tiene dos tarjetas: <b className="font-semibold">Profesionales</b> e{" "}
+        <b className="font-semibold">Instituciones</b>. Lo que cambies en cada bloque cambia esa tarjeta.
       </p>
 
       <div className="mb-6 flex flex-col gap-4">
@@ -545,18 +539,6 @@ export function PlanesFormulario({
             </div>
           </fieldset>
         </Tarjeta>
-      </div>
-
-      <div className="mb-6 flex flex-col gap-4">
-        <EtiquetaSeccion className="mb-0">Tarjeta «Fundadoras»</EtiquetaSeccion>
-        <p className="m-0 -mt-2 text-[13px] leading-normal text-apagado">
-          {cupos > 0
-            ? "La página pública muestra «Las primeras " + totalCupos + "» y «Quedan " + cupos + " de " + totalCupos + "»."
-            : "Hoy no quedan cupos de fundadoras, así que la página pública no muestra esta tarjeta."}{" "}
-          Los cupos se cuentan por antigüedad entre las instituciones reales, no por plan, y el total ({totalCupos}) está fijo en el sistema. Esta tarjeta
-          no muestra precio, y no hay un plan aparte para las fundadoras: su precio de fundadora se acuerda con cada una desde su ficha de cobros
-          («Precio» → «Acordar un precio»), con un abono entre el piso y la lista de su plan, o un convenio a medida.
-        </p>
       </div>
 
       <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-tarjeta border border-linea bg-white/95 px-5 py-3.5 shadow-[0_-4px_14px_rgba(31,36,33,.06)] backdrop-blur">

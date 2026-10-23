@@ -1,8 +1,5 @@
 import type { CategoriaDocente } from "@/db/schema";
 
-/** Cupos de institución fundadora: las primeras que se suman (por antigüedad, no por plan). El precio de fundadora se acuerda con cada una. */
-export const CUPOS_FUNDADOR = 20;
-
 /** Paso 1 del alta de cada rol (el registro de la cuenta). */
 export const RUTA_REGISTRO_INSTITUCION = "/onboarding/institucion/1";
 export const RUTA_REGISTRO_DOCENTE = "/onboarding/docente/1";

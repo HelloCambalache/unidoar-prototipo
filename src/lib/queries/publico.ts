@@ -4,7 +4,6 @@ import { and, asc, count, countDistinct, desc, eq, gt, isNull, or, sql } from "d
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
-import { CUPOS_FUNDADOR } from "@/lib/publico";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
@@ -86,19 +85,6 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
     tiposInstitucion: filaInst?.tipos ?? 0,
     categorias,
   };
-});
-
-/*
- * Cupos de institución fundadora que quedan. Son las primeras CUPOS_FUNDADOR instituciones reales
- * que se suman, sin contar las de ejemplo: se cuenta por antigüedad y no por plan, porque el arancel sale
- * del tipo de institución (no existe un plan «fundador»: el precio de fundadora se acuerda con cada una).
- */
-export const cuposFundadorRestantes = cache(async (): Promise<number> => {
-  const [{ n }] = await getDb()
-    .select({ n: count() })
-    .from(instituciones)
-    .where(eq(instituciones.esDemo, false));
-  return Math.max(0, CUPOS_FUNDADOR - n);
 });
 
 /* ───────── Logos y testimonios ───────── */
