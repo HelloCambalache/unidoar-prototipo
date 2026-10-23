@@ -14,6 +14,7 @@ import { CLAVES_PLAN } from "@/lib/planes";
 import { planes } from "@/lib/queries/planes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/queries/plan";
+import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { DEMASIADOS_PEDIDOS, permitirPedidoAlEquipo } from "@/lib/pedidos";
 
 /*
@@ -49,6 +50,12 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
 
     if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id, tx))) return fallo(SOLO_ADMINISTRADORES);
     if (vigente.plan === destino.data) return fallo(`Ya estás en el ${P.planDe(vigente.plan).label}.`);
+    // Solo se pide un plan que le corresponde (el arancel de su tipo, la búsqueda puntual, Multisede con sedes para una red): lo que la
+    // pantalla ofrece lo vuelve a exigir el servidor, que no le cree al navegador.
+    const sedes = (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1;
+    if (!P.planesParaPedir(institucion.tipo, sedes, vigente.plan).includes(destino.data)) {
+      return fallo("Ese plan no corresponde a tu institución. Si necesitás otro, escribinos desde Contacto.");
+    }
     if (await solicitudPendiente(institucion.id, tx)) {
       return fallo("Ya tenés un pedido de cambio pendiente. Cancelalo si querés pedir otro plan.");
     }

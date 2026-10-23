@@ -609,6 +609,43 @@ describe("el plan sigue al tipo de institución", () => {
   });
 });
 
+describe("qué planes puede pedir una institución", () => {
+  it("un colegio puede pedir el arancel de colegios y la búsqueda puntual, no el de clubes (que es más barato)", () => {
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "colegio"), ["colegio", "puntual"]);
+    assert.ok(!P.planesParaPedir("Colegio privado", 1, "colegio").includes("deportiva"));
+  });
+
+  it("un club (o un tipo escrito a mano) puede pedir el arancel de clubes y la búsqueda puntual", () => {
+    assert.deepEqual(P.planesParaPedir("Club o gimnasio", 1, "deportiva"), ["deportiva", "puntual"]);
+    assert.deepEqual(P.planesParaPedir("Sociedad de fomento", 2, "deportiva"), ["deportiva", "puntual"]);
+  });
+
+  it("Multisede solo aparece con sedes para una red (desde las de Planes)", () => {
+    assert.ok(!P.planesParaPedir("Colegio privado", 4, "colegio").includes("multisede"));
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 5, "colegio"), ["colegio", "multisede", "puntual"]);
+  });
+
+  it("quien está en un plan que no es el de su tipo (asignado a mano) lo ve como actual y puede volver al de su tipo", () => {
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "multisede"), ["colegio", "multisede", "puntual"]);
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "puntual"), ["colegio", "puntual"]);
+  });
+
+  it("un plan que el equipo apagó no se ofrece, salvo a quien ya lo tiene", () => {
+    const apagado = crearPlanes({
+      ...CATALOGO_POR_DEFECTO,
+      planes: { ...CATALOGO_POR_DEFECTO.planes, puntual: { ...CATALOGO_POR_DEFECTO.planes.puntual, vigente: false } },
+    });
+    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 1, "colegio"), ["colegio"]);
+    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 1, "puntual"), ["colegio", "puntual"]);
+  });
+
+  it("sigue lo que cambie el equipo en Planes: qué tipos pagan el arancel de colegios", () => {
+    const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
+    catalogo.condiciones.tiposColegio = ["Colegio privado"];
+    assert.deepEqual(crearPlanes(catalogo).planesParaPedir("Universidad", 1, "deportiva"), ["deportiva", "puntual"]);
+  });
+});
+
 describe("meses bonificados por recomendación (mes a mes)", () => {
   const con = (referidoMesesMensual: number | undefined) =>
     catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), referidoMesesMensual }).condiciones.referidoMesesMensual;

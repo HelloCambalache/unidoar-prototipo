@@ -47,6 +47,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
       <PlanPanel
         catalogo={catalogo}
         plan={datos.plan}
+        tipo={institucion.tipo}
         sedes={datos.sedes}
         acuerdo={datos.acuerdo}
         semestrePagoHasta={datos.semestrePagoHasta}

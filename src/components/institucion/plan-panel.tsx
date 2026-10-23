@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 export function PlanPanel({
   catalogo,
   plan,
+  tipo,
   sedes,
   acuerdo,
   semestrePagoHasta,
@@ -29,6 +30,8 @@ export function PlanPanel({
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
   plan: PlanClave;
+  /** El tipo de la institución: de ahí sale el arancel que puede pedir (ver `planesParaPedir`). */
+  tipo: string;
   /** Cuántas sedes tiene la institución: con más de una, el monto suma las adicionales. */
   sedes: number;
   /** El precio acordado con la institución (abono o convenio a medida), si lo tiene; sin acuerdo paga el de lista. */
@@ -161,7 +164,7 @@ export function PlanPanel({
 
       {abierto && puedeCambiar && !solicitud && (
         <div className="mt-5 flex max-w-[1180px] flex-wrap gap-4">
-          {P.clavesParaElegir(plan).map((clave) => {
+          {P.planesParaPedir(tipo, sedes, plan).map((clave) => {
             const p = P.planDe(clave);
             const esActual = clave === plan;
             return (

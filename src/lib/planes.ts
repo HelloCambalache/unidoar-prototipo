@@ -181,6 +181,16 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   /** El plan que le corresponde a una institución por su tipo. Multisede se asigna a mano. */
   const planPorTipo = (tipo: string): PlanClave => (tiposColegio.includes(tipo) ? "colegio" : "deportiva");
   /**
+   * Los planes que una institución puede pedir desde «Cambiar de plan»: el arancel que le toca por su tipo (un colegio no puede pedir el de
+   * clubes, que es más barato), la búsqueda puntual y, solo si tiene sedes para una red, Multisede; siempre que se sigan ofreciendo. Más el
+   * plan en el que ya está, que se muestra como actual aunque ya no se ofrezca. En el orden de siempre.
+   */
+  const planesParaPedir = (tipo: string, sedes: number, actual?: string): PlanClave[] => {
+    const posibles: PlanClave[] = [planPorTipo(tipo), "puntual"];
+    if (sedes >= condiciones.sedesMultisede) posibles.push("multisede");
+    return CLAVES_PLAN.filter((c) => (posibles.includes(c) && planes[c].vigente) || c === actual);
+  };
+  /**
    * El plan que le toca a una institución cuando cambia su tipo. Solo se mueve si el plan que tiene era el que le correspondía por su tipo
    * anterior (el que se le asignó solo al crearla): uno que el equipo cambió a mano (Multisede…) no se toca. Sin esto, alguien
    * podía elegir "Otro" (arancel deportivo), cambiar después a "Colegio" antes de verificarse y quedarse con el plan más barato.
@@ -321,6 +331,7 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     vigentes,
     clavesParaElegir,
     planPorTipo,
+    planesParaPedir,
     planTrasCambiarElTipo,
     tiposPorPlan,
     esMultisede,
