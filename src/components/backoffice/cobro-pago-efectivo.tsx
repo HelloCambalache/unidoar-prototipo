@@ -145,7 +145,8 @@ export function CobroPagoEfectivo({
               disabled={situacion === "impaga"}
               onChange={(e) => setPlanElegido(e.target.value as PlanClave)}
             >
-              {CLAVES_PLAN.map((c) => (
+              {/* La búsqueda puntual no se paga por mes: tiene su propio «Registrar pago de búsqueda puntual». */}
+              {CLAVES_PLAN.filter((c) => !P.esPuntual(c)).map((c) => (
                 <option key={c} value={c}>
                   {P.planDe(c).label} · {P.precioDePlan(c)}
                 </option>

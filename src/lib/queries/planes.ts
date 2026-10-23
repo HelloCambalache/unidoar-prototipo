@@ -23,6 +23,10 @@ export async function leerCatalogoDePlanes(ejecutor: Ejecutor = getDb()): Promis
       ? {
           sedesMultisede: condiciones.sedesMultisede,
           descuentoSedeExtra: condiciones.descuentoSedeExtra,
+          puntualVigenciaDias: condiciones.puntualVigenciaDias,
+          puntualBusquedasAbiertas: condiciones.puntualBusquedasAbiertas,
+          puntualIncluyeCursos: condiciones.puntualIncluyeCursos,
+          puntualIncluyeBuscador: condiciones.puntualIncluyeBuscador,
           packMeses: condiciones.packMeses,
           packMesesPagos: condiciones.packMesesPagos,
           packMesesReferido: condiciones.packMesesReferido,

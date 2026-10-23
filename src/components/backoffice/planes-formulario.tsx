@@ -34,12 +34,16 @@ const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
   fundador: "Es el plan de las instituciones fundadoras: el precio queda congelado mientras sigan suscriptas. Ya no se asigna a cuentas nuevas (el arancel sale del tipo de institución).",
   estandar: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
   anual: "Plan anterior: ya no se ofrece, pero lo siguen teniendo las instituciones que lo contrataron.",
+  puntual:
+    "Se asigna a mano desde la ficha de la institución (o al aprobar un pedido de cambio de plan). No tiene abono: se paga cada búsqueda, y el pago lo registra el equipo en la ficha de cobros.",
 };
 
 /** Los dos planes que reciben a las instituciones nuevas: no se pueden dejar de ofrecer. */
 const SIEMPRE_VIGENTES: readonly PlanClave[] = ["colegio", "deportiva"];
 
-const VIGENTES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => PLANES_POR_DEFECTO[c].vigente);
+/** Los planes con abono que se ofrecen hoy: los de la tarjeta «Instituciones». La búsqueda puntual (sin abono) tiene su propio bloque. */
+const VIGENTES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => PLANES_POR_DEFECTO[c].vigente && PLANES_POR_DEFECTO[c].periodo !== "evento");
+const PUNTUAL: readonly PlanClave[] = ["puntual"];
 /** La tarjeta "Fundadoras" de la landing: el plan que tienen las instituciones que entraron primero. */
 const FUNDADORAS: readonly PlanClave[] = ["fundador"];
 /** Lo que ya no se vende y no tiene tarjeta en la landing (Estándar y Anual): va plegado al final. */
@@ -123,6 +127,11 @@ export function PlanesFormulario({
     cambiarPlan(clave, "precioMinimo", limpio ? Number(limpio) : null);
   };
 
+  const cambiarPuntual = <K extends keyof EdicionDePlanes["condiciones"]["puntual"]>(campo: K, valor: EdicionDePlanes["condiciones"]["puntual"][K]) => {
+    setErrorDelServidor(null);
+    setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, puntual: { ...d.condiciones.puntual, [campo]: valor } } }));
+  };
+
   const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
@@ -190,7 +199,7 @@ export function PlanesFormulario({
     const p = datos.planes[clave];
     const base = PLANES_POR_DEFECTO[clave];
     const rutaPrecio = `planes.${clave}.precio`;
-    const unidad = base.periodo === "año" ? "por año" : base.porSede ? "por mes y por sede" : "por mes";
+    const unidad = base.periodo === "año" ? "por año" : base.periodo === "evento" ? "por búsqueda" : base.porSede ? "por mes y por sede" : "por mes";
     const cuantas = cantidades[clave] ?? 0;
     return (
       <Tarjeta key={clave} como="section" className="p-[22px]" aria-labelledby={`plan-${clave}`}>
@@ -228,7 +237,7 @@ export function PlanesFormulario({
               onChange={(e) => cambiarPrecio(clave, e.target.value)}
             />
           </Campo>
-          {base.periodo === "mes" && (
+          {base.periodo !== "año" && (
             <Campo
               etiqueta="Precio mínimo ($, optativo)"
               error={verError(`planes.${clave}.precioMinimo`)}
@@ -465,6 +474,68 @@ export function PlanesFormulario({
           )}
         </fieldset>
       </Tarjeta>
+
+      <div className="mb-6 flex flex-col gap-4">
+        <EtiquetaSeccion className="mb-0">Búsqueda puntual (sin abono mensual)</EtiquetaSeccion>
+        <p className="m-0 -mt-2 text-[13px] leading-normal text-apagado">
+          Para una institución que solo necesita cubrir una vacante: paga cada búsqueda, sin abono mensual ni factura por mes. El equipo registra el pago desde
+          su ficha de cobros y la institución queda con una búsqueda pagada para publicar; pasada su vigencia, la búsqueda se cierra sola. El precio de lista
+          y el mínimo se editan acá; con un mínimo, el equipo puede acordar un precio entre los dos con cada institución.
+        </p>
+        {PUNTUAL.map(tarjetaDePlan)}
+        <Tarjeta como="section" className="p-[22px]" aria-labelledby="puntual-titulo">
+          <h3 id="puntual-titulo" className="m-0 mb-3 text-[17px] leading-tight font-semibold">
+            Condiciones de la búsqueda puntual
+          </h3>
+          <div className="mb-4 grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+            <Campo
+              etiqueta="Días que queda publicada"
+              ayuda="Pasado ese plazo la búsqueda se cierra sola (el cierre lo hace el proceso diario)."
+              error={verError("condiciones.puntual.vigenciaDias")}
+            >
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                step={1}
+                value={datos.condiciones.puntual.vigenciaDias}
+                aria-invalid={!!verError("condiciones.puntual.vigenciaDias")}
+                onChange={(e) => cambiarPuntual("vigenciaDias", aNumero(e.target.value))}
+              />
+            </Campo>
+            <Campo
+              etiqueta="Búsquedas abiertas a la vez"
+              ayuda="Cuántas puede tener publicadas al mismo tiempo, aunque haya pagado más."
+              error={verError("condiciones.puntual.busquedasAbiertas")}
+            >
+              <Input
+                type="number"
+                min={1}
+                max={20}
+                step={1}
+                value={datos.condiciones.puntual.busquedasAbiertas}
+                aria-invalid={!!verError("condiciones.puntual.busquedasAbiertas")}
+                onChange={(e) => cambiarPuntual("busquedasAbiertas", aNumero(e.target.value))}
+              />
+            </Campo>
+          </div>
+          <fieldset className="m-0 min-w-0 border-0 p-0">
+            <legend className="mb-2 p-0 text-xs font-semibold text-apagado">Qué incluye</legend>
+            <div className="flex flex-col gap-2.5">
+              <Casilla checked={datos.condiciones.puntual.incluyeCursos} onChange={(e) => cambiarPuntual("incluyeCursos", e.target.checked)}>
+                Difusión de cursos
+                <span className="block text-xs text-sutil">Puede publicar cursos y los profesionales los ven. Sin tildar, no aparece en su menú y no puede crearlos.</span>
+              </Casilla>
+              <Casilla checked={datos.condiciones.puntual.incluyeBuscador} onChange={(e) => cambiarPuntual("incluyeBuscador", e.target.checked)}>
+                Buscador y base de profesionales
+                <span className="block text-xs text-sutil">
+                  Son los beneficios continuos del abono. Sin tildar, no aparecen en su menú. Siempre ve a quienes se postulan a su búsqueda.
+                </span>
+              </Casilla>
+            </div>
+          </fieldset>
+        </Tarjeta>
+      </div>
 
       <div className="mb-6 flex flex-col gap-4">
         <EtiquetaSeccion className="mb-0">Tarjeta «Fundadoras»</EtiquetaSeccion>

@@ -7,6 +7,7 @@ import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
 import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
+import { CobroPuntualAnular, CobroPuntualPago } from "@/components/backoffice/cobro-puntual";
 import { CobroAcuerdo } from "@/components/backoffice/cobro-acuerdo";
 import { CobroSemestre } from "@/components/backoffice/cobro-semestre";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
@@ -18,6 +19,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { describirAcuerdo } from "@/lib/acuerdos";
+import { ETIQUETA_DE_CREDITO } from "@/lib/puntual";
 import { esUuid } from "@/lib/busquedas";
 import {
   enlaceWhatsappConTexto,
@@ -38,6 +40,7 @@ import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { planes } from "@/lib/queries/planes";
+import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { getDb } from "@/db";
@@ -83,12 +86,15 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   // El precio acordado con la institución (abono o convenio), si lo tiene: con él se calculan los montos que se muestran y se facturan.
   const acordado = await acuerdoConNota(getDb(), id);
   const acuerdo = acordado?.acuerdo ?? null;
+  // Una institución con búsqueda puntual no tiene abono ni facturas mensuales: paga cada búsqueda (ver src/lib/puntual.ts).
+  const [creditos, saldo] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id)]);
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
   const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "fundador";
+  const esPuntual = P.esPuntual(plan);
   // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
   const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
   const estado: EstadoCobro = d.vencidas > 0 ? "vencida" : proximo ? "pendiente" : "aldia";
@@ -158,7 +164,10 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               Historial de cobros
             </EtiquetaSeccion>
             {facturas.length === 0 ? (
-              <EstadoVacio titulo="Todavía no tiene facturas" texto="Cargá la primera desde “Cargar factura”." />
+              <EstadoVacio
+                titulo="Todavía no tiene facturas"
+                texto={esPuntual ? "Con una búsqueda puntual no hay facturas mensuales: sus pagos están en «Búsquedas puntuales»." : "Cargá la primera desde “Cargar factura”."}
+              />
             ) : (
               <Tabla>
                 <thead>
@@ -210,11 +219,52 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
             <div className="text-[13px] leading-normal text-apagado">
               {P.planDe(plan).periodo === "año"
                 ? "Pago anual por adelantado"
-                : i.diaCobro
+                : esPuntual
+                  ? "Se paga cada búsqueda, por adelantado"
+                  : i.diaCobro
                   ? `Se cobra el día ${i.diaCobro} de cada mes`
                   : "Sin día de cobro definido"}
             </div>
           </Seccion>
+
+          {(esPuntual || creditos.length > 0) && (
+            <Seccion titulo="Búsquedas puntuales">
+              <div className="flex flex-col gap-2">
+                <Dato k="Pagadas y sin publicar">{saldo.disponibles}</Dato>
+                <Dato k="Abiertas ahora">{saldo.abiertas}</Dato>
+                <Dato k="Vigencia">{P.condiciones.puntual.vigenciaDias} días</Dato>
+                {creditos.length > 0 && (
+                  <ul className="m-0 mt-1 flex list-none flex-col gap-2 border-t border-linea p-0 pt-2.5">
+                    {creditos.map((c) => (
+                      <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[13px] leading-[1.4]">
+                        <span className="min-w-0 text-tinta">
+                          <b className="font-semibold">{ETIQUETA_DE_CREDITO[c.estado]}</b> · {pesos(c.monto)} · {fechaCorta(c.pagadoEn)}
+                          <span className="block text-xs text-apagado">
+                            {c.medio}
+                            {c.busqueda ? ` · ${c.busqueda.puesto}` : ""}
+                            {c.venceEn && c.usadoEn ? ` · vence el ${fechaCorta(c.venceEn)}` : ""}
+                            {c.nota ? ` · ${c.nota}` : ""}
+                          </span>
+                        </span>
+                        {c.estado === "disponible" && <CobroPuntualAnular creditoId={c.id} monto={pesos(c.monto)} />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {esPuntual ? (
+                  <div className="mt-1.5">
+                    <CobroPuntualPago
+                      institucionId={i.id}
+                      monto={pesos(P.montoDePlan(plan, 1, acuerdo))}
+                      vigenciaDias={P.condiciones.puntual.vigenciaDias}
+                    />
+                  </div>
+                ) : (
+                  <p className="m-0 text-xs leading-normal text-sutil">Esta institución ya no tiene el plan de búsqueda puntual: no se registran pagos nuevos.</p>
+                )}
+              </div>
+            </Seccion>
+          )}
 
           <Seccion titulo="Precio">
             {(() => {
@@ -250,15 +300,17 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 {`Registrar pago de ${etiquetaPeriodo(proximo.periodo)}`}
               </CobroPago>
             )}
-            <CobroPagoEfectivo
-              institucionId={i.id}
-              sedes={sedes}
-              acuerdo={acuerdo}
-              catalogo={P.catalogo}
-              plan={plan}
-              periodoSugerido={impagas[0]?.periodo ?? sugerido}
-              facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
-            />
+            {!esPuntual && (
+              <CobroPagoEfectivo
+                institucionId={i.id}
+                sedes={sedes}
+                acuerdo={acuerdo}
+                catalogo={P.catalogo}
+                plan={plan}
+                periodoSugerido={impagas[0]?.periodo ?? sugerido}
+                facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
+              />
+            )}
             {P.planDe(plan).periodo === "mes" && (
               <CobroSemestre
                 institucionId={i.id}
@@ -271,16 +323,18 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 debitoVigente={debitoVigente}
               />
             )}
-            <CobroNuevaFactura
-              institucionId={i.id}
-              sedes={sedes}
-              acuerdo={acuerdo}
-              catalogo={P.catalogo}
-              plan={plan}
-              diaCobro={i.diaCobro}
-              medioPago={i.medioPago}
-              periodoSugerido={sugerido}
-            />
+            {!esPuntual && (
+              <CobroNuevaFactura
+                institucionId={i.id}
+                sedes={sedes}
+                acuerdo={acuerdo}
+                catalogo={P.catalogo}
+                plan={plan}
+                diaCobro={i.diaCobro}
+                medioPago={i.medioPago}
+                periodoSugerido={sugerido}
+              />
+            )}
             <BotonWhatsapp
               href={whatsapp}
               motivoDeshabilitado={impagas.length === 0 ? "No hay cobros pendientes para recordar" : "No hay un teléfono de contacto válido cargado"}

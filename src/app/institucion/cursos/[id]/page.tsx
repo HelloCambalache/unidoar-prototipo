@@ -6,6 +6,7 @@ import { CursoMigas } from "@/components/institucion/curso-migas";
 import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { esUuid } from "@/lib/busquedas";
 import { esEnlaceWeb, etiquetaInscriptos, PUNTAJE_POR_DEFECTO } from "@/lib/cursos";
 import { etiquetaFechas } from "@/lib/fechas-curso";
@@ -38,6 +39,7 @@ export default async function FichaCurso({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { institucion } = await requerirInstitucion();
+  await exigirBeneficio(institucion.plan, "cursos");
   const { id } = await params;
   const { aviso } = await searchParams;
   if (!esUuid(id)) notFound();

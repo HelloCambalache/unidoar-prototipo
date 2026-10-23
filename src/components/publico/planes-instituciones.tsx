@@ -15,14 +15,31 @@ const etiquetaDe = (P: Planes, clave: PlanClave) =>
       ? "Clubes y gimnasios"
       : clave === "multisede"
         ? `${P.condiciones.sedesMultisede} sedes o más`
-        : P.planDe(clave).label;
+        : clave === "puntual"
+          ? "Una sola búsqueda"
+          : P.planDe(clave).label;
+
+/** Lo que incluye (y lo que no) la búsqueda puntual, con lo que fijó el equipo en Planes. */
+function beneficiosPuntual(P: Planes) {
+  const { vigenciaDias, incluyeCursos, incluyeBuscador } = P.condiciones.puntual;
+  const noIncluye = [!incluyeBuscador && "el buscador de profesionales", !incluyeCursos && "la difusión de cursos"].filter(Boolean) as string[];
+  return {
+    incluye: [
+      `Tu búsqueda publicada ${vigenciaDias} días`,
+      "Avisamos a los profesionales que encajan con el puesto",
+      "Recibís las postulaciones y las movés por etapas hasta contratar",
+      "Sin abono mensual y sin comisión por contratación",
+    ],
+    noIncluye: noIncluye.length > 0 ? `No incluye ${noIncluye.join(" ni ")}.` : null,
+  };
+}
 
 /** "1 mes" · "2 meses" */
 const meses = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 
 /** Los tipos que entran en cada arancel, para que quien elige sepa si es el suyo. */
 function detalleDe(P: Planes, clave: PlanClave) {
-  if (clave === "multisede") return P.planDe("multisede").detalle;
+  if (clave === "multisede" || clave === "puntual") return P.planDe(clave).detalle;
   const tipos = P.tiposPorPlan[clave as keyof typeof P.tiposPorPlan];
   return tipos ? `Incluye ${tipos.join(", ").toLowerCase()}.` : P.planDe(clave).detalle;
 }
@@ -37,6 +54,8 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
   const plan = P.planDe(clave);
   const pack = P.packDe(clave);
   const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
+  const puntual = P.esPuntual(clave);
+  const delPuntual = beneficiosPuntual(P);
 
   return (
     <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
@@ -77,12 +96,12 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
       <div className="relative mt-5 mb-1">
         <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(plan.precio)}</span>
         <span className="text-[15px] leading-none text-white/60">
-          &nbsp;/ mes{plan.porSede ? " por sede" : ""}
+          &nbsp;{puntual ? "por búsqueda" : `/ mes${plan.porSede ? " por sede" : ""}`}
         </span>
       </div>
       <p className="relative mb-5 text-sm leading-normal text-white/65">
         {detalleDe(P, clave)}
-        {!plan.porSede && P.condiciones.descuentoSedeExtra > 0 && P.condiciones.descuentoSedeExtra < 100 && (
+        {!puntual && !plan.porSede && P.condiciones.descuentoSedeExtra > 0 && P.condiciones.descuentoSedeExtra < 100 && (
           <>
             {" "}
             <span className="text-white/85">
@@ -93,25 +112,41 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
       </p>
 
       <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-white/85">
-        {beneficios.map((b) => (
+        {(puntual ? delPuntual.incluye : beneficios).map((b) => (
           <li key={b} className="flex items-start gap-2.5">
             <Icono nombre="tilde" tamano={16} trazo={2} className="mt-0.5 shrink-0 text-celeste" />
             {b}
           </li>
         ))}
+        {puntual && delPuntual.noIncluye && (
+          <li className="flex items-start gap-2.5 text-white/60">
+            <Icono nombre="cerrar" tamano={16} trazo={2} className="mt-0.5 shrink-0" />
+            {delPuntual.noIncluye}
+          </li>
+        )}
       </ul>
 
-      <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
-        <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
-          {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
-        </span>
-        <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
-        <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
-          Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
-          <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
-          {plan.porSede ? ", por sede" : ""}.
-        </p>
-      </div>
+      {puntual ? (
+        <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
+          <div className="text-sm leading-tight font-semibold text-white">Sin abono mensual</div>
+          <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
+            Pagás solo cuando necesitás cubrir un puesto. Si después querés buscar de forma continua, pasás a un plan con abono y tenés el buscador de
+            profesionales y la difusión de cursos.
+          </p>
+        </div>
+      ) : (
+        <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
+          <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
+            {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
+          </span>
+          <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
+          <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
+            Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
+            <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
+            {plan.porSede ? ", por sede" : ""}.
+          </p>
+        </div>
+      )}
 
       <BotonLink
         href={RUTA_REGISTRO_INSTITUCION}

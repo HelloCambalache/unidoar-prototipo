@@ -118,7 +118,8 @@ export function CobroNuevaFactura({
           </Campo>
           <Campo etiqueta="Plan" requerido error={errores.plan}>
             <Select value={planElegido} onChange={(e) => setPlanElegido(e.target.value as PlanClave)}>
-              {P.clavesParaElegir(plan).map((c) => (
+              {/* La búsqueda puntual no se factura por mes: tiene su propio «Registrar pago de búsqueda puntual». */}
+              {P.clavesParaElegir(plan).filter((c) => !P.esPuntual(c)).map((c) => (
                 <option key={c} value={c}>
                   {P.planDe(c).label} · {P.precioDePlan(c)}
                 </option>

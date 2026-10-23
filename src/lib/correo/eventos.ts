@@ -150,10 +150,11 @@ export async function correoDeCobroRechazado(ejecutor: Ejecutor, d: Factura & { 
 }
 
 /** M53: el equipo registró el pago. Con `mesesCubiertos` > 1 (un semestre al contado) lo cuenta como tal: "6 meses (octubre 2026 a marzo 2027)". */
-export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura & { mesesCubiertos?: number }) {
+export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura & { mesesCubiertos?: number; concepto?: string }) {
   await encolarParaUsuarios(ejecutor, d.usuarioIds, "M53", {
     institucion: d.institucion,
-    periodo: etiquetaDeCobertura(d.periodo, d.mesesCubiertos),
+    // `concepto` reemplaza al período cuando lo que se pagó no es un mes (una búsqueda puntual): "una búsqueda puntual".
+    periodo: d.concepto ?? etiquetaDeCobertura(d.periodo, d.mesesCubiertos),
     monto: pesos(d.monto),
   });
 }

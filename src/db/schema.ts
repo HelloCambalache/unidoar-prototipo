@@ -932,12 +932,52 @@ export const acuerdosPrecio = pgTable("acuerdos_precio", {
 });
 export type AcuerdoPrecioFila = typeof acuerdosPrecio.$inferSelect;
 
+/**
+ * Búsquedas puntuales pagadas (el plan sin abono: se paga cada búsqueda). Cada fila es UNA búsqueda que la institución pagó: la carga el equipo
+ * al registrar el pago y queda **disponible** (`usado_en` null) hasta que la institución publica una búsqueda, que la **consume** (guarda su id,
+ * cuándo se usó y cuándo vence). Disponible o usada se decide por `usado_en`, nunca por el enlace: si se borrara la búsqueda, el crédito no
+ * vuelve a quedar disponible. Al vencer, el cron diario cierra la búsqueda. No es una factura (las facturas son una por mes y esto no
+ * es mensual). Creada a mano con `pnpm db:planes`, con RLS.
+ */
+export const creditosBusqueda = pgTable(
+  "creditos_busqueda",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    /** Pesos que pagó (el precio de la búsqueda puntual, o el acordado, al momento del pago). */
+    monto: integer("monto").notNull(),
+    /** "Transferencia", "Efectivo", "Mercado Pago"… */
+    medio: text("medio").notNull(),
+    pagadoEn: timestamp("pagado_en", { withTimezone: true }).notNull(),
+    /** Interna del equipo (por ejemplo el número de recibo). */
+    nota: text("nota"),
+    /** La búsqueda que la consumió; null mientras está disponible (o si esa búsqueda se borró: igual ya está usada, ver `usado_en`). */
+    busquedaId: uuid("busqueda_id").references(() => busquedas.id, { onDelete: "set null" }),
+    usadoEn: timestamp("usado_en", { withTimezone: true }),
+    /** Cuándo vence la búsqueda que la consumió (el cron la cierra después). */
+    venceEn: timestamp("vence_en", { withTimezone: true }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("creditos_busqueda_institucion_idx").on(t.institucionId)],
+);
+export type CreditoBusqueda = typeof creditosBusqueda.$inferSelect;
+
 /** Condiciones de los planes (una sola fila, `id = 1`): desde cuántas sedes es Multisede, el pack por adelantado y qué tipos pagan el arancel de colegios. */
 export const planesCondiciones = pgTable("planes_condiciones", {
   id: integer("id").primaryKey().default(1),
   sedesMultisede: integer("sedes_multisede").notNull(),
   /** Descuento (%) sobre el abono para cada sede adicional. Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar el código que la lee). */
   descuentoSedeExtra: integer("descuento_sede_extra").notNull().default(50),
+  /**
+   * La búsqueda puntual (el plan sin abono): días que dura publicada una búsqueda, cuántas puede tener abiertas a la vez y qué incluye
+   * (difusión de cursos, buscador y base de profesionales). Agregadas a mano con `pnpm db:planes` (correrlo ANTES de desplegar).
+   */
+  puntualVigenciaDias: integer("puntual_vigencia_dias").notNull().default(30),
+  puntualBusquedasAbiertas: integer("puntual_busquedas_abiertas").notNull().default(1),
+  puntualIncluyeCursos: boolean("puntual_incluye_cursos").notNull().default(false),
+  puntualIncluyeBuscador: boolean("puntual_incluye_buscador").notNull().default(false),
   packMeses: integer("pack_meses").notNull(),
   packMesesPagos: integer("pack_meses_pagos").notNull(),
   packMesesReferido: integer("pack_meses_referido").notNull(),

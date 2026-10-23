@@ -7,6 +7,7 @@ import { CursoInscripto } from "@/components/institucion/curso-inscripto";
 import { CursoMigas } from "@/components/institucion/curso-migas";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { esUuid } from "@/lib/busquedas";
 import { etiquetaInscriptos, PUNTAJE_POR_DEFECTO } from "@/lib/cursos";
 import { fechaDeInput } from "@/lib/fechas";
@@ -17,6 +18,7 @@ export const metadata: Metadata = { title: "Inscriptos" };
 
 export default async function InscriptosDelCurso({ params }: { params: Promise<{ id: string }> }) {
   const { institucion } = await requerirInstitucion();
+  await exigirBeneficio(institucion.plan, "cursos");
   const { id } = await params;
   if (!esUuid(id)) notFound();
   const datos = await cursoConInscriptos(institucion.id, id);

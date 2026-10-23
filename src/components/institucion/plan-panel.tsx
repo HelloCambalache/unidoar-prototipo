@@ -58,7 +58,7 @@ export function PlanPanel({
   const pedir = async (destino: PlanClave) => {
     const p = P.planDe(destino);
     const ok = await pedirConfirmacion(
-      `¿Pedir el cambio al ${p.label} (${pesos(p.precio)}/${p.periodo})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
+      `¿Pedir el cambio al ${p.label} (${pesos(p.precio)}${P.sufijoDePrecio(destino)})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
     );
     if (!ok) return;
     empezar(async () => {
@@ -84,7 +84,7 @@ export function PlanPanel({
           </div>
           <div className="text-[26px] leading-[1.2] font-semibold">
             {pesos(mostrarTotal ? desglose.total : actual.precio)}
-            <span className="text-sm leading-none font-normal text-white/60">/{actual.periodo}</span>
+            <span className="text-sm leading-none font-normal text-white/60">{P.sufijoDePrecio(plan)}</span>
           </div>
           {desglose.acordado && (
             <div className="mt-1 text-[13px] leading-normal text-white/65">
@@ -180,7 +180,7 @@ export function PlanPanel({
                 <div className="mb-1 text-base leading-[1.2] font-semibold">{p.label}</div>
                 <div className="mb-2.5 text-2xl leading-none font-semibold">
                   {pesos(p.precio)}
-                  <span className="text-[13px] font-normal text-apagado">/{p.periodo}</span>
+                  <span className="text-[13px] font-normal text-apagado">{P.sufijoDePrecio(clave)}</span>
                 </div>
                 <p className={cn("m-0 text-[13px] leading-normal text-apagado", !esActual && "mb-3.5")}>{p.detalle}</p>
                 {!esActual && (

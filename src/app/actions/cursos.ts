@@ -20,11 +20,13 @@ import {
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { avisar, avisarAVarios } from "@/lib/queries/avisos";
 import { cursoPropio, inscripcionPropia, inscriptosDelCurso } from "@/lib/queries/cursos-institucion";
+import { planes } from "@/lib/queries/planes";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { esUrlPublicaPropia } from "@/lib/subidas";
 import { claveDeDireccion } from "@/lib/ubicacion";
 
 const NO_ENCONTRADO = "No encontramos ese curso.";
+const SIN_CURSOS = "Tu plan de búsqueda puntual no incluye la difusión de cursos.";
 const NO_INSCRIPTO = "No encontramos esa inscripción.";
 
 /** Pantallas de las dos puntas que muestran cursos o sus conteos. */
@@ -68,6 +70,7 @@ async function ubicacionDeCurso(
 /** Crea un curso de la institución de la sesión y lleva a su ficha. */
 export async function crearCurso(_estado: EstadoFormularioCurso, formData: FormData): Promise<EstadoFormularioCurso> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!(await planes()).incluye(institucion.plan, "cursos")) return fallo(SIN_CURSOS);
   const datos = parsear(cursoSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);
   if (datos.data.fotoUrl && !fotoAceptable(datos.data.fotoUrl, null, usuario.id)) return FOTO_INVALIDA;
@@ -88,6 +91,7 @@ export async function editarCurso(
   formData: FormData,
 ): Promise<EstadoFormularioCurso> {
   const { usuario, institucion } = await requerirInstitucion();
+  if (!(await planes()).incluye(institucion.plan, "cursos")) return fallo(SIN_CURSOS);
   if (!esUuid(cursoId)) return fallo(NO_ENCONTRADO);
   const datos = parsear(cursoSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);

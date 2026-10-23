@@ -106,9 +106,10 @@ describe("el día en que cobra el débito", () => {
 });
 
 describe("planes que se pueden debitar", () => {
-  it("todos los mensuales sí y el anual no", () => {
+  it("todos los mensuales sí; el anual y la búsqueda puntual no", () => {
     for (const c of ["colegio", "deportiva", "multisede", "fundador", "estandar"]) assert.equal(esPlanDebitable(c), true, c);
     assert.equal(esPlanDebitable("anual"), false);
+    assert.equal(esPlanDebitable("puntual"), false, "no hay abono que debitar");
   });
 });
 

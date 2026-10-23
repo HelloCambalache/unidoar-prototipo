@@ -64,6 +64,16 @@ describe("actividad del equipo al editar una institución", () => {
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", mesesCubiertos: 1 }), "Registró el pago de Octubre 2026");
   });
 
+  it("el pago de una búsqueda puntual muestra el monto, el medio y la nota; y anularlo, el motivo", () => {
+    assert.equal(
+      describirAccion("busqueda_puntual.pago", { monto: 110_000, medio: "Transferencia", nota: "Comprobante 55" }),
+      "Registró el pago de una búsqueda puntual · $ 110.000 · Transferencia · Comprobante 55",
+    );
+    assert.equal(describirAccion("busqueda_puntual.pago", {}), "Registró el pago de una búsqueda puntual");
+    assert.equal(describirAccion("busqueda_puntual.anular_pago", { motivo: "Se pagó dos veces" }), "Anuló el pago de una búsqueda puntual · Se pagó dos veces");
+    assert.equal(describirAccion("busqueda_puntual.anular_pago", {}), "Anuló el pago de una búsqueda puntual");
+  });
+
   it("cuenta el precio acordado con los montos de antes y de después, sin la nota", () => {
     assert.equal(
       describirAccion("institucion.precio_acordado", { antes: null, despues: { modalidad: "abono", monto: 48_000 }, nota: "secreta" }),

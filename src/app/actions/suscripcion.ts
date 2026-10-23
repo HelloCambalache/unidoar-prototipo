@@ -54,7 +54,13 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   if (!(await debitoDisponiblePara(institucion))) return fallo(NO_DISPONIBLE);
   if (!permitirActivarDebito(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
   if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id))) return fallo(SOLO_GESTORES);
-  if (!esPlanDebitable(institucion.plan)) return fallo("Tu plan es anual: se paga por adelantado y no tiene débito automático.");
+  if (!esPlanDebitable(institucion.plan)) {
+    return fallo(
+      institucion.plan === "puntual"
+        ? "Tu plan es de búsqueda puntual: se paga cada búsqueda y no tiene débito automático."
+        : "Tu plan es anual: se paga por adelantado y no tiene débito automático.",
+    );
+  }
 
   const existente = await suscripcionDe(institucion.id);
   if (existente && (existente.estado === "autorizada" || existente.estado === "pausada")) return fallo("Ya tenés el débito automático activado.");

@@ -62,6 +62,7 @@ const FACTURA_NO_ENCONTRADA = "No encontramos esa factura.";
 const INSTITUCION_NO_ENCONTRADA = "No encontramos esa institución.";
 const PEDIDO_NO_ENCONTRADO = "No encontramos ese pedido.";
 const PEDIDO_ATENDIDO = "Ese pedido ya fue atendido por otra persona del equipo.";
+const SOLO_POR_BUSQUEDA = "La búsqueda puntual no tiene factura mensual: se paga cada búsqueda desde «Registrar pago de búsqueda puntual».";
 
 function revalidarCobros(institucionId?: string) {
   revalidatePath("/backoffice/cobros");
@@ -163,6 +164,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fecha, nota, avisar } = datos.data;
   const P = await planes();
+  if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
 
   const hoy = hoyAR();
   const errorFecha = errorDeFechaDePago(fecha, hoy);
@@ -294,7 +296,7 @@ async function facturasDelSemestre(ejecutor: Ejecutor, institucionId: string, pe
 /** Qué impide registrar el semestre (null si se puede): un plan que no es mensual, meses ya pagos o facturas sin pagar adentro. */
 function impedimentoDeSemestre(P: Planes, plan: string, periodo: string, meses: number, cercanas: FacturaConCobertura[]) {
   if (!esClavePlan(plan) || P.planDe(plan).periodo !== "mes") {
-    return { error: "El semestre al contado es para planes mensuales: el plan de esta institución ya se paga por adelantado." };
+    return { error: "El semestre al contado es para planes con abono mensual: el plan de esta institución no lo tiene (se paga por adelantado o por búsqueda)." };
   }
   const { pagos, impagas } = conflictosDeSemestre(periodo, meses, cercanas);
   const lista = (ps: string[]) => ps.map(etiquetaPeriodo).join(", ");
@@ -536,11 +538,9 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fechaCobro, medio } = datos.data;
   // En un plan por sede (Multisede) el monto es el precio de una sede por las sedes que tiene la institución.
-  const monto = (await planes()).montoDePlan(
-    plan,
-    (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1,
-    await acuerdoParaPlan(getDb(), institucionId, plan),
-  );
+  const P = await planes();
+  if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
+  const monto = P.montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, await acuerdoParaPlan(getDb(), institucionId, plan));
 
   try {
     const resultado = await transaccion(async (tx) => {
@@ -663,6 +663,7 @@ function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
   }
   if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
   if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
+  if (r.motivo === "sin_abono") return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
   return " Tu plan anual ya cubre este mes: no hay nada para pagar ahora.";
 }
 

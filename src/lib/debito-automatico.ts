@@ -8,7 +8,8 @@ import { fechaCobroDelPeriodo, hoyAR, sumarMeses } from "@/lib/cobros";
 export const MONEDA = "ARS";
 
 /** Planes que se cobran con débito automático: los mensuales. El Anual es un pago por adelantado y queda manual. */
-export const esPlanDebitable = (clave: string) => clave !== "anual";
+/** El débito es mensual: el plan anual se paga por adelantado y la búsqueda puntual se paga cada búsqueda (ninguno tiene abono mensual). */
+export const esPlanDebitable = (clave: string) => clave !== "anual" && clave !== "puntual";
 
 /** En qué está la suscripción de una institución. Lo informa Mercado Pago; acá solo se espeja. */
 export type EstadoSuscripcion = "pendiente" | "autorizada" | "pausada" | "cancelada";

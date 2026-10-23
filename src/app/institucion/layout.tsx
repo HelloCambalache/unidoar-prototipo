@@ -23,6 +23,14 @@ export default async function InstitucionLayout({ children }: { children: React.
   const { usuario, institucion } = await requerirInstitucion();
   const [notificaciones, P] = await Promise.all([notificacionesDe(usuario.id), planes()]);
   const plan = P.planDe(institucion.plan);
+  // Una búsqueda puntual puede no incluir el buscador de profesionales ni la difusión de cursos (lo decide el equipo en Planes): no se ofrecen en el menú.
+  const sinBuscador = !P.incluye(institucion.plan, "buscador");
+  const sinCursos = !P.incluye(institucion.plan, "cursos");
+  const nav = NAV.filter(
+    (item) =>
+      !(sinBuscador && (item.href === "/institucion/buscar-docentes" || item.href === "/institucion/base-de-docentes")) &&
+      !(sinCursos && item.href === "/institucion/cursos"),
+  );
 
   return (
     <AppShell
@@ -30,7 +38,7 @@ export default async function InstitucionLayout({ children }: { children: React.
       nombre={institucion.nombre}
       iniciales={iniciales(institucion.contactoNombre ?? institucion.nombre)}
       insignia={{ texto: plan.label, href: "/institucion/plan", titulo: "Ver plan y facturación" }}
-      nav={NAV}
+      nav={nav}
       navPie={NAV_PIE}
       tarjetaPie={
         <div className="rounded-caja border border-borde bg-superficie px-3 py-3.5">

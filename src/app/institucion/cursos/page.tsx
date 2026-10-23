@@ -4,12 +4,14 @@ import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CursoTarjeta } from "@/components/institucion/curso-tarjeta";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { listarCursosDeInstitucion } from "@/lib/queries/cursos-institucion";
 
 export const metadata: Metadata = { title: "Mis cursos" };
 
 export default async function MisCursos() {
   const { institucion } = await requerirInstitucion();
+  await exigirBeneficio(institucion.plan, "cursos");
   const cursos = await listarCursosDeInstitucion(institucion.id);
 
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CursoFormulario } from "@/components/institucion/curso-formulario";
 import { CursoMigas } from "@/components/institucion/curso-migas";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { PUNTAJE_POR_DEFECTO, type ValoresCurso } from "@/lib/cursos";
 
 export const metadata: Metadata = { title: "Crear curso" };
@@ -24,7 +25,8 @@ const VACIO: ValoresCurso = {
 };
 
 export default async function CrearCurso() {
-  await requerirInstitucion();
+  const { institucion } = await requerirInstitucion();
+  await exigirBeneficio(institucion.plan, "cursos");
   return (
     <>
       <CursoMigas actual="Crear curso" />

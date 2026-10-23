@@ -276,7 +276,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_anual" | "cubierta_por_semestre" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
@@ -293,6 +293,8 @@ export async function aplicarPlanAlPeriodoActual(
   P: Planes,
   ahora = new Date(),
 ): Promise<ResultadoFacturaDelPeriodo> {
+  // La búsqueda puntual no tiene abono mensual: no hay factura del mes (se paga cada búsqueda).
+  if (P.esPuntual(plan)) return { resultado: "sin_cambios", motivo: "sin_abono" };
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
   const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, await acuerdoDe(tx, institucion.id));

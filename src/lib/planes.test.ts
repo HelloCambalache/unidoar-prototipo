@@ -31,12 +31,23 @@ const filasDeLanzamiento = (): FilaDePlan[] =>
 
 const condicionesDeLanzamiento = (): FilaDeCondiciones => {
   const c = CATALOGO_POR_DEFECTO.condiciones;
-  return { sedesMultisede: c.sedesMultisede, descuentoSedeExtra: c.descuentoSedeExtra, packMeses: c.pack.meses, packMesesPagos: c.pack.mesesQueSePagan, packMesesReferido: c.pack.mesesConReferido, tiposColegio: c.tiposColegio };
+  return {
+    sedesMultisede: c.sedesMultisede,
+    descuentoSedeExtra: c.descuentoSedeExtra,
+    packMeses: c.pack.meses,
+    packMesesPagos: c.pack.mesesQueSePagan,
+    packMesesReferido: c.pack.mesesConReferido,
+    tiposColegio: c.tiposColegio,
+    puntualVigenciaDias: c.puntual.vigenciaDias,
+    puntualBusquedasAbiertas: c.puntual.busquedasAbiertas,
+    puntualIncluyeCursos: c.puntual.incluyeCursos,
+    puntualIncluyeBuscador: c.puntual.incluyeBuscador,
+  };
 };
 
 describe("planes vigentes y heredados", () => {
-  it("ofrece los tres de hoy y deja afuera los que ya no se venden", () => {
-    assert.deepEqual(P.vigentes, ["colegio", "deportiva", "multisede"]);
+  it("ofrece los de hoy (con la búsqueda puntual al final) y deja afuera los que ya no se venden", () => {
+    assert.deepEqual(P.vigentes, ["colegio", "deportiva", "multisede", "puntual"]);
     for (const clave of ["fundador", "estandar", "anual"] as const) {
       assert.equal(P.planes[clave].vigente, false, `${clave} no debería ofrecerse`);
     }
@@ -52,11 +63,11 @@ describe("planes vigentes y heredados", () => {
   });
 
   it("un selector ofrece los vigentes y, si la institución está en uno heredado, también el suyo", () => {
-    assert.deepEqual(P.clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede"]);
-    assert.deepEqual(P.clavesParaElegir("fundador"), ["colegio", "deportiva", "multisede", "fundador"]);
+    assert.deepEqual(P.clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede", "puntual"]);
+    assert.deepEqual(P.clavesParaElegir("fundador"), ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
     assert.ok(!P.clavesParaElegir("colegio").includes("fundador"));
-    assert.deepEqual(P.clavesParaElegir(undefined), ["colegio", "deportiva", "multisede"]);
-    assert.deepEqual(P.clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede"]);
+    assert.deepEqual(P.clavesParaElegir(undefined), ["colegio", "deportiva", "multisede", "puntual"]);
+    assert.deepEqual(P.clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede", "puntual"]);
   });
 
   it("el anual aporta un doceavo al MRR y el resto su precio mensual", () => {
@@ -591,5 +602,83 @@ describe("el plan sigue al tipo de institución", () => {
   it("si el tipo no cambia de arancel, el plan queda igual", () => {
     assert.equal(P.planTrasCambiarElTipo("colegio", "Colegio privado", "Jardín de infantes"), "colegio");
     assert.equal(P.planTrasCambiarElTipo("deportiva", "Club o gimnasio", "Natatorio o colonia"), "deportiva");
+  });
+});
+
+describe("la búsqueda puntual", () => {
+  it("es un plan por evento: se paga cada búsqueda, sin abono ni ingreso mensual", () => {
+    assert.equal(P.esPuntual("puntual"), true);
+    for (const clave of ["colegio", "deportiva", "multisede", "fundador", "estandar", "anual"]) assert.equal(P.esPuntual(clave), false, clave);
+    assert.equal(P.equivalenteMensual("puntual"), 0, "no entra en el MRR");
+    assert.equal(P.planDe("puntual").precio, 110_000);
+    assert.equal(P.planDe("puntual").precioMinimo, 95_000);
+  });
+
+  it("escribe el precio por búsqueda y no por mes", () => {
+    assert.equal(P.precioDePlan("puntual"), "$ 110.000 por búsqueda");
+    assert.equal(P.sufijoDePrecio("puntual"), " por búsqueda");
+    assert.equal(P.sufijoDePrecio("colegio"), "/mes");
+    assert.equal(P.sufijoDePrecio("anual"), "/año");
+  });
+
+  it("los planes con abono incluyen todo y la búsqueda puntual solo lo que se tildó", () => {
+    for (const beneficio of ["cursos", "buscador"] as const) {
+      assert.equal(P.incluye("colegio", beneficio), true);
+      assert.equal(P.incluye("puntual", beneficio), false, "de lanzamiento no incluye ninguno");
+    }
+    const abierto = crearPlanes({
+      ...CATALOGO_POR_DEFECTO,
+      condiciones: { ...CATALOGO_POR_DEFECTO.condiciones, puntual: { ...CATALOGO_POR_DEFECTO.condiciones.puntual, incluyeCursos: true } },
+    });
+    assert.equal(abierto.incluye("puntual", "cursos"), true);
+    assert.equal(abierto.incluye("puntual", "buscador"), false);
+  });
+
+  it("las condiciones de la base se leen y una rota se reemplaza campo por campo", () => {
+    const con = (c: Partial<FilaDeCondiciones>) => catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), ...c }).condiciones.puntual;
+    assert.deepEqual(con({ puntualVigenciaDias: 45, puntualBusquedasAbiertas: 2, puntualIncluyeCursos: true }), {
+      vigenciaDias: 45,
+      busquedasAbiertas: 2,
+      incluyeCursos: true,
+      incluyeBuscador: false,
+    });
+    assert.equal(con({ puntualVigenciaDias: 0 }).vigenciaDias, 30);
+    assert.equal(con({ puntualVigenciaDias: 400 }).vigenciaDias, 30);
+    assert.equal(con({ puntualVigenciaDias: 7.5 }).vigenciaDias, 30);
+    assert.equal(con({ puntualBusquedasAbiertas: 0 }).busquedasAbiertas, 1);
+    assert.equal(con({ puntualBusquedasAbiertas: 21 }).busquedasAbiertas, 1);
+    assert.equal(con({ puntualIncluyeBuscador: undefined }).incluyeBuscador, false, "sin la columna vale el de lanzamiento");
+  });
+
+  it("sin las columnas nuevas (una base a la que todavía no se le corrió el script) vale todo lo de lanzamiento", () => {
+    const { tiposColegio, sedesMultisede, descuentoSedeExtra, packMeses, packMesesPagos, packMesesReferido } = condicionesDeLanzamiento();
+    const vieja: FilaDeCondiciones = { tiposColegio, sedesMultisede, descuentoSedeExtra, packMeses, packMesesPagos, packMesesReferido };
+    assert.deepEqual(catalogoDesdeLaBase(filasDeLanzamiento(), vieja).condiciones.puntual, CATALOGO_POR_DEFECTO.condiciones.puntual);
+  });
+
+  it("la edición acepta las condiciones de lanzamiento y rechaza una vigencia o un tope fuera de rango", () => {
+    assert.equal(edicionDePlanesSchema.safeParse(edicion()).success, true);
+    for (const [campo, valor] of [
+      ["vigenciaDias", 0],
+      ["vigenciaDias", 366],
+      ["vigenciaDias", 30.5],
+      ["busquedasAbiertas", 0],
+      ["busquedasAbiertas", 21],
+    ] as const) {
+      const e = edicion();
+      e.condiciones.puntual[campo] = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, false, `${campo} = ${valor} no debería pasar`);
+    }
+  });
+
+  it("un cambio de las condiciones queda anotado, y el piso no puede pasar el precio", () => {
+    const antes = edicion();
+    const despues = edicion();
+    despues.condiciones.puntual.vigenciaDias = 45;
+    assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["condiciones de la búsqueda puntual"] }]);
+
+    const roto = edicion();
+    roto.planes.puntual.precioMinimo = roto.planes.puntual.precio + 1;
+    assert.equal(edicionDePlanesSchema.safeParse(roto).success, false);
   });
 });

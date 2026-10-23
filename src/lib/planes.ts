@@ -19,7 +19,8 @@ import { TIPOS_INSTITUCION } from "@/lib/catalogo";
  * factura o una institución las referencian.
  */
 
-export type Periodo = "mes" | "año";
+/** Cada cuánto se cobra un plan: por mes, por año o por evento (la búsqueda puntual: se paga cada búsqueda, sin abono). */
+export type Periodo = "mes" | "año" | "evento";
 
 export type Plan = {
   label: string;
@@ -39,7 +40,7 @@ export type Plan = {
   porSede: boolean;
 };
 
-export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "fundador", "estandar", "anual"] as const;
+export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "fundador", "estandar", "anual", "puntual"] as const;
 export type PlanClave = (typeof CLAVES_PLAN)[number];
 
 export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && (CLAVES_PLAN as readonly string[]).includes(v);
@@ -53,6 +54,18 @@ export type PackDeLanzamiento = {
   mesesConReferido: number;
 };
 
+/** Lo que define a la búsqueda puntual (el plan sin abono: se paga cada búsqueda). Todo lo edita el equipo en Planes. */
+export type CondicionesDePuntual = {
+  /** Cuántos días queda publicada una búsqueda puntual: pasado ese plazo se cierra sola. */
+  vigenciaDias: number;
+  /** Cuántas búsquedas puntuales puede tener abiertas a la vez. */
+  busquedasAbiertas: number;
+  /** Si una institución con búsquedas puntuales puede publicar cursos (difusión de cursos). */
+  incluyeCursos: boolean;
+  /** Si puede usar el buscador de profesionales y la base de profesionales (los «beneficios continuos»). */
+  incluyeBuscador: boolean;
+};
+
 export type CondicionesDePlanes = {
   /** Desde esta cantidad de sedes (incluida) corresponde el plan Multisede (redes: valor a convenir). */
   sedesMultisede: number;
@@ -62,6 +75,8 @@ export type CondicionesDePlanes = {
    */
   descuentoSedeExtra: number;
   pack: PackDeLanzamiento;
+  /** La búsqueda puntual: vigencia, tope de búsquedas abiertas y qué incluye. */
+  puntual: CondicionesDePuntual;
   /** Tipos de institución que pagan el arancel de colegios; el resto paga el deportivo. */
   tiposColegio: string[];
 };
@@ -139,12 +154,23 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
     vigente: false,
     porSede: false,
   },
+  puntual: {
+    label: "Búsqueda puntual",
+    precio: 110_000,
+    precioMinimo: 95_000,
+    periodo: "evento",
+    resumen: "Una vacante puntual, sin abono mensual.",
+    detalle: "Para cubrir un puesto puntual: pagás solo esa búsqueda, sin abono mensual.",
+    vigente: true,
+    porSede: false,
+  },
 };
 
 export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
   sedesMultisede: 5,
   descuentoSedeExtra: 50,
   pack: { meses: 6, mesesQueSePagan: 5, mesesConReferido: 4 },
+  puntual: { vigenciaDias: 30, busquedasAbiertas: 1, incluyeCursos: false, incluyeBuscador: false },
   tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario", "Universidad"],
 };
 
@@ -205,11 +231,27 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return { lista: mensual * meses, anticipado: mensual * mesesQueSePagan, conReferido: mensual * mesesConReferido };
   };
 
-  /** "$ 50.000/mes" · "$ 15.000/mes por sede" */
+  /** Lo que va detrás del precio: "/mes", "/año" o " por búsqueda" (la búsqueda puntual no tiene abono). */
+  const sufijoDePrecio = (clave: string) => {
+    const p = planDe(clave);
+    return p.periodo === "evento" ? " por búsqueda" : `/${p.periodo}`;
+  };
+
+  /** "$ 50.000/mes" · "$ 15.000/mes por sede" · "$ 110.000 por búsqueda" */
   const precioDePlan = (clave: string) => {
     const p = planDe(clave);
-    return `${pesos(p.precio)}/${p.periodo}${p.porSede ? " por sede" : ""}`;
+    return `${pesos(p.precio)}${sufijoDePrecio(clave)}${p.porSede ? " por sede" : ""}`;
   };
+
+  /** Es el plan sin abono de búsqueda puntual: se paga cada búsqueda, no hay facturas mensuales ni débito. */
+  const esPuntual = (clave: string) => planDe(clave).periodo === "evento";
+
+  /**
+   * Si el plan incluye un beneficio. Los planes con abono incluyen todo; la búsqueda puntual, solo lo que el equipo tilda en Planes
+   * (difusión de cursos, buscador y base de profesionales: los «beneficios continuos»).
+   */
+  const incluye = (clave: string, beneficio: "cursos" | "buscador") =>
+    !esPuntual(clave) || (beneficio === "cursos" ? condiciones.puntual.incluyeCursos : condiciones.puntual.incluyeBuscador);
 
   /**
    * El abono de la primera sede: el de lista o, si la institución tiene un abono acordado, ese. Un abono acordado nunca cobra más que la lista:
@@ -290,6 +332,8 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   /** Lo que aporta una institución al MRR: el anual cuenta como precio / 12 y un plan por sede, el precio por la cantidad de sedes. */
   const equivalenteMensual = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
     const p = planDe(clave);
+    // La búsqueda puntual no es un ingreso recurrente: no entra en el MRR.
+    if (p.periodo === "evento") return 0;
     const monto = montoDePlan(clave, sedes, acuerdo);
     return p.periodo === "año" ? Math.round(monto / 12) : monto;
   };
@@ -308,6 +352,9 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     precioMultisede,
     packDe,
     precioDePlan,
+    sufijoDePrecio,
+    esPuntual,
+    incluye,
     precioDeSedeExtra,
     abonoDe,
     montoDePlan,
@@ -340,6 +387,11 @@ export type FilaDeCondiciones = {
   sedesMultisede: number;
   /** Puede faltar en una base a la que todavía no se le agregó la columna: en ese caso vale el de lanzamiento. */
   descuentoSedeExtra?: number;
+  /** Condiciones de la búsqueda puntual: pueden faltar en una base a la que todavía no se le agregaron las columnas (vale el de lanzamiento). */
+  puntualVigenciaDias?: number;
+  puntualBusquedasAbiertas?: number;
+  puntualIncluyeCursos?: boolean;
+  puntualIncluyeBuscador?: boolean;
   packMeses: number;
   packMesesPagos: number;
   packMesesReferido: number;
@@ -378,6 +430,12 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
   const condiciones: CondicionesDePlanes = {
     sedesMultisede: c && entero(c.sedesMultisede, 2, 100) ? c.sedesMultisede : defecto.sedesMultisede,
     descuentoSedeExtra: c && entero(c.descuentoSedeExtra, 0, 100) ? c.descuentoSedeExtra : defecto.descuentoSedeExtra,
+    puntual: {
+      vigenciaDias: c && entero(c.puntualVigenciaDias, 1, 365) ? c.puntualVigenciaDias : defecto.puntual.vigenciaDias,
+      busquedasAbiertas: c && entero(c.puntualBusquedasAbiertas, 1, 20) ? c.puntualBusquedasAbiertas : defecto.puntual.busquedasAbiertas,
+      incluyeCursos: c && typeof c.puntualIncluyeCursos === "boolean" ? c.puntualIncluyeCursos : defecto.puntual.incluyeCursos,
+      incluyeBuscador: c && typeof c.puntualIncluyeBuscador === "boolean" ? c.puntualIncluyeBuscador : defecto.puntual.incluyeBuscador,
+    },
     pack: packValido ? { meses: c.packMeses, mesesQueSePagan: c.packMesesPagos, mesesConReferido: c.packMesesReferido } : defecto.pack,
     tiposColegio: c && Array.isArray(c.tiposColegio) && c.tiposColegio.length > 0 ? [...c.tiposColegio] : [...defecto.tiposColegio],
   };
@@ -427,6 +485,12 @@ export const edicionDePlanesSchema = z
     condiciones: z.object({
       sedesMultisede: numeroDePack(2, 100),
       descuentoSedeExtra: numeroDePack(0, 100),
+      puntual: z.object({
+        vigenciaDias: numeroDePack(1, 365),
+        busquedasAbiertas: numeroDePack(1, 20),
+        incluyeCursos: z.boolean(),
+        incluyeBuscador: z.boolean(),
+      }),
       pack: z.object({ meses: numeroDePack(2, 24), mesesQueSePagan: numeroDePack(1, 24), mesesConReferido: numeroDePack(1, 24) }),
       tiposColegio: z.array(z.enum(TIPOS_INSTITUCION)).min(1, "Elegí al menos un tipo de institución para el arancel de colegios."),
     }),
@@ -479,6 +543,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
     condiciones: {
       sedesMultisede: c.condiciones.sedesMultisede,
       descuentoSedeExtra: c.condiciones.descuentoSedeExtra,
+      puntual: { ...c.condiciones.puntual },
       pack: { ...c.condiciones.pack },
       tiposColegio: TIPOS_INSTITUCION.filter((t) => c.condiciones.tiposColegio.includes(t)),
     },
@@ -515,6 +580,11 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
   const campos: string[] = [];
   if (antes.condiciones.sedesMultisede !== despues.condiciones.sedesMultisede) campos.push("sedes para el plan Multisede");
   if (antes.condiciones.descuentoSedeExtra !== despues.condiciones.descuentoSedeExtra) campos.push("descuento por sede adicional");
+  const ua = antes.condiciones.puntual;
+  const ud = despues.condiciones.puntual;
+  if (ua.vigenciaDias !== ud.vigenciaDias || ua.busquedasAbiertas !== ud.busquedasAbiertas || ua.incluyeCursos !== ud.incluyeCursos || ua.incluyeBuscador !== ud.incluyeBuscador) {
+    campos.push("condiciones de la búsqueda puntual");
+  }
   const pa = antes.condiciones.pack;
   const pd = despues.condiciones.pack;
   if (pa.meses !== pd.meses || pa.mesesQueSePagan !== pd.mesesQueSePagan || pa.mesesConReferido !== pd.mesesConReferido) campos.push("pack por adelantado");

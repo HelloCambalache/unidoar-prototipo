@@ -4,6 +4,7 @@ import { CursoBorrar } from "@/components/institucion/curso-borrar";
 import { CursoFormulario } from "@/components/institucion/curso-formulario";
 import { CursoMigas } from "@/components/institucion/curso-migas";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { esUuid } from "@/lib/busquedas";
 import { MODALIDADES, PUNTAJE_POR_DEFECTO, type ValoresCurso } from "@/lib/cursos";
 import { cursoConInscriptos } from "@/lib/queries/cursos-institucion";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Editar curso" };
 
 export default async function EditarCurso({ params }: { params: Promise<{ id: string }> }) {
   const { institucion } = await requerirInstitucion();
+  await exigirBeneficio(institucion.plan, "cursos");
   const { id } = await params;
   if (!esUuid(id)) notFound();
   const datos = await cursoConInscriptos(institucion.id, id);

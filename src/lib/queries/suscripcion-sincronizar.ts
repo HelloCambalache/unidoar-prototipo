@@ -58,12 +58,14 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
           await avisarAVarios(db, await destinatariosDeInstitucion(db, inst.id), {
             tipo: "sistema",
             titulo: "UNIDOAR",
-            texto: "tu plan pasó a ser anual y se paga por adelantado, así que cancelamos el débito automático mensual.",
+            texto: P.esPuntual(inst.plan)
+              ? "tu plan pasó a ser de búsqueda puntual (se paga cada búsqueda, sin abono mensual), así que cancelamos el débito automático mensual."
+              : "tu plan pasó a ser anual y se paga por adelantado, así que cancelamos el débito automático mensual.",
             enlace: "/institucion/plan",
           });
           await avisarAAdmins(db, {
             titulo: "Débito automático cancelado",
-            texto: `${inst.nombre} pasó al plan Anual: se canceló su débito automático mensual.`,
+            texto: `${inst.nombre} pasó al plan ${P.nombreDePlan(inst.plan)}: se canceló su débito automático mensual.`,
             enlace: `/backoffice/cobros/${inst.id}`,
           });
         } else if (decision.accion === "cambiar-monto") {

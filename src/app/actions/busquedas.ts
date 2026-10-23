@@ -19,8 +19,11 @@ import {
 import { diaHoraLegible } from "@/lib/calendario";
 import { correoDeBusquedaUrgente } from "@/lib/correo/eventos";
 import { MS } from "@/lib/fechas";
+import { permisoParaPublicarPuntual, puedeReabrirPuntual, venceEnDePuntual } from "@/lib/puntual";
 import { avisarAVarios, avisarCierreDeBusqueda } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
+import { planes as cargarPlanes } from "@/lib/queries/planes";
+import { consumirCredito, saldoDeBusquedas, vencimientoDePuntual } from "@/lib/queries/puntuales";
 import { sedeParaBusqueda, sedesDeInstitucion } from "@/lib/queries/sedes";
 import { sedesElegidas } from "@/lib/sedes";
 import { docentesAvisables, resumenCoincidencias } from "@/lib/queries/coincidencias";
@@ -37,6 +40,9 @@ function revalidarBusquedas(busquedaId?: string) {
 }
 
 const activado = (formData: FormData, nombre: string) => formData.get(nombre) === "on";
+
+/** Se corta la publicación (y se deshace la transacción) cuando una búsqueda puntual ya no tiene una búsqueda pagada para consumir. */
+class SinBusquedaPagada extends Error {}
 
 /** Los criterios del formulario más los interruptores del panel lateral, con el mismo schema que usa el panel. */
 function filtrosDeFormulario(d: BusquedaFormulario, zona: string | null | undefined, formData: FormData) {
@@ -85,6 +91,21 @@ export async function crearBusqueda(
   const ahora = new Date();
   const venceEn = valores.rapida ? new Date(ahora.getTime() + (datos.data.venceEnHoras ?? 24) * MS.HORA) : null;
 
+  // Búsqueda puntual (el plan sin abono): hace falta una búsqueda pagada y disponible, una sola sede y no pasarse del tope de abiertas. Se mira
+  // acá para dar el motivo; el crédito se consume adentro de la transacción (si dos publicaciones compiten, una sola se lo lleva).
+  const P = await cargarPlanes();
+  const puntual = P.esPuntual(institucion.plan);
+  if (puntual) {
+    const saldo = await saldoDeBusquedas(getDb(), institucion.id);
+    const permiso = permisoParaPublicarPuntual({
+      ...saldo,
+      maxAbiertas: P.condiciones.puntual.busquedasAbiertas,
+      sedes: sedes.length,
+      precio: P.precioDePlan(institucion.plan),
+    });
+    if (!permiso.ok) return fallo(permiso.error, permiso.campo ? { [permiso.campo]: permiso.error } : undefined);
+  }
+
   // Con una sede, la zona del formulario (o la de la sede). Con varias, cada búsqueda toma la zona de su sede.
   const planes = await Promise.all(
     sedes.map(async (sede) => {
@@ -93,7 +114,9 @@ export async function crearBusqueda(
     }),
   );
 
-  const avisados = await transaccion(async (tx) => {
+  let avisados: number;
+  try {
+    avisados = await transaccion(async (tx) => {
     // A cada profesional se le avisa una sola vez por publicación, aunque encaje en varias sedes (por la primera en la que encaja).
     const yaAvisados = new Set<string>();
     for (const { sede, zona, destinatarios } of planes) {
@@ -101,6 +124,10 @@ export async function crearBusqueda(
         .insert(busquedas)
         .values({ institucionId: institucion.id, sedeId: sede.id, ...valores, zona, venceEn })
         .returning({ id: busquedas.id });
+      // La búsqueda puntual consume la búsqueda pagada y queda con su plazo (pasado, el cron la cierra).
+      if (puntual && !(await consumirCredito(tx, institucion.id, creada!.id, venceEnDePuntual(ahora, P.condiciones.puntual.vigenciaDias)))) {
+        throw new SinBusquedaPagada();
+      }
       const nuevos = destinatarios.map((d) => d.usuarioId).filter((u) => !yaAvisados.has(u));
       nuevos.forEach((u) => yaAvisados.add(u));
       if (nuevos.length === 0) continue;
@@ -125,7 +152,13 @@ export async function crearBusqueda(
       }
     }
     return yaAvisados.size;
-  });
+    });
+  } catch (e) {
+    if (e instanceof SinBusquedaPagada) {
+      return fallo("Ya no tenés una búsqueda pagada disponible (otra publicación la usó). Escribinos desde Contacto para abonar otra.");
+    }
+    throw e;
+  }
 
   revalidarBusquedas();
   redirect(`/institucion/busquedas?publicada=${avisados}${varias ? `&sedes=${sedes.length}` : ""}`);
@@ -208,6 +241,12 @@ export async function reabrirBusqueda(busquedaId: string): Promise<Resultado> {
 
   const actual = await busquedaPropia(institucion.id, busquedaId);
   if (!actual) return fallo("No encontramos esa búsqueda.");
+
+  // Una búsqueda puntual pasada de su plazo no se reabre: sería publicar otra sin pagarla.
+  const puntual = await vencimientoDePuntual(getDb(), actual.id);
+  if (puntual.esPuntual && !puedeReabrirPuntual(puntual.venceEn)) {
+    return fallo("Esta búsqueda puntual ya cumplió su plazo: para publicar otra hace falta abonar una nueva.");
+  }
 
   const ahora = new Date();
   const plazoVencido = actual.rapida && (!actual.venceEn || actual.venceEn.getTime() <= ahora.getTime());

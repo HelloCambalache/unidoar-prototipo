@@ -10,6 +10,7 @@ import {
   fechaCobroDelPeriodo,
   pagoEfectivoSchema,
   pagoHastaDeMes,
+  pagoPuntualSchema,
   pagoSchema,
   planificarFacturas,
   semestreSchema,
@@ -74,6 +75,28 @@ describe("registrar un pago", () => {
     assert.equal(errorDeFechaDePago("2026-09-01", "2026-10-07"), null);
     assert.match(errorDeFechaDePago("2026-10-08", "2026-10-07") ?? "", /futura/);
     assert.match(errorDeFechaDePago("2025-01-01", "2026-10-07") ?? "", /más de un año/);
+  });
+});
+
+describe("pago de una búsqueda puntual", () => {
+  const base = { medio: "Transferencia", fecha: "2026-10-03", avisar: true };
+
+  it("acepta un pago completo y recorta la nota; sin nota queda sin nota", () => {
+    assert.equal(pagoPuntualSchema.parse({ ...base, nota: "  Comprobante 55 " }).nota, "Comprobante 55");
+    assert.equal(pagoPuntualSchema.parse({ ...base, nota: "   " }).nota, undefined);
+    assert.equal(pagoPuntualSchema.parse(base).nota, undefined);
+  });
+
+  it("rechaza un medio que no existe, una fecha inválida y no saber si se avisa", () => {
+    assert.equal(pagoPuntualSchema.safeParse({ ...base, medio: "Cheque" }).success, false);
+    assert.equal(pagoPuntualSchema.safeParse({ ...base, fecha: "" }).success, false);
+    assert.equal(pagoPuntualSchema.safeParse({ ...base, fecha: "2026-02-30" }).success, false);
+    assert.equal(pagoPuntualSchema.safeParse({ medio: base.medio, fecha: base.fecha }).success, false);
+    assert.equal(pagoPuntualSchema.safeParse({ ...base, nota: "x".repeat(121) }).success, false);
+  });
+
+  it("el monto no viaja en el pedido: sale del plan y del precio acordado", () => {
+    assert.equal("monto" in pagoPuntualSchema.parse({ ...base, monto: 1 }), false);
   });
 });
 
@@ -340,6 +363,11 @@ describe("facturas automáticas (planificarFacturas)", () => {
     const cubierta = una(inst("a", "fundador"), [f("a", "2026-06", "anual", "pagada")]);
     assert.deepEqual([cubierta.crear.length, cubierta.omitidas[0]!.motivo], [0, "cubierta_por_anual"]);
     assert.equal(una(inst("a", "fundador"), [f("a", "2026-06", "anual", "pendiente")]).crear.length, 1);
+  });
+
+  it("no factura el plan de búsqueda puntual: no tiene abono, se paga cada búsqueda", () => {
+    const r = una(inst("a", "puntual"), [f("a", "2026-05", "colegio", "pagada")]);
+    assert.deepEqual([r.crear.length, r.omitidas[0]!.motivo], [0, "sin_abono"]);
   });
 
   it("no factura un plan que no existe", () => {

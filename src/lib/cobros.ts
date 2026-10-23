@@ -207,13 +207,14 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "anual_vigente" | "cubierta_por_anual" | "cubierta_por_semestre" | "sin_abono" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
  * (`aplicarPlanAlPeriodoActual`): una por institución y mes, nace pendiente, el monto sale del plan, y una factura
  * anual cubre los 12 meses desde su período. Sin acceso a base: `recientes` trae las facturas de los últimos 12 períodos.
  *
+ *  - plan de búsqueda puntual: no tiene abono mensual, nunca se factura;
  *  - ya tiene factura de ese mes → no se toca;
  *  - plan anual: si ya hay una factura anual en la ventana (paga o por pagar) no se genera otra hasta que venza el año;
  *  - plan mensual: si una factura anual paga todavía cubre el mes, no se cobra;
@@ -242,6 +243,8 @@ export function planificarFacturas(
     const omitir = (motivo: MotivoOmision) => omitidas.push({ institucionId: inst.id, motivo });
 
     if (!esClavePlan(inst.plan)) omitir("plan_desconocido");
+    // La búsqueda puntual no tiene abono: se paga cada búsqueda (ver src/lib/puntual.ts), así que no hay factura mensual.
+    else if (planes.esPuntual(inst.plan)) omitir("sin_abono");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
     else if (inst.plan === "anual" && propias.some((f) => f.plan === "anual")) omitir("anual_vigente");
     else if (inst.plan !== "anual" && propias.some((f) => f.plan === "anual" && f.estado === "pagada")) {
@@ -352,6 +355,26 @@ export const semestreSchema = z.object({
   cancelarDebito: z.boolean(),
 });
 export type SemestreAlContado = z.input<typeof semestreSchema>;
+
+/** Cómo se paga una búsqueda puntual: por adelantado y de una vez (no hay débito: no es una suscripción). */
+export const MEDIOS_PUNTUAL = ["Transferencia", "Efectivo", "Mercado Pago", "Tarjeta"] as const;
+
+/**
+ * Pago de una búsqueda puntual (el plan sin abono): el equipo lo registra y la institución queda con una búsqueda pagada para publicar. El monto
+ * sale del plan de búsqueda puntual y del precio acordado de la institución, nunca del cliente.
+ */
+export const pagoPuntualSchema = z.object({
+  medio: z.enum(MEDIOS_PUNTUAL, { error: "Elegí cómo pagó" }),
+  /** Cuándo llegó el pago. */
+  fecha: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Elegí la fecha del pago")
+    .refine(esFechaReal, "La fecha no existe"),
+  nota: vacioAUndefined(z.string().trim().max(120, "Máximo 120 caracteres").optional()),
+  /** Si se le avisa a la institución (campanita y mail) que se registró su pago. */
+  avisar: z.boolean(),
+});
+export type PagoPuntual = z.input<typeof pagoPuntualSchema>;
 
 /** Qué hay de un mes en la facturación de una institución: ya pago, con la factura impaga, o sin factura. */
 export type SituacionDelMes = "pagada" | "impaga" | "sinFactura";

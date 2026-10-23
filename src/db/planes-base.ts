@@ -1,6 +1,7 @@
 /*
- * Planes editables: crea `planes`, `planes_condiciones` y `acuerdos_precio` (con RLS) y llena las dos primeras con los valores de lanzamiento de
- * src/lib/planes.ts. También agrega `planes.precio_minimo` (el piso del rango de precio) y `planes_condiciones.descuento_sede_extra`.
+ * Planes editables: crea `planes`, `planes_condiciones`, `acuerdos_precio` y `creditos_busqueda` (con RLS) y llena las dos primeras con los
+ * valores de lanzamiento de src/lib/planes.ts (incluida la fila del plan de búsqueda puntual, que se inserta si falta). También agrega
+ * `planes.precio_minimo` (el piso del rango de precio), `planes_condiciones.descuento_sede_extra` y las condiciones de la búsqueda puntual.
  *
  * Aditivo e idempotente: nunca pisa lo que ya se editó desde el backoffice (inserta solo las filas que faltan), y el código viejo
  * ignora las tablas nuevas, así que se puede correr antes de subir el código. Si alguna vez se hace `db:push`, correr `db:rls` después.
@@ -58,9 +59,30 @@ async function main() {
         creado_en timestamptz not null default now(),
         actualizado_en timestamptz not null default now()
       )`;
+    // La búsqueda puntual (el plan sin abono): días de vigencia, búsquedas abiertas a la vez y qué incluye.
+    await tx`alter table public.planes_condiciones add column if not exists puntual_vigencia_dias integer not null default 30`;
+    await tx`alter table public.planes_condiciones add column if not exists puntual_busquedas_abiertas integer not null default 1`;
+    await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_cursos boolean not null default false`;
+    await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_buscador boolean not null default false`;
+    // Búsquedas puntuales pagadas: una fila por búsqueda que la institución pagó. Disponible mientras usado_en es null; al publicar se consume.
+    await tx`
+      create table if not exists public.creditos_busqueda (
+        id uuid primary key default gen_random_uuid(),
+        institucion_id uuid not null references public.instituciones(id) on delete cascade,
+        monto integer not null,
+        medio text not null,
+        pagado_en timestamptz not null,
+        nota text,
+        busqueda_id uuid references public.busquedas(id) on delete set null,
+        usado_en timestamptz,
+        vence_en timestamptz,
+        creado_en timestamptz not null default now()
+      )`;
+    await tx`create index if not exists creditos_busqueda_institucion_idx on public.creditos_busqueda (institucion_id)`;
     await tx`alter table public.planes enable row level security`;
     await tx`alter table public.planes_condiciones enable row level security`;
     await tx`alter table public.acuerdos_precio enable row level security`;
+    await tx`alter table public.creditos_busqueda enable row level security`;
 
     let nuevos = 0;
     for (const clave of CLAVES_PLAN) {

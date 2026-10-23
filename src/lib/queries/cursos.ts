@@ -1,10 +1,11 @@
 import "server-only";
-import { and, asc, count, desc, eq, getTableColumns } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cursos, docentes, inscripcionesCurso, instituciones } from "@/db/schema";
 import { normalizar } from "@/lib/coincidencia";
 import { avancePorFechas, hoyArgentina } from "@/lib/fechas-curso";
 import { distanciaKm } from "@/lib/geo";
+import { planes } from "@/lib/queries/planes";
 import { institucionVisible } from "@/lib/visibilidad";
 
 export type CursoBase = {
@@ -81,6 +82,8 @@ function base(f: typeof cursos.$inferSelect, inst: CursoBase["institucion"]): Cu
 /** Todos los cursos con cuántos anotados tienen y si el docente está anotado. */
 async function consultar(docenteId: string, soloId?: string): Promise<CursoVista[]> {
   const db = getDb();
+  // Una institución con búsquedas puntuales que no incluyen la difusión de cursos no los muestra (lo decide el equipo en Planes).
+  const sinCursos = (await planes()).incluye("puntual", "cursos") ? undefined : ne(instituciones.plan, "puntual");
   const [filas, mias, [origen]] = await Promise.all([
     db
       .select({
@@ -95,7 +98,7 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
       .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
       .leftJoin(inscripcionesCurso, eq(inscripcionesCurso.cursoId, cursos.id))
       // Los cursos de una institución suspendida no se ven ni admiten inscripciones.
-      .where(soloId ? and(eq(cursos.id, soloId), institucionVisible) : institucionVisible)
+      .where(and(soloId ? eq(cursos.id, soloId) : undefined, institucionVisible, sinCursos))
       .groupBy(cursos.id, instituciones.id)
       .orderBy(asc(cursos.fechaInicio), asc(cursos.titulo)),
     db

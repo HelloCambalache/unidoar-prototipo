@@ -22,6 +22,7 @@ import {
   disciplinasParaFiltro,
   vocabularioBuscador,
 } from "@/lib/queries/profesionales";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { puntosDeReferencia } from "@/lib/sedes";
 import { BarraBuscadorDocentes } from "./barra-buscador-docentes";
@@ -45,6 +46,8 @@ export async function PantallaBuscadorDocentes({
   searchParams: ParametrosDePagina;
 }) {
   const { usuario, institucion } = await requerirInstitucion();
+  // El buscador de profesionales es un beneficio del abono: una búsqueda puntual puede no incluirlo (lo decide el equipo en Planes).
+  await exigirBeneficio(institucion.plan, "buscador");
   const sp = await searchParams;
   const rapidas = modo === "rapidas";
   const ruta = rapidas ? RUTA_RAPIDAS : RUTA_BUSCADOR;

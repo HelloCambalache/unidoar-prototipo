@@ -3,7 +3,7 @@ import { describirCambioDeAcuerdo, paraCalcular } from "@/lib/acuerdos";
 import { MENSAJE_CUIT, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { CLAVES_PLAN, esClavePlan, etiquetaDeCobertura, etiquetaPeriodo } from "@/lib/cobros";
 import { esCuitValido, formatearCuit } from "@/lib/documentos";
-import { planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
+import { pesos, planesPorDefecto, type PlanClave, type Planes } from "@/lib/planes";
 
 /* Filtros y vocabularios del backoffice de instituciones. Sin acceso a base: los usa también el cliente. */
 
@@ -127,6 +127,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       const acuerdo = (v: unknown) => (typeof v === "object" && v !== null ? paraCalcular(v as { modalidad: string; monto: number }) : null);
       return `Cambió el precio acordado: ${describirCambioDeAcuerdo(acuerdo(d.antes), acuerdo(d.despues))}`;
     }
+    case "busqueda_puntual.pago":
+      return `Registró el pago de una búsqueda puntual${typeof d.monto === "number" ? ` · ${pesos(d.monto)}` : ""}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
+    case "busqueda_puntual.anular_pago":
+      return `Anuló el pago de una búsqueda puntual${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Planes y aranceles",
   description:
-    "Para los profesionales UNIDOAR es gratis, siempre. Las instituciones pagan una suscripción mensual según su tipo, sin comisión por contratación.",
+    "Para los profesionales UNIDOAR es gratis, siempre. Las instituciones pagan una suscripción mensual según su tipo o una tarifa por búsqueda, sin comisión por contratación.",
 };
 
 // Los cupos de institución fundadora salen de la base: no se prerenderiza (en el build puede no haber DATABASE_URL).
@@ -43,7 +43,7 @@ const BENEFICIOS_FUNDADORA = [
 ];
 
 /** Lo que el banner resume de un vistazo: son las mismas promesas de las tarjetas, dichas cortas. */
-const PROMESAS = ["Gratis para profesionales", "Sin comisión por contratación", "Sin costo por publicación"];
+const PROMESAS = ["Gratis para profesionales", "Sin comisión por contratación", "Búsquedas ilimitadas con el abono"];
 
 export default async function Planes() {
   const [cupos, catalogo] = await Promise.all([cuposFundadorRestantes(), catalogoDePlanes()]);
@@ -64,7 +64,15 @@ export default async function Planes() {
     {
       pregunta: "¿Hay comisión por contratar o costo por publicar?",
       respuesta:
-        "No. Las instituciones pagan solo la suscripción mensual: publican todas las búsquedas que necesitan y no se les cobra nada cuando contratan.",
+        "No hay comisión por contratar. Con la suscripción mensual publicás todas las búsquedas que necesitás sin costo extra; si preferís pagar solo cuando necesitás cubrir un puesto, pagás una tarifa por esa búsqueda y nada más.",
+    },
+    {
+      pregunta: "¿Y si solo necesito cubrir un puesto?",
+      respuesta: `Elegís «Una sola búsqueda»: pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
+        P.incluye("puntual", "buscador") && P.incluye("puntual", "cursos")
+          ? ""
+          : ` No incluye ${[!P.incluye("puntual", "buscador") && "el buscador de profesionales", !P.incluye("puntual", "cursos") && "la difusión de cursos"].filter(Boolean).join(" ni ")}: eso es parte del abono mensual.`
+      }`,
     },
     {
       pregunta: "¿Cuánto paga mi institución?",
@@ -101,7 +109,7 @@ export default async function Planes() {
           </h1>
           <p className="relative m-0 max-w-[56ch] text-[17px] leading-[1.65] text-white/75">
             Para los profesionales UNIDOAR es gratis, siempre. Las instituciones pagan una suscripción mensual según su
-            tipo.
+            tipo o, si solo necesitan cubrir un puesto, una tarifa por búsqueda.
           </p>
           <ul className="relative m-0 mt-7 flex list-none flex-wrap gap-2.5 p-0">
             {PROMESAS.map((p) => (

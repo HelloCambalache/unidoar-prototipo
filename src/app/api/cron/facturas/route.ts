@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { cerrarPuntualesVencidas } from "@/lib/queries/puntuales";
 import { reconciliarSuscripciones } from "@/lib/queries/suscripcion-reconciliar";
 import { sincronizarSuscripciones } from "@/lib/queries/suscripcion-sincronizar";
 import { resumenDeError } from "@/lib/errores";
@@ -37,9 +38,18 @@ export async function GET(request: Request) {
     // Mercado Pago cobró o cambió sin que llegara el aviso, y después los montos siguen al plan y a las sedes.
     const reconciliacion = await reconciliarSuscripciones();
     const suscripciones = await sincronizarSuscripciones();
-    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, reconciliacion, suscripciones });
+    // Las búsquedas puntuales que ya cumplieron su plazo se cierran solas (nunca lanza: lo que falle se reintenta mañana).
+    const puntuales = await cerrarPuntualesVencidas();
+    if (puntuales.cerradas > 0) {
+      revalidatePath("/institucion/busquedas");
+      revalidatePath("/institucion/dashboard");
+      revalidatePath("/institucion/plan");
+      revalidatePath("/docente/oportunidades");
+      revalidatePath("/docente/dashboard");
+    }
+    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, reconciliacion, suscripciones, puntuales });
     return NextResponse.json(
-      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones },
+      { periodo: resultado.periodo, creadas: resultado.creadas.length, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones, puntuales },
       { headers: SIN_CACHE },
     );
   } catch (e) {

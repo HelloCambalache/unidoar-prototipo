@@ -10,6 +10,7 @@ import { Avatar, Insignia } from "@/components/ui/insignia";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tabla } from "@/components/ui/tabla";
 import { requerirInstitucion } from "@/lib/auth";
+import { exigirBeneficio } from "@/lib/queries/puntuales";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
 import { fechaCorta } from "@/lib/fechas";
 import { baseDeDocentes, PESTANAS_BASE, type FilaBase, type PestanaBase } from "@/lib/queries/profesionales";
@@ -32,6 +33,8 @@ const ORIGEN: Record<FilaBase["origen"], { etiqueta: string; tono: "verde" | "az
 
 export default async function BaseDeDocentesPage({ searchParams }: Props) {
   const { usuario, institucion } = await requerirInstitucion();
+  // La base de profesionales es un beneficio del abono: una búsqueda puntual puede no incluirla (lo decide el equipo en Planes).
+  await exigirBeneficio(institucion.plan, "buscador");
   const sp = await searchParams;
   const pestana: PestanaBase = PESTANAS_BASE.find((p) => p.clave === uno(sp.tab))?.clave ?? "todos";
   const q = (uno(sp.q) ?? "").trim().slice(0, 80);
