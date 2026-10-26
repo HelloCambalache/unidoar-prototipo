@@ -60,8 +60,10 @@ export function PlanPanel({
 
   const pedir = async (destino: PlanClave) => {
     const p = P.planDe(destino);
+    // El plan por sede es un convenio: no tiene un precio de lista para mostrar (la página pública también dice «A convenir»).
+    const precio = p.porSede ? "a convenir según el volumen" : `${pesos(p.precio)}${P.sufijoDePrecio(destino)}`;
     const ok = await pedirConfirmacion(
-      `¿Pedir el cambio al ${p.label} (${pesos(p.precio)}${P.sufijoDePrecio(destino)})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
+      `¿Pedir el cambio al ${p.label} (${precio})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
     );
     if (!ok) return;
     empezar(async () => {
@@ -182,8 +184,16 @@ export function PlanPanel({
                 )}
                 <div className="mb-1 text-base leading-[1.2] font-semibold">{p.label}</div>
                 <div className="mb-2.5 text-2xl leading-none font-semibold">
-                  {pesos(p.precio)}
-                  <span className="text-[13px] font-normal text-apagado">{P.sufijoDePrecio(clave)}</span>
+                  {p.porSede ? (
+                    <>
+                      A convenir<span className="text-[13px] font-normal text-apagado"> según el volumen</span>
+                    </>
+                  ) : (
+                    <>
+                      {pesos(p.precio)}
+                      <span className="text-[13px] font-normal text-apagado">{P.sufijoDePrecio(clave)}</span>
+                    </>
+                  )}
                 </div>
                 <p className={cn("m-0 text-[13px] leading-normal text-apagado", !esActual && "mb-3.5")}>{p.detalle}</p>
                 {!esActual && (

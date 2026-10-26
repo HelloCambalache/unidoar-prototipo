@@ -208,9 +208,15 @@ export function PlanesFormulario({
             />
           </Campo>
           <Campo
-            etiqueta={`Precio de lista ($ ${unidad})`}
+            etiqueta={base.porSede ? "Precio base por sede ($ por mes, uso interno)" : `Precio de lista ($ ${unidad})`}
             error={verError(rutaPrecio)}
-            ayuda={p.precio > 0 ? `Se ve como ${pesos(p.precio)}` : undefined}
+            ayuda={
+              base.porSede
+                ? "Uso interno: la página pública y «Cambiar de plan» muestran «A convenir según el volumen». Es lo que se factura por sede si se asigna Multisede sin un convenio a medida."
+                : p.precio > 0
+                  ? `Se ve como ${pesos(p.precio)}`
+                  : undefined
+            }
             requerido
           >
             <Input
