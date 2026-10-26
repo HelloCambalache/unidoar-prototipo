@@ -205,7 +205,9 @@ export function FormularioInstitucion({
                 texto={`Pagás solo la búsqueda que necesitás, sin abono mensual. Queda publicada ${vigenciaDias} días${noIncluye ? ` y no incluye ${noIncluye}` : ""}. Al terminar el alta te ayudamos a abonarla.`}
               />
             </div>
-            <p className="mt-2 mb-0 text-xs leading-normal text-apagado">Lo podés cambiar después desde Plan y facturación.</p>
+            <p className="mt-2 mb-0 text-xs leading-normal text-apagado">
+              Si más adelante querés cambiar de modalidad, lo pedís desde Plan y facturación o nos escribís por Contacto.
+            </p>
           </fieldset>
         )}
 

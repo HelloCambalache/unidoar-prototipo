@@ -662,39 +662,47 @@ describe("el plan que queda al guardar el alta", () => {
 });
 
 describe("qué planes puede pedir una institución", () => {
-  it("un colegio puede pedir el arancel de colegios y la búsqueda puntual, no el de clubes (que es más barato)", () => {
-    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "colegio"), ["colegio", "puntual"]);
+  it("un colegio puede pedir el arancel de colegios, no el de clubes (que es más barato)", () => {
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "colegio"), ["colegio"]);
     assert.ok(!P.planesParaPedir("Colegio privado", 1, "colegio").includes("deportiva"));
   });
 
-  it("un club (o un tipo escrito a mano) puede pedir el arancel de clubes y la búsqueda puntual", () => {
-    assert.deepEqual(P.planesParaPedir("Club o gimnasio", 1, "deportiva"), ["deportiva", "puntual"]);
-    assert.deepEqual(P.planesParaPedir("Sociedad de fomento", 2, "deportiva"), ["deportiva", "puntual"]);
+  it("un club (o un tipo escrito a mano) puede pedir el arancel de clubes", () => {
+    assert.deepEqual(P.planesParaPedir("Club o gimnasio", 1, "deportiva"), ["deportiva"]);
+    assert.deepEqual(P.planesParaPedir("Sociedad de fomento", 2, "deportiva"), ["deportiva"]);
+  });
+
+  it("la búsqueda puntual no es un plan al que se cambie: no se ofrece a nadie que no esté ya en ella", () => {
+    for (const actual of ["colegio", "deportiva", "multisede"]) {
+      assert.ok(!P.planesParaPedir("Colegio privado", 5, actual).includes("puntual"), `se ofreció a quien está en ${actual}`);
+    }
   });
 
   it("Multisede solo aparece con sedes para una red (desde las de Planes)", () => {
     assert.ok(!P.planesParaPedir("Colegio privado", 4, "colegio").includes("multisede"));
-    assert.deepEqual(P.planesParaPedir("Colegio privado", 5, "colegio"), ["colegio", "multisede", "puntual"]);
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 5, "colegio"), ["colegio", "multisede"]);
   });
 
   it("quien está en un plan que no es el de su tipo (asignado a mano) lo ve como actual y puede volver al de su tipo", () => {
-    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "multisede"), ["colegio", "multisede", "puntual"]);
+    assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "multisede"), ["colegio", "multisede"]);
+    // Quien eligió una sola búsqueda la ve como actual y puede pasarse al abono de su tipo.
     assert.deepEqual(P.planesParaPedir("Colegio privado", 1, "puntual"), ["colegio", "puntual"]);
+    assert.deepEqual(P.planesParaPedir("Club o gimnasio", 1, "puntual"), ["deportiva", "puntual"]);
   });
 
   it("un plan que el equipo apagó no se ofrece, salvo a quien ya lo tiene", () => {
     const apagado = crearPlanes({
       ...CATALOGO_POR_DEFECTO,
-      planes: { ...CATALOGO_POR_DEFECTO.planes, puntual: { ...CATALOGO_POR_DEFECTO.planes.puntual, vigente: false } },
+      planes: { ...CATALOGO_POR_DEFECTO.planes, multisede: { ...CATALOGO_POR_DEFECTO.planes.multisede, vigente: false } },
     });
-    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 1, "colegio"), ["colegio"]);
-    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 1, "puntual"), ["colegio", "puntual"]);
+    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 5, "colegio"), ["colegio"]);
+    assert.deepEqual(apagado.planesParaPedir("Colegio privado", 5, "multisede"), ["colegio", "multisede"]);
   });
 
   it("sigue lo que cambie el equipo en Planes: qué tipos pagan el arancel de colegios", () => {
     const catalogo = structuredClone(CATALOGO_POR_DEFECTO);
     catalogo.condiciones.tiposColegio = ["Colegio privado"];
-    assert.deepEqual(crearPlanes(catalogo).planesParaPedir("Universidad", 1, "deportiva"), ["deportiva", "puntual"]);
+    assert.deepEqual(crearPlanes(catalogo).planesParaPedir("Universidad", 1, "deportiva"), ["deportiva"]);
   });
 });
 

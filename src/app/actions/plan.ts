@@ -50,7 +50,7 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
 
     if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id, tx))) return fallo(SOLO_ADMINISTRADORES);
     if (vigente.plan === destino.data) return fallo(`Ya estás en el ${P.planDe(vigente.plan).label}.`);
-    // Solo se pide un plan que le corresponde (el arancel de su tipo, la búsqueda puntual, Multisede con sedes para una red): lo que la
+    // Solo se pide un plan que le corresponde (el arancel de su tipo, Multisede con sedes para una red): lo que la
     // pantalla ofrece lo vuelve a exigir el servidor, que no le cree al navegador.
     const sedes = (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1;
     if (!P.planesParaPedir(institucion.tipo, sedes, vigente.plan).includes(destino.data)) {
