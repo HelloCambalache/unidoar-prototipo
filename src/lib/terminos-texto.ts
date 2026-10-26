@@ -88,7 +88,7 @@ export const SECCIONES_TERMINOS: SeccionTerminos[] = [
         bloques: [
           {
             lista: [
-              "El acceso al catálogo de talento y el uso de las herramientas de búsqueda dentro de la App es arancelado y se encuentra supeditado a la suscripción activa al plan contratado (ej. Plan Fundador, abonos mensuales o anuales).",
+              "El acceso al catálogo de talento y el uso de las herramientas de búsqueda dentro de la App es arancelado y se encuentra supeditado a la suscripción activa al plan contratado (ej. abono mensual, pago por adelantado de varios meses o una sola búsqueda).",
               "La Institución podrá emitir sus búsquedas laborales, filtrar por nivel, zona o especialidad y acceder a perfiles con identidad y credenciales validadas. Las transacciones comerciales y contrataciones de abonos se realizarán a través de los medios de pago habilitados por la SAS, emitiéndose la documentación fiscal correspondiente (Factura A o B según corresponda al perfil impositivo del cliente).",
             ],
           },
