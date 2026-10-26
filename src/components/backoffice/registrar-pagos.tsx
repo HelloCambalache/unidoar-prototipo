@@ -9,6 +9,7 @@ import { etiquetaPeriodo, fechaDeColumna, periodoActual, sumarMeses } from "@/li
 import { pesos, type PlanClave, type Planes } from "@/lib/planes";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { detalleDeCobros } from "@/lib/queries/backoffice-cobros";
+import { periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 
 /**
@@ -17,10 +18,12 @@ import { cantidadDeSedes } from "@/lib/queries/sedes";
  * de una búsqueda. Lee sus propios datos: la ficha solo le dice de qué institución y de qué plan se trata.
  */
 export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: { institucionId: string; plan: PlanClave; P: Planes; debitoVigente: boolean }) {
-  const [detalle, sedes, acuerdo] = await Promise.all([
+  const [detalle, sedes, acuerdo, bonificados] = await Promise.all([
     detalleDeCobros(institucionId),
     cantidadDeSedes(getDb(), [institucionId]).then((m) => m.get(institucionId) ?? 1),
     acuerdoDe(getDb(), institucionId),
+    // Los meses bonificados por recomendar: cobrar uno (o un semestre que lo cubre) exige confirmarlo.
+    periodosBonificadosSinCobro(getDb(), institucionId),
   ]);
   if (!detalle) return null;
 
@@ -59,6 +62,7 @@ export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: 
           plan={plan}
           periodoSugerido={periodoSugerido}
           facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
+          periodosBonificados={bonificados}
         />
       )}
       {P.planDe(plan).periodo === "mes" && (
@@ -71,6 +75,7 @@ export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: 
           periodoSugerido={periodoSugerido}
           facturas={facturas.map((f) => ({ periodo: f.periodo, estado: f.estado, mesesCubiertos: f.mesesCubiertos }))}
           debitoVigente={debitoVigente}
+          periodosBonificados={bonificados}
         />
       )}
       {esPuntual && (

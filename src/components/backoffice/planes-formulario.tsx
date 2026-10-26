@@ -18,6 +18,7 @@ import {
   describirCambioDePlanes,
   edicionDePlanesSchema,
   huellaDePlanes,
+  MAX_MESES_DE_PACK,
   crearPlanes,
   pesos,
   PLANES_POR_DEFECTO,
@@ -405,13 +406,13 @@ export function PlanesFormulario({
           <legend className="mb-2 p-0 text-xs font-semibold text-apagado">Pack por adelantado</legend>
           <div className="grid grid-cols-3 gap-4 max-[760px]:grid-cols-1">
             <Campo etiqueta="Meses del pack" error={verError("condiciones.pack.meses")}>
-              <Input type="number" min={2} max={24} step={1} value={pack.meses} onChange={(e) => cambiarPack("meses", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.meses")} />
+              <Input type="number" min={2} max={MAX_MESES_DE_PACK} step={1} value={pack.meses} onChange={(e) => cambiarPack("meses", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.meses")} />
             </Campo>
             <Campo etiqueta="Meses que se pagan" error={verError("condiciones.pack.mesesQueSePagan")}>
-              <Input type="number" min={1} max={24} step={1} value={pack.mesesQueSePagan} onChange={(e) => cambiarPack("mesesQueSePagan", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.mesesQueSePagan")} />
+              <Input type="number" min={1} max={MAX_MESES_DE_PACK} step={1} value={pack.mesesQueSePagan} onChange={(e) => cambiarPack("mesesQueSePagan", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.mesesQueSePagan")} />
             </Campo>
             <Campo etiqueta="Meses que se pagan con referido" error={verError("condiciones.pack.mesesConReferido")}>
-              <Input type="number" min={1} max={24} step={1} value={pack.mesesConReferido} onChange={(e) => cambiarPack("mesesConReferido", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.mesesConReferido")} />
+              <Input type="number" min={1} max={MAX_MESES_DE_PACK} step={1} value={pack.mesesConReferido} onChange={(e) => cambiarPack("mesesConReferido", aNumero(e.target.value))} aria-invalid={!!verError("condiciones.pack.mesesConReferido")} />
             </Campo>
           </div>
           <p className="mt-2 mb-0 text-xs leading-normal text-sutil">

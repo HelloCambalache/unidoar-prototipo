@@ -130,4 +130,17 @@ describe("quién se puede recomendar", () => {
   it("si no se conoce a la dueña de alguna, se anota (el equipo la revisa al verificar)", () => {
     assert.equal(sePuedeAnotar({ id: "a", propietarioId: null }, { id: "b", propietarioId: null }), true);
   });
+
+  it("ni a otra institución con el mismo CUIT, aunque la haya creado otra cuenta (con guiones o sin ellos)", () => {
+    const con = { id: "a", propietarioId: "u1", cuit: "30-71234567-1" };
+    assert.equal(sePuedeAnotar(con, { id: "b", propietarioId: "u2", cuit: "30-71234567-1" }), false);
+    assert.equal(sePuedeAnotar(con, { id: "b", propietarioId: "u2", cuit: "30712345671" }), false);
+  });
+
+  it("con CUIT distinto, o sin CUIT cargado, se anota igual", () => {
+    const con = { id: "a", propietarioId: "u1", cuit: "30-71234567-1" };
+    assert.equal(sePuedeAnotar(con, { id: "b", propietarioId: "u2", cuit: "30-50001091-2" }), true);
+    assert.equal(sePuedeAnotar(con, { id: "b", propietarioId: "u2", cuit: null }), true);
+    assert.equal(sePuedeAnotar({ id: "a", propietarioId: "u1", cuit: null }, { id: "b", propietarioId: "u2", cuit: null }), true);
+  });
 });

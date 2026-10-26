@@ -35,8 +35,10 @@ import {
   type SemestreAlContado,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
+import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import { suscripcionVigente } from "@/lib/debito-automatico";
 import { pesos, type Planes } from "@/lib/planes";
+import { liberarMeses, mesesBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
@@ -162,7 +164,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
   if (!esUuid(institucionId)) return fallo(INSTITUCION_NO_ENCONTRADA);
   const datos = parsear(pagoEfectivoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
-  const { periodo, plan, fecha, nota, avisar } = datos.data;
+  const { periodo, plan, fecha, nota, avisar, cobrarMesBonificado } = datos.data;
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
   if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
@@ -196,6 +198,12 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
       // Un mes cubierto por un semestre pago no tiene factura propia: registrarle otro pago sería cobrarlo dos veces.
       const cubierto = existente ? null : await mensajeSiCubiertoPorSemestre(tx, institucionId, periodo);
       if (cubierto) return fallo(cubierto, { periodo: cubierto });
+      // Un mes bonificado por recomendar no se paga: cobrarlo exige confirmarlo, y el mes bonificado vuelve a quedar disponible (se libera abajo).
+      const bonificados = await mesesBonificadosSinCobro(tx, institucionId, [periodo]);
+      if (bonificados.length > 0 && !cobrarMesBonificado) {
+        const aviso = avisoDeCobroEnMesBonificado(bonificados.map(etiquetaPeriodo), "pago");
+        return fallo(aviso, { periodo: aviso });
+      }
 
       let facturaId: string;
       let monto: number;
@@ -211,6 +219,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
           .returning({ id: facturas.id });
         facturaId = nueva!.id;
       }
+      const liberados = await liberarMeses(tx, institucionId, bonificados);
 
       await registrarAuditoria(
         {
@@ -222,6 +231,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
             institucionId,
             periodo,
             monto,
+            ...(liberados > 0 ? { mesBonificadoLiberado: true } : {}),
             medio: MEDIO,
             fechaPago: fecha,
             ...(nota ? { nota } : {}),
@@ -324,7 +334,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   if (!esUuid(institucionId)) return fallo(INSTITUCION_NO_ENCONTRADA);
   const datos = parsear(semestreSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
-  const { periodo, medio, fecha, nota, avisar, cancelarDebito } = datos.data;
+  const { periodo, medio, fecha, nota, avisar, cancelarDebito, cobrarMesesBonificados } = datos.data;
 
   const hoy = hoyAR();
   const errorFecha = errorDeFechaDePago(fecha, hoy);
@@ -336,12 +346,19 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
   const { meses, mesesQueSePagan } = P.condiciones.pack;
+  // Los meses que cubre el semestre: si alguno es un mes bonificado por recomendar (la institución no lo paga), hay que confirmarlo.
+  const ventana = Array.from({ length: meses }, (_, k) => sumarMeses(periodo, k));
 
   // Antes de tocar nada (ni cancelar un débito) se mira que el semestre se pueda registrar; la transacción lo vuelve a mirar.
   const [previa] = await getDb().select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
   if (!previa) return fallo(INSTITUCION_NO_ENCONTRADA);
   const impedimento = impedimentoDeSemestre(P, previa.plan, periodo, meses, await facturasDelSemestre(getDb(), institucionId, periodo, meses));
   if (impedimento) return fallo(impedimento.error, impedimento.campos);
+  const bonificadosAntes = await mesesBonificadosSinCobro(getDb(), institucionId, ventana);
+  if (bonificadosAntes.length > 0 && !cobrarMesesBonificados) {
+    const aviso = avisoDeCobroEnMesBonificado(bonificadosAntes.map(etiquetaPeriodo), "semestre");
+    return fallo(aviso, { periodo: aviso });
+  }
 
   const susc = await suscripcionDe(institucionId);
   const debitoVivo = !!susc && suscripcionVigente(susc.estado);
@@ -367,6 +384,11 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
       const cercanas = await facturasDelSemestre(tx, institucionId, periodo, meses);
       const impedido = impedimentoDeSemestre(P, inst.plan, periodo, meses, cercanas);
       if (impedido) return fallo(impedido.error, impedido.campos);
+      const bonificados = await mesesBonificadosSinCobro(tx, institucionId, ventana);
+      if (bonificados.length > 0 && !cobrarMesesBonificados) {
+        const aviso = avisoDeCobroEnMesBonificado(bonificados.map(etiquetaPeriodo), "semestre");
+        return fallo(aviso, { periodo: aviso });
+      }
 
       const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
       const monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesQueSePagan;
@@ -395,6 +417,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
           .returning({ id: facturas.id });
         facturaId = nueva!.id;
       }
+      const liberados = await liberarMeses(tx, institucionId, bonificados);
 
       await registrarAuditoria(
         {
@@ -409,14 +432,16 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
             medio,
             fechaPago: fecha,
             ...(nota ? { nota } : {}),
+            ...(liberados > 0 ? { mesesBonificadosLiberados: liberados } : {}),
             semestre: true,
             mesesCubiertos: meses,
             hasta: sumarMeses(periodo, meses - 1),
             mesesQueSePagan,
             debitoCancelado: debitoVivo,
-            // Para poder dejar la factura como estaba si después se anula el pago.
+            // Para poder dejar la factura como estaba si después se anula el pago (si era una impaga que se convirtió en la del semestre, con su monto de antes).
             medioAnterior: null,
             estadoAnterior: existente?.estado ?? null,
+            montoAnterior: existente?.monto ?? null,
             facturaCreadaConElPago: !existente,
             avisoALaInstitucion: avisar,
           },
@@ -424,7 +449,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
         tx,
       );
       if (avisar) {
-        const hasta = etiquetaPeriodo(sumarMeses(periodo, meses - 1)).toLowerCase();
+        const hasta =etiquetaPeriodo(sumarMeses(periodo, meses - 1)).toLowerCase();
         await avisarAVarios(tx, await destinatariosDeInstitucion(tx, institucionId), {
           tipo: "sistema",
           titulo: "UNIDOAR",
@@ -456,15 +481,20 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
 }
 
 /**
- * Anula el registro de un pago: la factura vuelve a figurar como impaga (vencida si ya pasó su fecha) y se borran la
- * fecha y el medio con los que se había registrado. Pide un motivo, que queda en la auditoría, y puede avisarle a la
- * institución, que había recibido "registró tu pago".
+ * Anula el registro de un pago y deja la factura como estaba ANTES de ese pago:
+ *  - si el pago creó la factura (no existía), la factura se elimina, así no queda una impaga de un mes que nunca se facturó;
+ *  - si era un semestre que convirtió una factura impaga, vuelve a ser la de un solo mes, con su monto de antes;
+ *  - si no, la factura vuelve a figurar como impaga (vencida si ya pasó su fecha) y se borran la fecha y el medio del pago.
+ * Pide un motivo, que queda en la auditoría, y puede avisarle a la institución, que había recibido "registró tu pago".
  */
-export async function anularPago(facturaId: string, entrada: { motivo: string; avisar: boolean }): Promise<Resultado> {
+export async function anularPago(facturaId: string, entrada: { motivo: string; avisar: boolean }): Promise<Resultado<{ eliminada: boolean }>> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(facturaId)) return fallo(FACTURA_NO_ENCONTRADA);
   const datos = parsear(anulacionSchema, entrada);
   if (!datos.ok) return fallo(datos.campos?.motivo ?? datos.error, datos.campos);
+  // Con los precios vigentes: un pago de semestre anulado en una impaga de antes sin su monto guardado se recalcula con ellos.
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
 
   let institucionId: string | undefined;
   const resultado = await transaccion(async (tx) => {
@@ -480,15 +510,29 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
       .where(and(eq(auditoria.entidad, "factura"), eq(auditoria.entidadId, factura.id), eq(auditoria.accion, "factura.pagar")))
       .orderBy(desc(auditoria.creadoEn))
       .limit(1);
-    const anterior = (registro?.detalle as { medioAnterior?: unknown } | null | undefined)?.medioAnterior;
+    const previo = (registro?.detalle ?? null) as { medioAnterior?: unknown; facturaCreadaConElPago?: unknown; montoAnterior?: unknown } | null;
     const [institucion] = await tx
       .select({ medioPago: instituciones.medioPago })
       .from(instituciones)
       .where(eq(instituciones.id, factura.institucionId))
       .limit(1);
-    const medio = typeof anterior === "string" ? anterior : (institucion?.medioPago ?? null);
+    const medio = typeof previo?.medioAnterior === "string" ? previo.medioAnterior : (institucion?.medioPago ?? null);
 
-    await tx.update(facturas).set({ estado: "pendiente", pagadaEn: null, medio }).where(eq(facturas.id, factura.id));
+    // Dejar la factura como estaba antes del pago: si el pago la creó, se elimina; si era un semestre sobre una impaga, vuelve a ser la de un mes.
+    const eliminada = previo?.facturaCreadaConElPago === true;
+    const volvioAUnMes = !eliminada && factura.mesesCubiertos > 1;
+    if (eliminada) {
+      await tx.delete(facturas).where(eq(facturas.id, factura.id));
+    } else if (volvioAUnMes) {
+      const sedes = (await cantidadDeSedes(tx, [factura.institucionId])).get(factura.institucionId) ?? 1;
+      const mensual =
+        typeof previo?.montoAnterior === "number"
+          ? previo.montoAnterior
+          : P.montoDePlan(factura.plan, sedes, await acuerdoParaPlan(tx, factura.institucionId, factura.plan));
+      await tx.update(facturas).set({ estado: "pendiente", pagadaEn: null, medio, mesesCubiertos: 1, monto: mensual }).where(eq(facturas.id, factura.id));
+    } else {
+      await tx.update(facturas).set({ estado: "pendiente", pagadaEn: null, medio }).where(eq(facturas.id, factura.id));
+    }
     await registrarAuditoria(
       {
         usuarioId: admin.id,
@@ -503,6 +547,8 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
           medioDelPago: factura.medio,
           pagadaEn: factura.pagadaEn?.toISOString() ?? null,
           avisoALaInstitucion: datos.data.avisar,
+          ...(eliminada ? { facturaEliminada: true } : {}),
+          ...(volvioAUnMes ? { volvioAUnMes: true, mesesCubiertos: factura.mesesCubiertos } : {}),
         },
       },
       tx,
@@ -511,7 +557,9 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
       await avisarAVarios(tx, await destinatariosDeInstitucion(tx, factura.institucionId), {
         tipo: "sistema",
         titulo: "UNIDOAR",
-        texto: `corrigió el registro de tu pago de ${etiquetaPeriodo(factura.periodo)}: figura otra vez como pendiente.`,
+        texto: eliminada
+          ? `corrigió el registro de tu pago de ${etiquetaPeriodo(factura.periodo)}: quedó sin efecto.`
+          : `corrigió el registro de tu pago de ${etiquetaPeriodo(factura.periodo)}: figura otra vez como pendiente.`,
         enlace: "/institucion/plan",
       });
       const [dueña] = await tx.select({ nombre: instituciones.nombre }).from(instituciones).where(eq(instituciones.id, factura.institucionId)).limit(1);
@@ -522,7 +570,7 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
         monto: factura.monto,
       });
     }
-    return ok();
+    return ok({ eliminada });
   });
 
   if (resultado.ok) revalidarCobros(institucionId);
@@ -666,6 +714,7 @@ function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
   }
   if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
   if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
+  if (r.motivo === "bonificada") return " Este mes es un mes bonificado por recomendar a otra institución: no se te factura.";
   return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
 }
 

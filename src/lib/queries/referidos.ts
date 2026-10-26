@@ -63,7 +63,7 @@ export async function codigoDeInstitucion(institucionId: string): Promise<string
 /** La institución dueña de un código, si sigue en pie (ni dada de baja ni suspendida). */
 export async function institucionPorCodigo(codigo: string) {
   const [fila] = await getDb()
-    .select({ id: instituciones.id, nombre: instituciones.nombre, propietarioId: instituciones.propietarioId })
+    .select({ id: instituciones.id, nombre: instituciones.nombre, propietarioId: instituciones.propietarioId, cuit: instituciones.cuit })
     .from(codigosReferido)
     .innerJoin(instituciones, eq(instituciones.id, codigosReferido.institucionId))
     .where(and(eq(codigosReferido.codigo, codigo), isNull(instituciones.bajaEn), eq(instituciones.suspendida, false)))
@@ -76,7 +76,7 @@ export async function institucionPorCodigo(codigo: string) {
  * a esa institución en la campanita. Nunca frena el alta: si algo falla (o las tablas todavía no existen) solo queda en el log.
  * Gasta la cookie en cualquier caso, para que no se anote una segunda institución creada desde el mismo navegador.
  */
-export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: string; propietarioId: string }) {
+export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: string; propietarioId: string; cuit?: string | null }) {
   try {
     const jar = await cookies();
     const codigo = normalizarCodigo(jar.get(COOKIE_REFERIDO)?.value);
@@ -84,7 +84,7 @@ export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: st
     jar.delete(COOKIE_REFERIDO);
 
     const referidor = await institucionPorCodigo(codigo);
-    if (!referidor || !sePuedeAnotar(referidor, { id: nueva.id, propietarioId: nueva.propietarioId })) return;
+    if (!referidor || !sePuedeAnotar(referidor, { id: nueva.id, propietarioId: nueva.propietarioId, cuit: nueva.cuit })) return;
 
     await transaccion(async (tx) => {
       const [fila] = await tx

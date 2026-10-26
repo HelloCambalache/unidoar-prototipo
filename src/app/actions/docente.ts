@@ -28,6 +28,7 @@ import { hoyArgentina } from "@/lib/fechas-curso";
 import { disponibilidadDesdeGrilla } from "@/lib/onboarding";
 import { cambiaElNombre, identidadFija, perfilDocenteSchema } from "@/lib/perfil-docente";
 import { notificar } from "@/lib/queries/notificaciones";
+import { planes } from "@/lib/queries/planes";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
 import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
@@ -124,12 +125,15 @@ export async function inscribirseCurso(cursoId: string): Promise<Resultado> {
 
   const db = getDb();
   const [curso] = await db
-    .select({ id: cursos.id, titulo: cursos.titulo, fechaFinal: cursos.fechaFinal, institucionId: cursos.institucionId })
+    .select({ id: cursos.id, titulo: cursos.titulo, fechaFinal: cursos.fechaFinal, institucionId: cursos.institucionId, plan: instituciones.plan })
     .from(cursos)
     .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
     .where(and(eq(cursos.id, id.data), institucionVisible))
     .limit(1);
   if (!curso) return fallo("Ese curso ya no existe.");
+  // Los cursos de una institución cuyo plan no incluye la difusión de cursos (una búsqueda puntual) no se ven en el listado: tampoco se puede
+  // anotar quien llegue al curso por el enlace o llamando a la acción.
+  if (!(await planes()).incluye(curso.plan, "cursos")) return fallo("Ese curso ya no existe.");
   if (curso.fechaFinal && curso.fechaFinal < hoyArgentina()) return fallo("Este curso ya terminó y no admite inscripciones.");
 
   const [nueva] = await db

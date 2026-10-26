@@ -43,11 +43,13 @@ export default async function DashboardInstitucion() {
           equipo={equipo}
           cercanos={cercanos}
           planLabel={P.planDe(institucion.plan).label}
+          conBuscador={P.incluye(institucion.plan, "buscador")}
         />
       </>
     );
   }
 
+  const P = await planes();
   const activas = await listarBusquedas(institucion.id, { pestana: "activas", limite: 5 });
   const recomendados = await docentesRecomendados(institucion, {
     categorias: [...new Set(activas.map((b) => b.categoria))],
@@ -156,7 +158,8 @@ export default async function DashboardInstitucion() {
             </ul>
           )}
         </section>
-        <RecomendadosLateral docentes={recomendados} />
+        {/* Los recomendados son parte del buscador: una búsqueda puntual que no lo incluye no ve esta columna. */}
+        {P.incluye(institucion.plan, "buscador") && <RecomendadosLateral docentes={recomendados} />}
       </div>
 
       {perfil.porcentaje < 100 && (

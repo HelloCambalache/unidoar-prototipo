@@ -11,6 +11,7 @@ import {
   type ResumenCoincidencias,
 } from "@/lib/busquedas";
 import { ordenarPorPuntaje, puntuarCandidato, type BusquedaAbierta } from "@/lib/recomendaciones";
+import { motivoSinBeneficio } from "@/lib/queries/puntuales";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { sedeMasCercana } from "@/lib/sedes";
 import { iniciales } from "@/lib/utils";
@@ -187,6 +188,8 @@ export async function docentesRecomendados(
   institucion: Institucion,
   { categorias = [], busquedas: abiertas = [], limite }: { categorias?: CategoriaDocente[]; busquedas?: BusquedaAbierta[]; limite: number },
 ): Promise<DocenteRecomendado[]> {
+  // Los profesionales recomendados son parte del buscador: una búsqueda puntual que no lo incluye no los ve (ni el inicio ni ninguna otra pantalla).
+  if (await motivoSinBeneficio(institucion.plan, "buscador")) return [];
   const sedes = await sedesDeInstitucion(institucion.id);
   // El texto de zona junta el de todas las sedes (cada nombre de zona del catálogo que aparezca suma); sin sedes, el de la ficha.
   const textoDeZonas = sedes.map((s) => s.zona ?? s.partido).filter(Boolean).join(" ");

@@ -37,6 +37,43 @@ export async function mesesYaBonificados(ejecutor: EjecutorBo, ids: readonly str
   return filas.flatMap((f) => (f.periodo ? [{ institucionId: f.institucionId, periodo: f.periodo }] : []));
 }
 
+/**
+ * De estos meses, cuáles ya quedaron bonificados SIN cobro del débito (el cron no los facturó: la institución no los paga). Se usa cuando alguien
+ * del equipo va a registrar un pago de un mes así: hay que avisarle antes, porque sería cobrarle un mes que era gratis.
+ */
+export async function mesesBonificadosSinCobro(ejecutor: Pick<EjecutorBo, "select">, institucionId: string, periodos: readonly string[]): Promise<string[]> {
+  if (periodos.length === 0) return [];
+  const filas = await ejecutor
+    .select({ periodo: mesesBonificados.periodo })
+    .from(mesesBonificados)
+    .where(and(eq(mesesBonificados.institucionId, institucionId), inArray(mesesBonificados.periodo, [...periodos]), isNull(mesesBonificados.cobroId)));
+  return filas.flatMap((f) => (f.periodo ? [f.periodo] : [])).sort();
+}
+
+/** Todos los meses bonificados sin cobro de una institución (para que la pantalla de registrar un pago avise cuando se elige uno). */
+export async function periodosBonificadosSinCobro(ejecutor: Pick<EjecutorBo, "select">, institucionId: string): Promise<string[]> {
+  const filas = await ejecutor
+    .select({ periodo: mesesBonificados.periodo })
+    .from(mesesBonificados)
+    .where(and(eq(mesesBonificados.institucionId, institucionId), isNotNull(mesesBonificados.periodo), isNull(mesesBonificados.cobroId)));
+  return filas.flatMap((f) => (f.periodo ? [f.periodo] : [])).sort();
+}
+
+/**
+ * Devuelve a «disponibles» los meses bonificados que se habían gastado en estos períodos sin cobro: el equipo decidió cobrar ese mes igual, así
+ * que la institución no pierde el mes gratis que ganó, lo usa en otro. No toca uno gastado sobre un cobro del débito (ese tiene factura paga).
+ * Devuelve cuántos devolvió.
+ */
+export async function liberarMeses(ejecutor: Pick<EjecutorBo, "update">, institucionId: string, periodos: readonly string[]): Promise<number> {
+  if (periodos.length === 0) return 0;
+  const liberados = await ejecutor
+    .update(mesesBonificados)
+    .set({ periodo: null, usadoEn: null })
+    .where(and(eq(mesesBonificados.institucionId, institucionId), inArray(mesesBonificados.periodo, [...periodos]), isNull(mesesBonificados.cobroId)))
+    .returning({ id: mesesBonificados.id });
+  return liberados.length;
+}
+
 /** Las instituciones que tienen un débito automático autorizado: ahí el mes bonificado se gasta al llegar el cobro. */
 export async function conDebitoAutorizado(ejecutor: EjecutorBo, ids: readonly string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();

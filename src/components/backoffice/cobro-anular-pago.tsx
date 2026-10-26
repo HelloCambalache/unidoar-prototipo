@@ -41,7 +41,7 @@ export function CobroAnularPago({ factura }: { factura: Pick<FacturaParaPago, "i
           toast(r.error, "error");
           return;
         }
-        toast(`Pago de ${factura.periodo} anulado`);
+        toast(r.data.eliminada ? `Pago de ${factura.periodo} anulado: la factura, que había creado ese pago, se eliminó.` : `Pago de ${factura.periodo} anulado`);
         setAbierto(false);
       } catch {
         toast("No pudimos anular el pago. Probá de nuevo.", "error");
@@ -56,8 +56,9 @@ export function CobroAnularPago({ factura }: { factura: Pick<FacturaParaPago, "i
       </Boton>
       <DialogoModal abierto={abierto} onCerrar={() => setAbierto(false)} titulo={`Anular el pago de ${factura.periodo}`}>
         <p className="m-0 mb-4 text-sm leading-normal text-apagado">
-          {factura.monto}. La factura vuelve a figurar como impaga (vencida, si ya pasó su fecha) y se borran la fecha y el
-          medio del pago registrado. Usalo si se registró por error.
+          {factura.monto}. Deja la factura como estaba antes del pago: si el pago la creó (no existía), se elimina; si era un semestre
+          sobre una factura impaga, vuelve a ser la de un solo mes; y si ya existía, vuelve a figurar como impaga (vencida, si ya pasó su
+          fecha) y se borran la fecha y el medio del pago. Usalo si se registró por error.
         </p>
         <div className="mb-3.5">
           <Campo etiqueta="Motivo" requerido error={error ?? undefined} ayuda="Queda en el registro del equipo.">

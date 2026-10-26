@@ -6,6 +6,7 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
+import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import {
   conflictosDeSemestre,
   DIAS_MAXIMOS_PAGO_ATRASADO,
@@ -16,6 +17,7 @@ import {
   hoyAR,
   MEDIOS_SEMESTRE,
   periodoActual,
+  sumarMeses,
 } from "@/lib/cobros";
 import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
@@ -38,6 +40,7 @@ export function CobroSemestre({
   periodoSugerido,
   facturas,
   debitoVigente,
+  periodosBonificados = [],
 }: {
   institucionId: string;
   /** Cuántas sedes tiene (el semestre es el monto mensual, con sus sedes adicionales, por los meses que se pagan). */
@@ -52,6 +55,8 @@ export function CobroSemestre({
   facturas: FacturaDelSemestre[];
   /** Tiene un débito automático vivo: se ofrece cancelarlo junto con el registro. */
   debitoVigente: boolean;
+  /** Los meses que esta institución ya tiene bonificados por recomendar (no se facturaron: no los paga). Un semestre que los cubre exige confirmarlo. */
+  periodosBonificados?: string[];
 }) {
   const P = crearPlanes(catalogo);
   const { meses, mesesQueSePagan } = P.condiciones.pack;
@@ -64,6 +69,7 @@ export function CobroSemestre({
   const [nota, setNota] = useState("");
   const [avisar, setAvisar] = useState(true);
   const [cancelarDebito, setCancelarDebito] = useState(debitoVigente);
+  const [registrarIgual, setRegistrarIgual] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
 
   const abrir = () => {
@@ -73,6 +79,7 @@ export function CobroSemestre({
     setNota("");
     setAvisar(true);
     setCancelarDebito(debitoVigente);
+    setRegistrarIgual(false);
     setErrores({});
     setAbierto(true);
   };
@@ -82,6 +89,9 @@ export function CobroSemestre({
   const bonificado = mensual * (meses - mesesQueSePagan);
 
   const valido = PERIODO_VALIDO.test(periodo);
+  // Si alguno de los meses que cubre el semestre es un mes bonificado por recomendar (no se paga), hay que confirmarlo.
+  const ventana = valido ? Array.from({ length: meses }, (_, k) => sumarMeses(periodo, k)) : [];
+  const bonificadosEnLaVentana = periodosBonificados.filter((p) => ventana.includes(p));
   const { pagos, impagas } = valido ? conflictosDeSemestre(periodo, meses, facturas) : { pagos: [], impagas: [] };
   const errorInicio = valido ? errorDeInicioDeSemestre(periodo, periodoActual()) : null;
   const sePuede = valido && pagos.length === 0 && impagas.length === 0 && !errorInicio;
@@ -112,7 +122,15 @@ export function CobroSemestre({
     setErrores({});
     empezar(async () => {
       try {
-        const r = await registrarSemestreAlContado(institucionId, { periodo, medio, fecha, nota, avisar, cancelarDebito: debitoVigente && cancelarDebito });
+        const r = await registrarSemestreAlContado(institucionId, {
+          periodo,
+          medio,
+          fecha,
+          nota,
+          avisar,
+          cancelarDebito: debitoVigente && cancelarDebito,
+          cobrarMesesBonificados: bonificadosEnLaVentana.length > 0 && registrarIgual,
+        });
         if (!r.ok) {
           setErrores(r.campos ?? { _: r.error });
           toast(r.error, "error");
@@ -173,6 +191,14 @@ export function CobroSemestre({
           </Campo>
         </div>
         {aviso && <p className={`m-0 mb-4 rounded-caja px-3.5 py-2.5 text-[13px] leading-normal ${aviso.clase}`}>{aviso.texto}</p>}
+        {bonificadosEnLaVentana.length > 0 && (
+          <div className="mb-4 rounded-caja bg-naranja-tint px-3.5 py-2.5 text-[13px] leading-normal text-naranja-ink">
+            <p className="m-0 mb-2">{avisoDeCobroEnMesBonificado(bonificadosEnLaVentana.map(etiquetaPeriodo), "semestre")}</p>
+            <Casilla checked={registrarIgual} onChange={(e) => setRegistrarIgual(e.target.checked)}>
+              Registrar igual ({bonificadosEnLaVentana.length === 1 ? "el mes bonificado vuelve a quedar disponible" : "los meses bonificados vuelven a quedar disponibles"})
+            </Casilla>
+          </div>
+        )}
         <div className="mb-4 flex flex-col gap-2.5">
           <Casilla checked={avisar} onChange={(e) => setAvisar(e.target.checked)}>
             Avisarle a la institución que registramos su pago
@@ -189,7 +215,7 @@ export function CobroSemestre({
           </p>
         )}
         <div className="flex gap-2.5">
-          <Boton disabled={pendiente || !sePuede} onClick={guardar}>
+          <Boton disabled={pendiente || !sePuede || (bonificadosEnLaVentana.length > 0 && !registrarIgual)} onClick={guardar}>
             {pendiente ? "Registrando…" : "Registrar semestre"}
           </Boton>
           <Boton variante="secundario" disabled={pendiente} onClick={() => setAbierto(false)}>

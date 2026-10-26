@@ -11,19 +11,49 @@ import { resumenDeError } from "@/lib/errores";
 // Se evalúa en cada pedido: crea facturas, no es algo cacheable.
 export const dynamic = "force-dynamic";
 // La revisión de las suscripciones hace llamadas a Mercado Pago (dos por suscripción viva): el tiempo crece con la cantidad.
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const SIN_CACHE = { "Cache-Control": "no-store" };
 
 /**
- * Crea las facturas del mes en curso (ver `generarFacturasDelPeriodo`). Corre todos los días: es idempotente, así que
- * un día que falla se recupera al siguiente y los días sin nada que crear no tocan la base. Se programa en vercel.json.
+ * Corre un paso del cron sin que su falla frene a los demás: si lanza, lo anota (sin datos de la base) y sigue. Así un día en que, por ejemplo, no se
+ * pueden leer los precios y no se crean las facturas, igual se cierran las búsquedas puntuales vencidas y se revisa Mercado Pago.
+ */
+async function paso<T>(nombre: string, fallidos: string[], fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (e) {
+    console.error(`Falló un paso del cron diario de facturas: ${nombre}`, resumenDeError(e));
+    fallidos.push(nombre);
+    return null;
+  }
+}
+
+/**
+ * Tareas diarias de cobros: cierra las búsquedas puntuales vencidas, crea las facturas del mes en curso (ver `generarFacturasDelPeriodo`) y revisa el
+ * débito automático. Corre todos los días: es idempotente, así que un día que falla se recupera al siguiente y los días sin nada que hacer no tocan
+ * la base. Cada paso va por separado (`paso`): lo que falla se reintenta mañana sin frenar lo demás, y el pedido responde error si algo falló, para que
+ * se note. Se programa en vercel.json.
  */
 export async function GET(request: Request) {
   if (!cronAutorizado(request)) return NextResponse.json({ error: "No autorizado" }, { status: 401, headers: SIN_CACHE });
 
-  try {
-    const resultado = await transaccion((tx) => generarFacturasDelPeriodo(tx));
+  const fallidos: string[] = [];
+
+  // 1. Las búsquedas puntuales que ya cumplieron su plazo se cierran solas: lo primero porque solo toca la base y es lo más barato (nunca lanza,
+  // pero se envuelve igual).
+  const puntuales = await paso("cerrar-puntuales", fallidos, () => cerrarPuntualesVencidas());
+  if (puntuales && puntuales.cerradas > 0) {
+    revalidatePath("/institucion/busquedas");
+    revalidatePath("/institucion/dashboard");
+    revalidatePath("/institucion/plan");
+    revalidatePath("/docente/oportunidades");
+    revalidatePath("/docente/dashboard");
+  }
+
+  // 2. Las facturas del mes. Con los precios vigentes o nada: si no se pueden leer, este paso falla y se reintenta mañana.
+  const resultado = await paso("facturas", fallidos, () => transaccion((tx) => generarFacturasDelPeriodo(tx)));
+  if (resultado) {
     if (resultado.creadas.length > 0) {
       revalidatePath("/backoffice/cobros");
       revalidatePath("/backoffice/instituciones");
@@ -40,27 +70,37 @@ export async function GET(request: Request) {
       revalidatePath("/institucion/referidos");
       revalidatePath(`/backoffice/cobros/${institucionId}`);
     }
-    // Débito automático (ninguna de las dos lanza: si algo falla, queda en el log y se reintenta mañana). Primero se pone al día lo que
-    // Mercado Pago cobró o cambió sin que llegara el aviso, y después los montos siguen al plan y a las sedes.
-    const reconciliacion = await reconciliarSuscripciones();
-    const suscripciones = await sincronizarSuscripciones();
-    // Las búsquedas puntuales que ya cumplieron su plazo se cierran solas (nunca lanza: lo que falle se reintenta mañana).
-    const puntuales = await cerrarPuntualesVencidas();
-    if (puntuales.cerradas > 0) {
-      revalidatePath("/institucion/busquedas");
-      revalidatePath("/institucion/dashboard");
-      revalidatePath("/institucion/plan");
-      revalidatePath("/docente/oportunidades");
-      revalidatePath("/docente/dashboard");
-    }
-    const bonificadas = resultado.bonificadas.length;
-    console.info("Facturas automáticas", { periodo: resultado.periodo, creadas: resultado.creadas.length, bonificadas, omitidas: resultado.omitidas, reconciliacion, suscripciones, puntuales });
-    return NextResponse.json(
-      { periodo: resultado.periodo, creadas: resultado.creadas.length, bonificadas, omitidas: resultado.omitidas, sinFacturaPrevia: resultado.sinFacturaPrevia, reconciliacion, suscripciones, puntuales },
-      { headers: SIN_CACHE },
-    );
-  } catch (e) {
-    console.error("No se pudieron generar las facturas del período", resumenDeError(e));
-    return NextResponse.json({ error: "No se pudieron generar las facturas" }, { status: 500, headers: SIN_CACHE });
   }
+
+  // 3. Débito automático (llaman a Mercado Pago). Primero se pone al día lo que Mercado Pago cobró o cambió sin que llegara el aviso, y después
+  // los montos siguen al plan y a las sedes.
+  const reconciliacion = await paso("reconciliar-suscripciones", fallidos, () => reconciliarSuscripciones());
+  const suscripciones = await paso("sincronizar-suscripciones", fallidos, () => sincronizarSuscripciones());
+
+  const bonificadas = resultado?.bonificadas.length ?? 0;
+  console.info("Facturas automáticas", {
+    periodo: resultado?.periodo,
+    creadas: resultado?.creadas.length,
+    bonificadas,
+    omitidas: resultado?.omitidas,
+    reconciliacion,
+    suscripciones,
+    puntuales,
+    fallidos,
+  });
+  return NextResponse.json(
+    {
+      periodo: resultado?.periodo ?? null,
+      creadas: resultado?.creadas.length ?? null,
+      bonificadas: resultado ? bonificadas : null,
+      omitidas: resultado?.omitidas ?? null,
+      sinFacturaPrevia: resultado?.sinFacturaPrevia ?? null,
+      reconciliacion,
+      suscripciones,
+      puntuales,
+      ...(fallidos.length > 0 ? { fallidos } : {}),
+    },
+    // Con un paso caído responde error: Vercel lo marca y se nota, pero todo lo demás ya corrió.
+    { status: fallidos.length > 0 ? 500 : 200, headers: SIN_CACHE },
+  );
 }

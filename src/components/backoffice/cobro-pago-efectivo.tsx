@@ -6,6 +6,7 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
+import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import { DIAS_MAXIMOS_PAGO_ATRASADO, errorDeFechaDePago, etiquetaPeriodo, hoyAR, situacionDelMes } from "@/lib/cobros";
 import { CLAVES_PLAN, crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
@@ -27,6 +28,7 @@ export function CobroPagoEfectivo({
   plan,
   periodoSugerido,
   facturas,
+  periodosBonificados = [],
 }: {
   institucionId: string;
   /** Cuántas sedes tiene la institución (el monto de un plan por sede se multiplica por esto). */
@@ -39,6 +41,8 @@ export function CobroPagoEfectivo({
   /** Mes que se propone: la factura impaga más antigua o, si no hay, el primer mes sin factura ("2026-11"). */
   periodoSugerido: string;
   facturas: FacturaDelMes[];
+  /** Los meses que esta institución ya tiene bonificados por recomendar (no se facturaron: no los paga). Cobrar uno exige confirmarlo. */
+  periodosBonificados?: string[];
 }) {
   const P = crearPlanes(catalogo);
   const toast = useToast();
@@ -49,6 +53,7 @@ export function CobroPagoEfectivo({
   const [fecha, setFecha] = useState(() => hoyAR());
   const [nota, setNota] = useState("");
   const [avisar, setAvisar] = useState(true);
+  const [cobrarIgual, setCobrarIgual] = useState(false);
   const [errores, setErrores] = useState<Record<string, string>>({});
 
   const abrir = () => {
@@ -57,10 +62,12 @@ export function CobroPagoEfectivo({
     setFecha(hoyAR());
     setNota("");
     setAvisar(true);
+    setCobrarIgual(false);
     setErrores({});
     setAbierto(true);
   };
 
+  const mesBonificado = PERIODO_VALIDO.test(periodo) && periodosBonificados.includes(periodo);
   const factura = PERIODO_VALIDO.test(periodo) ? facturas.find((f) => f.periodo === periodo) : undefined;
   const situacion = situacionDelMes(factura ? { estado: factura.pagada ? "pagada" : "pendiente" } : null);
   const monto = factura ? factura.monto : P.montoDePlan(planElegido, sedes, planElegido === plan ? acuerdo : null);
@@ -74,7 +81,7 @@ export function CobroPagoEfectivo({
     setErrores({});
     empezar(async () => {
       try {
-        const r = await registrarPagoEnEfectivo(institucionId, { periodo, plan: planElegido, fecha, nota, avisar });
+        const r = await registrarPagoEnEfectivo(institucionId, { periodo, plan: planElegido, fecha, nota, avisar, cobrarMesBonificado: mesBonificado && cobrarIgual });
         if (!r.ok) {
           setErrores(r.campos ?? { _: r.error });
           toast(r.error, "error");
@@ -158,6 +165,14 @@ export function CobroPagoEfectivo({
           </Campo>
         </div>
         {aviso && <p className={`m-0 mb-4 rounded-caja px-3.5 py-2.5 text-[13px] leading-normal ${aviso.clase}`}>{aviso.texto}</p>}
+        {mesBonificado && (
+          <div className="mb-4 rounded-caja bg-naranja-tint px-3.5 py-2.5 text-[13px] leading-normal text-naranja-ink">
+            <p className="m-0 mb-2">{avisoDeCobroEnMesBonificado([etiquetaPeriodo(periodo)], "pago")}</p>
+            <Casilla checked={cobrarIgual} onChange={(e) => setCobrarIgual(e.target.checked)}>
+              Cobrar igual (el mes bonificado vuelve a quedar disponible)
+            </Casilla>
+          </div>
+        )}
         <Casilla checked={avisar} onChange={(e) => setAvisar(e.target.checked)} className="mb-4">
           Avisarle a la institución que registramos su pago
         </Casilla>
@@ -167,7 +182,7 @@ export function CobroPagoEfectivo({
           </p>
         )}
         <div className="flex gap-2.5">
-          <Boton disabled={pendiente || situacion === "pagada" || !PERIODO_VALIDO.test(periodo)} onClick={guardar}>
+          <Boton disabled={pendiente || situacion === "pagada" || !PERIODO_VALIDO.test(periodo) || (mesBonificado && !cobrarIgual)} onClick={guardar}>
             {pendiente ? "Registrando…" : "Registrar pago"}
           </Boton>
           <Boton variante="secundario" disabled={pendiente} onClick={() => setAbierto(false)}>

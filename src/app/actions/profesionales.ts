@@ -9,6 +9,7 @@ import { requerirInstitucion } from "@/lib/auth";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { correoDeInvitacion } from "@/lib/correo/eventos";
 import { notificar } from "@/lib/queries/notificaciones";
+import { motivoSinBeneficio } from "@/lib/queries/puntuales";
 import { docenteVisible } from "@/lib/visibilidad";
 import { resumenDeError } from "@/lib/errores";
 import { motivoDeTopeDeInvitaciones } from "@/lib/invitaciones";
@@ -33,6 +34,9 @@ function refrescarProfesionales() {
  */
 export async function invitarDocente(docenteId: string, busquedaId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
+  // Invitar a un profesional sale del buscador, que una búsqueda puntual puede no incluir: se exige acá y no solo en la pantalla.
+  const sinBuscador = await motivoSinBeneficio(institucion.plan, "buscador");
+  if (sinBuscador) return fallo(sinBuscador);
   const p = parsear(idsInvitacion, { docenteId, busquedaId });
   if (!p.ok) return fallo(p.error);
   const db = getDb();
@@ -126,7 +130,10 @@ export async function invitarDocente(docenteId: string, busquedaId: string): Pro
 
 /** Guarda o quita un docente de los favoritos de quien está en sesión. Devuelve cómo quedó. */
 export async function alternarFavorito(docenteId: string): Promise<Resultado<{ favorito: boolean }>> {
-  const { usuario } = await requerirInstitucion();
+  const { usuario, institucion } = await requerirInstitucion();
+  // Los favoritos de profesionales viven en el buscador y en la base de profesionales, que una búsqueda puntual puede no incluir.
+  const sinBuscador = await motivoSinBeneficio(institucion.plan, "buscador");
+  if (sinBuscador) return fallo(sinBuscador);
   const p = parsear(idDocente, { docenteId });
   if (!p.ok) return fallo(p.error);
   const db = getDb();

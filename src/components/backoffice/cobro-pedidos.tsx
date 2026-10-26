@@ -74,7 +74,9 @@ export function CobroPedidos({ pedidos, catalogo }: { pedidos: PedidoVista[]; ca
               ? `Plan actualizado. Se cargó la factura de ${etiquetaPeriodo(f.periodo).toLowerCase()}.`
               : f.resultado === "actualizada"
                 ? `Plan actualizado. Se ajustó la factura de ${etiquetaPeriodo(f.periodo).toLowerCase()}.`
-                : "Plan actualizado. La factura de este mes no se tocó.",
+                : f.motivo === "bonificada"
+                  ? "Plan actualizado. Este mes está bonificado por una recomendación: no se facturó."
+                  : "Plan actualizado. La factura de este mes no se tocó.",
           );
         }
         cerrar();

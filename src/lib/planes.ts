@@ -46,6 +46,12 @@ export type PlanClave = (typeof CLAVES_PLAN)[number];
 
 export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && (CLAVES_PLAN as readonly string[]).includes(v);
 
+/**
+ * Hasta cuántos meses puede tener el pack por adelantado. Un año: las consultas que miran si un mes ya está cubierto por un pago por adelantado
+ * leen los últimos 12 meses de facturas, así que un pack más largo se facturaría mes a mes pasado el año aunque siguiera pago.
+ */
+export const MAX_MESES_DE_PACK = 12;
+
 /** Pack por adelantado: los meses bonificados no cambian el precio mensual, se descuentan de los que se facturan. */
 export type PackDeLanzamiento = {
   meses: number;
@@ -487,7 +493,7 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
 
   const c = condicionesGuardadas;
   const defecto = CONDICIONES_POR_DEFECTO;
-  const packValido = !!c && entero(c.packMeses, 2, 24) && entero(c.packMesesPagos, 1, c.packMeses - 1) && entero(c.packMesesReferido, 1, c.packMesesPagos - 1);
+  const packValido = !!c && entero(c.packMeses, 2, MAX_MESES_DE_PACK) &&entero(c.packMesesPagos, 1, c.packMeses - 1) && entero(c.packMesesReferido, 1, c.packMesesPagos - 1);
   const condiciones: CondicionesDePlanes = {
     sedesMultisede: c && entero(c.sedesMultisede, 2, 100) ? c.sedesMultisede : defecto.sedesMultisede,
     descuentoSedeExtra: c && entero(c.descuentoSedeExtra, 0, 100) ? c.descuentoSedeExtra : defecto.descuentoSedeExtra,
@@ -554,7 +560,11 @@ export const edicionDePlanesSchema = z
         incluyeCursos: z.boolean(),
         incluyeBuscador: z.boolean(),
       }),
-      pack: z.object({ meses: numeroDePack(2, 24), mesesQueSePagan: numeroDePack(1, 24), mesesConReferido: numeroDePack(1, 24) }),
+      pack: z.object({
+        meses: numeroDePack(2, MAX_MESES_DE_PACK),
+        mesesQueSePagan: numeroDePack(1, MAX_MESES_DE_PACK),
+        mesesConReferido: numeroDePack(1, MAX_MESES_DE_PACK),
+      }),
       tiposColegio: z.array(z.enum(TIPOS_INSTITUCION)).min(1, "Elegí al menos un tipo de institución para el arancel de colegios."),
     }),
   })

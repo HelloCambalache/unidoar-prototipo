@@ -30,6 +30,7 @@ export function DashboardPrimeraVez({
   equipo,
   cercanos,
   planLabel,
+  conBuscador = true,
 }: {
   institucion: Institucion;
   nombre: string;
@@ -38,6 +39,8 @@ export function DashboardPrimeraVez({
   /** Integrantes del equipo además de quien creó la cuenta. */
   equipo: number;
   cercanos: DocenteRecomendado[];
+  /** Su plan incluye el buscador de profesionales: sin él (una búsqueda puntual que no lo incluye) no se ofrece mirar quién hay cerca. */
+  conBuscador?: boolean;
 }) {
   const perfil = pasosDePerfilInstitucion(institucion);
   const perfilListo = perfil.porcentaje === 100;
@@ -171,21 +174,25 @@ export function DashboardPrimeraVez({
         <BannerPasos titulo="Cubrir un cargo son tres pasos" acentuado="celeste" />
       </div>
 
-      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
-        <h2 className="m-0 text-[17px] leading-tight font-semibold">Mientras tanto, mirá quién hay cerca</h2>
-        <Link href="/institucion/buscar-docentes" className="text-[13px] font-medium">
-          Ver todo el catálogo
-        </Link>
-      </div>
-      <p className="m-0 mb-4 text-[13.5px] leading-normal text-apagado">
-        Ya están en UNIDOAR, cerca de tu institución. Podés invitarlos a postularse incluso antes de publicar.
-      </p>
-      {cercanos.length > 0 ? (
-        <GrillaCercanos docentes={cercanos} />
-      ) : (
-        <p className="m-0 rounded-tarjeta border border-dashed border-borde-fuerte bg-white/60 px-6 py-8 text-center text-[13.5px] text-apagado">
-          Todavía no hay profesionales verificados en tu zona. Publicá tu búsqueda y los avisamos apenas aparezcan.
-        </p>
+      {conBuscador && (
+        <>
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+            <h2 className="m-0 text-[17px] leading-tight font-semibold">Mientras tanto, mirá quién hay cerca</h2>
+            <Link href="/institucion/buscar-docentes" className="text-[13px] font-medium">
+              Ver todo el catálogo
+            </Link>
+          </div>
+          <p className="m-0 mb-4 text-[13.5px] leading-normal text-apagado">
+            Ya están en UNIDOAR, cerca de tu institución. Podés invitarlos a postularse incluso antes de publicar.
+          </p>
+          {cercanos.length > 0 ? (
+            <GrillaCercanos docentes={cercanos} />
+          ) : (
+            <p className="m-0 rounded-tarjeta border border-dashed border-borde-fuerte bg-white/60 px-6 py-8 text-center text-[13.5px] text-apagado">
+              Todavía no hay profesionales verificados en tu zona. Publicá tu búsqueda y los avisamos apenas aparezcan.
+            </p>
+          )}
+        </>
       )}
     </>
   );

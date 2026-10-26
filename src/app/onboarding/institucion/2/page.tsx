@@ -23,6 +23,8 @@ export default async function PasoInstitucion2() {
   const institucion = await institucionPropia(usuario.id);
   // Con la institución verificada el equipo ya revisó estos datos: no se vuelven a editar desde el alta (`crearInstitucion` también lo corta).
   if (institucion?.verificada) redirect(RUTA_INICIO.institucion);
+  // Una institución suspendida o dada de baja no reescribe sus datos desde el alta (`requerirInstitucion` la manda a la pantalla de cuenta suspendida).
+  if (institucion && (institucion.suspendida || institucion.bajaEn) && usuario.rol !== "admin") redirect("/cuenta-suspendida");
   if (!institucion) {
     // Quien ya es miembro de un equipo no crea una institución propia.
     if (await institucionDeMiembro(usuario)) redirect(RUTA_INICIO.institucion);

@@ -341,6 +341,11 @@ export const pagoEfectivoSchema = z.object({
   nota: vacioAUndefined(z.string().trim().max(120, "Máximo 120 caracteres").optional()),
   /** Si se le avisa a la institución (campanita y mail) que se registró su pago. */
   avisar: z.boolean(),
+  /**
+   * El mes está bonificado por recomendar (la institución no lo paga) y el equipo confirma que lo cobra igual: el mes bonificado vuelve a quedar
+   * disponible para otro mes. Sin esto, un mes bonificado no se puede registrar.
+   */
+  cobrarMesBonificado: z.boolean().optional(),
 });
 export type PagoEfectivo = z.input<typeof pagoEfectivoSchema>;
 
@@ -365,6 +370,11 @@ export const semestreSchema = z.object({
   avisar: z.boolean(),
   /** Si tiene un débito automático vivo, se cancela antes de registrar (si no, Mercado Pago le cobraría los meses que ya pagó). */
   cancelarDebito: z.boolean(),
+  /**
+   * Algún mes de la ventana está bonificado por recomendar (no se paga) y el equipo confirma que registra el semestre igual: esos meses vuelven a
+   * quedar disponibles. Sin esto, un semestre que cubre un mes bonificado no se puede registrar.
+   */
+  cobrarMesesBonificados: z.boolean().optional(),
 });
 export type SemestreAlContado = z.input<typeof semestreSchema>;
 

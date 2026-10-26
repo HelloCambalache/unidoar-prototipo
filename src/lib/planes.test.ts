@@ -526,6 +526,22 @@ describe("la edición del backoffice", () => {
     assert.equal(validar(e).success, true);
   });
 
+  it("el pack por adelantado no puede pasar de un año: las consultas de cobertura miran los últimos 12 meses", () => {
+    const deUnAnio = edicion();
+    deUnAnio.condiciones.pack = { meses: 12, mesesQueSePagan: 10, mesesConReferido: 9 };
+    assert.equal(validar(deUnAnio).success, true);
+    const deTrece = edicion();
+    deTrece.condiciones.pack = { meses: 13, mesesQueSePagan: 11, mesesConReferido: 10 };
+    const r = validar(deTrece);
+    assert.equal(r.success, false);
+    if (!r.success) assert.ok(camposDeErrorDePlanes(r.error)["condiciones.pack.meses"]);
+  });
+
+  it("un pack de más de un año guardado en la base (de antes de este tope) vuelve al de lanzamiento", () => {
+    const catalogo = catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), packMeses: 18, packMesesPagos: 15, packMesesReferido: 14 });
+    assert.deepEqual(catalogo.condiciones.pack, CATALOGO_POR_DEFECTO.condiciones.pack);
+  });
+
   it("rechaza un precio en cero, negativo, con centavos o disparatado", () => {
     for (const precio of [0, -1, 1000.5, 99_000_000]) {
       const e = edicion();

@@ -281,7 +281,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "bonificada" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
@@ -322,6 +322,9 @@ export async function aplicarPlanAlPeriodoActual(
     .from(facturas)
     .where(and(eq(facturas.institucionId, institucion.id), eq(facturas.estado, "pagada"), gte(facturas.mesesCubiertos, 2), gte(facturas.periodo, sumarMeses(periodo, -11)), lte(facturas.periodo, periodo)));
   if (pagoHastaDeMes(periodo, semestres)) return { resultado: "sin_cambios", motivo: "cubierta_por_semestre" };
+
+  // Un mes bonificado por recomendar tampoco se factura (el cron lo respeta): no se le crea una factura que la institución no tiene que pagar.
+  if ((await mesesYaBonificados(tx, [institucion.id], periodo)).length > 0) return { resultado: "sin_cambios", motivo: "bonificada" };
 
   // Si el día de cobro de este mes ya pasó, se cobra hoy: no nace vencida.
   const fecha = fechaCobroDelPeriodo(periodo, institucion.diaCobro);

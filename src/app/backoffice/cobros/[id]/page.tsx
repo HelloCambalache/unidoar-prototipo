@@ -40,7 +40,7 @@ import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
-import { mesesDe } from "@/lib/queries/bonificaciones";
+import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { planes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -90,6 +90,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const acuerdo = acordado?.acuerdo ?? null;
   // Una institución con búsqueda puntual no tiene abono ni facturas mensuales: paga cada búsqueda (ver src/lib/puntual.ts).
   const [creditos, saldo, mesesGanados] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id), mesesDe(id)]);
+  // Los meses ya bonificados por recomendar (sin cobro del débito): registrar un pago de uno de ellos pide confirmación.
+  const periodosBonificados = await periodosBonificadosSinCobro(getDb(), id);
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
   const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
 
@@ -349,6 +351,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 plan={plan}
                 periodoSugerido={impagas[0]?.periodo ?? sugerido}
                 facturas={facturas.map((f) => ({ periodo: f.periodo, pagada: f.estado === "pagada", monto: f.monto }))}
+                periodosBonificados={periodosBonificados}
               />
             )}
             {P.planDe(plan).periodo === "mes" && (
@@ -361,6 +364,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 periodoSugerido={impagas[0]?.periodo ?? sugerido}
                 facturas={facturas.map((f) => ({ periodo: f.periodo, estado: f.estado, mesesCubiertos: f.mesesCubiertos }))}
                 debitoVigente={debitoVigente}
+                periodosBonificados={periodosBonificados}
               />
             )}
             {!esPuntual && (

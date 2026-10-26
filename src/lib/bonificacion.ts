@@ -87,7 +87,21 @@ export function motivoParaNoDeshacer(mesesUsados: number): string | null {
 }
 
 /** Los textos de la campanita de la institución cuando se gasta un mes (`periodo` ya escrito, por ejemplo «Noviembre 2026»). */
-export const textoDeMesBonificado = (e: { periodo: string; recomendada: string | null; conDebito: boolean; montoTexto?: string }) =>
+/**
+ * Lo que se le dice a quien va a registrar un pago que cae en un mes bonificado por recomendar (la institución no lo paga): hay que confirmarlo,
+ * y el mes bonificado vuelve a quedar disponible para otro mes. `meses` son las etiquetas ya escritas ("noviembre 2026").
+ */
+export function avisoDeCobroEnMesBonificado(meses: readonly string[], contexto: "pago" | "semestre"): string {
+  const uno = meses.length === 1;
+  const lista = meses.join(", ");
+  const es = uno ? "es un mes bonificado" : "son meses bonificados";
+  const vuelve = uno ? "el mes bonificado vuelve a quedar disponible" : "los meses bonificados vuelven a quedar disponibles";
+  return contexto === "pago"
+    ? `${lista} ${es} por recomendar: la institución no ${uno ? "lo paga" : "los paga"}. Si igual lo cobraste, confirmalo: ${vuelve} para otro mes.`
+    : `${lista} ${es} por recomendar y el semestre ${uno ? "lo cubre" : "los cubre"}. Si igual lo registrás, confirmalo: ${vuelve} para otros meses.`;
+}
+
+export const textoDeMesBonificado =(e: { periodo: string; recomendada: string | null; conDebito: boolean; montoTexto?: string }) =>
   e.conDebito
     ? `el débito automático de ${e.periodo}${e.montoTexto ? ` (${e.montoTexto})` : ""} está bonificado${e.recomendada ? ` por recomendar a ${e.recomendada}` : ""}: te devolvemos lo cobrado a tu medio de pago en Mercado Pago.`
     : `${e.periodo} está bonificado${e.recomendada ? ` por recomendar a ${e.recomendada}` : ""}: no se te factura ese mes.`;

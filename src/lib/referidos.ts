@@ -111,10 +111,17 @@ export function beneficioDeReferido(pack: { meses: number; mesesQueSePagan: numb
 
 /**
  * ¿Se anota la recomendación? Nunca una institución recomendándose a sí misma, ni a una cuenta de la misma persona
- * (dos instituciones con el mismo dueño): sin esto, cualquiera se daría el beneficio solo.
+ * (dos instituciones con el mismo dueño), ni a otra con el mismo CUIT (la misma organización dada de alta con otra cuenta): sin esto,
+ * cualquiera se daría el beneficio solo.
  */
-export function sePuedeAnotar(referidor: { id: string; propietarioId: string | null }, referido: { id: string; propietarioId: string | null }) {
+export function sePuedeAnotar(
+  referidor: { id: string; propietarioId: string | null; cuit?: string | null },
+  referido: { id: string; propietarioId: string | null; cuit?: string | null },
+) {
   if (referidor.id === referido.id) return false;
   if (referidor.propietarioId && referidor.propietarioId === referido.propietarioId) return false;
+  // El mismo CUIT es la misma organización aunque la haya dado de alta otra cuenta (otro mail): también se recomendaría a sí misma.
+  const cuitDe = (c: string | null | undefined) => (c ?? "").replace(/\D/g, "");
+  if (cuitDe(referidor.cuit) && cuitDe(referidor.cuit) === cuitDe(referido.cuit)) return false;
   return true;
 }

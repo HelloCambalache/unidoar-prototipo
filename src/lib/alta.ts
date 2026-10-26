@@ -41,6 +41,8 @@ export async function institucionEnAlta() {
   const usuario = await usuarioParaAlta("institucion");
   const institucion = await institucionPropia(usuario.id);
   if (!institucion) redirect("/onboarding/institucion/2");
+  // Suspendida o dada de baja: no sigue con el alta (editaría su perfil público por fuera de `requerirInstitucion`).
+  if ((institucion.suspendida || institucion.bajaEn) && usuario.rol !== "admin") redirect("/cuenta-suspendida");
   return { usuario, institucion };
 }
 

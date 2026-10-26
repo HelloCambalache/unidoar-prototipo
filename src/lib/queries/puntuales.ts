@@ -22,6 +22,18 @@ export async function exigirBeneficio(plan: string, beneficio: Beneficio): Promi
   if (!P.incluye(plan, beneficio)) redirect(`/institucion/plan?sin=${beneficio}`);
 }
 
+/**
+ * Lo mismo para una ACCIÓN (invitar, guardar un favorito): no alcanza con esconder el botón, la acción se puede llamar directo. Devuelve el
+ * motivo para mostrarle (null si el plan incluye el beneficio, que es siempre el caso con un abono).
+ */
+export async function motivoSinBeneficio(plan: string, beneficio: Beneficio): Promise<string | null> {
+  const P = await planes();
+  if (P.incluye(plan, beneficio)) return null;
+  return beneficio === "buscador"
+    ? "Tu plan de búsqueda puntual no incluye el buscador ni la base de profesionales: son parte del abono mensual."
+    : "Tu plan de búsqueda puntual no incluye la difusión de cursos: es parte del abono mensual.";
+}
+
 /*
  * Búsquedas puntuales pagadas (tabla `creditos_busqueda`, ver src/db/schema.ts y las reglas puras en src/lib/puntual.ts). Una fila es UNA
  * búsqueda pagada: disponible mientras `usado_en` es null, consumida al publicar, y su búsqueda se cierra sola al vencer (`cerrarPuntualesVencidas`,

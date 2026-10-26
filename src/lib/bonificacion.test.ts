@@ -11,6 +11,7 @@ import {
   resumenDeMeses,
   TIPOS_DE_BENEFICIO,
   textoDeBeneficioAplicado,
+  avisoDeCobroEnMesBonificado,
   textoDeMesBonificado,
 } from "@/lib/bonificacion";
 import { planesPorDefecto } from "@/lib/planes";
@@ -79,6 +80,25 @@ describe("qué se hace con el cobro del débito de un mes", () => {
 
   it("sin meses bonificados el cobro es un cobro común", () => {
     assert.equal(gastoDelCobro({ mesAnotado: null, disponibles: 0 }), "ninguno");
+  });
+});
+
+describe("cobrar un mes que está bonificado", () => {
+  it("el aviso de un pago dice qué mes es, que no se paga y qué pasa si igual se cobra", () => {
+    const t = avisoDeCobroEnMesBonificado(["noviembre 2026"], "pago");
+    assert.match(t, /noviembre 2026 es un mes bonificado por recomendar/);
+    assert.match(t, /no lo paga/);
+    assert.match(t, /vuelve a quedar disponible/);
+  });
+
+  it("el aviso de un semestre, con uno o con varios meses, concuerda en singular y plural", () => {
+    const uno = avisoDeCobroEnMesBonificado(["noviembre 2026"], "semestre");
+    assert.match(uno, /es un mes bonificado/);
+    assert.match(uno, /el semestre lo cubre/);
+    const varios = avisoDeCobroEnMesBonificado(["noviembre 2026", "enero 2027"], "semestre");
+    assert.match(varios, /noviembre 2026, enero 2027 son meses bonificados/);
+    assert.match(varios, /los cubre/);
+    assert.match(varios, /los meses bonificados vuelven a quedar disponibles/);
   });
 });
 

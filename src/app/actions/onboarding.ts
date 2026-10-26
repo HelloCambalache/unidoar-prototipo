@@ -130,6 +130,10 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   const usuario = await usuarioParaAlta("institucion");
   const propia = await institucionPropia(usuario.id);
 
+  // Una institución suspendida o dada de baja no puede reescribir su nombre, su tipo, su CUIT, su sede ni su plan llamando directo a esta acción
+  // (el resto del área se lo impide en `requerirInstitucion`).
+  if (propia && (propia.suspendida || propia.bajaEn) && usuario.rol !== "admin") redirect("/cuenta-suspendida");
+
   if (propia?.verificada) {
     // El equipo ya revisó el nombre, el tipo y el CUIT: desde acá no se pisan (la pantalla ni siquiera se ofrece; esto cubre un pedido directo).
     return conError(formData, "Tu institución ya está verificada. Para cambiar sus datos escribinos desde Contacto.");
@@ -236,7 +240,7 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       nuevaId = await crear(`${slugify(d.nombre) || "institucion"}-${crypto.randomUUID().slice(0, 6)}`);
     }
     // Si entró por el enlace de otra institución (cookie de /referido/<código>), queda anotada como recomendada. Nunca frena el alta.
-    await anotarReferidoDelNavegador({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id });
+    await anotarReferidoDelNavegador({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id, cuit: datos.cuit });
   }
 
   revalidatePath("/institucion", "layout");
