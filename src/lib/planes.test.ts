@@ -6,6 +6,7 @@ import {
   camposDeErrorDePlanes,
   cambiosDePlanes,
   catalogoDesdeLaBase,
+  catalogoParaNavegador,
   CATALOGO_POR_DEFECTO,
   CLAVES_PLAN,
   crearPlanes,
@@ -196,6 +197,34 @@ describe("precio acordado con una institución", () => {
     assert.equal(P.abonoDe("colegio", abono(60_000)), 50_000);
   });
 
+  it("un acuerdo solo rige con el plan para el que se acordó: al cambiar de plan paga la lista", () => {
+    const deClubes: AcuerdoDePrecio = { modalidad: "abono", monto: 29_000, plan: "deportiva" };
+    assert.equal(P.montoDePlan("deportiva", 1, deClubes), 29_000, "con su plan, rige");
+    assert.equal(P.montoDePlan("colegio", 1, deClubes), 50_000, "pasado a Colegios paga la lista, no $ 29.000 (por debajo del piso de $ 48.000)");
+    assert.equal(P.montoDePlan("colegio", 3, deClubes), 50_000 + 2 * 25_000, "y las sedes adicionales siguen con su descuento sobre la lista");
+    assert.equal(P.montoDePlan("puntual", 1, deClubes), 110_000, "en una búsqueda puntual tampoco");
+    const deRed: AcuerdoDePrecio = { modalidad: "total", monto: 180_000, plan: "multisede" };
+    assert.equal(P.montoDePlan("multisede", 8, deRed), 180_000);
+    assert.equal(P.montoDePlan("puntual", 1, deRed), 110_000, "un convenio mensual no es el precio de una búsqueda");
+    assert.equal(P.montoDePlan("colegio", 2, deRed), 75_000);
+  });
+
+  it("un acuerdo sin plan anotado (anterior a este control) vale con cualquiera, como antes", () => {
+    assert.equal(P.montoDePlan("colegio", 1, abono(49_000)), 49_000);
+    assert.equal(P.montoDePlan("colegio", 1, { modalidad: "abono", monto: 49_000, plan: null }), 49_000);
+  });
+
+  it("un acuerdo de otro plan no cuenta como acordado: ni en el desglose, ni en el MRR, ni en el semestre", () => {
+    const deClubes: AcuerdoDePrecio = { modalidad: "abono", monto: 29_000, plan: "deportiva" };
+    assert.equal(P.desgloseDeMonto("colegio", 1, deClubes).acordado, false);
+    assert.equal(P.desgloseDeMonto("deportiva", 1, deClubes).acordado, true);
+    assert.equal(P.equivalenteMensual("colegio", 1, deClubes), 50_000);
+    assert.equal(P.packDe("colegio", 1, deClubes).anticipado, 250_000);
+    assert.equal(P.rigeElAcuerdo("colegio", deClubes), false);
+    assert.equal(P.rigeElAcuerdo("deportiva", deClubes), true);
+    assert.equal(P.rigeElAcuerdo("colegio", abono(49_000)), true);
+  });
+
   it("explica el monto con un acuerdo: abono, convenio y sedes", () => {
     assert.deepEqual(P.desgloseDeMonto("colegio", 3, abono(48_000)), {
       sedes: 3,
@@ -250,6 +279,41 @@ describe("precio acordado con una institución", () => {
     assert.equal(P.errorDeAcuerdo("colegio", convenio(400_000)), null);
     assert.equal(P.errorDeAcuerdo("colegio", convenio(20_000)), null);
     for (const mal of [0, -5, 1000.5, 99_000_000]) assert.ok(P.errorDeAcuerdo("colegio", convenio(mal)), `${mal} no debería pasar`);
+  });
+});
+
+describe("lo que se manda al navegador y lo que se le dice a una institución", () => {
+  it("el catálogo para el navegador no lleva el piso de precios ni los meses que se bonifican por recomendar", () => {
+    const c = catalogoParaNavegador(CATALOGO_POR_DEFECTO);
+    for (const clave of CLAVES_PLAN) assert.equal(c.planes[clave].precioMinimo, null, clave);
+    assert.equal(c.condiciones.referidoMesesMensual, 0);
+    assert.equal(c.condiciones.pack.mesesConReferido, c.condiciones.pack.mesesQueSePagan);
+    // Lo que viaja en la página no puede traer ninguno de los tres pisos (colegios, clubes y búsqueda puntual).
+    assert.ok(!/48000|28000|95000/.test(JSON.stringify(c)));
+  });
+
+  it("lo demás queda igual: precios, descuento por sede, pack y condiciones de la búsqueda puntual", () => {
+    const c = catalogoParaNavegador(CATALOGO_POR_DEFECTO);
+    const enElNavegador = crearPlanes(c);
+    for (const clave of CLAVES_PLAN) assert.equal(c.planes[clave].precio, CATALOGO_POR_DEFECTO.planes[clave].precio, clave);
+    assert.equal(enElNavegador.montoDePlan("colegio", 3), P.montoDePlan("colegio", 3));
+    assert.equal(enElNavegador.packDe("deportiva").anticipado, P.packDe("deportiva").anticipado);
+    assert.equal(c.condiciones.descuentoSedeExtra, CATALOGO_POR_DEFECTO.condiciones.descuentoSedeExtra);
+    assert.deepEqual(c.condiciones.puntual, CATALOGO_POR_DEFECTO.condiciones.puntual);
+    assert.equal(CATALOGO_POR_DEFECTO.planes.colegio.precioMinimo, 48_000, "no toca el catálogo original");
+  });
+
+  it("para la página pública también se saca el precio base de Multisede (dice «a convenir»)", () => {
+    const c = catalogoParaNavegador(CATALOGO_POR_DEFECTO, { sinPrecioPorSede: true });
+    assert.equal(c.planes.multisede.precio, 0);
+    assert.equal(c.planes.colegio.precio, 50_000);
+    assert.ok(!JSON.stringify(c).includes("15000"));
+  });
+
+  it("a una institución no se le dice el precio base de Multisede: es un convenio", () => {
+    assert.equal(P.precioParaLaInstitucion("multisede"), "a convenir según el volumen");
+    assert.equal(P.precioParaLaInstitucion("colegio"), "$ 50.000/mes");
+    assert.equal(P.precioParaLaInstitucion("puntual"), "$ 110.000 por búsqueda");
   });
 });
 

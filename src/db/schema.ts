@@ -965,6 +965,12 @@ export const acuerdosPrecio = pgTable("acuerdos_precio", {
   modalidad: text("modalidad").notNull(),
   /** Pesos por mes. */
   monto: integer("monto").notNull(),
+  /**
+   * El plan de la institución cuando se acordó el precio: el acuerdo solo rige con ese plan (`acuerdoQueRige`, src/lib/planes.ts). Si la institución
+   * cambia de plan, el acuerdo queda guardado pero sin efecto (paga la lista) hasta que el equipo acuerde otro precio. null: anterior a este control
+   * (vale con cualquier plan). Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar).
+   */
+  plan: text("plan"),
   /** Qué se acordó y con quién (interno del equipo: la institución no lo ve). */
   nota: text("nota"),
   ...marcasDeTiempo,

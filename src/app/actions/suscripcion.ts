@@ -16,7 +16,7 @@ import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { buscarSuscripcionesDelPlanMp, ErrorDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { DEMASIADOS_PEDIDOS, permitirActivarDebito } from "@/lib/pedidos";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
-import { planes } from "@/lib/queries/planes";
+import { planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
@@ -59,7 +59,8 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   const existente = await suscripcionDe(institucion.id);
   if (existente && (existente.estado === "autorizada" || existente.estado === "pausada")) return fallo("Ya tenés el débito automático activado.");
 
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   const sedes = (await cantidadDeSedes(getDb(), [institucion.id])).get(institucion.id) ?? 1;
   const monto = P.montoDePlan(institucion.plan, sedes, await acuerdoDe(getDb(), institucion.id));
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");

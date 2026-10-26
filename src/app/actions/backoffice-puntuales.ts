@@ -15,7 +15,7 @@ import { pesos } from "@/lib/planes";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
-import { planes } from "@/lib/queries/planes";
+import { planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 
 /*
  * Búsquedas puntuales, del lado del equipo (solo admin): registrar que una institución con el plan de búsqueda puntual pagó UNA búsqueda (queda un
@@ -50,7 +50,8 @@ export async function registrarPagoDeBusquedaPuntual(institucionId: string, entr
   if (errorFecha) return fallo(errorFecha, { fecha: errorFecha });
   // Un pago de otro día se guarda al mediodía UTC de ese día (la misma fecha en Argentina); el de hoy, con su hora real.
   const pagadoEn = fecha === hoy ? new Date() : new Date(`${fecha}T12:00:00Z`);
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
 
   try {
     const resultado = await transaccion(async (tx) => {

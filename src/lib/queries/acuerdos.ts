@@ -15,7 +15,7 @@ export async function acuerdosDePrecio(ejecutor: Ejecutor, institucionIds: strin
   const acuerdos = new Map<string, AcuerdoDePrecio>();
   if (institucionIds.length === 0) return acuerdos;
   const filas = await ejecutor
-    .select({ institucionId: acuerdosPrecio.institucionId, modalidad: acuerdosPrecio.modalidad, monto: acuerdosPrecio.monto })
+    .select({ institucionId: acuerdosPrecio.institucionId, modalidad: acuerdosPrecio.modalidad, monto: acuerdosPrecio.monto, plan: acuerdosPrecio.plan })
     .from(acuerdosPrecio)
     .where(inArray(acuerdosPrecio.institucionId, institucionIds));
   for (const f of filas) {

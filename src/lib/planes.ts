@@ -95,7 +95,16 @@ export type CatalogoDePlanes = { planes: Record<PlanClave, Plan>; condiciones: C
  *    y las sedes adicionales siguen con su descuento sobre ESE abono.
  *  - "total": un monto mensual fijo a medida (el convenio de una red): es lo que paga por mes sin importar cuántas sedes tenga.
  */
-export type AcuerdoDePrecio = { modalidad: "abono" | "total"; monto: number };
+export type AcuerdoDePrecio = {
+  modalidad: "abono" | "total";
+  monto: number;
+  /**
+   * El plan de la institución cuando se acordó el precio. Un acuerdo solo rige con ese plan (`acuerdoQueRige`): un abono de $29.000 acordado
+   * en Clubes no se puede cobrar en Colegios, ni un convenio mensual en una búsqueda puntual. Sin plan anotado (acuerdos anteriores a este
+   * control) vale con cualquiera, como antes.
+   */
+  plan?: string | null;
+};
 
 /* ───────────────────────────── Valores de lanzamiento (respaldo) ───────────────────────────── */
 
@@ -154,6 +163,29 @@ export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
 export const CATALOGO_POR_DEFECTO: CatalogoDePlanes = { planes: PLANES_POR_DEFECTO, condiciones: CONDICIONES_POR_DEFECTO };
 
 export const pesos = (n: number) => `$ ${n.toLocaleString("es-AR")}`;
+
+/**
+ * El catálogo sin lo que es del equipo, para mandarlo al navegador de una visita o de una institución: los componentes de cliente lo reciben por
+ * props y quedan a la vista en el código de la página. Se quita el piso del rango de precio (con el que se negocia), los meses que se bonifican
+ * por recomendar y, con `sinPrecioPorSede`, el precio base interno del plan por sede (la página pública dice «a convenir»). Ningún componente
+ * fuera del backoffice usa esos valores; todo lo demás (listas, descuento por sede, pack, condiciones de la búsqueda puntual) queda igual.
+ */
+export function catalogoParaNavegador(catalogo: CatalogoDePlanes, opciones: { sinPrecioPorSede?: boolean } = {}): CatalogoDePlanes {
+  const planes = Object.fromEntries(
+    CLAVES_PLAN.map((c) => {
+      const p = catalogo.planes[c];
+      return [c, { ...p, precioMinimo: null, ...(opciones.sinPrecioPorSede && p.porSede ? { precio: 0 } : {}) }];
+    }),
+  ) as Record<PlanClave, Plan>;
+  return {
+    planes,
+    condiciones: {
+      ...catalogo.condiciones,
+      referidoMesesMensual: 0,
+      pack: { ...catalogo.condiciones.pack, mesesConReferido: catalogo.condiciones.pack.mesesQueSePagan },
+    },
+  };
+}
 
 /* ───────────────────────────── Reglas sobre un catálogo ───────────────────────────── */
 
@@ -249,6 +281,12 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     return `${pesos(p.precio)}${sufijoDePrecio(clave)}${p.porSede ? " por sede" : ""}`;
   };
 
+  /**
+   * Lo que se le dice a una INSTITUCIÓN del precio de un plan (avisos, textos): el plan por sede (Multisede) es un convenio y no tiene un precio
+   * de lista, así que se dice «a convenir» en lugar de su precio base, que es interno (la página pública hace lo mismo).
+   */
+  const precioParaLaInstitucion = (clave: string) => (planDe(clave).porSede ? "a convenir según el volumen" : precioDePlan(clave));
+
   /** Es el plan sin abono de búsqueda puntual: se paga cada búsqueda, no hay facturas mensuales ni débito. */
   const esPuntual = (clave: string) => planDe(clave).periodo === "evento";
 
@@ -260,12 +298,23 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     !esPuntual(clave) || (beneficio === "cursos" ? condiciones.puntual.incluyeCursos : condiciones.puntual.incluyeBuscador);
 
   /**
-   * El abono de la primera sede: el de lista o, si la institución tiene un abono acordado, ese. Un abono acordado nunca cobra más que la lista:
-   * si el plan cambió o la lista bajó por debajo de lo acordado, vale la lista (la ficha avisa que el acuerdo quedó fuera de rango).
+   * El acuerdo de precio que rige para un plan: solo uno acordado para ESE plan. Si la institución cambió de plan después (o de tipo, y con él
+   * de plan), el acuerdo viejo no se aplica al nuevo —cobraría por debajo del piso de Colegios un abono acordado en Clubes, o un convenio
+   * mensual en una búsqueda puntual— y paga la lista hasta que el equipo acuerde otro precio. Un acuerdo sin plan anotado vale con cualquiera.
+   */
+  const acuerdoQueRige = (clave: string, acuerdo: AcuerdoDePrecio | null): AcuerdoDePrecio | null =>
+    acuerdo && (acuerdo.plan == null || acuerdo.plan === (esClavePlan(clave) ? clave : "colegio")) ? acuerdo : null;
+  /** ¿Rige este acuerdo con ese plan? (Para avisarle al equipo que uno quedó sin efecto.) */
+  const rigeElAcuerdo = (clave: string, acuerdo: AcuerdoDePrecio) => acuerdoQueRige(clave, acuerdo) !== null;
+
+  /**
+   * El abono de la primera sede: el de lista o, si la institución tiene un abono acordado para este plan, ese. Un abono acordado nunca cobra
+   * más que la lista: si la lista bajó por debajo de lo acordado, vale la lista.
    */
   const abonoDe = (clave: string, acuerdo: AcuerdoDePrecio | null = null) => {
     const lista = planDe(clave).precio;
-    return acuerdo?.modalidad === "abono" ? Math.min(acuerdo.monto, lista) : lista;
+    const a = acuerdoQueRige(clave, acuerdo);
+    return a?.modalidad === "abono" ? Math.min(a.monto, lista) : lista;
   };
 
   /**
@@ -283,29 +332,31 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
    * con su descuento (`precioDeSedeExtra`). Nunca menos de una sede.
    */
   const montoDePlan = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
-    if (acuerdo?.modalidad === "total") return acuerdo.monto;
+    const a = acuerdoQueRige(clave, acuerdo);
+    if (a?.modalidad === "total") return a.monto;
     const n = Math.max(1, Math.floor(sedes));
-    const abono = abonoDe(clave, acuerdo);
-    return planDe(clave).porSede ? abono * n : abono + (n - 1) * precioDeSedeExtra(clave, acuerdo);
+    const abono = abonoDe(clave, a);
+    return planDe(clave).porSede ? abono * n : abono + (n - 1) * precioDeSedeExtra(clave, a);
   };
 
   /** El monto explicado: la primera sede, las adicionales y el total. Para mostrarlo ("$ 48.000 + 2 sedes adicionales de $ 24.000"). */
   const desgloseDeMonto = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
+    const a = acuerdoQueRige(clave, acuerdo);
     const n = Math.max(1, Math.floor(sedes));
-    const convenio = acuerdo?.modalidad === "total";
+    const convenio = a?.modalidad === "total";
     return {
       /** Cuántas sedes tiene en total. */
       sedes: n,
       /** Lo que paga la primera sede (en un plan por sede, el precio por sede). Con un convenio a medida, el total. */
-      base: convenio ? acuerdo.monto : abonoDe(clave, acuerdo),
+      base: convenio ? a.monto : abonoDe(clave, a),
       adicionales: convenio || planDe(clave).porSede ? 0 : n - 1,
       /** Lo que paga cada sede adicional. */
-      precioAdicional: convenio ? 0 : precioDeSedeExtra(clave, acuerdo),
-      total: montoDePlan(clave, n, acuerdo),
+      precioAdicional: convenio ? 0 : precioDeSedeExtra(clave, a),
+      total: montoDePlan(clave, n, a),
       /** El monto es un convenio a medida (un total fijo), no un abono por sede. */
       convenio,
-      /** Tiene un precio acordado (abono o convenio) en lugar del de lista. */
-      acordado: !!acuerdo,
+      /** Tiene un precio acordado (abono o convenio) que rige con este plan, en lugar del de lista. */
+      acordado: !!a,
     };
   };
 
@@ -358,6 +409,8 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     precioMultisede,
     packDe,
     precioDePlan,
+    precioParaLaInstitucion,
+    rigeElAcuerdo,
     sufijoDePrecio,
     esPuntual,
     incluye,

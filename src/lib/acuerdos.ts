@@ -31,10 +31,14 @@ export const acuerdoSchema = z.object({
 });
 export type AcuerdoCargado = z.input<typeof acuerdoSchema>;
 
-/** Lo mínimo de un acuerdo para calcular con él (`montoDePlan`): sin la nota, que es interna. */
-export function paraCalcular(fila: { modalidad: string; monto: number } | null | undefined): AcuerdoDePrecio | null {
+/**
+ * Lo mínimo de un acuerdo para calcular con él (`montoDePlan`): sin la nota, que es interna. Lleva el plan para el que se acordó cuando está
+ * anotado (`acuerdoQueRige`: el acuerdo solo rige con ese plan).
+ */
+export function paraCalcular(fila: { modalidad: string; monto: number; plan?: string | null } | null | undefined): AcuerdoDePrecio | null {
   if (!fila) return null;
-  return fila.modalidad === "abono" || fila.modalidad === "total" ? { modalidad: fila.modalidad, monto: fila.monto } : null;
+  if (fila.modalidad !== "abono" && fila.modalidad !== "total") return null;
+  return { modalidad: fila.modalidad, monto: fila.monto, ...(fila.plan ? { plan: fila.plan } : {}) };
 }
 
 /** "Abono acordado: $ 48.000 por mes" · "Convenio a medida: $ 180.000 por mes (total, sin importar las sedes)" */

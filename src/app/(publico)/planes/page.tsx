@@ -4,7 +4,7 @@ import { Icono } from "@/components/icons";
 import { BandaCTA } from "@/components/publico/banda-cta";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { BotonLink } from "@/components/ui/button";
-import { crearPlanes, pesos } from "@/lib/planes";
+import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
 import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 
@@ -154,7 +154,8 @@ export default async function Planes() {
             </BotonLink>
           </article>
 
-          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogo} />
+          {/* Al navegador va el catálogo sin el piso de precios ni el precio base interno de Multisede: quedarían a la vista en el código de la página. */}
+          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoParaNavegador(catalogo, { sinPrecioPorSede: true })} />
         </section>
 
         <section

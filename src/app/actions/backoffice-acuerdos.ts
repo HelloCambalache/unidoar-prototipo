@@ -11,7 +11,7 @@ import { requerirUsuario } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { resumenDeError } from "@/lib/errores";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
-import { planes } from "@/lib/queries/planes";
+import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 
 /*
  * Precio acordado con una institución, del lado del equipo (solo admin). Un abono propio dentro del rango del plan (entre el piso y la lista) o
@@ -38,7 +38,9 @@ export async function guardarAcuerdoDePrecio(institucionId: string, entrada: Acu
   const datos = parsear(acuerdoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { modalidad, monto, nota } = datos.data;
-  const P = await planes();
+  // El rango del abono se valida con los precios vigentes: con los de lanzamiento (si la base no respondió) se aceptaría un monto fuera de rango.
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
 
   try {
     const resultado = await transaccion(async (tx) => {
@@ -55,13 +57,19 @@ export async function guardarAcuerdoDePrecio(institucionId: string, entrada: Acu
       if (error) return fallo(error, { monto: error });
 
       const previo = await acuerdoConNota(tx, institucionId);
-      const igual = previo && previo.acuerdo.modalidad === modalidad && previo.acuerdo.monto === monto && (previo.nota ?? undefined) === nota;
+      // El acuerdo queda atado al plan que tiene hoy la institución: solo rige con ese plan (ver `acuerdoQueRige`). Volver a guardar el mismo
+      // monto sobre un acuerdo hecho para otro plan SÍ es un cambio: lo vuelve a poner en vigencia con el plan actual.
+      const igual =
+        previo && previo.acuerdo.modalidad === modalidad && previo.acuerdo.monto === monto && previo.acuerdo.plan === inst.plan && (previo.nota ?? undefined) === nota;
       if (igual) return ok({ cambio: false });
 
       await tx
         .insert(acuerdosPrecio)
-        .values({ institucionId, modalidad, monto, nota: nota ?? null })
-        .onConflictDoUpdate({ target: acuerdosPrecio.institucionId, set: { modalidad, monto, nota: nota ?? null, actualizadoEn: new Date() } });
+        .values({ institucionId, modalidad, monto, plan: inst.plan, nota: nota ?? null })
+        .onConflictDoUpdate({
+          target: acuerdosPrecio.institucionId,
+          set: { modalidad, monto, plan: inst.plan, nota: nota ?? null, actualizadoEn: new Date() },
+        });
       await registrarAuditoria(
         {
           usuarioId: admin.id,

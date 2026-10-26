@@ -3,6 +3,7 @@ import { cache } from "react";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { auditoria, instituciones, planes as tablaDePlanes, planesCondiciones, usuarios } from "@/db/schema";
+import { resumenDeError } from "@/lib/errores";
 import { CATALOGO_POR_DEFECTO, catalogoDesdeLaBase, crearPlanes, type CatalogoDePlanes, type Planes } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -42,14 +43,40 @@ export const catalogoDePlanes = cache(async (): Promise<CatalogoDePlanes> => {
   try {
     return await leerCatalogoDePlanes();
   } catch (error) {
-    console.error("No se pudieron leer los planes de la base: se usan los valores de lanzamiento", error);
+    console.error("No se pudieron leer los planes de la base: se usan los valores de lanzamiento", resumenDeError(error));
     return CATALOGO_POR_DEFECTO;
   }
 });
 
-/** Las reglas de planes ya atadas al catálogo vigente: `const P = await planes(); P.precioDePlan(clave)`. */
+/**
+ * Las reglas de planes ya atadas al catálogo vigente: `const P = await planes(); P.precioDePlan(clave)`. Para MOSTRAR: si la base falla, usa los
+ * valores de lanzamiento (una pantalla nunca queda sin precios). Para lo que MUEVE PLATA (facturar, registrar un pago, validar un precio acordado,
+ * el débito automático) usar `planesParaCobrar`.
+ */
 export async function planes(): Promise<Planes> {
   return crearPlanes(await catalogoDePlanes());
+}
+
+/**
+ * Las reglas de planes para lo que mueve plata: lee el catálogo de la base y, si no puede, LANZA en lugar de usar los valores de lanzamiento.
+ * Facturar con un precio que no es el vigente (el equipo subió Colegios a $55.000 y el cron lee los de lanzamiento) deja facturas con el monto
+ * equivocado, y como se crean una por mes y por institución, quedan así. Mejor que falle y se reintente (el cron corre todos los días y es idempotente).
+ */
+export async function planesParaCobrar(ejecutor: Ejecutor = getDb()): Promise<Planes> {
+  return crearPlanes(await leerCatalogoDePlanes(ejecutor));
+}
+
+/** Lo que se le dice a quien pidió algo que mueve plata cuando no se pudieron leer los precios. */
+export const SIN_PRECIOS = "No pudimos leer los precios vigentes. Probá de nuevo en un momento.";
+
+/** `planesParaCobrar` para una acción del servidor: devuelve null (y deja el motivo en el log) en lugar de lanzar, así la acción responde con `SIN_PRECIOS`. */
+export async function planesParaCobrarOFallar(): Promise<Planes | null> {
+  try {
+    return await planesParaCobrar();
+  } catch (error) {
+    console.error("No se pudieron leer los precios para cobrar", resumenDeError(error));
+    return null;
+  }
 }
 
 /** Cuántas instituciones tiene cada plan (para mostrar el alcance de un cambio de precio). */

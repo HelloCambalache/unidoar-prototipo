@@ -36,6 +36,11 @@ describe("del dato guardado a lo que se calcula", () => {
     assert.deepEqual(paraCalcular({ modalidad: "total", monto: 1, nota: "interna" } as { modalidad: string; monto: number }), { modalidad: "total", monto: 1 });
   });
 
+  it("lleva el plan para el que se acordó, si está anotado", () => {
+    assert.deepEqual(paraCalcular({ modalidad: "abono", monto: 48_000, plan: "colegio" }), { modalidad: "abono", monto: 48_000, plan: "colegio" });
+    assert.deepEqual(paraCalcular({ modalidad: "abono", monto: 48_000, plan: null }), { modalidad: "abono", monto: 48_000 });
+  });
+
   it("una fila rota o ausente es 'sin acuerdo': nunca cobra algo raro", () => {
     assert.equal(paraCalcular(null), null);
     assert.equal(paraCalcular(undefined), null);

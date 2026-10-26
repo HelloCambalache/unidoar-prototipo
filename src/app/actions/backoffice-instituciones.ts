@@ -254,7 +254,7 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `cambió el plan de ${inst.nombre} a ${P.planDe(nuevo).label} (${P.precioDePlan(nuevo)}).`,
+      texto: `cambió el plan de ${inst.nombre} a ${P.planDe(nuevo).label} (${P.precioParaLaInstitucion(nuevo)}).`,
       enlace: "/institucion/plan",
     });
     return ok();

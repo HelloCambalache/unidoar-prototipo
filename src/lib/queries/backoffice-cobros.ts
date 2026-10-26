@@ -20,7 +20,7 @@ import { correoDeFacturaNueva } from "@/lib/correo/eventos";
 import type { PlanClave, Planes } from "@/lib/planes";
 import { acuerdoDe, acuerdosDePrecio } from "@/lib/queries/acuerdos";
 import { conDebitoAutorizado, disponiblesPorInstitucion, gastarMesSinCobro, mesesYaBonificados } from "@/lib/queries/bonificaciones";
-import { planes as cargarPlanes } from "@/lib/queries/planes";
+import { planes as cargarPlanes, planesParaCobrar } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 
@@ -54,11 +54,13 @@ export async function tablaDeCobros(): Promise<{ resumen: ResumenCobros; filas: 
   const db = getDb();
   const P = await cargarPlanes();
   const hoy = hoyAR();
-  const [insts, impagas] = await Promise.all([
+  const [insts, conFacturas, impagas] = await Promise.all([
     db
-      .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, suspendida: instituciones.suspendida })
+      .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, suspendida: instituciones.suspendida, esDemo: instituciones.esDemo })
       .from(instituciones)
       .orderBy(asc(instituciones.nombre)),
+    // Quiénes ya tienen alguna factura: la primera la carga el equipo a mano, y hasta entonces la institución todavía no empezó a pagar.
+    db.select({ institucionId: facturas.institucionId }).from(facturas).groupBy(facturas.institucionId),
     db
       .select({
         institucionId: facturas.institucionId,
@@ -79,7 +81,9 @@ export async function tablaDeCobros(): Promise<{ resumen: ResumenCobros; filas: 
     impagasPor.set(f.institucionId, lista);
   }
 
-  const activas = insts.filter((i) => !i.suspendida);
+  // El MRR y las suscripciones activas cuentan a quienes pagan: ni las de ejemplo, ni las suspendidas, ni las que todavía no tienen una primera factura.
+  const conHistorial = new Set(conFacturas.map((f) => f.institucionId));
+  const activas = insts.filter((i) => !i.suspendida && !i.esDemo && conHistorial.has(i.id));
   const [sedesPor, acuerdosPor] = await Promise.all([
     cantidadDeSedes(db, activas.map((i) => i.id)),
     acuerdosDePrecio(db, activas.map((i) => i.id)),
@@ -354,7 +358,9 @@ export type ResultadoGeneracion = {
 export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = new Date()): Promise<ResultadoGeneracion> {
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
-  const P = await cargarPlanes();
+  // Los precios vigentes o nada: con los de lanzamiento (si la base no respondió) las facturas del mes saldrían con un monto equivocado y, como
+  // se crean una vez por mes, quedarían así. Si falla, el cron responde error y se reintenta mañana (es idempotente).
+  const P = await planesParaCobrar();
 
   const activas = await ejecutor
     .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, diaCobro: instituciones.diaCobro, medioPago: instituciones.medioPago })

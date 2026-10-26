@@ -39,7 +39,7 @@ import { suscripcionVigente } from "@/lib/debito-automatico";
 import { pesos, type Planes } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
-import { planes } from "@/lib/queries/planes";
+import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -163,7 +163,8 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
   const datos = parsear(pagoEfectivoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fecha, nota, avisar } = datos.data;
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
 
   const hoy = hoyAR();
@@ -332,7 +333,8 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   if (errorInicio) return fallo(errorInicio, { periodo: errorInicio });
   // Un pago de otro día se guarda al mediodía UTC de ese día (la misma fecha en Argentina); el de hoy, con su hora real.
   const pagadaEn = fecha === hoy ? new Date() : new Date(`${fecha}T12:00:00Z`);
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   const { meses, mesesQueSePagan } = P.condiciones.pack;
 
   // Antes de tocar nada (ni cancelar un débito) se mira que el semestre se pueda registrar; la transacción lo vuelve a mirar.
@@ -538,7 +540,8 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
   const { periodo, plan, fechaCobro, medio } = datos.data;
   // En un plan por sede (Multisede) el monto es el precio de una sede por las sedes que tiene la institución.
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
   const monto = P.montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, await acuerdoParaPlan(getDb(), institucionId, plan));
 
@@ -676,7 +679,8 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
   const datos = parsear(aprobacionSchema, { nota });
   if (!datos.ok) return fallo(datos.campos?.nota ?? datos.error, datos.campos);
 
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   let institucionId: string | undefined;
   const resultado = await transaccion(async (tx) => {
     const [pedido] = await tx.select().from(solicitudesPlan).where(eq(solicitudesPlan.id, pedidoId)).limit(1).for("update");
@@ -727,7 +731,7 @@ export async function aprobarPedidoDePlan(pedidoId: string, nota?: string): Prom
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `aprobó tu cambio al ${P.planDe(plan).label} (${P.precioDePlan(plan)}).${textoDeFactura(factura)}`,
+      texto: `aprobó tu cambio al ${P.planDe(plan).label} (${P.precioParaLaInstitucion(plan)}).${textoDeFactura(factura)}`,
       enlace: "/institucion/plan",
     });
     await correoDeResolucionDePlan(tx, {

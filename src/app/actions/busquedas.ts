@@ -22,7 +22,7 @@ import { MS } from "@/lib/fechas";
 import { permisoParaPublicarPuntual, puedeReabrirPuntual, venceEnDePuntual } from "@/lib/puntual";
 import { avisarAVarios, avisarCierreDeBusqueda } from "@/lib/queries/avisos";
 import { busquedaPropia } from "@/lib/queries/busquedas";
-import { planes as cargarPlanes } from "@/lib/queries/planes";
+import { planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 import { consumirCredito, saldoDeBusquedas, vencimientoDePuntual } from "@/lib/queries/puntuales";
 import { sedeParaBusqueda, sedesDeInstitucion } from "@/lib/queries/sedes";
 import { sedesElegidas } from "@/lib/sedes";
@@ -93,7 +93,9 @@ export async function crearBusqueda(
 
   // Búsqueda puntual (el plan sin abono): hace falta una búsqueda pagada y disponible, una sola sede y no pasarse del tope de abiertas. Se mira
   // acá para dar el motivo; el crédito se consume adentro de la transacción (si dos publicaciones compiten, una sola se lo lleva).
-  const P = await cargarPlanes();
+  // Con los precios y condiciones vigentes: la vigencia y el tope de abiertas salen de Planes, y se consume una búsqueda pagada.
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
   const puntual = P.esPuntual(institucion.plan);
   if (puntual) {
     const saldo = await saldoDeBusquedas(getDb(), institucion.id);

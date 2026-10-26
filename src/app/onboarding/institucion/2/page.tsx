@@ -9,6 +9,7 @@ import { RUTA_INICIO } from "@/lib/catalogo";
 import { ID_FORMULARIO_ONBOARDING, PASOS_INSTITUCION } from "@/lib/onboarding";
 import { institucionDeMiembro, invitacionDeEmail } from "@/lib/queries/equipo";
 import { opcionesDeUbicacion } from "@/lib/queries/onboarding";
+import { catalogoParaNavegador } from "@/lib/planes";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Tu institución" };
@@ -60,7 +61,7 @@ export default async function PasoInstitucion2() {
         pedirTerminos={!usuario.terminosAceptadosEn}
         partidos={partidos}
         provincias={provincias}
-        catalogo={catalogo}
+        catalogo={catalogoParaNavegador(catalogo)}
         modalidadInicial={institucion?.plan === "puntual" ? "puntual" : "abono"}
       />
     </MarcoOnboarding>

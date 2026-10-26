@@ -11,7 +11,7 @@ import { pesos } from "@/lib/planes";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { acuerdosDePrecio } from "@/lib/queries/acuerdos";
 import { destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
-import { planes } from "@/lib/queries/planes";
+import { planesParaCobrar } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 
@@ -35,8 +35,9 @@ export async function sincronizarSuscripciones(): Promise<ResultadoDeSincronizac
     if (filas.length === 0) return resultado;
 
     const ids = filas.map((f) => f.institucionId);
+    // Los precios vigentes o nada: con los de lanzamiento se le empujaría a Mercado Pago un monto equivocado (lo atrapa el catch de abajo y se reintenta mañana).
     const [P, sedes, acuerdos, insts] = await Promise.all([
-      planes(),
+      planesParaCobrar(db),
       cantidadDeSedes(db, ids),
       acuerdosDePrecio(db, ids),
       db.select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan }).from(instituciones).where(inArray(instituciones.id, ids)),

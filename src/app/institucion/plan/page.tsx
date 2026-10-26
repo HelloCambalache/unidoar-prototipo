@@ -7,7 +7,7 @@ import { PlanPanel } from "@/components/institucion/plan-panel";
 import { PlanPuntual } from "@/components/institucion/plan-puntual";
 import { getDb } from "@/db";
 import { requerirInstitucion } from "@/lib/auth";
-import { crearPlanes, pesos } from "@/lib/planes";
+import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
 import { datosDePlan } from "@/lib/queries/plan";
 import { mesesDe } from "@/lib/queries/bonificaciones";
 import { catalogoDePlanes } from "@/lib/queries/planes";
@@ -45,7 +45,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
         bajada="Tu plan, el medio de pago y las facturas anteriores."
       />
       <PlanPanel
-        catalogo={catalogo}
+        catalogo={catalogoParaNavegador(catalogo)}
         plan={datos.plan}
         tipo={institucion.tipo}
         sedes={datos.sedes}

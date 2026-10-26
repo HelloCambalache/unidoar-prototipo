@@ -59,6 +59,14 @@ async function main() {
         creado_en timestamptz not null default now(),
         actualizado_en timestamptz not null default now()
       )`;
+    // El plan para el que se acordó el precio: el acuerdo solo rige con ese plan. Los que ya existían se atan al plan que tiene hoy la institución
+    // (así siguen valiendo igual); un acuerdo nuevo lo anota la acción que lo guarda. No pisa uno que ya tenga plan.
+    await tx`alter table public.acuerdos_precio add column if not exists plan text`;
+    await tx`
+      update public.acuerdos_precio a
+      set plan = i.plan
+      from public.instituciones i
+      where i.id = a.institucion_id and a.plan is null`;
     // La búsqueda puntual (el plan sin abono): días de vigencia, búsquedas abiertas a la vez y qué incluye.
     await tx`alter table public.planes_condiciones add column if not exists puntual_vigencia_dias integer not null default 30`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_busquedas_abiertas integer not null default 1`;

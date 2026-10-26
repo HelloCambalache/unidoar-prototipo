@@ -97,6 +97,12 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "colegio";
   const esPuntual = P.esPuntual(plan);
+  // Un acuerdo hecho para otro plan no rige con el actual (ver `acuerdoQueRige`): se avisa para que el equipo lo vea y, si hace falta, acuerde otro.
+  const acuerdoRige = acuerdo ? P.rigeElAcuerdo(plan, acuerdo) : false;
+  const avisoDeAcuerdoDeOtroPlan =
+    acuerdo && !acuerdoRige
+      ? `Hay un precio acordado para el ${P.planDe(acuerdo.plan ?? plan).label}, que no rige con el plan actual (${P.planDe(plan).label}): paga el de lista.`
+      : "";
   // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
   const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
   const estado: EstadoCobro = d.vencidas > 0 ? "vencida" : proximo ? "pendiente" : "aldia";
@@ -125,11 +131,14 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               <div className="text-sm leading-[1.4] text-apagado">
                 {P.planDe(plan).label} · {P.precioDePlan(plan)}
               </div>
-              {acuerdo && (
+              {acuerdo && acuerdoRige && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-navy-700">
                   {acuerdo.modalidad === "total" ? "Convenio a medida" : "Precio acordado"}: {pesos(P.montoDePlan(plan, sedes, acuerdo))} por mes
                   {acuerdo.modalidad === "abono" && sedes > 1 ? ` (${sedes} sedes)` : ""}
                 </div>
+              )}
+              {acuerdo && !acuerdoRige && (
+                <div className="mt-1 text-[13px] leading-[1.4] font-medium text-naranja-ink">{avisoDeAcuerdoDeOtroPlan}</div>
               )}
               {semestrePagoHasta && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-verde">
@@ -299,11 +308,16 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 <div className="flex flex-col gap-2">
                   <Dato k="De lista">{pesos(maximo)} por mes</Dato>
                   <Dato k="Piso del plan">{minimo < maximo ? pesos(minimo) : "Sin piso"}</Dato>
-                  <Dato k="Acordado">{acuerdo ? describirAcuerdo(acuerdo) : "Paga el de lista"}</Dato>
+                  <Dato k="Acordado">{acuerdo && acuerdoRige ? describirAcuerdo(acuerdo) : "Paga el de lista"}</Dato>
+                  {acuerdo && !acuerdoRige && (
+                    <p className="m-0 text-[13px] leading-[1.45] text-naranja-ink">
+                      {avisoDeAcuerdoDeOtroPlan} Si querés volver a acordar un precio con este plan, usá «Acordar un precio».
+                    </p>
+                  )}
                   {acordado?.nota && <Dato k="Nota">{acordado.nota}</Dato>}
                   {sedes > 1 && <Dato k="Sedes">{sedes}</Dato>}
                   <div className="mt-1.5">
-                    <CobroAcuerdo institucionId={i.id} catalogo={P.catalogo} plan={plan} sedes={sedes} acuerdo={acuerdo} nota={acordado?.nota ?? null} />
+                    <CobroAcuerdo institucionId={i.id} catalogo={P.catalogo} plan={plan} sedes={sedes} acuerdo={acuerdoRige ? acuerdo : null} nota={acordado?.nota ?? null} />
                   </div>
                 </div>
               );
