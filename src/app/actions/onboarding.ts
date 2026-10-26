@@ -196,10 +196,11 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
 
   if (existente) {
     await transaccion(async (tx) => {
-      // El plan sigue al tipo mientras sea el que le tocaba (uno que cambió el equipo a mano no se toca): ver `planTrasCambiarElTipo`.
+      // El plan sigue al tipo mientras sea el que le tocaba (uno que cambió el equipo a mano no se toca) y respeta si eligió pagar una sola
+      // búsqueda: ver `planDelAlta` (y `planTrasCambiarElTipo` adentro).
       await tx
         .update(instituciones)
-        .set({ ...datos, plan: P.planTrasCambiarElTipo(existente.plan, existente.tipo, tipo) })
+        .set({ ...datos, plan: P.planDelAlta({ actual: existente.plan, tipoAnterior: existente.tipo, tipo, modalidad: d.modalidad }) })
         .where(eq(instituciones.id, existente.id));
       await guardarSedePrincipal(tx, existente.id, ubicacionDeLaSede);
     });
@@ -208,8 +209,9 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       transaccion(async (tx) => {
         const [creada] = await tx
           .insert(instituciones)
-          // El plan sale del tipo de institución, no de lo que elija: ver planPorTipo en src/lib/planes.ts (el catálogo editable de /backoffice/planes).
-          .values({ ...datos, slug, plan: P.planPorTipo(d.tipo), propietarioId: usuario.id, esDemo: false })
+          // El arancel sale del tipo de institución, no de lo que elija (planPorTipo, src/lib/planes.ts: el catálogo editable de /backoffice/planes);
+          // lo único que elige es pagar una sola búsqueda en lugar del abono (`planDelAlta`, solo si ese plan se ofrece).
+          .values({ ...datos, slug, plan: P.planDelAlta({ tipo: d.tipo, modalidad: d.modalidad }), propietarioId: usuario.id, esDemo: false })
           .returning({ id: instituciones.id });
         await guardarSedePrincipal(tx, creada!.id, ubicacionDeLaSede);
         await tx

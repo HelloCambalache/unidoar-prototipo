@@ -42,7 +42,6 @@ export default async function Planes() {
 
   const colegios = P.planDe("colegio");
   const clubes = P.planDe("deportiva");
-  const multisede = P.planDe("multisede");
   const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
 
   // Las respuestas salen del catálogo: si el equipo cambia un precio en Planes, esta página lo dice sola.
@@ -58,7 +57,7 @@ export default async function Planes() {
     },
     {
       pregunta: "¿Y si solo necesito cubrir un puesto?",
-      respuesta: `Elegís «Una sola búsqueda»: pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
+      respuesta: `Al crear tu cuenta de institución elegís «Una sola búsqueda» (o lo pedís después desde Plan y facturación): pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
         P.incluye("puntual", "buscador") && P.incluye("puntual", "cursos")
           ? ""
           : ` No incluye ${[!P.incluye("puntual", "buscador") && "el buscador de profesionales", !P.incluye("puntual", "cursos") && "la difusión de cursos"].filter(Boolean).join(" ni ")}: eso es parte del abono mensual.`
@@ -66,7 +65,7 @@ export default async function Planes() {
     },
     {
       pregunta: "¿Cuánto paga mi institución?",
-      respuesta: `Depende del tipo. ${colegios.label.replace("Plan ", "")}: ${pesos(colegios.precio)} por mes (${P.tiposPorPlan.colegio.join(", ").toLowerCase()}). ${clubes.label.replace("Plan ", "")}: ${pesos(clubes.precio)} por mes. Desde ${P.condiciones.sedesMultisede} sedes se factura por sede: ${pesos(multisede.precio)} por mes cada una.`,
+      respuesta: `Depende del tipo. ${colegios.label.replace("Plan ", "")}: ${pesos(colegios.precio)} por mes (${P.tiposPorPlan.colegio.join(", ").toLowerCase()}). ${clubes.label.replace("Plan ", "")}: ${pesos(clubes.precio)} por mes. Para redes de ${P.condiciones.sedesMultisede} sedes o más el valor se acuerda según el volumen (convenio corporativo): escribinos y te armamos una propuesta.`,
     },
     {
       pregunta: "¿Y si mi institución tiene más de una sede?",
@@ -74,7 +73,7 @@ export default async function Planes() {
         P.condiciones.descuentoSedeExtra >= 100
           ? "las sedes adicionales no tienen costo"
           : `cada sede adicional ${P.condiciones.descuentoSedeExtra > 0 ? `con ${P.condiciones.descuentoSedeExtra} % de descuento: ${pesos(P.precioDeSedeExtra("colegio"))} por mes en el plan de colegios y ${pesos(P.precioDeSedeExtra("deportiva"))} en el de clubes y academias` : "paga lo mismo que la primera"}`
-      }. Desde ${P.condiciones.sedesMultisede} sedes se factura por sede (plan Multisede).`,
+      }. Desde ${P.condiciones.sedesMultisede} sedes en total el valor se acuerda con nosotros (convenio corporativo).`,
     },
     {
       pregunta: "¿Cómo funciona el pago por adelantado?",

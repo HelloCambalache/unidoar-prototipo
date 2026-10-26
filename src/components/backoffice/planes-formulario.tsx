@@ -30,7 +30,8 @@ import {
 const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
   colegio: "Lo reciben las instituciones nuevas cuyo tipo está tildado más abajo, en «Arancel de colegios».",
   deportiva: "Lo reciben las instituciones nuevas de cualquier otro tipo.",
-  multisede: "Se asigna a mano desde la ficha de la institución (redes de varias sedes: valor a convenir). El precio es por sede.",
+  multisede:
+    "Se asigna a mano desde la ficha de la institución (redes de varias sedes). En la página pública se muestra «A convenir»: este precio por sede es el de base cuando se asigna sin un convenio a medida (que se carga desde Cobros → Precio).",
   puntual:
     "Se asigna a mano desde la ficha de la institución (o al aprobar un pedido de cambio de plan). No tiene abono: se paga cada búsqueda, y el pago lo registra el equipo en la ficha de cobros.",
 };

@@ -55,6 +55,8 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
   const pack = P.packDe(clave);
   const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
   const puntual = P.esPuntual(clave);
+  // Multisede (redes y cadenas) no tiene un precio de lista a la vista: el valor se acuerda según el volumen (convenio corporativo).
+  const convenio = plan.porSede;
   const delPuntual = beneficiosPuntual(P);
 
   return (
@@ -94,10 +96,17 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
       </div>
 
       <div className="relative mt-5 mb-1">
-        <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(plan.precio)}</span>
-        <span className="text-[15px] leading-none text-white/60">
-          &nbsp;{puntual ? "por búsqueda" : `/ mes${plan.porSede ? " por sede" : ""}`}
-        </span>
+        {convenio ? (
+          <>
+            <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">A convenir</span>
+            <span className="text-[15px] leading-none text-white/60">&nbsp;según el volumen</span>
+          </>
+        ) : (
+          <>
+            <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(plan.precio)}</span>
+            <span className="text-[15px] leading-none text-white/60">&nbsp;{puntual ? "por búsqueda" : "/ mes"}</span>
+          </>
+        )}
       </div>
       <p className="relative mb-5 text-sm leading-normal text-white/65">
         {detalleDe(P, clave)}
@@ -134,6 +143,13 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
             profesionales y la difusión de cursos.
           </p>
         </div>
+      ) : convenio ? (
+        <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
+          <div className="text-sm leading-tight font-semibold text-white">Convenio corporativo</div>
+          <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
+            El valor depende de la cantidad de sedes y de búsquedas. Escribinos y te armamos una propuesta a medida para tu red.
+          </p>
+        </div>
       ) : (
         <div className="relative mt-5 rounded-interno bg-white/8 px-4 py-3.5">
           <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
@@ -142,20 +158,19 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
           <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
             Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
-            <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}
-            {plan.porSede ? ", por sede" : ""}.
+            <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}.
           </p>
         </div>
       )}
 
       <BotonLink
-        href={RUTA_REGISTRO_INSTITUCION}
+        href={convenio ? "/contacto" : RUTA_REGISTRO_INSTITUCION}
         variante="cta"
         tamano="lg"
         bloque
         className="relative mt-[22px] h-[50px] bg-ambar text-tinta shadow-[0_4px_10px_rgba(245,147,50,.35)] hover:bg-ambar hover:text-tinta hover:brightness-95"
       >
-        Crear cuenta de institución
+        {convenio ? "Escribinos para armar tu propuesta" : "Crear cuenta de institución"}
       </BotonLink>
     </article>
   );

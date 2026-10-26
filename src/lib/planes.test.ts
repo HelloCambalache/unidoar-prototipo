@@ -312,6 +312,15 @@ describe("el precio sale del tipo de institución", () => {
     assert.equal(P.planPorTipo("Otro"), "deportiva");
   });
 
+  it("las pymes y entidades de barrio del esquema (escuelas deportivas, sociedades de fomento, idiomas, gimnasios) pagan el arancel de clubes", () => {
+    for (const tipo of ["Escuela deportiva", "Sociedad de fomento", "Instituto de idiomas", "Club o gimnasio"]) {
+      assert.ok((TIPOS_INSTITUCION as readonly string[]).includes(tipo), `${tipo} tiene que poder elegirse`);
+      assert.equal(P.planPorTipo(tipo), "deportiva", tipo);
+      assert.ok((P.tiposPorPlan.deportiva as readonly string[]).includes(tipo), `${tipo} se lista en el arancel de clubes`);
+    }
+    assert.ok(!(P.tiposPorPlan.colegio as readonly string[]).includes("Escuela deportiva"));
+  });
+
   it("todo tipo del catálogo tiene un plan: ninguno queda sin precio", () => {
     for (const tipo of TIPOS_INSTITUCION) {
       const clave = P.planPorTipo(tipo);
@@ -606,6 +615,49 @@ describe("el plan sigue al tipo de institución", () => {
   it("si el tipo no cambia de arancel, el plan queda igual", () => {
     assert.equal(P.planTrasCambiarElTipo("colegio", "Colegio privado", "Jardín de infantes"), "colegio");
     assert.equal(P.planTrasCambiarElTipo("deportiva", "Club o gimnasio", "Natatorio o colonia"), "deportiva");
+  });
+});
+
+describe("el plan que queda al guardar el alta", () => {
+  const apagado = crearPlanes({
+    ...CATALOGO_POR_DEFECTO,
+    planes: { ...CATALOGO_POR_DEFECTO.planes, puntual: { ...CATALOGO_POR_DEFECTO.planes.puntual, vigente: false } },
+  });
+
+  it("una cuenta nueva arranca con el arancel de su tipo, o con una sola búsqueda si lo eligió", () => {
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado" }), "colegio");
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", modalidad: "abono" }), "colegio");
+    assert.equal(P.planDelAlta({ tipo: "Club o gimnasio", modalidad: "abono" }), "deportiva");
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", modalidad: "puntual" }), "puntual");
+    assert.equal(P.planDelAlta({ tipo: "Escuela deportiva", modalidad: "puntual" }), "puntual");
+  });
+
+  it("si la búsqueda puntual ya no se ofrece, elegirla (un formulario viejo) no sirve: queda el arancel de su tipo", () => {
+    assert.equal(apagado.planDelAlta({ tipo: "Colegio privado", modalidad: "puntual" }), "colegio");
+  });
+
+  it("al volver al paso 2: del arancel de su tipo pasa a una sola búsqueda, y de ahí vuelve al abono", () => {
+    assert.equal(P.planDelAlta({ actual: "colegio", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "puntual" }), "puntual");
+    assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "puntual" }), "puntual");
+    assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "abono" }), "colegio");
+    assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Club o gimnasio", modalidad: "abono" }), "deportiva");
+  });
+
+  it("un plan que el equipo asignó a mano no se pisa, elija lo que elija", () => {
+    for (const modalidad of ["abono", "puntual", undefined] as const) {
+      assert.equal(P.planDelAlta({ actual: "multisede", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad }), "multisede", String(modalidad));
+    }
+  });
+
+  it("sin elección (la opción no se mostró) el plan sigue al tipo, como siempre, y una cuenta en puntual se queda ahí", () => {
+    assert.equal(P.planDelAlta({ actual: "deportiva", tipoAnterior: "Otro", tipo: "Colegio privado" }), "colegio");
+    assert.equal(P.planDelAlta({ actual: "colegio", tipoAnterior: "Colegio privado", tipo: "Club o gimnasio" }), "deportiva");
+    assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Club o gimnasio" }), "puntual");
+  });
+
+  it("cambiar el tipo sin elegir una sola búsqueda no deja quedarse con el arancel más barato", () => {
+    // "Otro" paga el arancel de clubes; pasar después a Colegio antes de verificarse tiene que subirlo al de colegios.
+    assert.equal(P.planDelAlta({ actual: "deportiva", tipoAnterior: "Otro", tipo: "Colegio privado", modalidad: "abono" }), "colegio");
   });
 });
 

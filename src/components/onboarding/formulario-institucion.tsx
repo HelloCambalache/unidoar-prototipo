@@ -9,7 +9,24 @@ import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { OTRO, opcionYTexto } from "@/lib/otro";
+import { crearPlanes, pesos, type CatalogoDePlanes } from "@/lib/planes";
 import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboarding";
+
+/** Una de las dos maneras de usar UNIDOAR (radio con forma de tarjeta): el abono de su tipo o pagar una sola búsqueda. */
+function OpcionDePlan({ valor, marcada, titulo, precio, texto }: { valor: "abono" | "puntual"; marcada: boolean; titulo: string; precio: string; texto: string }) {
+  return (
+    <label className="flex cursor-pointer items-start gap-3 rounded-caja border border-borde bg-white p-3.5 transition-colors has-[:checked]:border-navy-700 has-[:checked]:bg-navy-50 has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30">
+      <input type="radio" name="modalidad" value={valor} defaultChecked={marcada} className="mt-1 size-4 flex-none accent-navy-700" />
+      <span className="min-w-0">
+        <span className="flex flex-wrap items-baseline gap-x-2 text-[15px] leading-tight font-semibold text-tinta">
+          {titulo}
+          <span className="text-[13px] font-medium text-navy-700">{precio}</span>
+        </span>
+        <span className="mt-1 block text-[13px] leading-normal text-apagado">{texto}</span>
+      </span>
+    </label>
+  );
+}
 
 /**
  * Paso 2 de la institución. Si ya la había creado, llega precargado y guardar actualiza (no duplica).
@@ -21,6 +38,8 @@ export function FormularioInstitucion({
   pedirTerminos,
   partidos,
   provincias,
+  catalogo,
+  modalidadInicial,
 }: {
   inicial: DatosForm;
   yaCreada: boolean;
@@ -28,6 +47,10 @@ export function FormularioInstitucion({
   pedirTerminos: boolean;
   partidos: string[];
   provincias: string[];
+  /** Los planes vigentes: de ahí salen los precios que se muestran y si se ofrece pagar una sola búsqueda. */
+  catalogo: CatalogoDePlanes;
+  /** Con qué opción arranca (la de una cuenta que vuelve a este paso: la que ya tenía). */
+  modalidadInicial: "abono" | "puntual";
 }) {
   const [estado, accion, pendiente] = useActionState(crearInstitucion, null);
   // Si ya había guardado algo escrito a mano ("Academia de danza"), el desplegable queda en "Otro" y el texto en "¿Cuál?".
@@ -39,6 +62,12 @@ export function FormularioInstitucion({
   const v = (campo: string) => valorDe(estado, inicial, campo);
   const conCue = TIPOS_CON_CUE.includes(tipo);
   const id = (c: string) => `inst-${c}`;
+  // El abono que le toca sale del tipo que está eligiendo; pagar una sola búsqueda solo se ofrece si ese plan se sigue ofreciendo.
+  const P = crearPlanes(catalogo);
+  const abono = P.planDe(P.planPorTipo(tipo));
+  const puntual = P.planDe("puntual");
+  const { vigenciaDias, incluyeCursos, incluyeBuscador } = P.condiciones.puntual;
+  const noIncluye = [!incluyeBuscador && "el buscador de profesionales", !incluyeCursos && "la difusión de cursos"].filter(Boolean).join(" ni ");
 
   return (
     <form id={ID_FORMULARIO_ONBOARDING} action={accion}>
@@ -156,6 +185,29 @@ export function FormularioInstitucion({
             <option key={p} value={p} />
           ))}
         </datalist>
+
+        {puntual.vigente && (
+          <fieldset className="m-0 mt-1 min-w-0 border-0 p-0">
+            <legend className="mb-2 p-0 text-sm font-semibold text-tinta">¿Cómo querés usar UNIDOAR?</legend>
+            <div className="flex flex-col gap-2.5">
+              <OpcionDePlan
+                valor="abono"
+                marcada={modalidadInicial === "abono"}
+                titulo="Abono mensual"
+                precio={`${pesos(abono.precio)} por mes`}
+                texto="Búsquedas ilimitadas, el buscador de profesionales y la difusión de cursos. Sin comisión por contratación."
+              />
+              <OpcionDePlan
+                valor="puntual"
+                marcada={modalidadInicial === "puntual"}
+                titulo="Una sola búsqueda"
+                precio={`${pesos(puntual.precio)} por búsqueda`}
+                texto={`Pagás solo la búsqueda que necesitás, sin abono mensual. Queda publicada ${vigenciaDias} días${noIncluye ? ` y no incluye ${noIncluye}` : ""}. Al terminar el alta te ayudamos a abonarla.`}
+              />
+            </div>
+            <p className="mt-2 mb-0 text-xs leading-normal text-apagado">Lo podés cambiar después desde Plan y facturación.</p>
+          </fieldset>
+        )}
 
         {/* Solo si la cuenta no los aceptó al crearse (cuentas anteriores): las nuevas ya los aceptaron en el paso 1. */}
         {pedirTerminos && (

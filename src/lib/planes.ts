@@ -125,8 +125,8 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
     precio: 15_000,
     precioMinimo: null,
     periodo: "mes",
-    resumen: "Para redes de 5 sedes o más: el precio es por sede.",
-    detalle: "Desde la quinta sede se factura por sede, no por institución.",
+    resumen: "Para redes y cadenas de 5 sedes o más: valor a convenir según el volumen.",
+    detalle: "Convenio corporativo: el valor se acuerda según la cantidad de sedes y de búsquedas.",
     vigente: true,
     porSede: true,
   },
@@ -197,6 +197,23 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
    */
   const planTrasCambiarElTipo = (planActual: string, tipoAnterior: string, tipoNuevo: string): string =>
     planActual === planPorTipo(tipoAnterior) ? planPorTipo(tipoNuevo) : planActual;
+  /**
+   * El plan que queda al guardar el alta (paso 2), cuando la persona puede elegir cómo usar UNIDOAR: con el abono de su tipo (`abono`) o pagando
+   * una sola búsqueda (`puntual`, solo si ese plan se sigue ofreciendo). Sin elección (`modalidad` ausente: la opción no se mostró) el plan
+   * sigue al tipo como siempre.
+   *  - Cuenta nueva (`actual` ausente): `puntual` si lo eligió; si no, el arancel de su tipo.
+   *  - Cuenta que ya existe (vuelve al paso 2 antes de verificarse): pasa a `puntual` si lo eligió y estaba en el de su tipo (o ya en puntual);
+   *    vuelve al arancel de su tipo si estaba en puntual y eligió el abono; y un plan que el equipo le asignó a mano (Multisede…) no se toca.
+   */
+  const planDelAlta = (e: { actual?: string; tipoAnterior?: string; tipo: string; modalidad?: "abono" | "puntual" }): string => {
+    const quierePuntual = e.modalidad === "puntual" && planes.puntual.vigente;
+    if (e.actual === undefined) return quierePuntual ? "puntual" : planPorTipo(e.tipo);
+    const eraPuntual = e.actual === "puntual";
+    const eraElDeSuTipo = e.actual === planPorTipo(e.tipoAnterior ?? e.tipo);
+    if (quierePuntual) return eraPuntual || eraElDeSuTipo ? "puntual" : e.actual;
+    if (e.modalidad === "abono" && eraPuntual) return planPorTipo(e.tipo);
+    return planTrasCambiarElTipo(e.actual, e.tipoAnterior ?? e.tipo, e.tipo);
+  };
 
   /** Los tipos de cada arancel, para listarlos en la página de planes ("Otro" no se muestra: no le dice nada a quien decide). */
   const tiposPorPlan = {
@@ -333,6 +350,7 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     planPorTipo,
     planesParaPedir,
     planTrasCambiarElTipo,
+    planDelAlta,
     tiposPorPlan,
     esMultisede,
     precioMultisede,

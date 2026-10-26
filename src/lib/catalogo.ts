@@ -25,8 +25,10 @@ export const TIPOS_INSTITUCION = [
   "Colegio público",
   "Jardín de infantes",
   "Club o gimnasio",
+  "Escuela deportiva",
   "Natatorio o colonia",
   "Instituto de idiomas",
+  "Sociedad de fomento",
   "Instituto terciario",
   "Universidad",
   "Otro",
@@ -172,6 +174,11 @@ export const institucionDatosSchema = z.object({
   contactoRol: z.enum(ROLES_CONTACTO),
   contactoRolOtro: textoOpcional(60),
   telefono: texto(6, 40),
+  /**
+   * Cómo quiere usar UNIDOAR: con el abono de su tipo («abono») o pagando una sola búsqueda («puntual»). Solo viaja si el plan de la búsqueda
+   * puntual se ofrece; sin el campo, el plan sigue al tipo como siempre (ver `planDelAlta`, src/lib/planes.ts).
+   */
+  modalidad: z.enum(["abono", "puntual"]).optional(),
   cuit: cuitOpcional,
   cue: textoOpcional(20),
   direccion: texto(3, 200),
