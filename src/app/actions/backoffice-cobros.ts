@@ -143,6 +143,8 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
       institucion: dueña?.nombre ?? "tu institución",
       periodo: factura.periodo,
       monto: factura.monto,
+      // El mail lleva el comprobante de esta factura (ya marcada paga en esta misma transacción).
+      facturaId: factura.id,
     });
     return ok();
   });
@@ -263,6 +265,7 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
           institucion: inst.nombre,
           periodo,
           monto,
+          facturaId,
         });
       }
       return ok({ id: facturaId });
@@ -475,6 +478,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
           periodo,
           mesesCubiertos: meses,
           monto,
+          facturaId,
         });
       }
       return ok({ id: facturaId });

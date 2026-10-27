@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
+import { AvisoDePlanSinPago } from "@/components/institucion/plan-activo";
 import { FormularioBusqueda, type ValoresFormulario } from "@/components/institucion/formulario-busqueda";
 import { BotonLink } from "@/components/ui/button";
 import { Tarjeta } from "@/components/ui/tarjeta";
@@ -104,6 +105,8 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
       />
       {/* Con la cuenta limitada por una factura vencida publicar no se puede (la acción también lo frena): el cartel lo explica antes de llenar el formulario. */}
       <AvisoDeMora mora={mora} />
+      {/* Una cuenta nueva sin su primer pago tampoco publica (editar una ya publicada sí). */}
+      {!existente && <AvisoDePlanSinPago />}
       {permiso && !permiso.ok ? (
         <Tarjeta className="max-w-[980px] p-[22px]">
           <h2 className="m-0 mb-1.5 text-base leading-tight font-semibold">Todavía no podés publicar una búsqueda nueva</h2>

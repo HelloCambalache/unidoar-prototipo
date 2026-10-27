@@ -335,4 +335,4 @@ export type ValoresCurso = {
   fotoUrl: string;
 };
 
-export type EstadoFormularioCurso = { ok: false; error: string; campos?: Record<string, string> } | null;
+export type EstadoFormularioCurso = { ok: false; error: string; campos?: Record<string, string>; codigo?: string } | null;

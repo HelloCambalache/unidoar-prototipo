@@ -4,6 +4,7 @@ import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { TarjetaMetrica } from "@/components/app/tarjeta-metrica";
 import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
+import { AvisoDePlanSinPago } from "@/components/institucion/plan-activo";
 import { AvisoDebito } from "@/components/institucion/aviso-debito";
 import { BannerPasos } from "@/components/institucion/banner-pasos";
 import { DashboardPrimeraVez } from "@/components/institucion/dashboard-primera-vez";
@@ -41,6 +42,7 @@ export default async function DashboardInstitucion() {
     return (
       <>
         <AvisoDeMora mora={mora} />
+        <AvisoDePlanSinPago />
         {debito && <AvisoDebito monto={debito.monto} />}
         <DashboardPrimeraVez
           institucion={institucion}
@@ -79,6 +81,7 @@ export default async function DashboardInstitucion() {
   return (
     <>
       <AvisoDeMora mora={mora} />
+      <AvisoDePlanSinPago />
       {debito && <AvisoDebito monto={debito.monto} />}
       <EncabezadoPagina
         titulo={`Buenas, ${nombre}`}

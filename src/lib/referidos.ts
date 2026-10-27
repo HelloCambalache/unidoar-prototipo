@@ -93,6 +93,55 @@ export function normalizarCodigo(texto: string | null | undefined): string | nul
   return FORMA_DEL_CODIGO.test(t) ? t : null;
 }
 
+/**
+ * El código que una persona escribió o pegó a mano en el alta (campo «Código de referido»): lo que recibió de otra institución en un mensaje.
+ * Más permisivo que `normalizarCodigo` (que es la forma exacta que guardan la cookie y la base): acepta minúsculas, espacios o guiones en el
+ * medio («k7m2-xq9d») y también el enlace completo pegado (`…/referido/K7M2XQ9D`), porque quien recibió un enlace puede pegarlo acá.
+ * Devuelve el código en su forma exacta, o null si lo escrito no tiene la forma de un código (o está vacío).
+ */
+export function codigoDeTexto(texto: string | null | undefined): string | null {
+  const t = (texto ?? "").trim();
+  if (!t) return null;
+  const delEnlace = /\/referido\/([^/?#\s]+)/i.exec(t)?.[1];
+  return normalizarCodigo((delEnlace ?? t).replace(/[\s-]+/g, ""));
+}
+
+/** Qué código se usa al crear la institución: el que la persona escribió o, si el campo no vino, el del enlace (cookie). */
+export type CodigoDelAlta =
+  | { tipo: "ninguno" }
+  /** Escribió algo que no tiene la forma de un código: se le pide corregirlo (o dejar el campo vacío). */
+  | { tipo: "invalido" }
+  /** `escrito`: lo tipeó o lo cambió la persona (hay que comprobar que exista antes de crear nada); false: es el del enlace, que no frena el alta. */
+  | { tipo: "codigo"; codigo: string; escrito: boolean };
+
+/**
+ * Elige el código del alta. `escrito` es lo que llegó en el campo (null si el formulario no lo traía: una pantalla vieja) y `delNavegador` el de
+ * la cookie del enlace (ya normalizado). El campo viene precargado con el del enlace, así que **lo que está en el campo manda**: si la persona
+ * lo borra, no hay recomendación aunque la cookie siga ahí. Sin el campo, vale la cookie, como siempre.
+ */
+export function codigoParaElAlta(escrito: string | null, delNavegador: string | null): CodigoDelAlta {
+  if (escrito === null) return delNavegador ? { tipo: "codigo", codigo: delNavegador, escrito: false } : { tipo: "ninguno" };
+  if (!escrito.trim()) return { tipo: "ninguno" };
+  const codigo = codigoDeTexto(escrito);
+  if (!codigo) return { tipo: "invalido" };
+  return { tipo: "codigo", codigo, escrito: codigo !== delNavegador };
+}
+
+/** Cómo se guarda el código en el navegador (el enlace `/referido/<código>` y el campo del registro dejan la misma cookie, 30 días). */
+export const OPCIONES_DE_COOKIE_REFERIDO = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  maxAge: DIAS_DE_LA_COOKIE * 24 * 60 * 60,
+} as const;
+
+/** Lo que se le dice a quien probó demasiados códigos seguidos (ver `permitirProbarCodigoDeReferido`). */
+export const ERROR_DE_DEMASIADOS_CODIGOS = "Probaste muchos códigos seguidos. Esperá un rato y probá de nuevo, o dejá el campo vacío.";
+
+/** El mismo texto para un código mal escrito y para uno que no existe (o que es de una institución dada de baja o suspendida): no se dice cuál de los dos. */
+export const ERROR_DE_CODIGO_DE_REFERIDO = "No encontramos ese código. Revisalo (son 8 letras y números) o dejá el campo vacío.";
+
 /** La ruta pública que abre quien recibe el enlace. */
 export const rutaDeReferido = (codigo: string) => `/referido/${codigo}`;
 

@@ -13,4 +13,11 @@ export const permitirPedidoAlEquipo = crearTope(6, 60 * 60 * 1000);
  */
 export const permitirActivarDebito = crearTope(5, 60 * 60 * 1000);
 
+/**
+ * Códigos de referido que una cuenta puede probar a mano en el alta por hora: el campo dice si un código existe o no, así que sin un tope
+ * serviría para ir adivinándolos. Con 8 letras y números nadie los adivina, pero el tope lo deja explícito; alcanza de sobra para quien se
+ * equivoca de tipeo. En la memoria de cada instancia: frena un bucle, no es exacto con varias instancias.
+ */
+export const permitirProbarCodigoDeReferido = crearTope(8, 60 * 60 * 1000);
+
 export const DEMASIADOS_PEDIDOS ="Hiciste muchos pedidos seguidos. Esperá un rato y probá de nuevo.";

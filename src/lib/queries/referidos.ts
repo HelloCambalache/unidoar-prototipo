@@ -9,7 +9,21 @@ import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { resumenDeMesesPorReferido, type ResumenDeMesesDeReferido } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
-import { COOKIE_REFERIDO, estadoDeReferido, generarCodigo, normalizarCodigo, sePuedeAnotar, type EstadoReferido } from "@/lib/referidos";
+import {
+  codigoDeTexto,
+  codigoParaElAlta,
+  COOKIE_REFERIDO,
+  ERROR_DE_CODIGO_DE_REFERIDO,
+  ERROR_DE_DEMASIADOS_CODIGOS,
+  estadoDeReferido,
+  generarCodigo,
+  normalizarCodigo,
+  OPCIONES_DE_COOKIE_REFERIDO,
+  sePuedeAnotar,
+  type EstadoReferido,
+} from "@/lib/referidos";
+import { permitirProbarCodigoDeReferido } from "@/lib/pedidos";
+import { datosDeSesion } from "@/lib/sesion";
 import { resumenDeError } from "@/lib/errores";
 
 /*
@@ -72,16 +86,82 @@ export async function institucionPorCodigo(codigo: string) {
 }
 
 /**
- * Se llama cuando una cuenta acaba de crear su institución: si el navegador traía el código de quien la recomendó, lo anota y le avisa
- * a esa institución en la campanita. Nunca frena el alta: si algo falla (o las tablas todavía no existen) solo queda en el log.
- * Gasta la cookie en cualquier caso, para que no se anote una segunda institución creada desde el mismo navegador.
+ * El código de referido que ya trae la persona, para precargar el campo «Código de referido» del alta: el del enlace `/referido/<código>` o el que
+ * escribió en el registro (cookie `unidoar_referido`) o, si confirmó el mail desde otro dispositivo y la cookie no está, el que quedó en los datos
+ * de su cuenta. "" si no hay o si ya no sirve (institución dada de baja o suspendida). No dice a quién pertenece.
  */
-export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: string; propietarioId: string; cuit?: string | null }) {
+export async function codigoPrecargado(): Promise<string> {
+  const delNavegador = normalizarCodigo((await cookies()).get(COOKIE_REFERIDO)?.value);
+  const codigo = delNavegador ?? (await datosDeSesion().catch(() => null))?.referido ?? null;
+  if (!codigo) return "";
+  return (await institucionPorCodigo(codigo).catch(() => null)) ? codigo : "";
+}
+
+/** Lo que decide el alta sobre la recomendación: el código a anotar (null: ninguno) o el error para mostrar en el campo. */
+export type ReferidoDelAlta = { ok: true; codigo: string | null } | { ok: false; error: string };
+
+/**
+ * ¿Existe este código escrito a mano (de una institución en pie)? El campo contesta que sí o que no, así que cada intento cuenta contra un tope
+ * (`claveDeTope`: la cuenta en el alta, el origen del pedido en el registro). Un código mal escrito y uno que no existe (o de una institución dada de
+ * baja o suspendida) dan el mismo error: no se dice cuál de los dos.
+ */
+async function comprobarCodigoEscrito(codigo: string, claveDeTope: string): Promise<ReferidoDelAlta> {
+  if (!permitirProbarCodigoDeReferido(claveDeTope)) return { ok: false, error: ERROR_DE_DEMASIADOS_CODIGOS };
+  try {
+    return (await institucionPorCodigo(codigo)) ? { ok: true, codigo } : { ok: false, error: ERROR_DE_CODIGO_DE_REFERIDO };
+  } catch (e) {
+    console.error("No se pudo comprobar el código de referido", resumenDeError(e));
+    return { ok: false, error: "No pudimos comprobar el código ahora. Probá de nuevo en un momento o dejá el campo vacío." };
+  }
+}
+
+/**
+ * El campo «Código de referido» del REGISTRO (paso 1): vacío no es un error (no hay recomendación); lo escrito tiene que ser un código que exista, y
+ * si no vuelve como error del campo para corregirlo antes de crear la cuenta.
+ */
+export async function codigoDeRegistro(escrito: string, claveDeTope: string): Promise<ReferidoDelAlta> {
+  if (!escrito.trim()) return { ok: true, codigo: null };
+  const codigo = codigoDeTexto(escrito);
+  if (!codigo) return { ok: false, error: ERROR_DE_CODIGO_DE_REFERIDO };
+  return comprobarCodigoEscrito(codigo, claveDeTope);
+}
+
+/**
+ * Deja el código del registro en el navegador, igual que el enlace `/referido/<código>`: el paso 2 lo precarga y la recomendación se anota al crear
+ * la institución. Sin código (el campo quedó vacío) saca el que hubiera: si la persona lo borró, no quiere esa recomendación.
+ */
+export async function recordarCodigoDeReferido(codigo: string | null) {
+  const jar = await cookies();
+  if (codigo) jar.set(COOKIE_REFERIDO, codigo, OPCIONES_DE_COOKIE_REFERIDO);
+  else if (jar.get(COOKIE_REFERIDO)) jar.delete(COOKIE_REFERIDO);
+}
+
+/**
+ * Qué recomendación lleva el alta que se está por crear (paso 2): el código del campo «Código de referido» o, si el formulario no lo traía, el
+ * de la cookie. Es lo mismo que el enlace: los dos terminan en `anotarReferidoDelAlta`. Se llama **antes** de crear la institución: un código
+ * que la persona cambió o escribió y no existe vuelve como error del campo para que lo corrija (o lo deje vacío) y no se crea nada a medias.
+ * El que ya venía anotado del registro no frena el alta: si ya no sirve, simplemente no se anota.
+ */
+export async function referidoDelAlta(escrito: string | null, cuentaId: string): Promise<ReferidoDelAlta> {
+  const jar = await cookies();
+  const decision = codigoParaElAlta(escrito, normalizarCodigo(jar.get(COOKIE_REFERIDO)?.value));
+  if (decision.tipo === "ninguno") return { ok: true, codigo: null };
+  if (decision.tipo === "invalido") return { ok: false, error: ERROR_DE_CODIGO_DE_REFERIDO };
+  if (!decision.escrito) return { ok: true, codigo: decision.codigo };
+  return comprobarCodigoEscrito(decision.codigo, cuentaId);
+}
+
+/**
+ * Se llama cuando una cuenta acaba de crear su institución: si el alta traía el código de quien la recomendó (escrito a mano o del enlace;
+ * ver `referidoDelAlta`), lo anota y le avisa a esa institución en la campanita. Nunca frena el alta: si algo falla (o las tablas todavía no
+ * existen) solo queda en el log. Gasta la cookie del enlace en cualquier caso, para que no se anote una segunda institución creada desde el
+ * mismo navegador.
+ */
+export async function anotarReferidoDelAlta(nueva: { id: string; nombre: string; propietarioId: string; cuit?: string | null }, codigo: string | null) {
   try {
     const jar = await cookies();
-    const codigo = normalizarCodigo(jar.get(COOKIE_REFERIDO)?.value);
+    if (jar.get(COOKIE_REFERIDO)) jar.delete(COOKIE_REFERIDO);
     if (!codigo) return;
-    jar.delete(COOKIE_REFERIDO);
 
     const referidor = await institucionPorCodigo(codigo);
     if (!referidor || !sePuedeAnotar(referidor, { id: nueva.id, propietarioId: nueva.propietarioId, cuit: nueva.cuit })) return;
@@ -96,7 +176,7 @@ export async function anotarReferidoDelNavegador(nueva: { id: string; nombre: st
       await avisarAVarios(tx, await destinatariosDeInstitucion(tx, referidor.id), {
         tipo: "sistema",
         titulo: nueva.nombre,
-        texto: "se registró con tu enlace de referidos. Tu beneficio queda listo cuando el equipo la verifique y ella pague su primera factura.",
+        texto: "se registró con tu código de referidos. Tu beneficio queda listo cuando el equipo la verifique y ella pague su primera factura.",
         enlace: "/institucion/referidos",
       });
     });

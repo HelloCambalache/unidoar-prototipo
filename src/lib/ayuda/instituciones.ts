@@ -28,7 +28,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               ],
             },
             {
-              p: "Podés usar **Guardar y salir** en cualquier paso y retomar más tarde. Si tu cuenta es nueva, también podés entrar por el enlace de una institución que te recomendó: eso queda registrado para que ella reciba su beneficio (ver [Referidos](/ayuda/instituciones/referidos)).",
+              p: "Podés usar **Guardar y salir** en cualquier paso y retomar más tarde. Si otra institución te recomendó UNIDOAR, podés entrar por su enlace o, si solo te pasó el código, escribirlo en el campo «Código de referido» de **Tu acceso** (el primer paso): eso queda registrado para que ella reciba su beneficio (ver [Referidos](/ayuda/instituciones/referidos)). En el segundo paso lo vas a ver anotado, por si querés cambiarlo.",
             },
             {
               p: "El equipo de UNIDOAR revisa los datos de tu institución (nombre, tipo y CUIT) y la marca como **verificada**: se ve con un sello en el catálogo. Una vez verificada, el nombre y el tipo solo los cambia el equipo: si necesitás corregirlos, escribinos por [Contacto](/contacto).",
@@ -43,6 +43,9 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
           bloques: [
             {
               p: "En [Mi perfil](/institucion/vitrina) editás lo que ven los profesionales en la página de tu institución: logo, portada, descripción, fotos, novedades y datos como alumnos, niveles o turnos. Solo el dueño y los administradores del equipo pueden editarlo.",
+            },
+            {
+              p: "**Compartir tu perfil:** arriba, junto a **Ver perfil público**, el botón **Compartir** te deja copiar el enlace de la página de tu institución o mandarlo por WhatsApp, Facebook, LinkedIn, X o mail. Cualquiera que tenga el enlace la ve, con o sin cuenta. Lo mismo pasa con cada una de tus búsquedas abiertas (ver [Publicar una búsqueda](/ayuda/instituciones/publicar-una-busqueda)).",
             },
             {
               p: "Una institución puede tener **una o más sedes**. Se cargan en [Sedes](/institucion/sedes): la primera es la **sede principal** (no se puede quitar sin marcar otra) y cada una tiene nombre y dirección. La dirección se ubica sola mientras la escribís: si no la encuentra, completás partido y provincia a mano.",
@@ -110,6 +113,9 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               p: "Al publicar avisamos a los profesionales que encajan con tu búsqueda. Una **búsqueda urgente** vence en el plazo que elegís al publicarla («Responder antes de»: 24 horas si no lo cambiás) y les llega por campanita y por mail.",
             },
             { nota: "Los textos sugeridos no inventan beneficios ni sueldos: solo usan lo que cargaste y las tareas y requisitos habituales de la categoría. Revisalos y ajustalos." },
+            {
+              p: "**Compartir una búsqueda:** cada búsqueda abierta tiene su propia página pública. En [Publicaciones](/institucion/busquedas) y en el tablero de postulantes, el botón **Compartir** te deja copiar el enlace o mandarlo por WhatsApp, Facebook, LinkedIn, X o mail, para que te lleguen más postulantes. Quien abre el enlace ve el puesto, la descripción, los requisitos y lo que ofrecés, sin necesidad de tener cuenta, y puede crear la suya para postularse. Nunca ve quiénes se postularon. Si cerrás o pausás la búsqueda, el enlace pasa a decir que ya no está abierta y deja de mostrar el detalle.",
+            },
             {
               p: "Desde [Publicaciones](/institucion/busquedas) podés **editar** una búsqueda, **cerrarla** cuando ya cubriste el puesto (avisamos a quienes se postularon) o **reabrirla** cuando quieras (una urgente vencida vuelve a abrir por 24 horas más; la de una sola búsqueda, solo mientras no pasó su plazo). Si tu cuenta tiene una factura vencida hace más de 15 días no se pueden publicar ni reabrir búsquedas hasta regularizarla (ver [Plan y facturación](/ayuda/instituciones/plan-y-facturacion)).",
             },
@@ -258,10 +264,19 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               p: "Cada mes se genera tu factura y te avisamos por mail. Los pagos por transferencia o en efectivo los registra el equipo cuando los recibe. Si ves habilitado el **débito automático con Mercado Pago** en tu cuenta, lo activás desde esta pantalla: nunca vemos ni guardamos los datos de tu tarjeta.",
             },
             {
+              p: "**Comprobante de pago por mail:** cada vez que se registra un pago —lo cargue el equipo o lo cobre el débito automático— el dueño y los administradores reciben un mail con el **comprobante** (número, plan, período, monto, medio de pago y fecha) y un botón para abrirlo en la app, donde lo podés imprimir o guardar como PDF. También lo encontrás cuando quieras en las facturas de [Plan](/institucion/plan).",
+            },
+            {
               p: "Para pedir otro plan usá **Cambiar de plan**: el pedido lo confirma el equipo. Solo se ofrecen los planes que corresponden a tu institución.",
             },
             {
+              p: "**Tu plan se activa con el primer pago:** una cuenta nueva con abono (mensual o semestral) puede completar su perfil y recorrer la plataforma, pero **no puede publicar búsquedas, invitar profesionales ni publicar cursos** hasta que el equipo registre su primer pago. Escribinos por [Contacto](/contacto) o por WhatsApp y coordinamos el pago por transferencia o en efectivo: al registrarlo, el plan queda activo y se habilita todo sin que tengas que hacer nada.",
+            },
+            {
               p: "**Si una factura vence:** tenés 15 días de gracia antes de que se limite la cuenta. Te avisamos por mail y en un cartel dentro de la app. Pasados los 15 días **no se pueden publicar ni reabrir búsquedas, publicar cursos ni invitar profesionales** hasta pagar. Todo lo demás sigue funcionando —tu tablero, tus postulantes, el buscador y contratar— y al registrarse el pago se levanta solo.",
+            },
+            {
+              p: "En los dos casos, cuando intentás publicar, invitar o crear un curso, la app te muestra un cuadro con **tu plan, lo que cuesta y cómo pagar**, para que sepas qué hacer sin salir de lo que estabas haciendo. No se pierde lo que habías escrito.",
             },
           ],
         },
@@ -292,7 +307,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
           resumen: "Cómo ganar meses bonificados cuando otra institución se suma y paga.",
           bloques: [
             {
-              p: "En [Referidos](/institucion/referidos) tenés tu **enlace personal**: copialo o mandalo por WhatsApp. Cuando otra institución crea su cuenta desde tu enlace queda anotada como una recomendación tuya.",
+              p: "En [Referidos](/institucion/referidos) tenés tu **enlace personal** y tu **código** (8 letras y números): copialos o mandá el enlace por WhatsApp. Cuando otra institución crea su cuenta desde tu enlace —o escribe tu código en el campo «Código de referido» al crear su acceso (el primer paso)— queda anotada como una recomendación tuya. Las dos formas valen igual.",
             },
             {
               lista: [
@@ -366,6 +381,18 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
       pregunta: "¿Qué pasa si no pago una factura a tiempo?",
       respuesta: [
         { p: "Tenés 15 días de gracia. Pasados, no podés publicar ni reabrir búsquedas, publicar cursos ni invitar profesionales hasta pagar; lo demás sigue funcionando. Ver [Plan y facturación](/ayuda/instituciones/plan-y-facturacion)." },
+      ],
+    },
+    {
+      pregunta: "¿Por qué no me deja publicar una búsqueda ni invitar a un profesional?",
+      respuesta: [
+        {
+          lista: [
+            "**Tu plan todavía no está activo:** una cuenta nueva con abono se habilita cuando el equipo registra su primer pago. Escribinos por [Contacto](/contacto) y coordinamos.",
+            "**Tenés una factura vencida hace más de 15 días:** al registrarse el pago se levanta sola. Mirá [Plan](/institucion/plan).",
+            "**Estás en «Una sola búsqueda»:** necesitás una búsqueda pagada y disponible. Ver [Una sola búsqueda](/ayuda/instituciones/una-sola-busqueda).",
+          ],
+        },
       ],
     },
     {

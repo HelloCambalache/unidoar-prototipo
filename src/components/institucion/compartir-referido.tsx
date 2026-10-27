@@ -10,12 +10,12 @@ import { textoParaRecomendar } from "@/lib/referidos";
 export function CompartirReferido({ url, codigo }: { url: string; codigo: string }) {
   const toast = useToast();
 
-  const copiar = async () => {
+  const copiar = async (texto: string, aviso: string) => {
     try {
-      await navigator.clipboard.writeText(url);
-      toast("Enlace copiado");
+      await navigator.clipboard.writeText(texto);
+      toast(aviso);
     } catch {
-      toast("No pudimos copiarlo solo: seleccioná el enlace y copialo.", "error");
+      toast("No pudimos copiarlo solo: seleccionalo y copialo.", "error");
     }
   };
 
@@ -29,7 +29,7 @@ export function CompartirReferido({ url, codigo }: { url: string; codigo: string
           onFocus={(e) => e.currentTarget.select()}
           className="min-w-[240px] flex-1 bg-superficie text-[13.5px]"
         />
-        <Boton type="button" variante="primario" onClick={copiar} className="max-[560px]:w-full">
+        <Boton type="button" variante="primario" onClick={() => copiar(url, "Enlace copiado")} className="max-[560px]:w-full">
           Copiar enlace
         </Boton>
         <a
@@ -41,9 +41,21 @@ export function CompartirReferido({ url, codigo }: { url: string; codigo: string
           Recomendar por WhatsApp
         </a>
       </div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs leading-normal text-apagado">
+        <span>
+          Tu código es <b className="text-[13px] font-semibold tracking-[.08em] text-tinta">{codigo}</b>.
+        </span>
+        <button
+          type="button"
+          onClick={() => copiar(codigo, "Código copiado")}
+          className="rounded-md px-1.5 py-1 text-xs font-semibold text-navy-700 hover:underline focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none"
+        >
+          Copiar código
+        </button>
+      </div>
       <p className="m-0 text-xs leading-normal text-apagado">
-        Tu código es <b className="font-semibold tracking-[.08em] text-tinta">{codigo}</b>. Es personal: cualquier institución que cree su cuenta con este
-        enlace queda anotada como recomendada por la tuya.
+        Es personal: cualquier institución que cree su cuenta con este enlace —o que escriba tu código al crearla— queda anotada como recomendada por la
+        tuya.
       </p>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useState, useTransition } from "react";
 import { invitarDocente } from "@/app/actions/profesionales";
 import { Boton, BotonLink, type BotonTamano } from "@/components/ui/button";
+import { usePlanActivo } from "@/components/institucion/plan-activo";
 import { Cajon } from "@/components/ui/cajon";
 import { Insignia } from "@/components/ui/insignia";
 import { useToast } from "@/components/ui/toast";
@@ -38,7 +39,11 @@ export function BotonInvitarDocente({
   const [pendiente, empezar] = useTransition();
   const cerrar = useCallback(() => setAbierto(false), []);
 
+  // Sin el plan activo, invitar abre el popup de pago en lugar de invitar (el servidor igual lo exige: si frena algo que la pantalla creía permitido, `atender` lo abre).
+  const { frenarSiHaceFalta, atender } = usePlanActivo();
+
   const invitar = (busquedaId: string) => {
+    if (frenarSiHaceFalta()) return;
     setEnCurso(busquedaId);
     empezar(async () => {
       const r = await invitarDocente(docenteId, busquedaId);
@@ -46,6 +51,8 @@ export function BotonInvitarDocente({
       if (r.ok) {
         const puesto = opciones.find((o) => o.id === busquedaId)?.puesto;
         toast(puesto ? `Invitación enviada a ${nombre} para «${puesto}»` : `Invitación enviada a ${nombre}`);
+        setAbierto(false);
+      } else if (atender(r)) {
         setAbierto(false);
       } else {
         toast(r.error, "error");
@@ -97,7 +104,16 @@ export function BotonInvitarDocente({
 
   return (
     <>
-      <Boton variante="cta" tamano={tamano} bloque={bloque} className={className} onClick={() => setAbierto(true)}>
+      <Boton
+        variante="cta"
+        tamano={tamano}
+        bloque={bloque}
+        className={className}
+        onClick={() => {
+          // Con el plan inactivo el popup de pago va en lugar del cajón (dos diálogos encimados no se leen bien).
+          if (!frenarSiHaceFalta()) setAbierto(true);
+        }}
+      >
         Invitar a postularse
       </Boton>
       <Cajon abierto={abierto} onCerrar={cerrar} titulo={`Invitar a ${nombre}`}>

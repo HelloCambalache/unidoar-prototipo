@@ -5,7 +5,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { institucionActual, requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { etiquetaDeCobertura } from "@/lib/cobros";
-import { ESTADO_FACTURA, estadoDeFactura, periodoLegible } from "@/lib/facturacion";
+import { ESTADO_FACTURA, estadoDeFactura, numeroDeComprobante, periodoLegible } from "@/lib/facturacion";
 import { fechaCorta } from "@/lib/fechas";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { pesos } from "@/lib/planes";
@@ -82,7 +82,7 @@ export default async function ComprobanteDeFactura({ params, searchParams }: Pro
           <div className="sm:text-right">
             <h1 className="font-display m-0 text-xl leading-[1.2] font-bold tracking-[-0.01em]">Comprobante de facturación</h1>
             <div className="mt-1 text-[13px] leading-[1.4] text-apagado">
-              N.º {factura.id.slice(0, 8).toUpperCase()} · {periodoTexto}
+              N.º {numeroDeComprobante(factura.id)} · {periodoTexto}
             </div>
           </div>
         </header>

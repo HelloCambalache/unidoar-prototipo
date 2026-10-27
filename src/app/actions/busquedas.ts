@@ -27,7 +27,8 @@ import { consumirCredito, saldoDeBusquedas, vencimientoDePuntual } from "@/lib/q
 import { sedeParaBusqueda, sedesDeInstitucion } from "@/lib/queries/sedes";
 import { sedesElegidas } from "@/lib/sedes";
 import { docentesAvisables, resumenCoincidencias } from "@/lib/queries/coincidencias";
-import { motivoDeMora } from "@/lib/queries/mora";
+import { CODIGO_PLAN_INACTIVO } from "@/lib/plan-activo";
+import { motivoDeLimiteDePlan } from "@/lib/queries/plan-activo";
 
 /** Pantallas de la institución y del docente que muestran búsquedas o sus conteos. */
 function revalidarBusquedas(busquedaId?: string) {
@@ -71,9 +72,9 @@ export async function crearBusqueda(
   formData: FormData,
 ): Promise<EstadoFormularioBusqueda> {
   const { institucion } = await requerirInstitucion();
-  // Con una factura vencida hace más de 15 días la cuenta no publica búsquedas nuevas (ver src/lib/mora.ts).
-  const limitada = await motivoDeMora(institucion);
-  if (limitada) return fallo(limitada);
+  // Sin el plan activo (nueva sin su primer pago, o con una factura vencida hace más de 15 días) no se publican búsquedas nuevas (ver src/lib/plan-activo.ts).
+  const sinPlan = await motivoDeLimiteDePlan(institucion);
+  if (sinPlan) return fallo(sinPlan, undefined, CODIGO_PLAN_INACTIVO);
   const datos = parsear(busquedaFormularioSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);
 
@@ -243,9 +244,9 @@ export async function cerrarBusqueda(busquedaId: string): Promise<Resultado> {
  */
 export async function reabrirBusqueda(busquedaId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
-  // Reabrir es publicar de nuevo: con la cuenta limitada por una factura vencida tampoco (ver src/lib/mora.ts).
-  const limitada = await motivoDeMora(institucion);
-  if (limitada) return fallo(limitada);
+  // Reabrir es publicar de nuevo: sin el plan activo tampoco (ver src/lib/plan-activo.ts).
+  const sinPlan = await motivoDeLimiteDePlan(institucion);
+  if (sinPlan) return fallo(sinPlan, undefined, CODIGO_PLAN_INACTIVO);
   if (!esUuid(busquedaId)) return fallo("No encontramos esa búsqueda.");
 
   const actual = await busquedaPropia(institucion.id, busquedaId);

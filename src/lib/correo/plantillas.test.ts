@@ -188,6 +188,45 @@ describe("plantillas de mails", () => {
     assert.ok(m12.html.includes("white-space:pre-wrap"));
   });
 
+  it("M53 con comprobante lleva sus datos y el enlace a la hoja; sin él (búsqueda puntual) es solo el aviso", () => {
+    const comprobante = {
+      numero: "3F2A9C1E",
+      plan: "Plan Colegios",
+      medio: "Débito automático",
+      pagadoEl: "10 oct 2026",
+      ruta: "/institucion/plan/facturas/3f2a9c1e-5b7d-4e8a-9c01-2d3e4f5a6b7c",
+    };
+    const con = armarMail("M53", { ...EJEMPLOS.M53, comprobante }, { origen: ORIGEN });
+    assert.equal(con.asunto, "Comprobante de tu pago de octubre de 2026");
+    for (const dato of ["N.º: 3F2A9C1E", "Plan: Plan Colegios", "Período: Octubre de 2026", "Monto: $ 45.000", "Medio de pago: Débito automático", "Pagado el: 10 oct 2026"]) {
+      assert.ok(con.texto.includes(dato), dato);
+    }
+    assert.ok(con.texto.includes(`Ver el comprobante: ${ORIGEN}/institucion/plan/facturas/3f2a9c1e-5b7d-4e8a-9c01-2d3e4f5a6b7c`));
+    assert.ok(con.html.includes("Comprobante de pago") && con.html.includes("3F2A9C1E") && con.html.includes("Débito automático"));
+    // Sin medio de pago cargado no queda una fila vacía.
+    const sinMedio = armarMail("M53", { ...EJEMPLOS.M53, comprobante: { ...comprobante, medio: null } }, { origen: ORIGEN });
+    assert.ok(!sinMedio.texto.includes("Medio de pago"));
+    // El pago de una búsqueda puntual no es una factura: no hay comprobante, solo el aviso de siempre.
+    const sin = armarMail("M53", { ...EJEMPLOS.M53, periodo: "una búsqueda puntual" }, { origen: ORIGEN });
+    assert.equal(sin.asunto, "Recibimos tu pago de una búsqueda puntual");
+    assert.ok(!sin.texto.includes("N.º:") && !sin.html.includes("Comprobante de pago"));
+  });
+
+  it("el comprobante escapa lo que viene de afuera (el nombre de la institución en la tabla)", () => {
+    const mail = armarMail(
+      "M53",
+      {
+        institucion: "<script>alert(1)</script>",
+        periodo: "Octubre de 2026",
+        monto: "$ 45.000",
+        comprobante: { numero: "3F2A9C1E", plan: "Plan Colegios", medio: "Efectivo", pagadoEl: "10 oct 2026", ruta: "/institucion/plan/facturas/x" },
+      },
+      { origen: ORIGEN },
+    );
+    assert.ok(!mail.html.includes("<script>alert(1)</script>"));
+    assert.ok(mail.html.includes("&lt;script&gt;"));
+  });
+
   it("M15 se arma para un profesional y para una institución, con y sin motivo", () => {
     const docente = armarMail("M15", { nombre: "Lucía", institucion: null, motivo: "Datos falsos" }, { origen: ORIGEN });
     assert.ok(docente.texto.includes("Hola Lucía: suspendimos tu cuenta en UNIDOAR."));

@@ -51,10 +51,12 @@ export function moraDe(impagas: readonly FacturaImpaga[], hoy: string): Mora {
   return { conMora: true, limitada: diasDeAtraso > DIAS_DE_GRACIA, diasDeAtraso, ultimoDiaDeGracia: ultimoDiaDeGracia(masVieja) };
 }
 
+/** Lo que se le responde a quien intenta hacer algo limitado por una factura vencida. */
+export const MENSAJE_DE_MORA = `Tu cuenta tiene una factura vencida hace más de ${DIAS_DE_GRACIA} días: hasta que se acredite el pago no podés ${QUE_SE_LIMITA}. Podés pagarla desde Plan y facturación o escribirnos desde Contacto.`;
+
 /** Lo que se le responde a quien intenta hacer algo limitado (null si la cuenta no está limitada). */
 export function motivoDeLimite(m: Mora): string | null {
-  if (!m.limitada) return null;
-  return `Tu cuenta tiene una factura vencida hace más de ${DIAS_DE_GRACIA} días: hasta que se acredite el pago no podés ${QUE_SE_LIMITA}. Podés pagarla desde Plan y facturación o escribirnos desde Contacto.`;
+  return m.limitada ? MENSAJE_DE_MORA : null;
 }
 
 /** El cartel que ve la institución en su área (null sin mora). `limite` es el tono fuerte; `gracia`, el aviso de que todavía hay tiempo. */

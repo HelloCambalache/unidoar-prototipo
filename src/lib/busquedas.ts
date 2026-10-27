@@ -57,7 +57,7 @@ export type BusquedaFormulario = z.infer<typeof busquedaFormularioSchema>;
 export type EstadoFiltro = "todos" | "activa" | "rapida" | "pausada";
 export const ESTADOS_FILTRO: readonly EstadoFiltro[] = ["todos", "activa", "rapida", "pausada"];
 
-export type EstadoFormularioBusqueda = { ok: false; error: string; campos?: Record<string, string> } | null;
+export type EstadoFormularioBusqueda = { ok: false; error: string; campos?: Record<string, string>; codigo?: string } | null;
 
 const TURNOS_CON_PREFIJO: readonly string[] = ["Mañana", "Tarde", "Mañana y tarde", "Noche"];
 

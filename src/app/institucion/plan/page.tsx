@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
+import { AvisoDePlanSinPago } from "@/components/institucion/plan-activo";
 import { MesesBonificados } from "@/components/institucion/meses-bonificados";
 import { PlanDebito } from "@/components/institucion/plan-debito";
 import { PlanHistorial } from "@/components/institucion/plan-historial";
@@ -50,6 +51,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
         bajada="Tu plan, el medio de pago y las facturas anteriores."
       />
       <AvisoDeMora mora={mora} enPlan />
+      <AvisoDePlanSinPago enPlan />
       <PlanPanel
         // El valor de fundadora solo lo ve quien tiene ese plan: a las demás instituciones no les viaja en el código de la página.
         catalogo={catalogoParaNavegador(catalogo, { sinPrecioDeFundador: datos.plan !== "fundador" })}

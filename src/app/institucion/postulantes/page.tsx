@@ -8,10 +8,13 @@ import { EstadoBusqueda } from "@/components/institucion/insignias-busqueda";
 import { SelectorBusqueda } from "@/components/institucion/selector-busqueda";
 import { TableroPipeline } from "@/components/institucion/tablero-pipeline";
 import { BotonLink } from "@/components/ui/button";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { mensajeDeBusqueda, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { busquedaPorDefecto, opcionesDeBusqueda, pipelineDeBusqueda } from "@/lib/queries/pipeline";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
+import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
 import { Icono } from "@/components/icons";
 
@@ -43,10 +46,11 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
     );
   }
 
-  const [datos, opciones, sedes] = await Promise.all([
+  const [datos, opciones, sedes, origen] = await Promise.all([
     pipelineDeBusqueda(institucion, usuario.id, busquedaId),
     consultaOpciones,
     sedesDeInstitucion(institucion.id),
+    origenSitio(),
   ]);
   if (!datos) notFound();
   const { busqueda, postulantes } = datos;
@@ -66,7 +70,7 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
   const barra = (
     <>
       {cerrada ? (
-        <BotonAccion accion={reabrirBusqueda.bind(null, busqueda.id)} exito="Búsqueda reabierta">
+        <BotonAccion accion={reabrirBusqueda.bind(null, busqueda.id)} exito="Búsqueda reabierta" requierePlan>
           ↺ Reabrir búsqueda
         </BotonAccion>
       ) : (
@@ -82,6 +86,14 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
       <BotonLink href={`/institucion/publicar?editar=${busqueda.id}`} variante="secundario" tamano="sm">
         ✎ Editar búsqueda
       </BotonLink>
+      {/* Una búsqueda cerrada o pausada no se comparte: el enlace diría «ya no está abierta». */}
+      {busqueda.estado === "activa" && (
+        <BotonCompartir
+          mensaje={mensajeDeBusqueda({ puesto: busqueda.puesto, institucion: institucion.nombre, url: urlCompleta(origen, rutaDeOferta(busqueda.id)) })}
+          titulo="Compartir esta búsqueda"
+          bajada="Mandala por WhatsApp o mail, o publicala en tus redes para que te lleguen más postulantes. Quien abre el enlace ve la búsqueda sin necesidad de tener cuenta."
+        />
+      )}
       <div role="group" aria-label="Vista" className="ml-auto flex flex-none gap-1 rounded-full bg-[#E9E7E1] p-1">
         <Link href={base} aria-current={vista === "kanban" ? "page" : undefined} className={enlaceVista(vista === "kanban")}>
           <Icono nombre="kanban" tamano={14} trazo={2} />

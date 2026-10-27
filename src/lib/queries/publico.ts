@@ -246,6 +246,83 @@ export async function busquedasUrgentes(opciones: { categoria?: CategoriaDocente
   return filas.map(aBusquedaPublica);
 }
 
+/* ───────── Una búsqueda (la página que se comparte) ───────── */
+
+export type OfertaPublica = {
+  id: string;
+  puesto: string;
+  categoria: CategoriaDocente;
+  tipo: string;
+  rapida: boolean;
+  /** Sigue recibiendo postulaciones. Si no, la página dice que ya no está abierta y no muestra el detalle. */
+  abierta: boolean;
+  /** Por qué ya no está abierta (null si lo está). */
+  cierre: "cerrada" | "pausada" | "vencida" | null;
+  /** Hasta cuándo se acepta respuesta (solo las rápidas abiertas). */
+  venceEn: Date | null;
+  // El detalle va vacío cuando la búsqueda ya no está abierta: un enlace compartido que sobrevive a la búsqueda no es una forma de seguir leyéndola.
+  zona: string | null;
+  /** Cuál es la sede, solo cuando la institución tiene más de una. */
+  sede: string | null;
+  turno: string | null;
+  nivel: string | null;
+  disciplina: string | null;
+  cargaHoraria: string | null;
+  horario: string | null;
+  fechaInicio: string | null;
+  descripcion: string | null;
+  requisitos: string[];
+  beneficios: string[];
+  institucion: { slug: string; nombre: string; tipo: string; logoUrl: string | null; verificada: boolean; fundadora: boolean; zona: string | null };
+};
+
+/**
+ * La búsqueda que abre un enlace compartido (`/ofertas/<id>`), sin sesión. Null si no existe o si es de una institución suspendida (o de ejemplo,
+ * cuando se ocultan). Lo que ve cualquiera es lo mismo que ya muestran el buscador público y la página de la institución, más la descripción,
+ * los requisitos y lo que ofrece: nunca quiénes se postularon ni datos de contacto.
+ */
+export const ofertaPublica = cache(async (id: string): Promise<OfertaPublica | null> => {
+  const db = getDb();
+  const [fila] = await db
+    .select({ b: busquedas, i: instituciones })
+    .from(busquedas)
+    .innerJoin(instituciones, eq(instituciones.id, busquedas.institucionId))
+    .where(and(eq(busquedas.id, id), institucionVisible))
+    .limit(1);
+  if (!fila) return null;
+  const { b, i } = fila;
+
+  const vencida = b.estado === "activa" && b.rapida && b.venceEn !== null && b.venceEn.getTime() <= Date.now();
+  const cierre = b.estado === "cerrada" ? "cerrada" : b.estado === "pausada" ? "pausada" : vencida ? "vencida" : null;
+  const abierta = cierre === null;
+
+  const sedes = abierta && b.sedeId ? await sedesDeInstitucion(i.id) : [];
+  const sede = sedes.length > 1 ? (sedes.find((s) => s.id === b.sedeId)?.nombre ?? null) : null;
+
+  return {
+    id: b.id,
+    puesto: b.puesto,
+    categoria: b.categoria,
+    tipo: b.tipo,
+    rapida: b.rapida,
+    abierta,
+    cierre,
+    venceEn: abierta && b.rapida ? b.venceEn : null,
+    zona: abierta ? (b.zona ?? i.zona) : null,
+    sede,
+    turno: abierta ? b.turno : null,
+    nivel: abierta ? b.nivel : null,
+    disciplina: abierta ? b.disciplina : null,
+    cargaHoraria: abierta ? b.cargaHoraria : null,
+    horario: abierta ? b.horario : null,
+    fechaInicio: abierta ? b.fechaInicio : null,
+    descripcion: abierta ? b.descripcion : null,
+    requisitos: abierta ? b.requisitos : [],
+    beneficios: abierta ? b.beneficios : [],
+    institucion: { slug: i.slug, nombre: i.nombre, tipo: i.tipo, logoUrl: i.logoUrl, verificada: i.verificada, fundadora: i.plan === "fundador", zona: i.zona },
+  };
+});
+
 /* ───────── Instituciones ───────── */
 
 export type PerfilInstitucionPublico = {

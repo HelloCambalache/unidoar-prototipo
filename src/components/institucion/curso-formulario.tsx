@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { crearCurso, editarCurso } from "@/app/actions/cursos";
 import { CursoHorario } from "@/components/institucion/curso-horario";
+import { usePlanActivo } from "@/components/institucion/plan-activo";
 import { Boton, BotonLink } from "@/components/ui/button";
 import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Input, Textarea } from "@/components/ui/campos";
@@ -14,6 +15,7 @@ import {
   MODALIDADES,
   recalcularDias,
   type DiasCurso,
+  type EstadoFormularioCurso,
   type Modalidad,
   type ValoresCurso,
 } from "@/lib/cursos";
@@ -33,7 +35,13 @@ export function CursoFormulario({
   inicial: ValoresCurso;
 }) {
   const accion = modo === "editar" && cursoId ? editarCurso.bind(null, cursoId) : crearCurso;
-  const [estado, formAction, pendiente] = useActionState(accion, null);
+  // Sin el plan activo, publicar un curso abre el popup de pago en lugar de enviar (el servidor igual lo exige: si frena algo que la pantalla creía permitido, `atender` lo abre).
+  const { frenarSiHaceFalta, atender } = usePlanActivo();
+  const [estado, formAction, pendiente] = useActionState(async (anterior: EstadoFormularioCurso, datos: FormData) => {
+    const resultado = await accion(anterior, datos);
+    atender(resultado);
+    return resultado;
+  }, null);
   const errores = estado?.campos ?? {};
 
   const [v, setV] = useState(inicial);
@@ -288,7 +296,18 @@ export function CursoFormulario({
           <BotonLink href={cancelar} variante="secundario" className="flex-1">
             Cancelar
           </BotonLink>
-          <Boton type="submit" variante="cta" className="flex-1" disabled={pendiente} aria-busy={pendiente}>
+          <Boton
+            type="submit"
+            variante="cta"
+            className="flex-1"
+            disabled={pendiente}
+            aria-busy={pendiente}
+            // Solo al publicar (editar un curso ya publicado no depende del plan). Va en el clic y no en el envío: así el popup sale aunque falten
+            // campos obligatorios (la validación del navegador frena antes del envío). Frenar acá no pierde lo escrito: los campos son controlados.
+            onClick={(e) => {
+              if (modo === "crear" && frenarSiHaceFalta()) e.preventDefault();
+            }}
+          >
             {pendiente ? "Guardando…" : "Guardar curso"}
           </Boton>
         </div>

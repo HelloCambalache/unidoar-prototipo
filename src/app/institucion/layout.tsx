@@ -1,6 +1,8 @@
 import { AppShell, type NavItem } from "@/components/app/app-shell";
+import { PlanActivoProvider } from "@/components/institucion/plan-activo";
 import { requerirInstitucion } from "@/lib/auth";
 import { notificacionesDe } from "@/lib/queries/notificaciones";
+import { datosDelPopupDe } from "@/lib/queries/plan-activo";
 import { planes } from "@/lib/queries/planes";
 import { iniciales } from "@/lib/utils";
 
@@ -24,7 +26,8 @@ const NAV_PIE: NavItem[] = [
 
 export default async function InstitucionLayout({ children }: { children: React.ReactNode }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const [notificaciones, P] = await Promise.all([notificacionesDe(usuario.id), planes()]);
+  // `datosDelPopup` es null con el plan activo (lo común): sin más lecturas. Con el plan inactivo trae el plan y el precio para el popup de pago.
+  const [notificaciones, P, datosDelPopup] = await Promise.all([notificacionesDe(usuario.id), planes(), datosDelPopupDe(institucion)]);
   const plan = P.planDe(institucion.plan);
   // Una búsqueda puntual puede no incluir el buscador de profesionales ni la difusión de cursos (lo decide el equipo en Planes): no se ofrecen en el menú.
   const sinBuscador = !P.incluye(institucion.plan, "buscador");
@@ -36,22 +39,24 @@ export default async function InstitucionLayout({ children }: { children: React.
   );
 
   return (
-    <AppShell
-      tema="institucion"
-      nombre={institucion.nombre}
-      iniciales={iniciales(institucion.contactoNombre ?? institucion.nombre)}
-      insignia={{ texto: plan.label, href: "/institucion/plan", titulo: "Ver plan y facturación" }}
-      nav={nav}
-      navPie={NAV_PIE}
-      tarjetaPie={
-        <div className="rounded-caja border border-borde bg-superficie px-3 py-3.5">
-          <div className="mb-[5px] text-[13px] leading-tight font-semibold">{plan.label}</div>
-          <div className="text-xs leading-normal text-apagado">{plan.resumen}</div>
-        </div>
-      }
-      notificaciones={notificaciones}
-    >
-      {children}
-    </AppShell>
+    <PlanActivoProvider datos={datosDelPopup}>
+      <AppShell
+        tema="institucion"
+        nombre={institucion.nombre}
+        iniciales={iniciales(institucion.contactoNombre ?? institucion.nombre)}
+        insignia={{ texto: plan.label, href: "/institucion/plan", titulo: "Ver plan y facturación" }}
+        nav={nav}
+        navPie={NAV_PIE}
+        tarjetaPie={
+          <div className="rounded-caja border border-borde bg-superficie px-3 py-3.5">
+            <div className="mb-[5px] text-[13px] leading-tight font-semibold">{plan.label}</div>
+            <div className="text-xs leading-normal text-apagado">{plan.resumen}</div>
+          </div>
+        }
+        notificaciones={notificaciones}
+      >
+        {children}
+      </AppShell>
+    </PlanActivoProvider>
   );
 }

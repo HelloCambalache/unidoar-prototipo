@@ -171,7 +171,10 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
               ],
             },
             {
-              p: "Cuando se registra un pago, la institución recibe un aviso en la campanita y un mail de pago registrado. Los mismos botones para registrar pagos están también en la ficha de la institución.",
+              p: "Cuando se registra un pago, la institución recibe un aviso en la campanita y un **mail con el comprobante** (número, plan, período, monto, medio y fecha de pago, con un botón a la hoja de la app donde se imprime o se guarda como PDF). Lo mismo pasa con un cobro del débito automático de Mercado Pago, sin que tengas que hacer nada. En el pago en efectivo y en el semestre al contado el mail sale si dejás tildada la casilla «Avisar a la institución» (destildala para un pago viejo que solo estás cargando); el pago de una **búsqueda puntual** no es una factura, así que sale el aviso sin comprobante. Los mismos botones para registrar pagos están también en la ficha de la institución.",
+            },
+            {
+              p: "**Plan sin activar:** una cuenta nueva con abono mensual o semestral **no puede publicar ni reabrir búsquedas, publicar cursos ni invitar profesionales hasta que se registre su primer pago** (en efectivo o transferencia, o un semestre al contado). Se activa sola al registrarlo: no hay nada que tocar. No alcanza con cargar la factura: tiene que estar **paga**. Quedan afuera las cuentas de ejemplo, la búsqueda puntual (se rige por sus búsquedas pagadas) y Multisede sin convenio. Cuando la persona lo intenta, la app le muestra su plan, lo que cuesta y cómo pagar, y ella te escribe para coordinarlo.",
             },
             {
               p: "**Mora:** si una factura impaga cumple más de 15 días de vencida, la cuenta queda **limitada** (no puede publicar ni reabrir búsquedas, publicar cursos ni invitar profesionales). La ficha de cobros lo muestra («Factura vencida hace N días: en período de gracia hasta…» o «Cuenta limitada por mora»). **No hace falta hacer nada para levantarla**: al registrar el pago de la factura, se levanta sola. No es una suspensión: eso sigue siendo manual.",
@@ -336,6 +339,7 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
       respuesta: [
         {
           lista: [
+            "Si la cuenta es nueva y todavía no tiene ningún pago registrado, tiene el **plan sin activar**: registrá su primer pago (en efectivo, transferencia o semestre al contado) y se habilita sola.",
             "Mirá su ficha de cobros: puede estar **limitada por mora** (factura vencida hace más de 15 días). Se levanta sola al registrar el pago.",
             "Si está en el plan de **una sola búsqueda**, necesita un pago registrado: sin una búsqueda disponible no se puede publicar.",
             "Verificá que la cuenta no esté suspendida.",

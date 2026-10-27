@@ -3,8 +3,10 @@
 import { useState, useTransition } from "react";
 import { compartirPerfil } from "@/app/actions/docente";
 import { botonClases } from "@/components/ui/button";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
+import { mensajeDePerfil } from "@/lib/compartir";
 import { enlaceDeWhatsApp, rutaDePerfilCompartido, textoParaCompartir, urlDePerfilCompartido } from "@/lib/compartir-perfil";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +99,12 @@ export function PerfilCompartir({ tokenInicial, origen }: { tokenInicial: string
               WhatsApp
               <span className="sr-only"> (se abre en una pestaña nueva)</span>
             </a>
+            <BotonCompartir
+              mensaje={mensajeDePerfil(url)}
+              titulo="Compartir mi perfil"
+              etiqueta="Más opciones"
+              bajada="Se comparte la página pública de tu perfil: nunca tu teléfono, tu email ni tus documentos."
+            />
             <a href={rutaDePerfilCompartido(token)} target="_blank" rel="noopener noreferrer" className={botonClases({ variante: "secundario", tamano: "sm" })}>
               Ver cómo se ve
               <span className="sr-only"> (se abre en una pestaña nueva)</span>

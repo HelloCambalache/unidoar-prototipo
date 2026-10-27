@@ -4,9 +4,11 @@ import { VitrinaFormulario } from "@/components/institucion/vitrina-formulario";
 import { BotonLink } from "@/components/ui/button";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { requerirInstitucion } from "@/lib/auth";
+import { mensajeDeInstitucion, rutaDeInstitucion, urlCompleta } from "@/lib/compartir";
 import { esRolGestor } from "@/lib/equipo";
 import { rolEnInstitucion } from "@/lib/queries/equipo";
 import { sedesParaEditar } from "@/lib/queries/sedes";
+import { origenSitio } from "@/lib/sitio";
 import { datosVitrina } from "@/lib/queries/vitrina";
 import { datosInicialesDeVitrina, huellaDeVitrina } from "@/lib/vitrina";
 
@@ -37,6 +39,7 @@ export default async function Vitrina() {
     <>
       <VitrinaFormulario
         slug={i.slug}
+        mensajeParaCompartir={mensajeDeInstitucion({ nombre: i.nombre, url: urlCompleta(await origenSitio(), rutaDeInstitucion(i.slug)) })}
         verificada={i.verificada}
         inicial={inicial}
         fotos={datos.fotos}

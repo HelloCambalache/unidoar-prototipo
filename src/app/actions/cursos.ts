@@ -24,7 +24,8 @@ import { planes } from "@/lib/queries/planes";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { esUrlPublicaPropia } from "@/lib/subidas";
 import { claveDeDireccion } from "@/lib/ubicacion";
-import { motivoDeMora } from "@/lib/queries/mora";
+import { CODIGO_PLAN_INACTIVO } from "@/lib/plan-activo";
+import { motivoDeLimiteDePlan } from "@/lib/queries/plan-activo";
 
 const NO_ENCONTRADO = "No encontramos ese curso.";
 const SIN_CURSOS = "Tu plan de búsqueda puntual no incluye la difusión de cursos.";
@@ -72,9 +73,9 @@ async function ubicacionDeCurso(
 export async function crearCurso(_estado: EstadoFormularioCurso, formData: FormData): Promise<EstadoFormularioCurso> {
   const { usuario, institucion } = await requerirInstitucion();
   if (!(await planes()).incluye(institucion.plan, "cursos")) return fallo(SIN_CURSOS);
-  // Con una factura vencida hace más de 15 días la cuenta no publica cursos nuevos (ver src/lib/mora.ts).
-  const limitada = await motivoDeMora(institucion);
-  if (limitada) return fallo(limitada);
+  // Sin el plan activo (nueva sin su primer pago, o con una factura vencida hace más de 15 días) no se publican cursos nuevos (ver src/lib/plan-activo.ts).
+  const sinPlan = await motivoDeLimiteDePlan(institucion);
+  if (sinPlan) return fallo(sinPlan, undefined, CODIGO_PLAN_INACTIVO);
   const datos = parsear(cursoSchema, formData);
   if (!datos.ok) return fallo(datos.error, datos.campos);
   if (datos.data.fotoUrl && !fotoAceptable(datos.data.fotoUrl, null, usuario.id)) return FOTO_INVALIDA;

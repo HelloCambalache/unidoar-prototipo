@@ -6,16 +6,19 @@ import { LogoInstitucion } from "@/components/docente/logo-institucion";
 import { MapaOfertas } from "@/components/docente/mapa-ofertas";
 import { Icono } from "@/components/icons";
 import { Boton, BotonLink } from "@/components/ui/button";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import type { CategoriaDocente } from "@/db/schema";
 import { requerirDocente } from "@/lib/auth";
 import { fechaLarga } from "@/lib/calendario";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { mensajeDeBusqueda, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { kmLegible } from "@/lib/geo";
 import { esId } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { detalleOferta, horarioDeBusqueda, type DetalleOferta } from "@/lib/queries/oportunidades";
+import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Oferta de trabajo" };
@@ -280,6 +283,23 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               <FormularioPostular busquedaId={busqueda.id} />
             )}
           </div>
+
+          {detalle.abierta && (
+            <div className="rounded-panel bg-white p-6 shadow-tarjeta">
+              <h2 className="font-display m-0 mb-1 text-[16px] leading-[1.3] font-semibold text-navy-900">¿Conocés a alguien a quien le sirva?</h2>
+              <p className="m-0 mb-3.5 text-[13px] leading-normal text-apagado">Compartí esta búsqueda con quien pueda postularse.</p>
+              <BotonCompartir
+                mensaje={mensajeDeBusqueda({
+                  puesto: busqueda.puesto,
+                  institucion: institucion.nombre,
+                  url: urlCompleta(await origenSitio(), rutaDeOferta(busqueda.id)),
+                })}
+                titulo="Compartir esta búsqueda"
+                bajada="Quien abra el enlace ve la búsqueda sin necesidad de tener cuenta."
+                className="w-full rounded-full"
+              />
+            </div>
+          )}
 
           <div className="rounded-panel bg-white p-6 shadow-tarjeta">
             <div className="mb-3 flex items-center gap-3">

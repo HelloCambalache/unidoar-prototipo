@@ -122,3 +122,21 @@ const PATH_DE_PASO = new RegExp(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4
  * (otra carpeta, otro bucket, un path raro) no se toca.
  */
 export const esPathDePaso = (path: string) => PATH_DE_PASO.test(path);
+
+const PATH_DE_DOCUMENTO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/documentos\/[^/]+$/i;
+
+/**
+ * ¿Es un documento privado de una cuenta (`<uuid de la cuenta>/documentos/<archivo>`: DNI, título, constancia, certificado de conducta)? Es lo
+ * único que barre la limpieza diaria de fotos del DNI sueltas: ante la duda (otra carpeta, una subcarpeta, un path raro) no se toca.
+ */
+export const esPathDeDocumento = (path: string) => PATH_DE_DOCUMENTO.test(path);
+
+/** Margen antes de barrer un documento que ninguna fila usa: una subida en curso todavía no está guardada (mismo margen que al verificar). */
+export const HORAS_DE_MARGEN_DE_DOCUMENTOS = 1;
+
+/**
+ * Hasta cuántos días después de verificada una identidad la limpieza diaria sigue buscando fotos del DNI sin borrar. La promesa a la persona es
+ * «dentro de las 24 horas de validada tu identidad»: la tarea corre todos los días, así que un borrado que falló al verificar se repara en la
+ * corrida siguiente; los días de más cubren una corrida que no salió.
+ */
+export const DIAS_PARA_REINTENTAR_FOTOS_DE_DNI = 3;

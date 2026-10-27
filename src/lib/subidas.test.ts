@@ -12,6 +12,9 @@ import {
   CUOTA_DE_PASO_BYTES,
   cabeEnLaCuotaDePaso,
   esPathDePaso,
+  esPathDeDocumento,
+  HORAS_DE_MARGEN_DE_DOCUMENTOS,
+  DIAS_PARA_REINTENTAR_FOTOS_DE_DNI,
 } from "@/lib/subidas";
 
 const UID = "1b8c3355-2755-443f-af6a-0a2a7a06b997";
@@ -146,5 +149,22 @@ describe("carpeta de paso: cuota y limpieza", () => {
     assert.equal(esPathDePaso(`otra-cosa/${CARPETA_DE_PASO}/${ARCHIVO}`), false);
     assert.equal(esPathDePaso(`${UID}/${CARPETA_DE_PASO}/`), false);
     assert.equal(esPathDePaso(""), false);
+  });
+
+  it("la limpieza de fotos del DNI sueltas solo toca documentos de una cuenta, y nada más", () => {
+    assert.equal(esPathDeDocumento(`${UID}/documentos/${ARCHIVO}`), true);
+    assert.equal(esPathDeDocumento(`${UID}/cv/${ARCHIVO}`), false, "ni el CV");
+    assert.equal(esPathDeDocumento(`${UID}/${CARPETA_DE_PASO}/${ARCHIVO}`), false, "ni la carpeta de paso");
+    assert.equal(esPathDeDocumento(`${UID}/examenes/${ARCHIVO}`), false, "ni los estudios médicos de una institución");
+    assert.equal(esPathDeDocumento(`${UID}/documentos/a/${ARCHIVO}`), false, "ni una subcarpeta");
+    assert.equal(esPathDeDocumento(`documentos/${ARCHIVO}`), false, "ni uno sin cuenta");
+    assert.equal(esPathDeDocumento(`otra-cosa/documentos/${ARCHIVO}`), false);
+    assert.equal(esPathDeDocumento(`${UID}/documentos/`), false);
+    assert.equal(esPathDeDocumento(""), false);
+  });
+
+  it("el margen es corto (para no pasarse de las 24 horas) y el reintento cubre varias corridas del cron diario", () => {
+    assert.ok(HORAS_DE_MARGEN_DE_DOCUMENTOS <= 2, "un margen largo atrasaría el borrado más allá de las 24 horas prometidas");
+    assert.ok(DIAS_PARA_REINTENTAR_FOTOS_DE_DNI >= 2, "tiene que alcanzar para una corrida del cron que no salió");
   });
 });

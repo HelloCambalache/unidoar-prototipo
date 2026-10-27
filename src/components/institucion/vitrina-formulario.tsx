@@ -11,11 +11,13 @@ import { VitrinaValores } from "@/components/institucion/vitrina-valores";
 import { LogoInstitucion } from "@/components/publico/logo-institucion";
 import { Boton, BotonLink, botonClases } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Insignia } from "@/components/ui/insignia";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { ROLES_CONTACTO, TIPOS_INSTITUCION } from "@/lib/catalogo";
+import type { Mensaje } from "@/lib/compartir";
 import { OTRO, opcionYTexto, valorAlEscribirOtro } from "@/lib/otro";
 import { focoDeFoto } from "@/lib/fotos";
 import type { BusquedaAbierta, CursoVitrina, DatosFormularioVitrina, VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
@@ -64,8 +66,11 @@ export function VitrinaFormulario({
   almacenamientoDisponible,
   institucionIdAdmin,
   huella,
+  mensajeParaCompartir,
 }: {
   slug: string;
+  /** Qué se comparte con el botón «Compartir» del encabezado (el perfil público); sin él no se muestra (el equipo no lo usa al editar). */
+  mensajeParaCompartir?: Mensaje;
   verificada: boolean;
   inicial: DatosFormularioVitrina;
   /** Huella de lo guardado cuando se abrió la pantalla (`huellaDeVitrina`): el servidor no pisa lo que otra persona cambió mientras tanto. */
@@ -151,16 +156,27 @@ export function VitrinaFormulario({
             : "Así te ven los profesionales cuando entran a tu vitrina. Tocá cualquier campo para editarlo."
         }
         acciones={
-          <a
-            href={`/instituciones/${slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(botonClases({ variante: "secundario", tamano: "lg" }), "gap-[7px] text-sm text-tinta hover:text-tinta")}
-          >
-            <Icono nombre="externo" tamano={14} trazo={1.8} />
-            Ver perfil público
-            <span className="sr-only"> (se abre en una pestaña nueva)</span>
-          </a>
+          <div className="flex flex-wrap gap-2.5">
+            {mensajeParaCompartir && (
+              <BotonCompartir
+                mensaje={mensajeParaCompartir}
+                titulo="Compartir tu perfil público"
+                bajada="Mandalo por WhatsApp o mail, o publicalo en tus redes. Cualquiera que tenga el enlace ve tu perfil público, con o sin cuenta."
+                tamano="lg"
+                className="gap-[7px] text-sm text-tinta hover:text-tinta"
+              />
+            )}
+            <a
+              href={`/instituciones/${slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(botonClases({ variante: "secundario", tamano: "lg" }), "gap-[7px] text-sm text-tinta hover:text-tinta")}
+            >
+              <Icono nombre="externo" tamano={14} trazo={1.8} />
+              Ver perfil público
+              <span className="sr-only"> (se abre en una pestaña nueva)</span>
+            </a>
+          </div>
         }
       />
 

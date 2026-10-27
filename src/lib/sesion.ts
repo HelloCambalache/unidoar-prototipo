@@ -3,6 +3,7 @@ import { cache } from "react";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/supabase/env";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
+import { normalizarCodigo } from "@/lib/referidos";
 import { decodificarAceptacion, type AceptacionDeTerminos } from "@/lib/terminos";
 
 export type DatosDeSesion = {
@@ -17,6 +18,11 @@ export type DatosDeSesion = {
   rolPista: RolAlta | null;
   /** Constancia de aceptación de los términos que dejó el registro con email del docente (en `user_metadata`). */
   terminos: AceptacionDeTerminos | null;
+  /**
+   * Código de referido que escribió la institución al registrarse con email (en `user_metadata`), por si confirma el mail desde otro dispositivo y la
+   * cookie no llegó. Es un dato que cualquiera puede escribir en su propia cuenta: solo sirve para precargar el campo del alta, que lo vuelve a comprobar.
+   */
+  referido: string | null;
 };
 
 const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -42,5 +48,6 @@ export const datosDeSesion = cache(async (): Promise<DatosDeSesion | null> => {
     fotoUrl: texto(meta.avatar_url) ?? texto(meta.picture),
     rolPista: (ROLES_ALTA as readonly string[]).includes(rol ?? "") ? (rol as RolAlta) : null,
     terminos: decodificarAceptacion(meta.terminos),
+    referido: normalizarCodigo(texto(meta.referido)),
   };
 });

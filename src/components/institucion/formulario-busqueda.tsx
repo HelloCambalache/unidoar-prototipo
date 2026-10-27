@@ -8,8 +8,9 @@ import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Select, Textarea } from "@/components/ui/campos";
 import { PanelCoincidencias, type Interruptores } from "@/components/institucion/panel-coincidencias";
+import { usePlanActivo } from "@/components/institucion/plan-activo";
 import type { CategoriaDocente } from "@/db/schema";
-import { OPCIONES_VENCIMIENTO } from "@/lib/busquedas";
+import { OPCIONES_VENCIMIENTO, type EstadoFormularioBusqueda } from "@/lib/busquedas";
 import { CATEGORIA_INFO, CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { sugerirDescripcion, sugerirPuesto, sugerirRequisitos, type DatosParaRedactar } from "@/lib/redaccion-busqueda";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,13 @@ export function FormularioBusqueda({
   plazoActual?: string | null;
 }) {
   const accion = modo === "editar" && busquedaId ? editarBusqueda.bind(null, busquedaId) : crearBusqueda;
-  const [estado, formAction, pendiente] = useActionState(accion, null);
+  // Sin el plan activo, publicar abre el popup de pago en lugar de enviar (el servidor igual lo exige: si frena algo que la pantalla creía permitido, `atender` lo abre).
+  const { frenarSiHaceFalta, atender } = usePlanActivo();
+  const [estado, formAction, pendiente] = useActionState(async (anterior: EstadoFormularioBusqueda, datos: FormData) => {
+    const resultado = await accion(anterior, datos);
+    atender(resultado);
+    return resultado;
+  }, null);
   const errores = estado?.campos ?? {};
 
   const [v, setV] = useState(inicial);
@@ -485,7 +492,18 @@ export function FormularioBusqueda({
         </div>
 
         <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
-          <Boton type="submit" variante="cta" tamano="lg" disabled={pendiente} aria-busy={pendiente}>
+          <Boton
+            type="submit"
+            variante="cta"
+            tamano="lg"
+            disabled={pendiente}
+            aria-busy={pendiente}
+            // Solo al publicar (editar una ya publicada no depende del plan). Va en el clic y no en el envío: así el popup sale aunque falten campos
+            // obligatorios (la validación del navegador frena antes del envío). Frenar acá no pierde lo escrito: los campos son controlados.
+            onClick={(e) => {
+              if (modo === "crear" && frenarSiHaceFalta()) e.preventDefault();
+            }}
+          >
             {pendiente ? "Guardando…" : modo === "editar" ? "Guardar cambios" : "Publicar búsqueda"}
           </Boton>
           <Link href={cancelar} className="ml-1.5 text-[13px] font-medium text-sutil hover:text-tinta">

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   beneficioDeReferido,
+  codigoDeTexto,
+  codigoParaElAlta,
   estadoDeReferido,
   generarCodigo,
   LARGO_DEL_CODIGO,
@@ -99,6 +101,49 @@ describe("códigos de referido", () => {
 
   it("el texto para recomendar lleva el enlace al final", () => {
     assert.match(textoParaRecomendar("https://www.unidoar.com.ar/referido/K7M2XQ9D"), /UNIDOAR.*https:\/\/www\.unidoar\.com\.ar\/referido\/K7M2XQ9D$/);
+  });
+});
+
+describe("código escrito a mano en el alta", () => {
+  it("acepta el código tal cual, en minúsculas, con espacios o con guiones", () => {
+    assert.equal(codigoDeTexto("K7M2XQ9D"), "K7M2XQ9D");
+    assert.equal(codigoDeTexto("  k7m2xq9d "), "K7M2XQ9D");
+    assert.equal(codigoDeTexto("K7M2-XQ9D"), "K7M2XQ9D");
+    assert.equal(codigoDeTexto("k7m2 xq9d"), "K7M2XQ9D");
+  });
+
+  it("acepta el enlace completo pegado (con o sin https, con parámetros)", () => {
+    assert.equal(codigoDeTexto("https://www.unidoar.com.ar/referido/K7M2XQ9D"), "K7M2XQ9D");
+    assert.equal(codigoDeTexto("www.unidoar.com.ar/referido/k7m2xq9d?utm=wa"), "K7M2XQ9D");
+    assert.equal(codigoDeTexto("Te paso UNIDOAR: https://www.unidoar.com.ar/referido/K7M2XQ9D"), "K7M2XQ9D");
+  });
+
+  it("lo vacío o lo que no tiene la forma de un código no pasa", () => {
+    for (const malo of ["", "   ", null, undefined, "hola", "K7M2XQ9", "K7M2XQ9DD", "K7M2XQ90", "https://sitio.com/referido/../x", "https://sitio.com/otra/K7M2XQ9D"]) {
+      // "otra/K7M2XQ9D" no trae /referido/: se mira entero y no tiene la forma de un código.
+      assert.equal(codigoDeTexto(malo), null, String(malo));
+    }
+  });
+
+  it("el campo manda: lo escrito gana sobre la cookie y vacío significa «sin recomendación»", () => {
+    assert.deepEqual(codigoParaElAlta("AAAAAAAA", "K7M2XQ9D"), { tipo: "codigo", codigo: "AAAAAAAA", escrito: true });
+    assert.deepEqual(codigoParaElAlta("", "K7M2XQ9D"), { tipo: "ninguno" }, "lo borró a propósito");
+    assert.deepEqual(codigoParaElAlta("   ", null), { tipo: "ninguno" });
+  });
+
+  it("el código precargado desde el enlace no cuenta como escrito (no frena el alta si dejó de servir)", () => {
+    assert.deepEqual(codigoParaElAlta("K7M2XQ9D", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
+    assert.deepEqual(codigoParaElAlta("k7m2xq9d", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
+  });
+
+  it("sin el campo (una pantalla vieja) vale la cookie, como antes", () => {
+    assert.deepEqual(codigoParaElAlta(null, "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
+    assert.deepEqual(codigoParaElAlta(null, null), { tipo: "ninguno" });
+  });
+
+  it("un texto que no es un código se rechaza, aunque haya cookie", () => {
+    assert.deepEqual(codigoParaElAlta("hola", "K7M2XQ9D"), { tipo: "invalido" });
+    assert.deepEqual(codigoParaElAlta("K7M2XQ9", null), { tipo: "invalido" });
   });
 });
 

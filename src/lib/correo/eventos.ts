@@ -1,11 +1,14 @@
 import "server-only";
+import { eq } from "drizzle-orm";
 import { claveDePostulantes, sumarDias, type Recordatorio } from "./claves";
 import { encolarParaUsuarios } from "./cola";
-import type { EtapaPostulacion } from "@/db/schema";
-import { etiquetaDeCobertura, etiquetaPeriodo, fechaBreve } from "@/lib/cobros";
+import { facturas, type EtapaPostulacion } from "@/db/schema";
+import { etiquetaDeCobertura, etiquetaPeriodo, fechaBreve, hoyAR } from "@/lib/cobros";
+import { numeroDeComprobante, rutaDeComprobante } from "@/lib/facturacion";
 import { DIAS_DE_GRACIA, type AvisoDeMora } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { planes } from "@/lib/queries/planes";
 
 /*
  * Un mail por cada cosa que pasa en el producto. Las acciones llaman a estas funciones en lugar de armar los datos y
@@ -177,13 +180,36 @@ export async function correoDeCobroRechazado(ejecutor: Ejecutor, d: Factura & { 
   );
 }
 
-/** M53: el equipo registró el pago. Con `mesesCubiertos` > 1 (un semestre al contado) lo cuenta como tal: "6 meses (octubre 2026 a marzo 2027)". */
-export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura & { mesesCubiertos?: number; concepto?: string }) {
+/**
+ * Los datos del comprobante de una factura ya pagada, para el mail: lo mismo que muestra la hoja de la app (`/institucion/plan/facturas/<id>`). Se lee
+ * con el mismo ejecutor que registró el pago (dentro de su transacción): ve la factura ya marcada paga, con su medio y su fecha.
+ */
+async function datosDelComprobante(ejecutor: Ejecutor, facturaId: string) {
+  const [f] = await ejecutor.select({ plan: facturas.plan, medio: facturas.medio, pagadaEn: facturas.pagadaEn }).from(facturas).where(eq(facturas.id, facturaId)).limit(1);
+  if (!f) return null;
+  return {
+    numero: numeroDeComprobante(facturaId),
+    plan: (await planes()).planDe(f.plan).label,
+    medio: f.medio,
+    pagadoEl: fechaBreve(hoyAR(f.pagadaEn ?? new Date())),
+    ruta: rutaDeComprobante(facturaId),
+  };
+}
+
+/**
+ * M53: se registró el pago, lo haya cargado el equipo (factura impaga, efectivo o semestre) o lo haya cobrado el débito automático de Mercado Pago.
+ * Con `facturaId` el mail es el **comprobante**: lleva sus datos (N.º, plan, período, monto, medio y fecha de pago) y el enlace a la hoja de la app;
+ * sin él (la compra de una búsqueda puntual, que no es una factura) es solo el aviso. Con `mesesCubiertos` > 1 (un semestre al contado) el período
+ * se cuenta como tal: "6 meses (octubre 2026 a marzo 2027)".
+ */
+export async function correoDePagoRegistrado(ejecutor: Ejecutor, d: Factura & { mesesCubiertos?: number; concepto?: string; facturaId?: string }) {
+  const comprobante = d.facturaId ? await datosDelComprobante(ejecutor, d.facturaId) : null;
   await encolarParaUsuarios(ejecutor, d.usuarioIds, "M53", {
     institucion: d.institucion,
     // `concepto` reemplaza al período cuando lo que se pagó no es un mes (una búsqueda puntual): "una búsqueda puntual".
     periodo: d.concepto ?? etiquetaDeCobertura(d.periodo, d.mesesCubiertos),
     monto: pesos(d.monto),
+    ...(comprobante ? { comprobante } : {}),
   });
 }
 

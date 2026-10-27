@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import {
   type EstadoAuth,
 } from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
+import { codigoDeRegistro, recordarCodigoDeReferido } from "@/lib/queries/referidos";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { COOKIE_RECUPERACION, firmarRecuperacion, recuperacionVigente, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
@@ -35,6 +36,12 @@ const passwordCampo = z.string().min(8, "Usá al menos 8 caracteres").max(72, "U
 
 const texto = (v: FormDataEntryValue | null) => (typeof v === "string" ? v : "");
 
+/** De dónde viene el pedido (la dirección que informa el proxy de Vercel): la clave del tope de códigos de referido probados antes de tener cuenta. */
+async function origenDelPedido() {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "sin-origen";
+}
+
 function errores(error: z.ZodError) {
   const campos: Record<string, string> = {};
   for (const issue of error.issues) campos[String(issue.path[0] ?? "_")] ??= issue.message;
@@ -53,10 +60,13 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   if (!rolValido.success) return { ok: false, error: "Elegí si sos institución o profesional." };
   if (!supabaseConfigurado()) return { ok: false, error: SIN_CONFIGURAR };
 
+  // El campo «Código de referido» solo lo trae el registro de una institución (el de la invitación al equipo y el del profesional no lo tienen).
+  const traeCodigo = rolValido.data === "institucion" && formData.has("codigoReferido");
   const valores = {
     email: texto(formData.get("email")).trim(),
     nombre: texto(formData.get("nombre")).trim(),
     apellido: texto(formData.get("apellido")).trim(),
+    ...(traeCodigo ? { codigoReferido: texto(formData.get("codigoReferido")) } : {}),
   };
   const esquema = z
     .object({
@@ -85,6 +95,13 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   // Todos aceptan los términos acá, al crear la cuenta (el profesional, la institución y quien llega por una invitación al
   // equipo): así no existe una cuenta sin su constancia.
   if (r.success && r.data.aceptaTerminos !== "on") campos.aceptaTerminos = "Tenés que aceptar los términos y condiciones";
+  // Quién la recomendó: lo escrito tiene que ser un código que exista. Se mira recién cuando lo demás está bien (cada código probado cuenta contra un tope).
+  let codigoDeReferido: string | null = null;
+  if (traeCodigo && r.success && Object.keys(campos).length === 0) {
+    const referido = await codigoDeRegistro(valores.codigoReferido ?? "", await origenDelPedido());
+    if (referido.ok) codigoDeReferido = referido.codigo;
+    else campos.codigoReferido = referido.error;
+  }
   if (!r.success || Object.keys(campos).length > 0) {
     return { ok: false, error: "Revisá los campos marcados.", campos, valores };
   }
@@ -101,6 +118,8 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
         ...(r.data.nombre ? { nombre: r.data.nombre } : {}),
         ...(rolValido.data === "docente" && r.data.apellido ? { apellido: r.data.apellido } : {}),
         terminos: codificarAceptacion(),
+        // Si confirma el mail desde otro dispositivo, la cookie no llega: el código viaja también en los datos de la cuenta (como los términos).
+        ...(codigoDeReferido ? { referido: codigoDeReferido } : {}),
       },
     },
   });
@@ -110,6 +129,8 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   // nuevo, y "Revisá tu mail" aclara qué hacer si ya había una cuenta (`ConfirmarMail`).
   if (emailYaRegistrado(error, data.user)) return { ok: true, confirmarEmail: r.data.email };
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
+  // El código queda en el navegador igual que con el enlace de la otra institución: el paso 2 lo muestra y al crear la institución se anota.
+  if (traeCodigo) await recordarCodigoDeReferido(codigoDeReferido);
   if (!data.session) return { ok: true, confirmarEmail: r.data.email };
 
   revalidatePath("/", "layout");
@@ -172,6 +193,16 @@ export async function ingresarConGoogle(rol: RolAlta | null, formData: FormData)
       error: "Revisá los campos marcados.",
       campos: { aceptaTerminos: "Tenés que aceptar los términos y condiciones" },
     };
+  }
+
+  // Registro de una institución con Google: el campo «Código de referido» es el mismo y se comprueba antes de salir hacia Google.
+  if (rolValido.data === "institucion" && formData.has("codigoReferido")) {
+    const escrito = texto(formData.get("codigoReferido"));
+    const referido = await codigoDeRegistro(escrito, await origenDelPedido());
+    if (!referido.ok) {
+      return { ok: false, error: "Revisá los campos marcados.", campos: { codigoReferido: referido.error }, valores: { codigoReferido: escrito } };
+    }
+    await recordarCodigoDeReferido(referido.codigo);
   }
 
   const siguiente = rolValido.data

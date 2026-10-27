@@ -5,7 +5,15 @@ import { cursos, docenteDetalle, docentes, institucionFotos, instituciones, post
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { objetoDeArchivo } from "@/lib/archivos";
 import { clienteAdmin } from "@/lib/supabase/admin";
-import { BUCKETS, CARPETA_DE_PASO, HORAS_DE_PASO_ANTES_DE_BARRER, esPathDePaso } from "@/lib/subidas";
+import {
+  BUCKETS,
+  CARPETA_DE_PASO,
+  DIAS_PARA_REINTENTAR_FOTOS_DE_DNI,
+  HORAS_DE_MARGEN_DE_DOCUMENTOS,
+  HORAS_DE_PASO_ANTES_DE_BARRER,
+  esPathDeDocumento,
+  esPathDePaso,
+} from "@/lib/subidas";
 import { resumenDeError } from "@/lib/errores";
 
 /**
@@ -83,7 +91,7 @@ export async function borrarDocumentosSueltos(docenteId: string): Promise<number
     if (!almacenamientoConfigurado()) return 0;
     const [d] = await getDb().select({ usuarioId: docentes.usuarioId }).from(docentes).where(eq(docentes.id, docenteId)).limit(1);
     if (!d?.usuarioId) return 0;
-    const limite = Date.now() - 60 * 60 * 1000;
+    const limite = Date.now() - HORAS_DE_MARGEN_DE_DOCUMENTOS * 60 * 60 * 1000;
     const sueltos: string[] = [];
     for (const a of await listarConFecha("privado", `${d.usuarioId}/documentos`)) {
       if (a.creado.getTime() < limite && !(await estaEnUso(a.path, a.path))) sueltos.push(a.path);
@@ -95,6 +103,44 @@ export async function borrarDocumentosSueltos(docenteId: string): Promise<number
     return sueltos.length;
   } catch (error) {
     console.error("[archivos] no se pudieron limpiar los documentos sueltos", error);
+    return 0;
+  }
+}
+
+/**
+ * Red de seguridad de la promesa «las fotos de tu DNI se eliminan dentro de las 24 horas de validada tu identidad». Al verificar, el borrado de
+ * Storage se hace DESPUÉS de confirmar la base y, si falla, solo queda en el log: la foto sigue en Storage sin que ninguna fila la use. Esto
+ * busca, en los perfiles verificados en los últimos días, los documentos privados (`<usuario>/documentos/…`) que ninguna fila usa y que tienen
+ * más de una hora, y los borra. Lo que una fila sigue usando no se toca (`estaEnUso`), y tampoco los perfiles sin verificar (sus fotos se
+ * necesitan para revisarlos). La corre el cron diario de mails, aunque los mails estén apagados; nunca rompe: devuelve cuántos borró.
+ */
+export async function barrerFotosDeDniSueltas(
+  dias: number = DIAS_PARA_REINTENTAR_FOTOS_DE_DNI,
+  horasDeMargen: number = HORAS_DE_MARGEN_DE_DOCUMENTOS,
+): Promise<number> {
+  try {
+    if (!almacenamientoConfigurado()) return 0;
+    const filas = await getDb().execute(sql`
+      select o.name
+      from storage.objects o
+      join ${docentes} d on d.usuario_id::text = split_part(o.name, '/', 1)
+      where o.bucket_id = 'privado'
+        and split_part(o.name, '/', 2) = 'documentos'
+        and d.verificacion = 'verificado'
+        and d.verificacion_revisada_en > now() - make_interval(days => ${dias})
+        and o.created_at < now() - make_interval(hours => ${horasDeMargen})
+      order by o.created_at
+      limit 500`);
+    const candidatos = (filas as unknown as { name: string }[]).map((f) => f.name).filter(esPathDeDocumento);
+    const sueltos: string[] = [];
+    for (const path of candidatos) if (!(await estaEnUso(path, path))) sueltos.push(path);
+    for (let i = 0; i < sueltos.length; i += 100) {
+      const { error } = await clienteAdmin().storage.from("privado").remove(sueltos.slice(i, i + 100));
+      if (error) console.error("[archivos] no se pudieron borrar fotos de DNI sueltas:", error.message);
+    }
+    return sueltos.length;
+  } catch (error) {
+    console.error("[archivos] no se pudieron barrer las fotos de DNI sueltas", resumenDeError(error));
     return 0;
   }
 }

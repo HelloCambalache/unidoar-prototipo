@@ -96,7 +96,7 @@ Van desde `facturacion@unidoar.com.ar` (solo envía) y las respuestas llegan al 
 | M50 | Tu factura de {mes} ya está disponible | La crea el cron del día 1 (o el equipo) | Dueño y administradores | No existe | Lanzamiento |
 | M51 | Tu factura vence en 3 días | 3 días antes del cobro | Dueño y administradores | Solo recordatorio manual por WhatsApp | Lanzamiento |
 | M52 | Tu factura de {mes} está vencida (dice hasta cuándo hay tiempo antes de que se limite la cuenta) | Pasada la fecha, y un segundo aviso a los 7 días | Dueño y administradores | Solo recordatorio manual por WhatsApp | Lanzamiento |
-| M53 | Recibimos tu pago de {mes} | El equipo registra el pago | Dueño y administradores | En la app | Lanzamiento |
+| M53 | Comprobante de tu pago de {mes} (lleva el comprobante: N.º, plan, período, monto, medio y fecha de pago, y el enlace a la hoja; el pago de una búsqueda puntual no es una factura y sale como «Recibimos tu pago», sin comprobante) | Se registra un pago: lo carga el equipo (factura impaga, efectivo, semestre) o lo cobra el débito automático de Mercado Pago | Dueño y administradores | En la app | Lanzamiento |
 | M54 | Corregimos el registro de tu pago | El equipo anula un pago registrado | Dueño y administradores | En la app | Pronto |
 | M55 | Recibimos tu pedido de cambio de plan | La institución lo pide | Dueño | No existe | Pronto |
 | M56 | Aprobamos tu cambio de plan / no pudimos aprobarlo (con la nota) | El equipo resuelve | Dueño y administradores | En la app | Lanzamiento |

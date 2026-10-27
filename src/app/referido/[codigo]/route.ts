@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { institucionPorCodigo } from "@/lib/queries/referidos";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
-import { COOKIE_REFERIDO, DIAS_DE_LA_COOKIE, normalizarCodigo } from "@/lib/referidos";
+import { COOKIE_REFERIDO, normalizarCodigo, OPCIONES_DE_COOKIE_REFERIDO } from "@/lib/referidos";
 
 /**
  * El enlace que una institución le manda a otra (`/referido/<código>`). Si el código es de una institución en pie, el navegador guarda
@@ -18,13 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const normal = normalizarCodigo(codigo);
   if (normal && (await institucionPorCodigo(normal).catch(() => null))) {
-    respuesta.cookies.set(COOKIE_REFERIDO, normal, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: DIAS_DE_LA_COOKIE * 24 * 60 * 60,
-    });
+    respuesta.cookies.set(COOKIE_REFERIDO, normal, OPCIONES_DE_COOKIE_REFERIDO);
   }
   return respuesta;
 }

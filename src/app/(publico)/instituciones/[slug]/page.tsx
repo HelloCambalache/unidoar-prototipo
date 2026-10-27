@@ -9,12 +9,15 @@ import { Imagen } from "@/components/publico/imagen";
 import { LogoInstitucion } from "@/components/publico/logo-institucion";
 import { accionPostular, sesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { mensajeDeInstitucion, rutaDeInstitucion, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { focoDeFoto } from "@/lib/fotos";
 import { sedesConUbicacion } from "@/lib/sedes";
 import { num, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { institucionPublica } from "@/lib/queries/publico";
+import { origenSitio } from "@/lib/sitio";
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
@@ -25,7 +28,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const inst = await institucionPublica(slug);
   if (!inst) return { title: "Institución no encontrada" };
-  return { title: inst.nombre, description: inst.descripcion ?? `${inst.tipo} en UNIDOAR.` };
+  const descripcion = inst.descripcion ?? `${inst.tipo} en UNIDOAR.`;
+  // El `openGraph` es lo que se ve en la vista previa del enlace al compartirlo (WhatsApp, redes, mail).
+  return { title: inst.nombre, description: descripcion, openGraph: { title: inst.nombre, description: descripcion, type: "website" } };
 }
 
 const VISTA_INSTITUCION = [
@@ -37,8 +42,9 @@ const VISTA_INSTITUCION = [
 
 export default async function PerfilInstitucion({ params }: Props) {
   const { slug } = await params;
-  const [inst, sesion] = await Promise.all([institucionPublica(slug), sesionPublica()]);
+  const [inst, sesion, origen] = await Promise.all([institucionPublica(slug), sesionPublica(), origenSitio()]);
   if (!inst) notFound();
+  const mensaje = mensajeDeInstitucion({ nombre: inst.nombre, url: urlCompleta(origen, rutaDeInstitucion(inst.slug)) });
 
   const datos = [
     inst.alumnos != null && { valor: num(inst.alumnos), etiqueta: "alumnos", grande: true },
@@ -95,6 +101,12 @@ export default async function PerfilInstitucion({ params }: Props) {
                   {inst.tipo}
                   {variasSedes ? ` · ${inst.sedes.length} sedes` : inst.zona ? ` · ${inst.zona}` : ""}
                 </div>
+                <BotonCompartir
+                  mensaje={mensaje}
+                  titulo="Compartir este perfil"
+                  bajada="Cualquiera que tenga el enlace puede ver el perfil público de la institución."
+                  className="mt-3.5"
+                />
               </div>
             </Tarjeta>
 
@@ -174,7 +186,8 @@ export default async function PerfilInstitucion({ params }: Props) {
               ) : (
                 <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3.5 p-0">
                   {inst.busquedas.map((b) => {
-                    const accion = accionPostular(sesion, b.id);
+                    // Una visita lee la oferta completa (la misma página que se comparte) antes de crear la cuenta; un profesional va a la de su panel.
+                    const accion = sesion.rol ? accionPostular(sesion, b.id) : { href: rutaDeOferta(b.id), etiqueta: "Ver oferta" };
                     return (
                       <li key={b.id} className="flex flex-col rounded-interno border border-borde p-3.5">
                         <div className="mb-1 flex items-start justify-between gap-2">

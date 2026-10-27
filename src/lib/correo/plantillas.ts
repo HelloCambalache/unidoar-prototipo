@@ -41,7 +41,16 @@ export type DatosDe = {
   /** `segundoAviso`: ya pasó más de una semana del vencimiento. */
   /** `ultimoDiaDeGracia`: hasta cuándo puede pagar antes de que se limite la cuenta (ver src/lib/mora.ts). */
   M52: { institucion: string; periodo: string; monto: string; vencio: string; segundoAviso: boolean; ultimoDiaDeGracia: string };
-  M53: { institucion: string; periodo: string; monto: string };
+  /**
+   * El pago registrado. Con `comprobante` el mail es el comprobante (los datos de la factura en una tabla y el enlace a la hoja de la app); sin él es solo
+   * el aviso: la compra de una búsqueda puntual no es una factura y no tiene comprobante.
+   */
+  M53: {
+    institucion: string;
+    periodo: string;
+    monto: string;
+    comprobante?: { numero: string; plan: string; medio: string | null; pagadoEl: string; ruta: string };
+  };
   M54: { institucion: string; periodo: string; monto: string };
   M55: { institucion: string; plan: string };
   /** `detalle`: lo que pasó con la factura del mes (la crearon, la ajustaron…), ya redactado. */
@@ -73,6 +82,8 @@ type Contenido = {
   previa: string;
   titulo: string;
   parrafos: Parte[][];
+  /** Una tabla de datos (etiqueta y valor) debajo de los párrafos: el comprobante de un pago. */
+  detalle?: { titulo: string; filas: { etiqueta: string; valor: string }[] };
   /** Texto de una persona (motivo, mensaje) que se muestra citado, respetando los saltos de línea. */
   cita?: string;
   boton?: { texto: string; ruta: string };
@@ -413,13 +424,41 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
   M53: {
     grupo: "facturacion",
     remitente: "facturacion",
-    contenido: (d) => ({
-      asunto: `Recibimos tu pago de ${minuscula(d.periodo)}`,
-      previa: `Registramos el pago de ${d.periodo}.`,
-      titulo: "Recibimos tu pago",
-      parrafos: [["Registramos el pago de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), ". ¡Gracias!"]],
-      boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
-    }),
+    contenido: (d) => {
+      const c = d.comprobante;
+      if (!c) {
+        return {
+          asunto: `Recibimos tu pago de ${minuscula(d.periodo)}`,
+          previa: `Registramos el pago de ${d.periodo}.`,
+          titulo: "Recibimos tu pago",
+          parrafos: [["Registramos el pago de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), ". ¡Gracias!"]],
+          boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
+        };
+      }
+      return {
+        asunto: `Comprobante de tu pago de ${minuscula(d.periodo)}`,
+        previa: `Comprobante N.º ${c.numero} por ${d.monto}.`,
+        titulo: "Recibimos tu pago",
+        parrafos: [
+          ["Registramos el pago de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), ". ¡Gracias!"],
+          ["Acá abajo está el comprobante. También lo podés ver, imprimir o guardar como PDF cuando quieras desde tu cuenta."],
+        ],
+        detalle: {
+          titulo: "Comprobante de pago",
+          filas: [
+            { etiqueta: "N.º", valor: c.numero },
+            { etiqueta: "Institución", valor: d.institucion },
+            { etiqueta: "Plan", valor: c.plan },
+            { etiqueta: "Período", valor: d.periodo },
+            { etiqueta: "Monto", valor: d.monto },
+            ...(c.medio ? [{ etiqueta: "Medio de pago", valor: c.medio }] : []),
+            { etiqueta: "Pagado el", valor: c.pagadoEl },
+          ],
+        },
+        boton: { texto: "Ver el comprobante", ruta: c.ruta },
+        nota: ["Guardalo para tu administración. Si algún dato no está bien, respondé este mail."],
+      };
+    },
   },
   M54: {
     grupo: "facturacion",
@@ -613,6 +652,13 @@ export type MailArmado = {
 
 const ESTILO_PARRAFO = "margin:0 0 16px;font-size:15px;line-height:1.6;color:#3D423E;";
 
+/**
+ * El logo de la cabecera de los mails es el de la web (isotipo con «UNIDOAR», `LogoMarca`) hecho imagen: `public/assets/unidoar-logo-mail.png`, sobre el mismo
+ * azul de la cabecera del sitio. Se genera con `pnpm logo:correo` cuando cambia el de la web. Mide 660 px de ancho y se muestra a 220 (nítido en pantallas de
+ * alta densidad). Las 13 plantillas de Supabase Auth (`supabase/plantillas-correo/`) llevan el mismo.
+ */
+const ANCHO_DEL_LOGO = 220;
+
 export function armarMail<P extends PlantillaId>(id: P, datos: DatosDe[P], contexto: ContextoDeArmado): MailArmado {
   const definicion = PLANTILLAS[id] as Definicion<P>;
   const c = definicion.contenido(datos);
@@ -623,6 +669,16 @@ export function armarMail<P extends PlantillaId>(id: P, datos: DatosDe[P], conte
   const asunto = limpiarAsunto(c.asunto);
 
   const parrafos = c.parrafos.map((p) => `        <p style="${ESTILO_PARRAFO}">${htmlDe(p)}</p>`).join("\n");
+  const detalle = c.detalle
+    ? `        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;border:1px solid #E3E1DC;border-radius:10px;border-collapse:separate;overflow:hidden;">
+          <tr><td colspan="2" style="padding:10px 16px;background:#F6F5F1;font-size:11px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#6B706C;">${escaparHtml(c.detalle.titulo)}</td></tr>
+${c.detalle.filas
+  .map(
+    (f) => `          <tr><td style="padding:9px 16px;border-top:1px solid #F0EFEA;width:38%;font-size:13px;line-height:1.4;color:#6B706C;">${escaparHtml(f.etiqueta)}</td><td style="padding:9px 16px;border-top:1px solid #F0EFEA;font-size:14px;line-height:1.4;font-weight:bold;color:#1F2421;">${escaparHtml(f.valor)}</td></tr>`,
+  )
+  .join("\n")}
+        </table>`
+    : "";
   const cita = c.cita
     ? `        <blockquote style="margin:0 0 20px;padding:12px 16px;background:#F6F5F1;border-left:4px solid #DD553F;border-radius:6px;font-size:15px;line-height:1.6;color:#3D423E;white-space:pre-wrap;">${escaparHtml(c.cita)}</blockquote>`
     : "";
@@ -662,12 +718,13 @@ ${otros
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F5F1;padding:28px 12px;">
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #E3E1DC;">
-      <tr><td align="center" style="background:#16214F;padding:22px 24px;">
-        <img src="${escaparHtml(origen)}/assets/unidoar-logo-horizontal.png" alt="UNIDOAR" width="150" style="display:block;border:0;height:auto;max-width:150px;">
+      <tr><td align="center" style="background:#040B35;padding:22px 24px;">
+        <img src="${escaparHtml(origen)}/assets/unidoar-logo-mail.png" alt="UNIDOAR" width="${ANCHO_DEL_LOGO}" style="display:block;border:0;height:auto;max-width:${ANCHO_DEL_LOGO}px;">
       </td></tr>
       <tr><td style="padding:32px 32px 8px;font-family:Arial,Helvetica,sans-serif;color:#1F2421;">
         <h1 style="margin:0 0 14px;font-size:22px;line-height:1.3;color:#16214F;">${escaparHtml(c.titulo)}</h1>
 ${parrafos}
+${detalle}
 ${cita}
 ${boton}
 ${otrosBotones}
@@ -688,6 +745,7 @@ ${nota}
     c.titulo,
     "",
     ...c.parrafos.map((p) => textoDe(p)),
+    ...(c.detalle ? ["", c.detalle.titulo.toUpperCase(), ...c.detalle.filas.map((f) => `${f.etiqueta}: ${f.valor}`), ""] : []),
     ...(c.cita ? ["", ...c.cita.split(/\r?\n/).map((l) => `> ${l}`), ""] : []),
     ...(c.boton && urlBoton ? [`${c.boton.texto}: ${urlBoton}`] : []),
     ...otros.map((b) => `${b.texto}: ${b.url}`),

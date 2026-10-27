@@ -8,11 +8,14 @@ import { BotonAccion } from "@/components/institucion/boton-accion";
 import { FiltrosBusquedas } from "@/components/institucion/filtros-busquedas";
 import { EstadoBusqueda } from "@/components/institucion/insignias-busqueda";
 import { BotonLink } from "@/components/ui/button";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tabla } from "@/components/ui/tabla";
 import { requerirInstitucion } from "@/lib/auth";
 import { ESTADOS_FILTRO, avisoDeBusquedasSinPostulaciones, plural, type EstadoFiltro } from "@/lib/busquedas";
+import { mensajeDeBusqueda, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { estadisticasInstitucion, listarBusquedas } from "@/lib/queries/busquedas";
+import { origenSitio } from "@/lib/sitio";
 
 export const metadata: Metadata = { title: "Publicaciones" };
 
@@ -29,9 +32,10 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
   // Publicada en varias sedes a la vez: se creó una búsqueda por sede.
   const enSedes = Number(uno(sp.sedes));
 
-  const [est, filas] = await Promise.all([
+  const [est, filas, origen] = await Promise.all([
     estadisticasInstitucion(institucion.id),
     listarBusquedas(institucion.id, { pestana, q, estado }),
+    origenSitio(),
   ]);
   const hayFiltros = q !== "" || (pestana === "activas" && estado !== "todos");
 
@@ -151,6 +155,15 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
                     <BotonLink href={`/institucion/postulantes?busqueda=${b.id}`} variante="secundario" tamano="sm">
                       Ver postulantes
                     </BotonLink>
+                    {/* Solo se comparte una búsqueda que sigue abierta: la pausada o la rápida vencida muestran «ya no está abierta» a quien abre el enlace. */}
+                    {b.estado === "activa" && !b.plazo?.vencida && (
+                      <BotonCompartir
+                        mensaje={mensajeDeBusqueda({ puesto: b.puesto, institucion: institucion.nombre, url: urlCompleta(origen, rutaDeOferta(b.id)) })}
+                        titulo="Compartir esta búsqueda"
+                        bajada="Mandala por WhatsApp o mail, o publicala en tus redes para que te lleguen más postulantes. Quien abre el enlace ve la búsqueda sin necesidad de tener cuenta."
+                        variante="fantasma"
+                      />
+                    )}
                     <BotonLink href={`/institucion/publicar?editar=${b.id}`} variante="fantasma" tamano="sm">
                       Editar
                     </BotonLink>
@@ -195,7 +208,7 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
                     <BotonLink href={`/institucion/postulantes?busqueda=${b.id}`} variante="secundario" tamano="sm">
                       Ver postulantes
                     </BotonLink>
-                    <BotonAccion accion={reabrirBusqueda.bind(null, b.id)} exito="Búsqueda reabierta">
+                    <BotonAccion accion={reabrirBusqueda.bind(null, b.id)} exito="Búsqueda reabierta" requierePlan>
                       Reabrir
                     </BotonAccion>
                   </div>

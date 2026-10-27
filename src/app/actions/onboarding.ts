@@ -20,7 +20,7 @@ import { bloquearCuposDeFundadoras, fundadorasActuales } from "@/lib/queries/fun
 import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
 import { resumenDeError } from "@/lib/errores";
 import { rechazarInvitacion, sumarseAlEquipo } from "@/lib/queries/equipo";
-import { anotarReferidoDelNavegador } from "@/lib/queries/referidos";
+import { anotarReferidoDelAlta, referidoDelAlta } from "@/lib/queries/referidos";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import { valorElegido } from "@/lib/otro";
@@ -209,6 +209,15 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
     await registrarAceptacionDeTerminos(usuario.id);
   }
 
+  // Quién la recomendó: el código escrito en el campo «Código de referido» o, si no vino, el del enlace (cookie). Solo en una institución nueva (una
+  // que vuelve a este paso ya pasó por acá). Se comprueba ANTES de crear nada: un código escrito a mano que no existe vuelve como error del campo.
+  let codigoDeReferido: string | null = null;
+  if (!propia) {
+    const referido = await referidoDelAlta(formData.has("codigoReferido") ? textoDe(formData, "codigoReferido") : null, usuario.id);
+    if (!referido.ok) return conError(formData, "Revisá los campos marcados.", { codigoReferido: referido.error });
+    codigoDeReferido = referido.codigo;
+  }
+
   // Coordenadas: las de la dirección (Georef / OpenStreetMap) si se pudo ubicar; si no, las del catálogo de zonas.
   const delCatalogo = await ubicarInstitucion({ direccion: d.direccion, partido: d.partido });
   const deLaDireccion = await ubicarPorDireccion({
@@ -291,8 +300,8 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       if (!esViolacionUnica(e)) throw e;
       nuevaId = await crear(`${slugify(d.nombre) || "institucion"}-${crypto.randomUUID().slice(0, 6)}`);
     }
-    // Si entró por el enlace de otra institución (cookie de /referido/<código>), queda anotada como recomendada. Nunca frena el alta.
-    await anotarReferidoDelNavegador({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id, cuit: datos.cuit });
+    // Si la recomendó otra institución (código escrito a mano o enlace /referido/<código>), queda anotada como recomendada. Nunca frena el alta.
+    await anotarReferidoDelAlta({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id, cuit: datos.cuit }, codigoDeReferido);
     await anotarFormaDePagoDelAlta(nuevaId, d.nombre, d.modalidad, true, P);
   }
   if (existente) await anotarFormaDePagoDelAlta(existente.id, d.nombre, d.modalidad, false, P);

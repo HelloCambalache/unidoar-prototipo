@@ -13,7 +13,8 @@ import { motivoSinBeneficio } from "@/lib/queries/puntuales";
 import { docenteVisible } from "@/lib/visibilidad";
 import { resumenDeError } from "@/lib/errores";
 import { motivoDeTopeDeInvitaciones } from "@/lib/invitaciones";
-import { motivoDeMora } from "@/lib/queries/mora";
+import { CODIGO_PLAN_INACTIVO } from "@/lib/plan-activo";
+import { motivoDeLimiteDePlan } from "@/lib/queries/plan-activo";
 
 const idsInvitacion = z.object({
   docenteId: z.guid({ error: "Perfil inválido" }),
@@ -35,9 +36,9 @@ function refrescarProfesionales() {
  */
 export async function invitarDocente(docenteId: string, busquedaId: string): Promise<Resultado> {
   const { institucion } = await requerirInstitucion();
-  // Con una factura vencida hace más de 15 días la cuenta no invita a postularse (ver src/lib/mora.ts).
-  const limitada = await motivoDeMora(institucion);
-  if (limitada) return fallo(limitada);
+  // Sin el plan activo (nueva sin su primer pago, o con una factura vencida hace más de 15 días) no se invita a postularse (ver src/lib/plan-activo.ts).
+  const sinPlan = await motivoDeLimiteDePlan(institucion);
+  if (sinPlan) return fallo(sinPlan, undefined, CODIGO_PLAN_INACTIVO);
   // Invitar a un profesional sale del buscador, que una búsqueda puntual puede no incluir: se exige acá y no solo en la pantalla.
   const sinBuscador = await motivoSinBeneficio(institucion.plan, "buscador");
   if (sinBuscador) return fallo(sinBuscador);

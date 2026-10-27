@@ -103,6 +103,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
                 "**Filtros:** categoría, nivel, turno, tipo (titular, suplencia, temporada, freelance), instituciones verificadas y favoritas, y a cuántos kilómetros de tu zona.",
                 "**Lista o mapa:** cambiás la vista con el selector. En el mapa cada pin es una búsqueda y se ve el radio que elegiste.",
                 "**Favoritas:** tocá la estrella de una búsqueda para guardarla y verla después con el filtro **Favoritos**.",
+                "**Compartir una búsqueda:** en el detalle de una oferta abierta, el botón **Compartir** te deja copiar el enlace o mandarlo por WhatsApp, redes o mail a quien pueda postularse. Quien lo abre ve la búsqueda sin necesidad de tener cuenta.",
               ],
             },
             { nota: "Los filtros quedan en la dirección de la página: podés copiarla y compartir tu búsqueda tal cual la ves." },
@@ -253,7 +254,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
           resumen: "Cómo tener una página pública de tu perfil y apagarla cuando quieras.",
           bloques: [
             {
-              p: "En [Mi perfil](/docente/perfil), la tarjeta **Compartir mi perfil** tiene un interruptor que viene **apagado**. Si lo prendés, tu perfil tiene una página con enlace propio que podés copiar, mandar por WhatsApp o ver.",
+              p: "En [Mi perfil](/docente/perfil), la tarjeta **Compartir mi perfil** tiene un interruptor que viene **apagado**. Si lo prendés, tu perfil tiene una página con enlace propio que podés copiar, mandar por WhatsApp, compartir en otras redes o por mail (**Más opciones**) o ver.",
             },
             {
               lista: [

@@ -7,6 +7,7 @@ import { Boton } from "@/components/ui/button";
 import { Campo, Casilla, Input } from "@/components/ui/campos";
 import { InputContrasena } from "@/components/ui/input-contrasena";
 import { BotonGoogle } from "@/components/onboarding/boton-google";
+import { AYUDA_DEL_CODIGO_AL_REGISTRARSE, CampoCodigoDeReferido } from "@/components/onboarding/campo-codigo-referido";
 import { ConfirmarMail } from "@/components/onboarding/confirmar-mail";
 import { AlertaError, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
 import { PRIMER_PASO_PROTEGIDO, type EstadoAuth } from "@/lib/acceso";
@@ -25,10 +26,16 @@ export function FormularioRegistro({
   rol,
   conGoogle,
   invitacion,
+  referido,
 }: {
   rol: RolAlta;
   conGoogle: boolean;
   invitacion?: { institucion: string; rol: string; email: string };
+  /**
+   * El campo «Código de referido (opcional)», solo en el registro de una institución (no en el del profesional ni en el de una invitación al equipo).
+   * `precargado` es el código del enlace de otra institución por el que llegó la persona ("" si no vino por uno). El código viaja con el email y con Google.
+   */
+  referido?: { precargado: string };
 }) {
   const esDocente = rol === "docente";
   const [otroEmail, setOtroEmail] = useState(false);
@@ -133,6 +140,14 @@ export function FormularioRegistro({
             aria-invalid={Boolean(campos.confirmacion)}
           />
         </Campo>
+        {referido && !esDocente && !invitacion && (
+          <CampoCodigoDeReferido
+            // Lo escrito en el envío anterior (aunque lo haya borrado) gana sobre el precargado: si lo sacó a propósito, no vuelve solo.
+            defaultValue={typeof valores.codigoReferido === "string" ? valores.codigoReferido : referido.precargado}
+            error={campos.codigoReferido}
+            ayuda={referido.precargado ? AYUDA_DEL_CODIGO_AL_REGISTRARSE.conEnlace : AYUDA_DEL_CODIGO_AL_REGISTRARSE.sinEnlace}
+          />
+        )}
       </div>
 
       <div className="flex flex-col gap-3.5">

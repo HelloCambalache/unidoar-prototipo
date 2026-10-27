@@ -38,7 +38,7 @@ Otros proveedores sirven igual (Brevo, Postmark, SendGrid, Amazon SES): cambian 
 
 ## 3. Plantillas en español
 
-**Authentication → Emails → Templates.** Pegar el contenido de cada archivo de [`supabase/plantillas-correo/`](../supabase/plantillas-correo) y poner el asunto:
+**Authentication → Emails → Templates.** Pegar el contenido de cada archivo de [`supabase/plantillas-correo/`](../supabase/plantillas-correo) y poner el asunto. (Desde el 2026-10-27 llevan el logo de la web, `/assets/unidoar-logo-mail.png`: pegarlas de nuevo **después de desplegar** esa imagen, si no el mail sale sin logo.)
 
 | Plantilla de Supabase | Archivo | Asunto |
 |---|---|---|

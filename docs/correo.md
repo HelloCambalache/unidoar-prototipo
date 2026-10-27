@@ -83,7 +83,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M50 | Se crea una factura (cron o carga manual) | Dueño y administradores | facturación |
 | M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días; dice hasta cuándo hay tiempo antes de que se limite la cuenta) | Dueño y administradores | facturación |
 | M68 | Mora: último aviso antes de limitar la cuenta (días 12 a 15 de atraso) y «tu cuenta quedó limitada» (desde el día 16) | Dueño y administradores, también con débito automático | facturación |
-| M53, M54 | Se registra un pago / se anula (si el equipo pidió avisar) | Dueño y administradores | facturación |
+| M53, M54 | Se registra un pago —lo carga el equipo o lo cobra el débito automático— (M53 es el comprobante: sus datos y el enlace a la hoja) / se anula (si el equipo pidió avisar) | Dueño y administradores | facturación |
 | M55 | Se pide un cambio de plan | Quien lo pidió | facturación |
 | M56 | Se aprueba o rechaza el cambio de plan | Dueño y administradores | facturación |
 | M58 | Mercado Pago no pudo cobrar el débito automático (solo el primer rechazo de cada cobro) | Dueño y administradores | facturación |

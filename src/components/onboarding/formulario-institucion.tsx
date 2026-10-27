@@ -7,6 +7,7 @@ import { Boton } from "@/components/ui/button";
 import { CampoDireccion } from "@/components/ui/campo-direccion";
 import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { AlertaError, TituloPaso } from "@/components/onboarding/elementos";
+import { CampoCodigoDeReferido } from "@/components/onboarding/campo-codigo-referido";
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { OTRO, opcionYTexto } from "@/lib/otro";
 import { resumenDeSemestre } from "@/lib/forma-de-pago";
@@ -55,6 +56,7 @@ function OpcionDePlan({
 export function FormularioInstitucion({
   inicial,
   yaCreada,
+  referido,
   pedirTerminos,
   partidos,
   provincias,
@@ -64,6 +66,12 @@ export function FormularioInstitucion({
 }: {
   inicial: DatosForm;
   yaCreada: boolean;
+  /**
+   * El campo «Código de referido»: se escribe en el paso 1 (registro) y acá solo vuelve si ya hay uno anotado, para confirmarlo, cambiarlo o dejarlo
+   * vacío (null: no se muestra, ni si ya creó la institución ni si no hay código). `precargado` es el código anotado; lo que esté en el campo al
+   * enviar es lo que vale.
+   */
+  referido: { precargado: string } | null;
   /** La cuenta no tiene la constancia de los términos (se creó antes de que se aceptaran en el paso 1): se piden acá. */
   pedirTerminos: boolean;
   partidos: string[];
@@ -258,6 +266,15 @@ export function FormularioInstitucion({
             Si más adelante querés cambiar de modalidad, lo pedís desde Plan y facturación o nos escribís por Contacto.
           </p>
         </fieldset>
+
+        {referido && (
+          <CampoCodigoDeReferido
+            // Lo escrito en el envío anterior (aunque lo haya borrado) gana sobre el anotado: si lo sacó a propósito, no vuelve solo.
+            defaultValue={valorDe(estado, { codigoReferido: referido.precargado }, "codigoReferido")}
+            error={campos.codigoReferido}
+            ayuda="Quedó anotado el código de la institución que te recomendó. Podés cambiarlo, o dejar el campo vacío si no querés usar ninguno."
+          />
+        )}
 
         {/* Solo si la cuenta no los aceptó al crearse (cuentas anteriores): las nuevas ya los aceptaron en el paso 1. */}
         {pedirTerminos && (

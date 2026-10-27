@@ -332,6 +332,8 @@ async function aplicarCobroEnLaBase(cobro: CobroLeido): Promise<ResultadoDeCobro
       institucion: inst.nombre,
       periodo,
       monto,
+      // El débito automático también genera su comprobante: la factura del mes que acaba de quedar paga ("Débito automático").
+      facturaId: factura?.id,
     });
     return "aprobado";
   });

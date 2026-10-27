@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BotonCompartir } from "@/components/ui/compartir";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { InstitucionCvBoton, InstitucionFavoritoBoton } from "@/components/docente/instituciones-acciones";
@@ -10,9 +11,11 @@ import { MapaDeSedes } from "@/components/instituciones/mapa-de-sedes";
 import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from "@/components/institucion/vitrina-secciones";
 import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
+import { mensajeDeInstitucion, rutaDeInstitucion, urlCompleta } from "@/lib/compartir";
 import { focoDeFoto } from "@/lib/fotos";
 import { perfilInstitucion } from "@/lib/queries/instituciones";
 import { sedesConUbicacion } from "@/lib/sedes";
+import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -95,6 +98,13 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
             <div className="mt-1 text-[15px] leading-[1.4] text-apagado">
               {[i.tipo, variasSedes ? `${sedes.length} sedes` : i.zona].filter(Boolean).join(" · ")}
             </div>
+          </div>
+          <div className="pt-4">
+            <BotonCompartir
+              mensaje={mensajeDeInstitucion({ nombre: i.nombre, url: urlCompleta(await origenSitio(), rutaDeInstitucion(i.slug)) })}
+              titulo="Compartir esta institución"
+              bajada="Se comparte el perfil público de la institución: cualquiera que tenga el enlace lo ve, con o sin cuenta."
+            />
           </div>
         </div>
         {cifras.length > 0 && (

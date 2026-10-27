@@ -19,8 +19,8 @@ export const metadata: Metadata = { title: "Referidos" };
 export const dynamic = "force-dynamic";
 
 const PASOS = [
-  "Le mandás tu enlace a una institución que todavía no usa UNIDOAR.",
-  "Crea su cuenta de institución con ese enlace: queda anotada como recomendada por la tuya.",
+  "Le mandás tu enlace (o solo tu código) a una institución que todavía no usa UNIDOAR.",
+  "Crea su cuenta de institución con ese enlace, o escribe tu código en el campo «Código de referido» al crear su acceso: queda anotada como recomendada por la tuya.",
   "El equipo la verifica y, cuando paga su primera factura, tu beneficio queda listo.",
   "Lo aplicamos nosotros: te suma meses bonificados, que se descuentan de tus facturas (de a uno por semestre).",
 ];
