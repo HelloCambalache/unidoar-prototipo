@@ -22,7 +22,7 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M30: { busqueda: "Profesor de natación", rapida: false, ruta: "/institucion/postulantes?busqueda=1" },
   M50: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
   M51: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
-  M52: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vencio: "10 oct 2026", segundoAviso: false },
+  M52: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vencio: "10 oct 2026", segundoAviso: false, ultimoDiaDeGracia: "25 oct 2026" },
   M53: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000" },
   M54: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000" },
   M55: { institucion: "Club Atlético", plan: "Pro" },
@@ -32,6 +32,8 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M61: { docente: "Lucía Pérez", detalle: "subió documentación para revisar.", ruta: "/backoffice/verificacion" },
   M62: { cuenta: "Lucía Pérez", tipo: "docente", ruta: "/backoffice/docentes" },
   M63: { institucion: "Club Atlético", plan: "Pro", ruta: "/backoffice/cobros" },
+  M67: { institucion: "Club Atlético", total: "$ 250.000", meses: 6, alCrearLaCuenta: false, ruta: "/backoffice/cobros/abc" },
+  M68: { institucion: "Club Atlético", limitada: false, periodo: "Octubre de 2026", monto: "$ 45.000", vencio: "10 oct 2026", ultimoDiaDeGracia: "25 oct 2026" },
 };
 
 describe("plantillas de mails", () => {
@@ -66,11 +68,11 @@ describe("plantillas de mails", () => {
     const opcionales = (Object.keys(PLANTILLAS) as PlantillaId[]).filter((id) => esGrupoOpcional(PLANTILLAS[id].grupo));
     assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30"]);
     for (const id of ["M11", "M12", "M13", "M15", "M16", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
-    for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56"] as const) {
+    for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56", "M68"] as const) {
       assert.equal(PLANTILLAS[id].grupo, "facturacion");
       assert.equal(PLANTILLAS[id].remitente, "facturacion");
     }
-    for (const id of ["M60", "M61", "M62", "M63"] as const) assert.equal(PLANTILLAS[id].grupo, "interno");
+    for (const id of ["M60", "M61", "M62", "M63", "M67"] as const) assert.equal(PLANTILLAS[id].grupo, "interno");
   });
 
   it("escapa lo que escriben las personas, en el HTML y en el asunto sin dejarlo ejecutable", () => {
@@ -89,6 +91,53 @@ describe("plantillas de mails", () => {
     assert.ok(!m60.html.includes("<img src=x"));
     // El asunto es texto plano: el cliente de correo no lo interpreta como HTML, así que va sin escapar.
     assert.ok(m60.asunto.includes("<img src=x"));
+  });
+
+  it("M67 avisa al equipo que una institución eligió pagar por semestre, distinguiendo la cuenta nueva del pedido posterior", () => {
+    const datos = { institucion: "Colegio San Martín", total: "$ 250.000", meses: 6, ruta: "/backoffice/cobros/abc" };
+    const alCrear = armarMail("M67", { ...datos, alCrearLaCuenta: true }, { origen: ORIGEN });
+    assert.equal(alCrear.asunto, "Colegio San Martín eligió pagar por semestre");
+    assert.match(alCrear.texto, /al crear su cuenta/);
+    assert.match(alCrear.texto, /\$ 250\.000 por 6 meses/);
+    assert.match(alCrear.texto, /Cuando verifiques la cuenta, coordiná/);
+    assert.match(alCrear.texto, /Registrar semestre al contado/);
+    assert.ok(alCrear.html.includes("/backoffice/cobros/abc"), "el botón lleva a la ficha de cobros");
+
+    const despues = armarMail("M67", { ...datos, alCrearLaCuenta: false }, { origen: ORIGEN });
+    assert.doesNotMatch(despues.texto, /al crear su cuenta/);
+    assert.doesNotMatch(despues.texto, /Cuando verifiques/);
+    assert.match(despues.texto, /pidió pagar el abono por semestre/);
+    assert.match(despues.texto, /Coordiná el pago/);
+  });
+
+  it("M67 no deja ejecutar lo que escriben las instituciones en su nombre", () => {
+    const mail = armarMail(
+      "M67",
+      { institucion: "<script>alert(1)</script>", total: "$ 1", meses: 6, alCrearLaCuenta: false, ruta: "/backoffice/cobros/abc" },
+      { origen: ORIGEN },
+    );
+    assert.ok(!mail.html.includes("<script>"));
+    assert.ok(mail.html.includes("&lt;script&gt;"));
+  });
+
+  it("M52 avisa hasta cuándo hay tiempo antes de que la cuenta se limite", () => {
+    const m = armarMail("M52", EJEMPLOS.M52, { origen: ORIGEN });
+    assert.match(m.texto, /Tenés tiempo hasta el 25 oct 2026/);
+    assert.match(m.texto, /no vas a poder publicar búsquedas, invitar a postularse ni publicar cursos/);
+  });
+
+  it("M68 avisa del último plazo y, cuando pasó, de que la cuenta quedó limitada; no se puede apagar", () => {
+    const previo = armarMail("M68", EJEMPLOS.M68, { origen: ORIGEN });
+    assert.equal(previo.asunto, "Tu cuenta se limita después del 25 oct 2026");
+    assert.match(previo.texto, /Si el pago no se acredita hasta el 25 oct 2026, tu cuenta queda limitada/);
+    assert.match(previo.texto, /publicar búsquedas, invitar a postularse ni publicar cursos/);
+    const limitada = armarMail("M68", { ...EJEMPLOS.M68, limitada: true }, { origen: ORIGEN });
+    assert.equal(limitada.asunto, "Tu cuenta está limitada por una factura vencida");
+    assert.match(limitada.texto, /pasaron más de 15 días/);
+    assert.match(limitada.texto, /se levanta sola/);
+    assert.ok(limitada.html.includes("/institucion/plan"), "lleva a Plan y facturación");
+    assert.equal(PLANTILLAS.M68.grupo, "facturacion");
+    assert.equal(esGrupoOpcional(PLANTILLAS.M68.grupo), false);
   });
 
   it("el asunto queda en una sola línea y con un largo razonable", () => {

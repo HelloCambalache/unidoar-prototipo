@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { and, asc, count, countDistinct, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
@@ -8,7 +8,7 @@ import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
 import type { VitrinaFotoVista, VitrinaNovedadVista } from "@/lib/vitrina";
-import { OCULTAR_EJEMPLOS, busquedaDeInstitucionActiva, busquedaVigente, docenteVisible, institucionVisible } from "@/lib/visibilidad";
+import { busquedaDeInstitucionActiva, busquedaVigente, docenteVisible, institucionVisible } from "@/lib/visibilidad";
 
 /* Lecturas del sitio público (sin sesión). Todo sale de la base: nada de cifras fijas. */
 
@@ -91,15 +91,27 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
 
 export type LogoInstitucion = { id: string; slug: string; nombre: string; logoUrl: string };
 
-/** Instituciones verificadas con logo, para la tira "Confían en UNIDOAR". Las fundadoras van primero (es uno de sus beneficios). */
+/**
+ * Los logos de la tira "Confían en UNIDOAR" de la portada (2026-10-27, definición del cliente): **solo las instituciones fundadoras**, verificadas, visibles y
+ * con logo, y **nunca las de ejemplo** (instituciones que no existen) aunque el interruptor de datos de ejemplo esté apagado. Sin ninguna, la tira no se dibuja.
+ * Las más antiguas primero.
+ */
 export async function logosInstituciones(limite = 24): Promise<LogoInstitucion[]> {
   const filas = await getDb()
     .select({ id: instituciones.id, slug: instituciones.slug, nombre: instituciones.nombre, logoUrl: instituciones.logoUrl })
     .from(instituciones)
-    .where(and(eq(instituciones.verificada, true), institucionVisible))
-    .orderBy(desc(sql`${instituciones.plan} = 'fundador'`), asc(instituciones.nombre))
-    .limit(limite * 2);
-  return filas.flatMap((f) => (f.logoUrl ? [{ ...f, logoUrl: f.logoUrl }] : [])).slice(0, limite);
+    .where(
+      and(
+        eq(instituciones.plan, "fundador"),
+        eq(instituciones.verificada, true),
+        eq(instituciones.esDemo, false),
+        isNotNull(instituciones.logoUrl),
+        institucionVisible,
+      ),
+    )
+    .orderBy(asc(instituciones.creadoEn), asc(instituciones.nombre))
+    .limit(limite);
+  return filas.flatMap((f) => (f.logoUrl ? [{ ...f, logoUrl: f.logoUrl }] : []));
 }
 
 export type FundadoraPublica = { id: string; slug: string; nombre: string; logoUrl: string | null };
@@ -120,11 +132,11 @@ export async function fundadorasPublicas(limite = 60): Promise<FundadoraPublica[
 export type TestimonioPublico = { id: string; cita: string; autor: string; cargo: string; fotoUrl: string | null };
 
 /**
- * Testimonios de una página: "home", "educadores", "entrenadores" o "guardavidas". Los que hay hoy son de ejemplo (personas
- * inventadas): con `OCULTAR_DATOS_DE_EJEMPLO` no se muestra ninguno, y las secciones sin testimonios no se dibujan.
+ * Los testimonios VISIBLES de una página ("home", "educadores", "entrenadores" o "guardavidas"), los que carga el equipo en Backoffice → Testimonios
+ * (los genéricos de ejemplo originales quedaron ocultos). No depende de `OCULTAR_DATOS_DE_EJEMPLO`: lo que el equipo cargó es real. Las secciones sin
+ * testimonios no se dibujan.
  */
 export async function testimoniosDe(pagina: string): Promise<TestimonioPublico[]> {
-  if (OCULTAR_EJEMPLOS) return [];
   return getDb()
     .select({
       id: testimonios.id,
@@ -134,7 +146,7 @@ export async function testimoniosDe(pagina: string): Promise<TestimonioPublico[]
       fotoUrl: testimonios.fotoUrl,
     })
     .from(testimonios)
-    .where(eq(testimonios.pagina, pagina))
+    .where(and(eq(testimonios.pagina, pagina), eq(testimonios.visible, true)))
     .orderBy(asc(testimonios.orden), asc(testimonios.autor));
 }
 

@@ -8,6 +8,7 @@ import { CajonPostulante } from "@/components/institucion/cajon-postulante";
 import { TarjetaPostulante } from "@/components/institucion/tarjeta-postulante";
 import { BotonLink } from "@/components/ui/button";
 import { Select } from "@/components/ui/campos";
+import { DesplazableX } from "@/components/ui/desplazable-x";
 import { Avatar } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { useToast } from "@/components/ui/toast";
@@ -172,7 +173,9 @@ export function TableroPipeline({
       )}
 
       {vista === "kanban" ? (
-        <div className="flex items-start gap-3.5 overflow-x-auto pb-1.5">
+        // Siete columnas no entran en los 1320 px que el marco le da al contenido (necesitan ~1600): el tablero usa todo el ancho
+        // que haya (`max-w-none!` le saca el tope) y, si aun así no entra, avisa con un degradado y un botón que hay más columnas.
+        <DesplazableX envoltorio="max-w-none!" className="flex items-start gap-3.5 pb-1.5" etiquetaMas="Ver más columnas">
           {COLUMNAS.map((col) => {
             const items = filtrados.filter((p) => p.etapa === col.key);
             return (
@@ -196,7 +199,7 @@ export function TableroPipeline({
                   if (id) mover(id, col.key);
                 }}
                 className={cn(
-                  "min-h-[420px] min-w-[236px] flex-1 rounded-tarjeta bg-[#ECEAE5] p-2.5 transition-shadow",
+                  "min-h-[420px] min-w-[216px] flex-1 rounded-tarjeta bg-[#ECEAE5] p-2.5 transition-shadow",
                   sobre === col.key && "ring-2 ring-rosa/50",
                 )}
               >
@@ -238,7 +241,7 @@ export function TableroPipeline({
               </section>
             );
           })}
-        </div>
+        </DesplazableX>
       ) : visibles.length === 0 ? (
         <EstadoVacio titulo="Ningún postulante coincide con los filtros" texto="Probá con otra zona o mostrando también a los que no están verificados." />
       ) : (

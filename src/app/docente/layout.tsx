@@ -13,7 +13,10 @@ const NAV: NavItem[] = [
   { href: "/docente/perfil", label: "Mi perfil", icono: "perfil" },
 ];
 
-const NAV_PIE: NavItem[] = [{ href: "/docente/cuenta", label: "Mi cuenta", icono: "cuenta" }];
+const NAV_PIE: NavItem[] = [
+  { href: "/ayuda/profesionales", label: "Ayuda", icono: "ayuda" },
+  { href: "/docente/cuenta", label: "Mi cuenta", icono: "cuenta" },
+];
 
 export default async function DocenteLayout({ children }: { children: React.ReactNode }) {
   const { usuario, docente } = await requerirDocente();

@@ -19,7 +19,7 @@ export async function leerCatalogoDePlanes(ejecutor: Ejecutor = getDb()): Promis
     ejecutor.select().from(planesCondiciones).limit(1),
   ]);
   return catalogoDesdeLaBase(
-    filas.map((f) => ({ clave: f.clave, etiqueta: f.etiqueta, precio: f.precio, precioMinimo: f.precioMinimo, resumen: f.resumen, detalle: f.detalle, vigente: f.vigente })),
+    filas.map((f) => ({ clave: f.clave, etiqueta: f.etiqueta, precio: f.precio, resumen: f.resumen, detalle: f.detalle, vigente: f.vigente })),
     condiciones
       ? {
           sedesMultisede: condiciones.sedesMultisede,

@@ -1,7 +1,7 @@
 /*
  * Búsqueda puntual: el plan sin abono mensual, para cubrir una vacante. La institución paga cada búsqueda (el equipo registra el pago y queda un
  * «crédito» disponible), publica una búsqueda que lo consume y, pasada su vigencia, se cierra sola. Reglas puras, sin base: las usan las acciones,
- * el cron, las pantallas y las pruebas. Lo que es editable (precio, piso, vigencia, tope de búsquedas abiertas y qué incluye) vive en Planes.
+ * el cron, las pantallas y las pruebas. Lo que es editable (precio, vigencia, tope de búsquedas abiertas y qué incluye) vive en Planes.
  */
 
 const MS_DIA = 86_400_000;

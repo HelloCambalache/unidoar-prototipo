@@ -29,6 +29,7 @@ import {
   etiquetaPeriodo,
   fechaBreve,
   fechaDeColumna,
+  hoyAR,
   pagoHastaDeMes,
   periodoActual,
   sumarMeses,
@@ -37,6 +38,7 @@ import {
 } from "@/lib/cobros";
 import { suscripcionVigente } from "@/lib/debito-automatico";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
+import { moraDe, SIN_MORA } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
@@ -108,6 +110,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
       : "";
   // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
   const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
+  // La mora (ver src/lib/mora.ts): con la factura impaga más vieja pasada de 15 días la cuenta queda limitada; las de ejemplo nunca.
+  const mora = i.esDemo ? SIN_MORA : moraDe(facturas.filter((f) => f.estado !== "pagada"), hoyAR(ahora));
   const estado: EstadoCobro = d.vencidas > 0 ? "vencida" : proximo ? "pendiente" : "aldia";
 
   const impagas = facturas.filter((f) => f.estado !== "pagada").sort((a, b) => a.fechaCobro.localeCompare(b.fechaCobro));
@@ -151,6 +155,13 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               {semestrePagoHasta && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-verde">
                   Semestre pago hasta {etiquetaPeriodo(semestrePagoHasta).toLowerCase()}
+                </div>
+              )}
+              {mora.conMora && (
+                <div role="status" className="mt-1.5 max-w-[60ch] text-[13px] leading-[1.45] font-medium text-[#8A1F1F]">
+                  {mora.limitada
+                    ? `Cuenta limitada por mora: ${mora.diasDeAtraso} días de atraso. No puede publicar búsquedas, invitar a postularse ni publicar cursos hasta que se acredite el pago (se levanta sola al registrarlo).`
+                    : `Factura vencida hace ${mora.diasDeAtraso} ${mora.diasDeAtraso === 1 ? "día" : "días"}: en período de gracia hasta el ${fechaBreve(mora.ultimoDiaDeGracia!)}. Después se limita la cuenta.`}
                 </div>
               )}
             </div>
@@ -311,11 +322,10 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
 
           <Seccion titulo="Precio">
             {(() => {
-              const { minimo, maximo } = P.rangoDeAbono(plan);
+              const { maximo } = P.rangoDeAbono(plan);
               return (
                 <div className="flex flex-col gap-2">
                   <Dato k="De lista">{pesos(maximo)} por mes</Dato>
-                  <Dato k="Piso del plan">{minimo < maximo ? pesos(minimo) : "Sin piso"}</Dato>
                   <Dato k="Acordado">{acuerdo && acuerdoRige ? describirAcuerdo(acuerdo) : "Paga el de lista"}</Dato>
                   {acuerdo && !acuerdoRige && (
                     <p className="m-0 text-[13px] leading-[1.45] text-naranja-ink">

@@ -12,8 +12,11 @@ const NAV: NavItem[] = [
   { href: "/backoffice/planes", label: "Planes", icono: "estrella", grupo: "Negocio" },
   { href: "/backoffice/referidos", label: "Referidos", icono: "apreton", grupo: "Negocio" },
   { href: "/backoffice/categorias", label: "Categorías", icono: "etiqueta", grupo: "Contenido" },
+  { href: "/backoffice/testimonios", label: "Testimonios", icono: "testimonio", grupo: "Contenido" },
   { href: "/backoffice/mensajes", label: "Mensajes", icono: "mensaje", grupo: "Contenido" },
 ];
+
+const NAV_PIE: NavItem[] = [{ href: "/backoffice/ayuda", label: "Ayuda", icono: "ayuda" }];
 
 export default async function BackofficeLayout({ children }: { children: React.ReactNode }) {
   // Cualquier otro rol vuelve a su propio inicio; sin sesión, al ingreso.
@@ -27,6 +30,7 @@ export default async function BackofficeLayout({ children }: { children: React.R
       iniciales={iniciales}
       insignia={{ texto: "Backoffice", href: "/backoffice/operacion", titulo: "Equipo UNIDOAR" }}
       nav={NAV}
+      navPie={NAV_PIE}
     >
       {children}
     </AppShell>

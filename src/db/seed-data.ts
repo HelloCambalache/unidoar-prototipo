@@ -50,17 +50,6 @@ export const CATALOGO_ASIGNATURAS: Record<CategoriaDocente, { rubro: string; ite
   ],
 };
 
-export const TESTIMONIOS: { pagina: string; cita: string; autor: string; cargo: string; fotoUrl: string }[] = [
-  { pagina: "home", cita: "Cubrimos una licencia de Matemática en dos días. Antes tardábamos semanas.", autor: "Marina Costa", cargo: "Vicedirectora · Colegio San Andrés del Norte", fotoUrl: "/assets/persona-f5.jpg" },
-  { pagina: "home", cita: "Publicamos la búsqueda un lunes y el jueves ya teníamos entrevistas agendadas.", autor: "Esteban Roldán", cargo: "Director · Instituto Vicente López", fotoUrl: "/assets/persona-m4.jpg" },
-  { pagina: "home", cita: "Nos sirvió sobre todo para las suplencias urgentes: antes eran puro WhatsApp.", autor: "Carla Núñez", cargo: "Coordinadora · Colegio del Árbol", fotoUrl: "/assets/persona-f1.jpg" },
-  { pagina: "entrenadores", cita: "Cubrimos un profe de sala en tres días, con dos opciones para elegir.", autor: "Rodrigo Ianni", cargo: "Director deportivo · Club Náutico Olivos", fotoUrl: "/assets/persona-m1.jpg" },
-  { pagina: "entrenadores", cita: "Nos sirvió sobre todo para las bajas de último momento antes de temporada.", autor: "Vanina Pardo", cargo: "Coordinadora · Gimnasio Full Body", fotoUrl: "/assets/persona-f2.jpg" },
-  { pagina: "entrenadores", cita: "Vimos títulos y certificaciones antes de la primera entrevista.", autor: "Martín Curcio", cargo: "Encargado · Club Atlético Ribera", fotoUrl: "/assets/persona-m3.jpg" },
-  { pagina: "guardavidas", cita: "Encontramos un guardavidas habilitado dos días antes de abrir la pileta.", autor: "Lucía Ferrer", cargo: "Encargada · Natatorio Sol de Mayo", fotoUrl: "/assets/persona-f3.jpg" },
-  { pagina: "guardavidas", cita: "La verificación de habilitación nos ahorró un dolor de cabeza en plena temporada.", autor: "Gonzalo Prat", cargo: "Director · Club San Fernando", fotoUrl: "/assets/persona-m2.jpg" },
-  { pagina: "guardavidas", cita: "Cubrimos los tres turnos de fin de semana sin depender de un solo contacto.", autor: "Marina Suárez", cargo: "Coordinadora · Colonia Vicente López", fotoUrl: "/assets/persona-f4.jpg" },
-];
 
 /* ───────── Instituciones demo ───────── */
 

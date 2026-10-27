@@ -14,7 +14,7 @@ import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type P
 const soloDigitos = (texto: string) => texto.replace(/\D/g, "");
 
 /**
- * «Precio acordado» de una institución: un abono propio dentro del rango del plan (entre el piso y la lista) o un convenio a medida (un monto
+ * «Precio acordado» de una institución: un abono propio (cualquier monto hasta el de lista) o un convenio a medida (un monto
  * fijo por mes, para redes). Muestra el rango, lo que pagaría con sus sedes y vuelve al precio de lista cuando se quiere. El servidor vuelve a
  * validar todo: acá se avisa antes de guardar.
  */
@@ -55,8 +55,7 @@ export function CobroAcuerdo({
     setAbierto(true);
   };
 
-  const { minimo, maximo } = P.rangoDeAbono(plan);
-  const hayRango = minimo < maximo;
+  const { maximo } = P.rangoDeAbono(plan);
   const montoNumero = monto ? Number(monto) : null;
   const propuesto: AcuerdoDePrecio | null = montoNumero ? { modalidad, monto: montoNumero } : null;
   const errorPrevio = propuesto ? P.errorDeAcuerdo(plan, propuesto) : null;
@@ -119,7 +118,7 @@ export function CobroAcuerdo({
               {MODALIDADES_DE_ACUERDO.map((m) => (
                 <option key={m} value={m}>
                   {ETIQUETA_DE_MODALIDAD[m]}
-                  {m === "abono" ? " (dentro del rango del plan)" : " (monto fijo por mes, para redes)"}
+                  {m === "abono" ? " (hasta el precio de lista)" : " (monto fijo por mes, para redes)"}
                 </option>
               ))}
             </Select>
@@ -130,9 +129,7 @@ export function CobroAcuerdo({
             error={errores.monto ?? (intentoDeError(errorPrevio, monto))}
             ayuda={
               modalidad === "abono"
-                ? hayRango
-                  ? `Entre ${pesos(minimo)} (el piso) y ${pesos(maximo)} (la lista). Las sedes adicionales siguen con su descuento sobre este abono.`
-                  : `Este plan no tiene piso: el abono es el de lista. Cargá un precio mínimo en Planes para poder acordar un abono, o usá un convenio a medida.`
+                ? `Hasta ${pesos(maximo)} (el precio de lista). Las sedes adicionales siguen con su descuento sobre este abono.`
                 : "Es lo que paga por mes en total, sin importar cuántas sedes tenga. No tiene límite de rango."
             }
           >

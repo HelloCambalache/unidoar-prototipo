@@ -188,6 +188,8 @@ export type DetalleCobros = {
     slug: string;
     plan: string;
     suspendida: boolean;
+    /** Cuenta de ejemplo: nunca queda limitada por mora (ver src/lib/mora.ts). */
+    esDemo: boolean;
     telefono: string | null;
     contactoNombre: string | null;
     cuit: string | null;
@@ -215,6 +217,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
       slug: instituciones.slug,
       plan: instituciones.plan,
       suspendida: instituciones.suspendida,
+      esDemo: instituciones.esDemo,
       telefono: instituciones.telefono,
       contactoNombre: instituciones.contactoNombre,
       cuit: instituciones.cuit,

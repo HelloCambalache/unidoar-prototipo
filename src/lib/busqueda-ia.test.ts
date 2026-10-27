@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { distanciaDeEdicion, interpretarBusqueda, type VocabularioBusqueda } from "@/lib/busqueda-ia";
+import {
+  distanciaDeEdicion,
+  interpretarBusqueda,
+  MAX_PALABRAS_DE_TEXTO,
+  textoDeLaFrase,
+  type VocabularioBusqueda,
+} from "@/lib/busqueda-ia";
 
 /** Una parte del catálogo real: lo que la base le pasa al buscador. */
 const VOCABULARIO: VocabularioBusqueda = {
@@ -134,6 +140,58 @@ describe("lo que no se pudo aplicar", () => {
   it("mantiene cómo lo escribió la persona y no repite", () => {
     const r = leer("Profe de Música, Noche, noche");
     assert.deepEqual(r.sinEntender, ["Noche"]);
+  });
+});
+
+describe("el buscador único: lo que no pide filtros se busca como texto", () => {
+  it("un nombre suelto no pide ningún filtro: se busca tal cual lo escribió", () => {
+    const r = leer("Ana Pérez");
+    assert.equal(r.reconocido, false);
+    assert.deepEqual(r.resto, ["Ana", "Pérez"]);
+    assert.equal(textoDeLaFrase(r), "Ana Pérez");
+  });
+
+  it("el relleno de una frase no se busca ('busco a Ana Pérez')", () => {
+    assert.equal(textoDeLaFrase(leer("busco a Ana Pérez")), "Ana Pérez");
+    assert.equal(textoDeLaFrase(leer("necesito a Ana Pérez, por favor")), "Ana Pérez");
+  });
+
+  it("una disciplina que el catálogo no tiene también se busca como texto", () => {
+    assert.equal(textoDeLaFrase(leer("ajedrez")), "ajedrez");
+  });
+
+  it("los nombres cortos cuentan (las palabras de dos letras no)", () => {
+    assert.deepEqual(leer("Eva").resto, ["Eva"]);
+    assert.deepEqual(leer("Li").resto, []);
+  });
+
+  it("sin palabras propias no hay texto que buscar", () => {
+    assert.equal(textoDeLaFrase(leer("hola")), "");
+    assert.equal(textoDeLaFrase(leer("necesito un profe, por favor")), "");
+    assert.equal(textoDeLaFrase(leer("")), "");
+  });
+
+  it("si la frase pide algún filtro, es un pedido: lo que sobra se avisa y no se busca", () => {
+    const r = leer("inglés Pérez");
+    assert.equal(r.reconocido, true);
+    assert.deepEqual(r.resto, ["Pérez"]);
+    assert.deepEqual(r.sinEntender, ["Pérez"]);
+    assert.equal(textoDeLaFrase(r), "");
+  });
+
+  it("una frase completa de las de antes sigue siendo solo filtros", () => {
+    assert.equal(textoDeLaFrase(leer("profe de inglés para secundario, turno mañana")), "");
+    assert.equal(textoDeLaFrase(leer("necesito un guardavidas para mañana mismo")), "");
+  });
+
+  it("busca hasta seis palabras y mantiene cómo las escribió", () => {
+    const r = leer("Nuestra Señora del Carmen de las Flores Azules Grandes Lejanas Remotas");
+    assert.equal(textoDeLaFrase(r), "Señora Carmen Flores Azules Grandes Lejanas");
+    assert.equal(textoDeLaFrase(r).split(" ").length, MAX_PALABRAS_DE_TEXTO);
+  });
+
+  it("no repite una palabra", () => {
+    assert.deepEqual(leer("Pérez pérez PEREZ").resto, ["Pérez"]);
   });
 });
 

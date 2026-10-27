@@ -54,13 +54,12 @@ export async function guardarPlanes(entrada: unknown, base: string): Promise<Res
       const p = nueva.planes[clave];
       await tx
         .insert(planes)
-        .values({ clave, etiqueta: p.etiqueta, precio: p.precio, precioMinimo: p.precioMinimo, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente })
+        .values({ clave, etiqueta: p.etiqueta, precio: p.precio, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente })
         .onConflictDoUpdate({
           target: planes.clave,
           set: {
             etiqueta: p.etiqueta,
             precio: p.precio,
-            precioMinimo: p.precioMinimo,
             resumen: p.resumen,
             detalle: p.detalle,
             vigente: p.vigente,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/campos";
@@ -51,8 +51,8 @@ export function ControlesBuscador({
   modo: "todas" | "rapidas";
   /** Sitio público (sin sesión): sin rango de distancia ni favoritos. */
   publico?: boolean;
-  /** Lo que se entendió de la frase de "Buscá con IA" (null si no hay frase). Los filtros ya vienen aplicados en `filtros`. */
-  lectura?: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
+  /** Lo que se entendió de lo escrito en el buscador (null si no hay frase). Los filtros y el texto ya vienen aplicados en `filtros`. */
+  lectura?: LecturaDelBuscador | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -87,18 +87,14 @@ export function ControlesBuscador({
       />
 
       <div className="min-w-0 flex-1 max-[760px]:w-full">
-        <FraseDeBusqueda
+        <BuscadorUnico
           base={base}
           vista={filtros.vista}
+          escrito={filtros.q ?? ""}
           lectura={lectura}
           limpiarHref={hrefOportunidades(base, {}, { vista: filtros.vista })}
         />
         <div className="mb-5 flex flex-wrap gap-2.5 rounded-tarjeta bg-white p-3.5 shadow-tarjeta">
-          <CampoTexto
-            inicial={filtros.q ?? ""}
-            reinicios={reinicios}
-            onAplicar={(q) => aplicar({ q: q || null })}
-          />
           <Select
             aria-label="Nivel"
             value={filtros.nivel ?? ""}
@@ -252,49 +248,6 @@ function Interruptor({
   );
 }
 
-/** Texto libre con espera de 350 ms: no recarga el listado en cada tecla. */
-function CampoTexto({
-  inicial,
-  reinicios,
-  onAplicar,
-}: {
-  inicial: string;
-  reinicios: number;
-  onAplicar: (texto: string) => void;
-}) {
-  const [texto, setTexto] = useState(inicial);
-  const [reiniciosVistos, setReiniciosVistos] = useState(reinicios);
-  // Limpiar filtros vacía el campo (ajuste de estado durante el render, sin efecto).
-  if (reinicios !== reiniciosVistos) {
-    setReiniciosVistos(reinicios);
-    setTexto("");
-  }
-  const espera = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(espera.current), []);
-
-  return (
-    <Input
-      type="search"
-      aria-label="Buscar por institución o materia"
-      placeholder="Buscar por institución o materia"
-      value={texto}
-      maxLength={80}
-      onChange={(e) => {
-        const nuevo = e.target.value;
-        setTexto(nuevo);
-        clearTimeout(espera.current);
-        espera.current = setTimeout(() => onAplicar(nuevo.trim()), 350);
-      }}
-      onKeyDown={(e) => {
-        if (e.key !== "Enter") return;
-        clearTimeout(espera.current);
-        onAplicar(e.currentTarget.value.trim());
-      }}
-      className="min-w-[180px] flex-1"
-    />
-  );
-}
-
 function RangoDeBusqueda({
   vigente,
   porDefecto,
@@ -370,31 +323,41 @@ function RangoDeBusqueda({
   );
 }
 
+/** Lo que se entendió de lo escrito en el buscador (ver `leerFraseDeTrabajo`). */
+export type LecturaDelBuscador = { frase: string; leido: string[]; reconocido: boolean; texto: string; sinEntender: string[] };
+
 /**
- * "Buscá con IA": una frase libre ("suplencia de inglés, de mañana, primaria") que el servidor convierte en los filtros de al lado.
- * Una frase nueva reemplaza los filtros; después se pueden ajustar a mano. No hay ningún modelo detrás: ver `leerFraseDeTrabajo`.
+ * El buscador único: un solo campo para escribir una institución, una materia o contar qué se busca ("suplencia de inglés,
+ * primaria, de mañana"). El servidor decide si lo escrito pide filtros o es un nombre (ver `leerFraseDeTrabajo`). Lo nuevo
+ * reemplaza los filtros; después se pueden ajustar a mano. No hay ningún modelo detrás.
  */
-function FraseDeBusqueda({
+function BuscadorUnico({
   base,
   vista,
+  escrito,
   lectura,
   limpiarHref,
 }: {
   base: string;
   vista: FiltrosOportunidades["vista"];
-  lectura: { frase: string; leido: string[]; reconocido: boolean; sinEntender: string[] } | null;
+  /** El texto que ya filtra la pantalla (`?q=`): se muestra en el campo para que no filtre a escondidas. */
+  escrito: string;
+  lectura: LecturaDelBuscador | null;
   limpiarHref: string;
 }) {
   const router = useRouter();
   const [pendiente, empezar] = useTransition();
+  const valor = lectura?.frase ?? escrito;
   return (
-    <section aria-label="Buscá con IA" className="mb-4 rounded-tarjeta bg-white px-5 py-[18px] shadow-tarjeta">
-      <div className="mb-2.5 flex items-center gap-2 text-rosa">
+    <section aria-label="Buscador" className="mb-4 rounded-tarjeta bg-white px-5 py-[18px] shadow-tarjeta">
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-rosa">
         <Icono nombre="chispas" tamano={17} trazo={1.6} relleno />
         <span className="text-sm leading-none font-semibold">Buscá con IA</span>
+        <span className="text-[12.5px] leading-none font-normal text-apagado">por institución, materia o contándonos qué buscás</span>
       </div>
       <form
-        key={lectura?.frase ?? ""}
+        key={`${lectura?.frase ?? ""}\u0000${escrito}`}
+        role="search"
         className="flex flex-wrap gap-2.5"
         onSubmit={(e) => {
           e.preventDefault();
@@ -407,11 +370,13 @@ function FraseDeBusqueda({
         }}
       >
         <Input
+          type="search"
           name="frase"
-          aria-label="Contanos qué buscás"
-          defaultValue={lectura?.frase ?? ""}
+          aria-label="Buscar por institución, por materia o contando qué buscás"
+          defaultValue={valor}
           maxLength={200}
-          placeholder="Contanos qué buscás: «suplencia de inglés en primaria, de mañana»"
+          enterKeyHint="search"
+          placeholder="Ej.: «suplencia de inglés en primaria, de mañana»"
           className="min-w-[240px] flex-1"
         />
         <Boton type="submit" disabled={pendiente} className="flex-none rounded-full bg-rosa px-7 hover:bg-[#7A0F4D]">
@@ -421,13 +386,13 @@ function FraseDeBusqueda({
       {lectura && (
         <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-borde pt-3.5">
           <span className="text-[12.5px] leading-none font-medium text-apagado">Entendimos:</span>
-          {lectura.reconocido ? (
-            lectura.leido.map((l) => (
-              <Insignia key={l} tono="azul">
-                {l}
-              </Insignia>
-            ))
-          ) : (
+          {lectura.leido.map((l) => (
+            <Insignia key={l} tono="azul">
+              {l}
+            </Insignia>
+          ))}
+          {lectura.texto && <Insignia tono="azul">Institución o materia: «{lectura.texto}»</Insignia>}
+          {!lectura.reconocido && !lectura.texto && (
             <Insignia tono="azul">No reconocimos filtros: te mostramos todas las búsquedas</Insignia>
           )}
           <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
@@ -435,7 +400,8 @@ function FraseDeBusqueda({
           </Link>
           {lectura.reconocido && lectura.sinEntender.length > 0 && (
             <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
-              No pudimos aplicar como filtro: {lectura.sinEntender.map((p) => `«${p}»`).join(", ")}.
+              No pudimos aplicar como filtro: {lectura.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es el nombre de una institución,
+              buscalo solo, sin el resto de la frase.
             </p>
           )}
         </div>

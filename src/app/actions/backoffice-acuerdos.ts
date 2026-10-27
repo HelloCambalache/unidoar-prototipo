@@ -14,7 +14,7 @@ import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 
 /*
- * Precio acordado con una institución, del lado del equipo (solo admin). Un abono propio dentro del rango del plan (entre el piso y la lista) o
+ * Precio acordado con una institución, del lado del equipo (solo admin). Un abono propio (cualquier monto hasta el de lista) o
  * un convenio a medida (un monto mensual fijo, para redes). Rige desde la próxima factura: las ya emitidas guardan su monto, y el débito
  * automático se pone al día con el cron diario. Queda en la actividad de la institución con los montos de antes y de después (la nota es
  * interna y no va a la auditoría). No se le avisa a la institución: es un acuerdo que ya conoce.

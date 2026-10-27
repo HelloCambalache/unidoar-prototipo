@@ -57,6 +57,11 @@ export function PiePublico() {
               </Link>
             </li>
             <li>
+              <Link href="/ayuda" className={ENLACE}>
+                Ayuda
+              </Link>
+            </li>
+            <li>
               <Link href="/contacto" className={ENLACE}>
                 Contacto
               </Link>

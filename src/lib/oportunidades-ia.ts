@@ -1,4 +1,4 @@
-import { interpretarBusqueda } from "@/lib/busqueda-ia";
+import { interpretarBusqueda, textoDeLaFrase } from "@/lib/busqueda-ia";
 import { NIVELES, TURNOS } from "@/lib/catalogo";
 import { ETIQUETA_FILTRO_CATEGORIA, type FiltrosOportunidades } from "@/lib/oportunidades";
 
@@ -6,7 +6,8 @@ import { ETIQUETA_FILTRO_CATEGORIA, type FiltrosOportunidades } from "@/lib/opor
  * "Contanos qué buscás" para el profesional: la misma lectura de frase libre que usa la institución
  * (`interpretarBusqueda`), pero llevada a los filtros de las ofertas (`FiltrosOportunidades`). Función pura y sin
  * costo: no hay ningún modelo detrás. Solo se aplica lo que esta pantalla sabe filtrar; lo demás se devuelve en
- * `sinEntender` para decirlo, en vez de ignorarlo en silencio.
+ * `sinEntender` para decirlo, en vez de ignorarlo en silencio. Si la frase no pide ningún filtro, se busca como texto
+ * (el buscador de ofertas es uno solo: la misma caja sirve para "inglés en primaria" y para "San Andrés").
  */
 
 export type LecturaDeFrase = {
@@ -15,6 +16,11 @@ export type LecturaDeFrase = {
   /** Lo que se entendió y se aplicó, listo para mostrar. */
   leido: string[];
   reconocido: boolean;
+  /**
+   * Lo que se busca como texto en el puesto, la materia y la institución de las ofertas ("San Andrés"): solo cuando la frase
+   * no pidió ningún filtro (un nombre o una materia sueltos). Ya viene aplicado en `filtros.q`.
+   */
+  texto: string;
   /** Lo que la frase pedía y no se pudo aplicar. */
   sinEntender: string[];
 };
@@ -78,5 +84,9 @@ export function leerFraseDeTrabajo(frase: string, disciplinas: string[], opcione
     }
   }
 
-  return { filtros, leido, reconocido: leido.length > 0, sinEntender: [...new Set(sinEntender)].slice(0, 4) };
+  // El buscador es uno solo: lo escrito que no pide ningún filtro ("Colegio San Andrés", "ajedrez") se busca como texto.
+  const texto = textoDeLaFrase(r);
+  if (texto) filtros.q = texto;
+
+  return { filtros, leido, reconocido: leido.length > 0, texto, sinEntender: [...new Set(sinEntender)].slice(0, 4) };
 }

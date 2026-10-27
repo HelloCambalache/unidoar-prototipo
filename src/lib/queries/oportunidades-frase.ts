@@ -6,8 +6,8 @@ import { vocabularioBuscador } from "@/lib/queries/profesionales";
 type Params = Record<string, string | string[] | undefined>;
 
 /**
- * Los filtros de una pantalla de búsqueda de trabajo. Si la URL trae una frase de "Buscá con IA" (`?frase=`), los filtros salen
- * de leerla (y reemplazan a los demás de la URL); si no, de los parámetros de siempre. Al tocar un filtro después, la URL se arma
+ * Los filtros de una pantalla de búsqueda de trabajo. Si la URL trae lo escrito en el buscador (`?frase=`), los filtros (o el
+ * texto, si no pidió ninguno) salen de leerlo y reemplazan a los demás de la URL; si no, de los parámetros de siempre. Al tocar un filtro después, la URL se arma
  * desde esos filtros y la frase ya no viaja: el ajuste manual manda.
  */
 export async function filtrosConFrase(params: Params, opciones: { publico?: boolean } = {}) {
@@ -19,5 +19,8 @@ export async function filtrosConFrase(params: Params, opciones: { publico?: bool
   const { disciplinas } = await vocabularioBuscador();
   const leida = leerFraseDeTrabajo(frase, disciplinas, opciones);
   const filtros: FiltrosOportunidades = { ...leida.filtros, ...(normales.vista ? { vista: normales.vista } : {}) };
-  return { filtros, lectura: { frase, leido: leida.leido, reconocido: leida.reconocido, sinEntender: leida.sinEntender } };
+  return {
+    filtros,
+    lectura: { frase, leido: leida.leido, reconocido: leida.reconocido, texto: leida.texto, sinEntender: leida.sinEntender },
+  };
 }

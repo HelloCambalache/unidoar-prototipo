@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { esCuitValido, esDniValido, formatearCuit, soloDigitos } from "./documentos";
+import { esCuitValido, esDniValido, formatearCuit, FOTOS_DNI_SE_ELIMINAN, soloDigitos } from "./documentos";
 
 describe("esDniValido", () => {
   it("acepta 7 u 8 números, con o sin puntos", () => {
@@ -62,5 +62,12 @@ describe("formatearCuit y soloDigitos", () => {
   it("soloDigitos saca espacios, puntos y guiones y deja lo demás", () => {
     assert.equal(soloDigitos("12.345-678 "), "12345678");
     assert.equal(soloDigitos("12a45"), "12a45");
+  });
+});
+
+describe("lo que se le promete a la persona sobre las fotos del DNI", () => {
+  it("dice que se eliminan dentro de las 24 horas de validada la identidad y que solo queda el número", () => {
+    assert.match(FOTOS_DNI_SE_ELIMINAN, /dentro de las 24 horas de que validamos tu identidad/);
+    assert.match(FOTOS_DNI_SE_ELIMINAN, /solo conservamos el número/);
   });
 });

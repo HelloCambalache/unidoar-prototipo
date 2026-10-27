@@ -1,7 +1,7 @@
 /*
- * Interruptor para ocultar los datos de ejemplo (las instituciones y los profesionales `es_demo` que sembró `pnpm db:seed`, y los
- * testimonios de ejemplo) de todo lo que ve la gente: sitio público, catálogo, buscadores, recomendaciones y las métricas del
- * backoffice. Se prende con la variable de entorno `OCULTAR_DATOS_DE_EJEMPLO=1` en Vercel el día que se abre al público, sin tocar la base.
+ * Interruptor para ocultar los datos de ejemplo (las instituciones y los profesionales `es_demo` que sembró `pnpm db:seed`) de todo lo
+ * que ve la gente: sitio público, catálogo, buscadores, recomendaciones y las métricas del backoffice. (Los testimonios ya no dependen de
+ * esto: los de ejemplo se ocultaron y los que se ven los carga el equipo.) Se prende con la variable de entorno `OCULTAR_DATOS_DE_EJEMPLO=1` en Vercel el día que se abre al público, sin tocar la base.
  * Con la variable apagada (lo de hoy) los ejemplos se ven como siempre, que es lo que sirve para mostrar el producto.
  *
  * Ocultarlos no los borra: las cuentas de prueba que se ligaron a ellos (`pnpm db:vincular`) siguen entrando a su propia área.

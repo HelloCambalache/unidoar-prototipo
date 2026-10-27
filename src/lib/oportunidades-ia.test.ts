@@ -73,6 +73,35 @@ describe("la frase de un profesional que busca trabajo", () => {
   });
 });
 
+describe("el buscador único del profesional: lo que no pide filtros se busca como texto", () => {
+  it("una institución suelta se busca por su nombre, sin el relleno", () => {
+    const r = leer("colegio San Andrés");
+    assert.equal(r.texto, "San Andrés");
+    assert.deepEqual(r.filtros, { q: "San Andrés" });
+    assert.equal(r.reconocido, false);
+  });
+
+  it("una materia que el catálogo tiene sigue siendo la materia y no suma texto", () => {
+    const r = leer("inglés");
+    assert.deepEqual(r.filtros, { q: "Inglés" });
+    assert.equal(r.texto, "");
+    assert.deepEqual(r.leido, ["Inglés"]);
+  });
+
+  it("si la frase pide filtros, lo que sobra se avisa y no se busca", () => {
+    const r = leer("profe de inglés en olivos");
+    assert.equal(r.texto, "");
+    assert.deepEqual(r.filtros, { q: "Inglés" });
+    assert.deepEqual(r.sinEntender, ["olivos"]);
+  });
+
+  it("sin palabras propias no hay texto", () => {
+    const r = leer("quiero trabajar");
+    assert.equal(r.texto, "");
+    assert.equal(r.filtros.q, undefined);
+  });
+});
+
 describe("el modo 'busca trabajo' del reconocedor", () => {
   it("devuelve los turnos con el nombre de una oferta y no cambia el modo de la institución", () => {
     assert.deepEqual(interpretarBusqueda("profe de noche", {}, { buscaTrabajo: true }).filtros.disponibilidad, ["Noche"]);

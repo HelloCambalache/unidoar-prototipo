@@ -1,5 +1,6 @@
 import type { Remitente } from "./config";
 import { rutaParaResponder } from "@/lib/entrevista-respuesta";
+import { DIAS_DE_GRACIA, QUE_SE_LIMITA } from "@/lib/mora";
 
 /*
  * Los mails de la app: qué dice cada uno, para quién es y cómo se arma el HTML y el texto plano. Es todo código puro
@@ -38,7 +39,8 @@ export type DatosDe = {
   M50: { institucion: string; periodo: string; monto: string; vence: string };
   M51: { institucion: string; periodo: string; monto: string; vence: string };
   /** `segundoAviso`: ya pasó más de una semana del vencimiento. */
-  M52: { institucion: string; periodo: string; monto: string; vencio: string; segundoAviso: boolean };
+  /** `ultimoDiaDeGracia`: hasta cuándo puede pagar antes de que se limite la cuenta (ver src/lib/mora.ts). */
+  M52: { institucion: string; periodo: string; monto: string; vencio: string; segundoAviso: boolean; ultimoDiaDeGracia: string };
   M53: { institucion: string; periodo: string; monto: string };
   M54: { institucion: string; periodo: string; monto: string };
   M55: { institucion: string; plan: string };
@@ -50,6 +52,13 @@ export type DatosDe = {
   M61: { docente: string; detalle: string; ruta: string };
   M62: { cuenta: string; tipo: string; ruta: string };
   M63: { institucion: string; plan: string; ruta: string };
+  /** Una institución eligió pagar el abono por semestre (al crear la cuenta o desde Plan y facturación): el equipo coordina el pago y lo registra. */
+  M67: { institucion: string; total: string; meses: number; alCrearLaCuenta: boolean; ruta: string };
+  /**
+   * Mora (ver src/lib/mora.ts): `limitada: false` es el último aviso (quedan pocos días de gracia) y `limitada: true` avisa que la gracia terminó y la
+   * cuenta quedó limitada. Una vez por factura y etapa.
+   */
+  M68: { institucion: string; limitada: boolean; periodo: string; monto: string; vencio: string; ultimoDiaDeGracia: string };
 };
 
 export type PlantillaId = keyof DatosDe;
@@ -357,10 +366,49 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       asunto: `Tu factura de ${minuscula(d.periodo)} ${d.segundoAviso ? "sigue vencida" : "está vencida"}`,
       previa: `La factura de ${d.periodo} de ${d.institucion} está vencida.`,
       titulo: "Tu factura está vencida",
-      parrafos: [["La factura de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), " venció el ", n(d.vencio), "."]],
+      parrafos: [
+        ["La factura de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), " venció el ", n(d.vencio), "."],
+        [
+          "Tenés tiempo hasta el ",
+          n(d.ultimoDiaDeGracia),
+          `: pasada esa fecha, si el pago no se acreditó, no vas a poder ${QUE_SE_LIMITA} hasta que se regularice. Lo demás de tu cuenta sigue funcionando.`,
+        ],
+      ],
       boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
       nota: ["Si ya la pagaste, respondé este mail con el comprobante y la registramos. Si necesitás otra fecha, escribinos."],
     }),
+  },
+  M68: {
+    grupo: "facturacion",
+    remitente: "facturacion",
+    contenido: (d) =>
+      d.limitada
+        ? {
+            asunto: "Tu cuenta está limitada por una factura vencida",
+            previa: `La factura de ${d.periodo} sigue vencida y la cuenta quedó limitada.`,
+            titulo: "Tu cuenta está limitada",
+            parrafos: [
+              ["La factura de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), " venció el ", n(d.vencio), " y pasaron más de ", String(DIAS_DE_GRACIA), " días."],
+              [`Hasta que se acredite el pago no podés ${QUE_SE_LIMITA}. Lo demás de tu cuenta sigue funcionando, y apenas registremos el pago se levanta sola.`],
+            ],
+            boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
+            nota: ["Si ya la pagaste, respondé este mail con el comprobante y la registramos. Si necesitás otra fecha, escribinos."],
+          }
+        : {
+            asunto: `Tu cuenta se limita después del ${d.ultimoDiaDeGracia}`,
+            previa: `Último aviso: pagá la factura de ${d.periodo} antes del ${d.ultimoDiaDeGracia}.`,
+            titulo: "Último aviso antes de limitar tu cuenta",
+            parrafos: [
+              ["La factura de ", n(d.periodo), " de ", n(d.institucion), " por ", n(d.monto), " venció el ", n(d.vencio), " y sigue sin pagarse."],
+              [
+                "Si el pago no se acredita hasta el ",
+                n(d.ultimoDiaDeGracia),
+                `, tu cuenta queda limitada: no vas a poder ${QUE_SE_LIMITA} hasta que se regularice. Lo demás sigue funcionando.`,
+              ],
+            ],
+            boton: { texto: "Ver mi plan y mis facturas", ruta: "/institucion/plan" },
+            nota: ["Si ya la pagaste, respondé este mail con el comprobante y la registramos. Si necesitás otra fecha, escribinos."],
+          },
   },
   M53: {
     grupo: "facturacion",
@@ -487,6 +535,30 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       titulo: "Pedido de cambio de plan",
       parrafos: [[n(d.institucion), " pidió pasar al plan ", n(d.plan), "."]],
       boton: { texto: "Verlo en el backoffice", ruta: d.ruta },
+    }),
+  },
+  M67: {
+    grupo: "interno",
+    remitente: "app",
+    // Un tope general: elegir y deshacer el semestre en un bucle no puede llenar la casilla del equipo.
+    tope: { max: 30, horas: 24 },
+    contenido: (d) => ({
+      asunto: `${d.institucion} eligió pagar por semestre`,
+      previa: `Semestre de ${d.total} (${d.meses} meses).`,
+      titulo: "Pago por semestre",
+      parrafos: [
+        [
+          n(d.institucion),
+          d.alCrearLaCuenta ? " eligió pagar el abono por semestre al crear su cuenta: " : " pidió pagar el abono por semestre: ",
+          n(d.total),
+          ` por ${d.meses} meses.`,
+        ],
+        [
+          d.alCrearLaCuenta ? "Cuando verifiques la cuenta, coordiná" : "Coordiná",
+          " el pago con la institución (transferencia o efectivo) y registralo en su ficha de cobros con «Registrar semestre al contado».",
+        ],
+      ],
+      boton: { texto: "Abrir sus cobros", ruta: d.ruta },
     }),
   },
 };

@@ -13,7 +13,8 @@ import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, 
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { avisoAlEquipoDeSemestre, puedePagarSemestre, resumenDeSemestre } from "@/lib/forma-de-pago";
-import { esClavePlan, type Planes } from "@/lib/planes";
+import { hoyAR } from "@/lib/cobros";
+import { esClavePlan, pesos, type Planes } from "@/lib/planes";
 import { guardarFormaDePago } from "@/lib/queries/forma-de-pago";
 import { bloquearCuposDeFundadoras, fundadorasActuales } from "@/lib/queries/fundadoras";
 import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
@@ -154,6 +155,13 @@ async function anotarFormaDePagoDelAlta(
       texto: avisoAlEquipoDeSemestre({ alCrearLaCuenta, total: r.total, meses: r.meses }),
       enlace: `/backoffice/cobros/${institucionId}`,
     });
+    // Además de la campanita, un mail al equipo (uno por institución y por día).
+    await encolarParaEquipo(
+      db,
+      "M67",
+      { institucion: nombre, total: pesos(r.total), meses: r.meses, alCrearLaCuenta, ruta: `/backoffice/cobros/${institucionId}` },
+      { clave: `M67:${institucionId}:${hoyAR()}` },
+    );
   } catch (e) {
     console.error("No se pudo anotar la forma de pago del alta", resumenDeError(e));
   }

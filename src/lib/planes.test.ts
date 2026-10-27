@@ -28,7 +28,7 @@ const edicion = (): EdicionDePlanes => structuredClone(edicionDesdeCatalogo(CATA
 const filasDeLanzamiento = (): FilaDePlan[] =>
   CLAVES_PLAN.map((clave) => {
     const p = CATALOGO_POR_DEFECTO.planes[clave];
-    return { clave, etiqueta: p.label, precio: p.precio, precioMinimo: p.precioMinimo, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente };
+    return { clave, etiqueta: p.label, precio: p.precio, resumen: p.resumen, detalle: p.detalle, vigente: p.vigente };
   });
 
 const condicionesDeLanzamiento = (): FilaDeCondiciones => {
@@ -216,7 +216,7 @@ describe("precio acordado con una institución", () => {
   it("un acuerdo solo rige con el plan para el que se acordó: al cambiar de plan paga la lista", () => {
     const deClubes: AcuerdoDePrecio = { modalidad: "abono", monto: 29_000, plan: "deportiva" };
     assert.equal(P.montoDePlan("deportiva", 1, deClubes), 29_000, "con su plan, rige");
-    assert.equal(P.montoDePlan("colegio", 1, deClubes), 50_000, "pasado a Colegios paga la lista, no $ 29.000 (por debajo del piso de $ 48.000)");
+    assert.equal(P.montoDePlan("colegio", 1, deClubes), 50_000, "pasado a Colegios paga la lista, no los $ 29.000 que tenía acordados en Clubes");
     assert.equal(P.montoDePlan("colegio", 3, deClubes), 50_000 + 2 * 25_000, "y las sedes adicionales siguen con su descuento sobre la lista");
     assert.equal(P.montoDePlan("puntual", 1, deClubes), 110_000, "en una búsqueda puntual tampoco");
     const deRed: AcuerdoDePrecio = { modalidad: "total", monto: 180_000, plan: "multisede" };
@@ -271,23 +271,17 @@ describe("precio acordado con una institución", () => {
     assert.equal(P.packDe("deportiva", 1, abono(28_000)).conReferido, 112_000);
   });
 
-  it("el rango de un abono va del piso a la lista; sin piso es un solo valor", () => {
-    assert.deepEqual(P.rangoDeAbono("colegio"), { minimo: 48_000, maximo: 50_000 });
-    assert.deepEqual(P.rangoDeAbono("deportiva"), { minimo: 28_000, maximo: 30_000 });
-    assert.deepEqual(P.rangoDeAbono("multisede"), { minimo: 15_000, maximo: 15_000 });
+  it("el rango de un abono va de un peso a la lista: no hay precio mínimo", () => {
+    assert.deepEqual(P.rangoDeAbono("colegio"), { minimo: 1, maximo: 50_000 });
+    assert.deepEqual(P.rangoDeAbono("deportiva"), { minimo: 1, maximo: 30_000 });
+    assert.deepEqual(P.rangoDeAbono("multisede"), { minimo: 1, maximo: 15_000 });
   });
 
-  it("acepta un abono dentro del rango y rechaza el que se sale", () => {
-    assert.equal(P.errorDeAcuerdo("colegio", abono(48_000)), null);
-    assert.equal(P.errorDeAcuerdo("colegio", abono(49_000)), null);
-    assert.equal(P.errorDeAcuerdo("colegio", abono(50_000)), null);
-    assert.match(P.errorDeAcuerdo("colegio", abono(47_999))!, /entre \$ 48\.000 y \$ 50\.000/);
-    assert.match(P.errorDeAcuerdo("colegio", abono(50_001))!, /entre \$ 48\.000 y \$ 50\.000/);
-  });
-
-  it("sin piso no hay abono para acordar: hace falta un piso o un convenio", () => {
-    assert.match(P.errorDeAcuerdo("multisede", abono(14_000))!, /no tiene un piso/);
-    assert.equal(P.errorDeAcuerdo("multisede", abono(15_000)), null);
+  it("acepta un abono de cualquier monto hasta la lista y rechaza el que la pasa", () => {
+    for (const monto of [1, 20_000, 28_000, 48_000, 49_999, 50_000]) assert.equal(P.errorDeAcuerdo("colegio", abono(monto)), null, String(monto));
+    assert.match(P.errorDeAcuerdo("colegio", abono(50_001))!, /no puede pasar el precio de lista \(\$ 50\.000\)/);
+    assert.equal(P.errorDeAcuerdo("multisede", abono(14_000)), null, "sin mínimo, también en un plan por sede");
+    assert.ok(P.errorDeAcuerdo("multisede", abono(15_001)));
     assert.equal(P.errorDeAcuerdo("multisede", convenio(14_000)), null, "un convenio no tiene rango");
   });
 
@@ -299,12 +293,12 @@ describe("precio acordado con una institución", () => {
 });
 
 describe("lo que se manda al navegador y lo que se le dice a una institución", () => {
-  it("el catálogo para el navegador no lleva el piso de precios ni los meses que se bonifican por recomendar", () => {
+  it("el catálogo para el navegador no lleva los meses que se bonifican por recomendar ni ninguna clave de precio mínimo", () => {
     const c = catalogoParaNavegador(CATALOGO_POR_DEFECTO);
-    for (const clave of CLAVES_PLAN) assert.equal(c.planes[clave].precioMinimo, null, clave);
     assert.equal(c.condiciones.referidoMesesMensual, 0);
     assert.equal(c.condiciones.pack.mesesConReferido, c.condiciones.pack.mesesQueSePagan);
-    // Lo que viaja en la página no puede traer ninguno de los tres pisos (colegios, clubes y búsqueda puntual).
+    // Ya no existe un piso: nada de eso viaja en la página.
+    assert.ok(!JSON.stringify(c).includes("precioMinimo"));
     assert.ok(!/48000|28000|95000/.test(JSON.stringify(c)));
   });
 
@@ -316,7 +310,6 @@ describe("lo que se manda al navegador y lo que se le dice a una institución", 
     assert.equal(enElNavegador.packDe("deportiva").anticipado, P.packDe("deportiva").anticipado);
     assert.equal(c.condiciones.descuentoSedeExtra, CATALOGO_POR_DEFECTO.condiciones.descuentoSedeExtra);
     assert.deepEqual(c.condiciones.puntual, CATALOGO_POR_DEFECTO.condiciones.puntual);
-    assert.equal(CATALOGO_POR_DEFECTO.planes.colegio.precioMinimo, 48_000, "no toca el catálogo original");
   });
 
   it("para la página pública también se saca el precio base de Multisede (dice «a convenir»)", () => {
@@ -333,46 +326,27 @@ describe("lo que se manda al navegador y lo que se le dice a una institución", 
   });
 });
 
-describe("el piso del rango de precio", () => {
-  it("los planes de colegios y clubes arrancan con el piso del esquema; el resto, sin piso", () => {
-    assert.equal(P.planes.colegio.precioMinimo, 48_000);
-    assert.equal(P.planes.deportiva.precioMinimo, 28_000);
-    assert.equal(P.planes.multisede.precioMinimo, null);
-  });
-
-  it("de la base toma el piso que cargó el equipo, y null es 'sin piso' (no vuelve al de lanzamiento)", () => {
-    const con = (clave: string, precioMinimo: number | null | undefined) =>
-      filasDeLanzamiento().map((f) => (f.clave === clave ? { ...f, precioMinimo } : f));
-    assert.equal(catalogoDesdeLaBase(con("colegio", 45_000), condicionesDeLanzamiento()).planes.colegio.precioMinimo, 45_000);
-    assert.equal(catalogoDesdeLaBase(con("colegio", null), condicionesDeLanzamiento()).planes.colegio.precioMinimo, null, "el equipo lo sacó");
-    assert.equal(catalogoDesdeLaBase(con("colegio", undefined), condicionesDeLanzamiento()).planes.colegio.precioMinimo, 48_000, "sin el dato vale el de lanzamiento");
-  });
-
-  it("un piso que no tiene sentido (más alto que la lista, cero o con centavos) se descarta", () => {
-    for (const roto of [60_000, 0, -1, 1000.5]) {
-      const filas = filasDeLanzamiento().map((f) => (f.clave === "colegio" ? { ...f, precioMinimo: roto } : f));
-      assert.equal(catalogoDesdeLaBase(filas, condicionesDeLanzamiento()).planes.colegio.precioMinimo, null, `${roto}`);
+describe("no hay precio mínimo", () => {
+  it("los planes no tienen piso: ni de lanzamiento ni en lo que edita el equipo", () => {
+    for (const clave of CLAVES_PLAN) {
+      assert.ok(!("precioMinimo" in CATALOGO_POR_DEFECTO.planes[clave]), clave);
+      assert.ok(!("precioMinimo" in edicion().planes[clave]), clave);
     }
   });
 
-  it("la edición acepta un piso igual o menor a la lista y no uno más alto", () => {
-    const e = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
-    e.planes.colegio.precioMinimo = 50_000;
-    assert.equal(edicionDePlanesSchema.safeParse(e).success, true);
-    e.planes.colegio.precioMinimo = null;
-    assert.equal(edicionDePlanesSchema.safeParse(e).success, true, "sin piso");
-    e.planes.colegio.precioMinimo = 50_001;
-    const r = edicionDePlanesSchema.safeParse(e);
-    assert.equal(r.success, false);
-    if (!r.success) assert.ok(camposDeErrorDePlanes(r.error)["planes.colegio.precioMinimo"]);
-    e.planes.colegio.precioMinimo = 0;
-    assert.equal(edicionDePlanesSchema.safeParse(e).success, false);
+  it("un piso que haya quedado guardado en la base se ignora", () => {
+    const filas = filasDeLanzamiento().map((f) => ({ ...f, precioMinimo: 45_000 }));
+    const catalogo = catalogoDesdeLaBase(filas, condicionesDeLanzamiento());
+    for (const clave of CLAVES_PLAN) assert.ok(!("precioMinimo" in catalogo.planes[clave]), clave);
+    assert.equal(catalogo.planes.colegio.precio, 50_000);
   });
 
-  it("cambiar el piso queda anotado como cambio del plan", () => {
-    const despues = structuredClone(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO));
-    despues.planes.deportiva.precioMinimo = 25_000;
-    assert.deepEqual(cambiosDePlanes(edicionDesdeCatalogo(CATALOGO_POR_DEFECTO), despues), [{ tipo: "plan", plan: "deportiva", campos: ["precio mínimo"] }]);
+  it("la edición no pide ni valida un mínimo, y cambiar solo el precio queda anotado como cambio de precio", () => {
+    const e = edicion();
+    assert.equal(edicionDePlanesSchema.safeParse(e).success, true);
+    const despues = edicion();
+    despues.planes.deportiva.precio = 31_000;
+    assert.deepEqual(cambiosDePlanes(e, despues), [{ tipo: "precio", plan: "deportiva", antes: 30_000, despues: 31_000 }]);
   });
 });
 
@@ -856,7 +830,6 @@ describe("la búsqueda puntual", () => {
     for (const clave of ["colegio", "deportiva", "multisede"]) assert.equal(P.esPuntual(clave), false, clave);
     assert.equal(P.equivalenteMensual("puntual"), 0, "no entra en el MRR");
     assert.equal(P.planDe("puntual").precio, 110_000);
-    assert.equal(P.planDe("puntual").precioMinimo, 95_000);
   });
 
   it("escribe el precio por búsqueda y no por mes", () => {
@@ -915,15 +888,11 @@ describe("la búsqueda puntual", () => {
     }
   });
 
-  it("un cambio de las condiciones queda anotado, y el piso no puede pasar el precio", () => {
+  it("un cambio de las condiciones queda anotado", () => {
     const antes = edicion();
     const despues = edicion();
     despues.condiciones.puntual.vigenciaDias = 45;
     assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["condiciones de la búsqueda puntual"] }]);
-
-    const roto = edicion();
-    roto.planes.puntual.precioMinimo = roto.planes.puntual.precio + 1;
-    assert.equal(edicionDePlanesSchema.safeParse(roto).success, false);
   });
 });
 

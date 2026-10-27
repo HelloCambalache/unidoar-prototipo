@@ -1,8 +1,9 @@
 import "server-only";
-import { claveDePostulantes, type Recordatorio } from "./claves";
+import { claveDePostulantes, sumarDias, type Recordatorio } from "./claves";
 import { encolarParaUsuarios } from "./cola";
 import type { EtapaPostulacion } from "@/db/schema";
 import { etiquetaDeCobertura, etiquetaPeriodo, fechaBreve } from "@/lib/cobros";
+import { DIAS_DE_GRACIA, type AvisoDeMora } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 
@@ -131,8 +132,35 @@ export async function correoDeRecordatorio(ejecutor: Ejecutor, r: Recordatorio, 
   if (r.plantilla === "M51") {
     await encolarParaUsuarios(ejecutor, d.usuarioIds, "M51", { ...datos, vence: fechaBreve(d.fechaCobro) }, { clave: () => r.clave });
   } else {
-    await encolarParaUsuarios(ejecutor, d.usuarioIds, "M52", { ...datos, vencio: fechaBreve(d.fechaCobro), segundoAviso: r.segundoAviso }, { clave: () => r.clave });
+    await encolarParaUsuarios(
+      ejecutor,
+      d.usuarioIds,
+      "M52",
+      { ...datos, vencio: fechaBreve(d.fechaCobro), segundoAviso: r.segundoAviso, ultimoDiaDeGracia: fechaBreve(sumarDias(d.fechaCobro, DIAS_DE_GRACIA)) },
+      { clave: () => r.clave },
+    );
   }
+}
+
+/**
+ * M68: la mora (ver src/lib/mora.ts). `previo` es el último aviso (quedan pocos días de gracia) y `limitada` avisa que la cuenta quedó limitada. La clave
+ * (factura y etapa) hace que cada uno salga una sola vez aunque la tarea corra todos los días.
+ */
+export async function correoDeMora(ejecutor: Ejecutor, a: AvisoDeMora, d: Factura & { fechaCobro: string }) {
+  await encolarParaUsuarios(
+    ejecutor,
+    d.usuarioIds,
+    "M68",
+    {
+      institucion: d.institucion,
+      limitada: a.etapa === "limitada",
+      periodo: etiquetaPeriodo(d.periodo),
+      monto: pesos(d.monto),
+      vencio: fechaBreve(d.fechaCobro),
+      ultimoDiaDeGracia: fechaBreve(sumarDias(d.fechaCobro, DIAS_DE_GRACIA)),
+    },
+    { clave: () => a.clave },
+  );
 }
 
 /**

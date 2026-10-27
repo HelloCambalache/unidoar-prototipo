@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { cancelarSolicitudPlan, solicitarCambioPlan } from "@/app/actions/plan";
+import { cancelarSolicitudPlan, elegirFormaDePago, solicitarCambioPlan } from "@/app/actions/plan";
 import { BotonAccion } from "@/components/institucion/boton-accion";
 import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
+import { puedePagarSemestre, resumenDeSemestre, textoDeSemestre, type FormaDePago } from "@/lib/forma-de-pago";
 import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export function PlanPanel({
   vencidas,
   solicitud,
   puedeCambiar,
+  formaDePago,
 }: {
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
@@ -44,6 +46,8 @@ export function PlanPanel({
   vencidas: number;
   solicitud: { id: string; planSolicitado: PlanClave; cuando: string } | null;
   puedeCambiar: boolean;
+  /** Cómo prefiere pagar el abono (el semestre por adelantado o mes a mes): se elige en «Cambiar de plan». */
+  formaDePago: FormaDePago;
 }) {
   const P = crearPlanes(catalogo);
   const toast = useToast();
@@ -57,6 +61,33 @@ export function PlanPanel({
   const mostrarTotal = desglose.sedes > 1 || desglose.acordado;
   const conVariasSedes = desglose.sedes > 1;
   const sedesAdicionales = `${desglose.adicionales} ${desglose.adicionales === 1 ? "sede adicional" : "sedes adicionales"}`;
+
+  // El pago por semestre (pagás 5 meses y usás 6) se elige acá mismo, junto con los planes: es una preferencia que el equipo coordina y registra.
+  // Solo con un abono mensual y mientras no haya un semestre ya pago.
+  const ofreceSemestre = puedePagarSemestre(P, plan) && !semestrePagoHasta;
+  const resumenSemestre = ofreceSemestre ? resumenDeSemestre(P, plan, sedes, acuerdo) : null;
+  const semestral = formaDePago === "semestral";
+
+  const elegirSemestre = async (quiere: boolean) => {
+    if (quiere && resumenSemestre) {
+      const ok = await pedirConfirmacion(
+        `¿Pagar por semestre? ${textoDeSemestre(resumenSemestre)} No se cobra nada ahora: el equipo te contacta para coordinar el pago (transferencia o efectivo) y hasta entonces seguís con tu abono mensual.`,
+      );
+      if (!ok) return;
+    }
+    empezar(async () => {
+      try {
+        const r = await elegirFormaDePago(quiere ? "semestral" : "mensual");
+        if (!r.ok) toast(r.error, "error");
+        else {
+          toast(quiere ? "Listo: le avisamos al equipo para coordinar el pago del semestre" : "Volviste a pagar mes a mes");
+          setAbierto(false);
+        }
+      } catch {
+        toast("No pudimos guardar tu elección. Probá de nuevo.", "error");
+      }
+    });
+  };
 
   const pedir = async (destino: PlanClave) => {
     const p = P.planDe(destino);
@@ -117,6 +148,9 @@ export function PlanPanel({
                 : "No tenés cobros programados por ahora."}
           </div>
           {medioPago && <div className="mt-0.5 text-[13px] leading-normal text-white/65">Medio de pago: {medioPago}</div>}
+          {semestral && ofreceSemestre && (
+            <div className="mt-0.5 text-[13px] leading-normal text-white/65">Elegiste pagar por semestre: el equipo coordina el pago con vos.</div>
+          )}
         </div>
         {puedeCambiar && !solicitud && (
           <Boton
@@ -208,6 +242,26 @@ export function PlanPanel({
               </div>
             );
           })}
+          {resumenSemestre && (
+            <div className={cn("min-w-[220px] flex-1 rounded-tarjeta bg-white p-5", semestral ? "border-2 border-navy-700" : "border border-borde")}>
+              {semestral && (
+                <div className="mb-2.5">
+                  <Insignia className="bg-navy-700 text-white">Elegido</Insignia>
+                </div>
+              )}
+              <div className="mb-1 text-base leading-[1.2] font-semibold">Pago semestral</div>
+              <div className="mb-2.5 text-2xl leading-none font-semibold">
+                {pesos(resumenSemestre.total)}
+                <span className="text-[13px] font-normal text-apagado"> por {resumenSemestre.meses} meses</span>
+              </div>
+              <p className="m-0 mb-3.5 text-[13px] leading-normal text-apagado">
+                {textoDeSemestre(resumenSemestre)} Lo coordina el equipo (transferencia o efectivo); hasta entonces seguís con tu abono mensual.
+              </p>
+              <Boton variante="secundario" tamano="sm" onClick={() => elegirSemestre(!semestral)} disabled={pendiente} aria-busy={pendiente}>
+                {pendiente ? "Guardando…" : semestral ? "Volver a mes a mes" : "Elegir"}
+              </Boton>
+            </div>
+          )}
         </div>
       )}
     </>

@@ -99,6 +99,8 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const t = TEMAS[tema];
+  // El encabezado del celular lleva el nombre de la institución (y no el isotipo de UNIDOAR) solo en el área de institución.
+  const nombreEnCelular = tema === "institucion";
   const pathname = usePathname();
   const [, empezarSalida] = useTransition();
 
@@ -199,14 +201,20 @@ export function AppShell({
           >
             <Icono nombre="menu" tamano={22} trazo={2} />
           </button>
-          <Link href="/" className="flex items-center min-[861px]:hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- isotipo fijo */}
-            <img src="/assets/unidoar-logo.png" alt="UNIDOAR" className="size-8 object-contain" />
-          </Link>
-          <span className="min-w-0 flex-1 truncate font-display text-[15px] font-semibold text-navy-900 max-[560px]:hidden">
+          {/* En el celular, la institución ve SU nombre en el encabezado en lugar del isotipo de UNIDOAR (decisión del cliente, 2026-10-27); el isotipo sigue arriba del menú lateral, con el enlace al inicio. Los demás perfiles mantienen el isotipo en el celular. */}
+          {!nombreEnCelular && (
+            <Link href="/" className="flex items-center min-[861px]:hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element -- isotipo fijo */}
+              <img src="/assets/unidoar-logo.png" alt="UNIDOAR" className="size-8 object-contain" />
+            </Link>
+          )}
+          <span
+            title={nombre}
+            className={cn("min-w-0 flex-1 truncate font-display text-[15px] font-semibold text-navy-900", !nombreEnCelular && "max-[560px]:hidden")}
+          >
             {nombre}
           </span>
-          <span className="flex-1 min-[561px]:hidden" />
+          {!nombreEnCelular && <span className="flex-1 min-[561px]:hidden" />}
           <Link
             href={insignia.href}
             title={insignia.titulo}

@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62 y M63. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62, M63, M67 y M68. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -95,7 +95,7 @@ Van desde `facturacion@unidoar.com.ar` (solo envía) y las respuestas llegan al 
 |---|---|---|---|---|---|
 | M50 | Tu factura de {mes} ya está disponible | La crea el cron del día 1 (o el equipo) | Dueño y administradores | No existe | Lanzamiento |
 | M51 | Tu factura vence en 3 días | 3 días antes del cobro | Dueño y administradores | Solo recordatorio manual por WhatsApp | Lanzamiento |
-| M52 | Tu factura de {mes} está vencida | Pasada la fecha, y un segundo aviso a los 7 días | Dueño y administradores | Solo recordatorio manual por WhatsApp | Lanzamiento |
+| M52 | Tu factura de {mes} está vencida (dice hasta cuándo hay tiempo antes de que se limite la cuenta) | Pasada la fecha, y un segundo aviso a los 7 días | Dueño y administradores | Solo recordatorio manual por WhatsApp | Lanzamiento |
 | M53 | Recibimos tu pago de {mes} | El equipo registra el pago | Dueño y administradores | En la app | Lanzamiento |
 | M54 | Corregimos el registro de tu pago | El equipo anula un pago registrado | Dueño y administradores | En la app | Pronto |
 | M55 | Recibimos tu pedido de cambio de plan | La institución lo pide | Dueño | No existe | Pronto |
@@ -113,6 +113,8 @@ Llegan a un alias del equipo (por ejemplo `equipo@unidoar.com.ar`), no a una per
 | M61 | {Docente} subió documentación para revisar | Sube DNI, título o certificado | En la app (a los admins) | Lanzamiento |
 | M62 | {Cuenta} pidió la baja | Docente o institución | En la app (a los admins) | Lanzamiento |
 | M63 | {Institución} pidió cambiar de plan | Lo pide en Plan | En la app (a los admins) | Lanzamiento |
+| M68 | Tu cuenta se limita después del {fecha} / Tu cuenta está limitada por una factura vencida | Último aviso (días 12 a 15 de atraso) y al quedar limitada (desde el día 16); también a quien tiene débito automático | Dueño y administradores | Cartel en el área de la institución | Lanzamiento |
+| M67 | {Institución} eligió pagar por semestre | Lo elige al crear la cuenta o en Plan y facturación | En la app y por mail (a los admins) | Lanzamiento |
 | M64 | Institución nueva con el alta completa | Termina el alta | No existe | Pronto |
 | M65 | Resumen diario del equipo | Todas las mañanas | No existe | Pronto |
 | M66 | Falló una tarea automática o la base | El cron de facturas devuelve error, o `/api/salud` cae | No existe | Pronto |

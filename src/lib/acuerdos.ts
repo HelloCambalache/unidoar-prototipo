@@ -2,8 +2,8 @@ import { z } from "zod";
 import { pesos, type AcuerdoDePrecio } from "@/lib/planes";
 
 /*
- * Precio acordado con una institución (reglas puras, sin base: las usan la pantalla del equipo y la acción que guarda). El rango del abono
- * depende del plan (`Planes.rangoDeAbono` / `errorDeAcuerdo`); acá viven la forma de lo que se carga y cómo se cuenta.
+ * Precio acordado con una institución (reglas puras, sin base: las usan la pantalla del equipo y la acción que guarda). El tope del abono
+ * es el precio de lista del plan (`Planes.rangoDeAbono` / `errorDeAcuerdo`; no hay mínimo); acá viven la forma de lo que se carga y cómo se cuenta.
  */
 
 export const MODALIDADES_DE_ACUERDO = ["abono", "total"] as const;
@@ -14,7 +14,7 @@ export const ETIQUETA_DE_MODALIDAD: Record<ModalidadDeAcuerdo, string> = {
   total: "Convenio a medida",
 };
 
-/** Lo que carga el equipo desde la ficha de cobros. El monto y la modalidad se validan además contra el rango del plan (`errorDeAcuerdo`). */
+/** Lo que carga el equipo desde la ficha de cobros. El monto y la modalidad se validan además contra el precio de lista del plan (`errorDeAcuerdo`). */
 export const acuerdoSchema = z.object({
   modalidad: z.enum(MODALIDADES_DE_ACUERDO, { error: "Elegí qué tipo de precio es" }),
   monto: z

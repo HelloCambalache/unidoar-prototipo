@@ -1,14 +1,18 @@
+import { DesplazableX } from "@/components/ui/desplazable-x";
 import { cn } from "@/lib/utils";
 
 /**
- * Tabla con el estilo del prototipo (`cbl-table--hover`): cabecera en mayúsculas,
- * filas con hover, contenedor con borde que hace scroll horizontal en mobile.
+ * Tabla con el estilo del prototipo (`cbl-table--hover`): cabecera en mayúsculas, filas con hover, contenedor con borde. Si no entra en el ancho
+ * hace scroll horizontal y lo avisa (degradado y botón en el borde): una tabla ancha no se ve «cortada» sin que se note.
  */
 export function Tabla({ className, children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    // `relative`: sin un contenedor posicionado, un texto `sr-only` de la tabla (p. ej. el de la columna de acciones) queda fuera
-    // del recorte del scroll y ensancha toda la página en el celular.
-    <div className="relative overflow-x-auto overflow-y-hidden rounded-tarjeta bg-white px-2 pb-1 shadow-tarjeta">
+    <DesplazableX
+      fondo="blanco"
+      etiquetaMas="Ver más columnas"
+      envoltorio="overflow-hidden rounded-tarjeta bg-white shadow-tarjeta"
+      className="overflow-y-hidden px-2 pb-1"
+    >
       <table
         className={cn(
           "w-full min-w-[540px] border-collapse text-sm text-tinta",
@@ -21,6 +25,6 @@ export function Tabla({ className, children, ...props }: React.TableHTMLAttribut
       >
         {children}
       </table>
-    </div>
+    </DesplazableX>
   );
 }

@@ -1,13 +1,13 @@
 import { esUuid } from "@/lib/busquedas";
 import { CATEGORIAS, DISPONIBILIDAD, NIVELES } from "@/lib/catalogo";
 import type { CategoriaDocente } from "@/db/schema";
-import type { FiltrosIA, Interpretacion } from "@/lib/busqueda-ia";
+import { textoDeLaFrase, type FiltrosIA, type Interpretacion } from "@/lib/busqueda-ia";
 
 /*
  * Filtros del buscador de profesionales. Viven en la URL (searchParams): este módulo es la única
  * fuente de cómo se leen y se escriben, y lo usan tanto la página (servidor) como los controles (cliente).
  *
- *   q        frase para "Buscá con IA" (se interpreta en el servidor)
+ *   q        lo que se escribió en el buscador único (se interpreta en el servidor: filtros si pide algo, texto si es un nombre)
  *   f=1      los filtros de la URL ya son los definitivos: la frase solo se muestra, no se vuelve a aplicar
  *   cat, disc*, zona*, disp*, nivel, tipo, verif=1, fav=1, texto, orden, busqueda, pagina
  */
@@ -67,7 +67,8 @@ const enLista = <T extends string>(valores: readonly T[], v: string | undefined)
 
 /**
  * Filtros efectivos a partir de la URL. Si la URL trae una frase y todavía no se tocó ningún control
- * (sin `f=1`), la interpretación de la frase completa lo que la URL no dice explícitamente.
+ * (sin `f=1`), la interpretación de la frase completa lo que la URL no dice explícitamente: los filtros que pidió o,
+ * si no pidió ninguno, el texto que se busca por nombre o disciplina (el buscador es uno solo).
  */
 export function leerFiltros(sp: SearchParams, ia?: Interpretacion | null): FiltrosDocentes {
   const base: FiltrosIA = sp.f !== "1" && ia ? ia.filtros : {};
@@ -86,7 +87,7 @@ export function leerFiltros(sp: SearchParams, ia?: Interpretacion | null): Filtr
     tipo: enLista(TIPOS_FILTRO, uno(sp.tipo)) ?? enLista(TIPOS_FILTRO, base.tipo) ?? null,
     soloVerificados: sp.verif === "1" || !!base.soloVerificados,
     soloFavoritos: sp.fav === "1" || !!base.soloFavoritos,
-    texto: (uno(sp.texto) ?? "").slice(0, 80),
+    texto: (uno(sp.texto) ?? (sp.f !== "1" && ia ? textoDeLaFrase(ia) : "")).slice(0, 80),
     orden: ORDENES.find((o) => o.clave === uno(sp.orden))?.clave ?? "recomendados",
     busqueda: esUuid(busqueda) ? busqueda : null,
     pagina: Number.isFinite(pagina) && pagina > 0 ? pagina : 1,

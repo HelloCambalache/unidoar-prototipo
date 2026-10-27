@@ -3,7 +3,8 @@ import { and, between, eq, ne } from "drizzle-orm";
 import { facturas, instituciones, suscripcionesMp } from "@/db/schema";
 import { hoyAR } from "@/lib/cobros";
 import { DIAS_ANTES_DEL_VENCIMIENTO, DIAS_MAXIMOS_DE_ATRASO, planificarRecordatorios, sumarDias } from "@/lib/correo/claves";
-import { correoDeRecordatorio } from "@/lib/correo/eventos";
+import { correoDeMora, correoDeRecordatorio } from "@/lib/correo/eventos";
+import { planificarAvisosDeMora } from "@/lib/mora";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 
 /**
@@ -52,5 +53,19 @@ export async function encolarRecordatoriosDeFactura(ejecutor: EjecutorBo, ahora 
       fechaCobro: f.fechaCobro,
     });
   }
-  return { facturas: filas.length, recordatorios: recordatorios.length };
+  // Los avisos de mora (último aviso antes de limitar y «tu cuenta quedó limitada») les llegan a todas las instituciones activas con una factura
+  // vencida, también a quienes tienen el débito automático: la limitación les alcanza igual (ver src/lib/mora.ts).
+  const avisosDeMora = planificarAvisosDeMora(filas, hoy);
+  for (const a of avisosDeMora) {
+    const f = filas.find((x) => x.id === a.facturaId)!;
+    if (!destinatarios.has(f.institucionId)) destinatarios.set(f.institucionId, await destinatariosDeFacturacion(ejecutor, f.institucionId));
+    await correoDeMora(ejecutor, a, {
+      usuarioIds: destinatarios.get(f.institucionId)!,
+      institucion: f.institucion,
+      periodo: f.periodo,
+      monto: f.monto,
+      fechaCobro: f.fechaCobro,
+    });
+  }
+  return { facturas: filas.length, recordatorios: recordatorios.length, avisosDeMora: avisosDeMora.length };
 }

@@ -32,6 +32,12 @@ export type Interpretacion = {
   reconocido: boolean;
   /** Palabras de la frase que parecen un pedido pero no se pudieron convertir en ningún filtro ("noche", "zona oeste"). */
   sinEntender: string[];
+  /**
+   * Todas las palabras que quedaron sin convertir en filtro y no son relleno ("Ana", "Pérez", "ajedrez"), tal como las escribió
+   * la persona. Con ellas el buscador único busca por nombre o disciplina cuando la frase no pidió ningún filtro:
+   * ver `textoDeLaFrase`.
+   */
+  resto: string[];
 };
 
 /** Datos del catálogo (asignaturas y zonas de la base) para que la frase reconozca todo lo que existe. */
@@ -181,6 +187,9 @@ const RELLENO = new Set(
   ).split(" "),
 );
 
+/** Palabras de tres letras que sobran en una frase y no son un nombre ("sus", "han"); las de dos ni se cuentan. */
+const VACIAS = new Set("sus mis tus nos les ser han fue ese esa eso ver".split(" "));
+
 export function interpretarBusqueda(
   texto: string,
   vocabulario: VocabularioBusqueda = {},
@@ -189,7 +198,7 @@ export function interpretarBusqueda(
   const original = normalizarTexto(texto);
   const filtros: FiltrosIA = {};
   const leido: string[] = [];
-  if (!original) return { filtros, leido, reconocido: false, sinEntender: [] };
+  if (!original) return { filtros, leido, reconocido: false, sinEntender: [], resto: [] };
 
   // "Mañana" puede ser el turno o el "para mañana mismo" de una urgencia: lo segundo se saca antes.
   const urgente =
@@ -371,5 +380,31 @@ export function interpretarBusqueda(
     if (sinEntender.length >= 4) break;
   }
 
-  return { filtros, leido, reconocido: leido.length > 0, sinEntender };
+  // Lo mismo, pero con las palabras cortas (un nombre como "Ana" o "Eva") y sin el tope de 4: es lo que se busca como texto.
+  const restantes = new Set(
+    (q.match(/[a-z0-9]+/g) ?? []).filter((p) => p.length >= 3 && !/^\d+$/.test(p) && !RELLENO.has(p) && !VACIAS.has(p)),
+  );
+  const resto: string[] = [];
+  for (const palabra of texto.match(/[\p{L}\p{N}]+/gu) ?? []) {
+    const clave = normalizarTexto(palabra);
+    if (restantes.has(clave) && !resto.some((s) => normalizarTexto(s) === clave)) resto.push(palabra);
+    if (resto.length >= 12) break;
+  }
+
+  return { filtros, leido, reconocido: leido.length > 0, sinEntender, resto };
+}
+
+/** Palabras del buscador por texto: el servidor usa como mucho estas y ninguna más. */
+export const MAX_PALABRAS_DE_TEXTO = 6;
+const MAX_LARGO_DE_TEXTO = 80;
+
+/**
+ * Lo que una frase pide buscar por nombre, disciplina o lugar (el buscador único: un solo campo para "Ana Pérez",
+ * "natación" o "profe de inglés para secundario"). Solo cuando la frase no pidió ningún filtro: si se reconoció alguno,
+ * la frase se lee como un pedido y las palabras que sobran se avisan, no se buscan. Sin palabras propias (la frase era
+ * puro relleno, como "hola") no hay texto que buscar.
+ */
+export function textoDeLaFrase(i: Pick<Interpretacion, "reconocido" | "resto">): string {
+  if (i.reconocido) return "";
+  return i.resto.slice(0, MAX_PALABRAS_DE_TEXTO).join(" ").slice(0, MAX_LARGO_DE_TEXTO).trim();
 }

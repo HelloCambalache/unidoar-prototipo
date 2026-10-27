@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { TarjetaMetrica } from "@/components/app/tarjeta-metrica";
+import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
 import { AvisoDebito } from "@/components/institucion/aviso-debito";
 import { BannerPasos } from "@/components/institucion/banner-pasos";
 import { DashboardPrimeraVez } from "@/components/institucion/dashboard-primera-vez";
@@ -15,6 +16,7 @@ import { chipEntrevista, rangoDeSemana } from "@/lib/fechas";
 import { enumerar, pasosDePerfilInstitucion } from "@/lib/perfil-institucion";
 import { estadisticasInstitucion, integrantesDeEquipo, listarBusquedas } from "@/lib/queries/busquedas";
 import { docentesRecomendados } from "@/lib/queries/coincidencias";
+import { moraDeInstitucion } from "@/lib/queries/mora";
 import { planes } from "@/lib/queries/planes";
 import { avisoDeDebito } from "@/lib/queries/suscripcion-vista";
 
@@ -26,6 +28,8 @@ export default async function DashboardInstitucion() {
   const est = await estadisticasInstitucion(institucion.id);
   // Una vez verificada, se le propone activar el débito automático (desaparece solo cuando queda activo).
   const debito = await avisoDeDebito(institucion, usuario.id);
+  // Una factura vencida: dentro de los 15 días de gracia avisa hasta cuándo; pasados, dice que la cuenta está limitada (ver src/lib/mora.ts).
+  const mora = await moraDeInstitucion(institucion);
 
   // Sin búsquedas todavía: la variante de "institución recién creada".
   if (est.totalBusquedas === 0) {
@@ -36,6 +40,7 @@ export default async function DashboardInstitucion() {
     ]);
     return (
       <>
+        <AvisoDeMora mora={mora} />
         {debito && <AvisoDebito monto={debito.monto} />}
         <DashboardPrimeraVez
           institucion={institucion}
@@ -73,6 +78,7 @@ export default async function DashboardInstitucion() {
 
   return (
     <>
+      <AvisoDeMora mora={mora} />
       {debito && <AvisoDebito monto={debito.monto} />}
       <EncabezadoPagina
         titulo={`Buenas, ${nombre}`}

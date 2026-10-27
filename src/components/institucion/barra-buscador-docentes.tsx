@@ -23,8 +23,9 @@ const BOTON_FILTRO =
 const INACTIVO = "border border-borde bg-white text-tinta-2 hover:border-borde-fuerte hover:bg-superficie";
 
 /**
- * Parte de arriba del buscador: "Buscá con IA", búsqueda de texto con sugerencias, orden y los filtros
- * rápidos (nivel, tipo, favoritos, búsqueda rápida, verificados). Todo termina en la URL.
+ * Parte de arriba del buscador: un solo campo para buscar por nombre, por disciplina o contando qué se necesita
+ * ("profe de inglés para secundario, turno mañana") —el servidor decide si lo escrito pide filtros o es un nombre—, más
+ * el orden y los filtros rápidos (nivel, tipo, favoritos, búsqueda rápida, verificados). Todo termina en la URL.
  */
 export function BarraBuscadorDocentes({
   ruta,
@@ -40,7 +41,7 @@ export function BarraBuscadorDocentes({
   rutaOtraPantalla: string;
   rapidas: boolean;
   filtros: FiltrosDocentes;
-  /** Lo que se entendió de la frase; null si no hay frase. */
+  /** Lo que se entendió de lo escrito; null si no se escribió nada. */
   leido: { etiquetas: string[]; reconocido: boolean; sinEntender: string[] } | null;
   sugerencias: string[];
   puedeOrdenarPorCercania: boolean;
@@ -48,93 +49,78 @@ export function BarraBuscadorDocentes({
   const { filtros, aplicar, pendiente, router, empezar } = useFiltrosEnUrl(ruta, delServidor);
   const idSugerencias = useId();
   const limpiarHref = hrefFrase(rapidas ? ruta : RUTA_BUSCADOR, "", filtros.busqueda);
+  // Un texto que vino solo en la URL (un enlace de antes, sin frase) también se muestra en el campo: si no, filtraría sin que se vea.
+  const escrito = delServidor.frase || delServidor.texto;
+  const textoBuscado = delServidor.texto;
 
   return (
     <>
-      <section aria-label="Buscá con IA" className="mb-4 rounded-tarjeta border border-linea bg-white px-[18px] py-4">
-        <div className="mb-2.5 flex items-center gap-2 text-navy-700">
+      <section aria-label="Buscador" className="mb-4 rounded-tarjeta border border-linea bg-white px-[18px] py-4">
+        <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-navy-700">
           <Icono nombre="chispas" tamano={17} trazo={1.6} relleno />
           <span className="text-sm leading-none font-semibold">Buscá con IA</span>
+          <span className="text-[12.5px] leading-none font-normal text-apagado">
+            por nombre, por disciplina o contándonos qué necesitás
+          </span>
         </div>
         <form
-          key={delServidor.frase}
+          key={`${delServidor.frase}\u0000${delServidor.texto}`}
+          role="search"
           className="flex flex-wrap gap-2.5"
           onSubmit={(e) => {
             e.preventDefault();
             const frase = String(new FormData(e.currentTarget).get("frase") ?? "");
-            // Una frase nueva reemplaza los filtros y arranca siempre en el catálogo: si pide algo urgente,
-            // el servidor la manda a "Búsquedas rápidas".
+            // Lo escrito reemplaza los filtros y arranca siempre en el catálogo: el servidor decide si pide filtros o es un
+            // nombre, y si pide algo urgente la manda a "Búsquedas rápidas".
             empezar(() => router.push(hrefFrase(RUTA_BUSCADOR, frase, filtros.busqueda)));
           }}
         >
           <Input
-            name="frase"
-            aria-label="Contanos qué necesitás"
-            defaultValue={filtros.frase}
-            maxLength={200}
-            placeholder="Contame qué necesitás: «profe de inglés para secundario, turno mañana»"
-            className="min-w-[240px] flex-1"
-          />
-          <Boton type="submit" disabled={pendiente} className="flex-none">
-            Buscar
-          </Boton>
-        </form>
-        {leido && (
-          <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-borde pt-3.5">
-            <span className="text-[12.5px] leading-none font-medium text-apagado">Entendimos:</span>
-            {leido.reconocido ? (
-              leido.etiquetas.map((l) => (
-                <Insignia key={l} tono="azul">
-                  {l}
-                </Insignia>
-              ))
-            ) : (
-              <Insignia tono="azul">No reconocimos filtros: te mostramos el catálogo completo</Insignia>
-            )}
-            <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
-              Limpiar
-            </Link>
-            {leido.reconocido && leido.sinEntender.length > 0 && (
-              <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
-                No pudimos aplicar como filtro: {leido.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es importante, usá los filtros de al lado o
-                contáselo a quien contactes.
-              </p>
-            )}
-          </div>
-        )}
-      </section>
-
-      <div className={cn("mb-2.5 flex flex-wrap gap-2.5 transition-opacity", pendiente && "opacity-70")}>
-        <form
-          key={delServidor.texto}
-          role="search"
-          className="relative min-w-[220px] flex-1"
-          onSubmit={(e) => {
-            e.preventDefault();
-            aplicar({ texto: String(new FormData(e.currentTarget).get("texto") ?? "").trim() });
-          }}
-        >
-          <Icono nombre="buscar" tamano={16} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sutil" />
-          <Input
             type="search"
-            name="texto"
-            aria-label="Buscar por nombre o disciplina"
-            placeholder="Buscar por nombre o disciplina"
+            name="frase"
+            aria-label="Buscar por nombre, por disciplina o contando qué necesitás"
+            defaultValue={escrito}
+            maxLength={200}
             list={idSugerencias}
-            defaultValue={filtros.texto}
-            maxLength={80}
             enterKeyHint="search"
-            onBlur={(e) => {
-              if (e.target.value.trim() !== filtros.texto) aplicar({ texto: e.target.value.trim() });
-            }}
-            className="h-10 py-0 pl-9"
+            placeholder="Ej.: «profe de inglés para secundario, turno mañana»"
+            className="min-w-[240px] flex-1"
           />
           <datalist id={idSugerencias}>
             {sugerencias.map((s) => (
               <option key={s} value={s} />
             ))}
           </datalist>
+          <Boton type="submit" disabled={pendiente} className="flex-none">
+            Buscar
+          </Boton>
         </form>
+        {(leido || textoBuscado) && (
+          <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-borde pt-3.5">
+            <span className="text-[12.5px] leading-none font-medium text-apagado">Entendimos:</span>
+            {(leido?.etiquetas ?? []).map((l) => (
+              <Insignia key={l} tono="azul">
+                {l}
+              </Insignia>
+            ))}
+            {textoBuscado && <Insignia tono="azul">Nombre o disciplina: «{textoBuscado}»</Insignia>}
+            {leido && !leido.reconocido && !textoBuscado && (
+              <Insignia tono="azul">No reconocimos filtros: te mostramos el catálogo completo</Insignia>
+            )}
+            <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
+              Limpiar
+            </Link>
+            {leido && leido.reconocido && leido.sinEntender.length > 0 && (
+              <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
+                No pudimos aplicar como filtro: {leido.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es un nombre, buscalo solo, sin el
+                resto de la frase; si es otra cosa, usá los filtros de al lado.
+              </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      <div className={cn("mb-[18px] flex flex-wrap gap-2.5 transition-opacity", pendiente && "opacity-70")}>
         <Select
           aria-label="Ordenar por"
           value={filtros.orden}
@@ -147,9 +133,6 @@ export function BarraBuscadorDocentes({
             </option>
           ))}
         </Select>
-      </div>
-
-      <div className={cn("mb-[18px] flex flex-wrap gap-2.5 transition-opacity", pendiente && "opacity-70")}>
         <Select
           aria-label="Nivel"
           value={filtros.nivel ?? ""}

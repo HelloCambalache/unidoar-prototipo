@@ -159,11 +159,13 @@ export async function PantallaBuscadorDocentes({
           />
         ) : (
           <EstadoVacio
-            titulo="No hay profesionales con esos filtros"
+            titulo={filtros.texto ? `No encontramos profesionales para «${filtros.texto}»` : "No hay profesionales con esos filtros"}
             texto={
-              rapidas
-                ? "Probá con menos condiciones, o mirá el catálogo completo."
-                : "Probá con menos condiciones, o ampliá la zona de búsqueda."
+              filtros.texto
+                ? "Probá con otro nombre o disciplina, o con menos condiciones."
+                : rapidas
+                  ? "Probá con menos condiciones, o mirá el catálogo completo."
+                  : "Probá con menos condiciones, o ampliá la zona de búsqueda."
             }
             accion={
               <BotonLink href={limpiarHref} variante="secundario">

@@ -10,8 +10,9 @@ import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { correoDePedidoDePlanRecibido } from "@/lib/correo/eventos";
+import { hoyAR } from "@/lib/cobros";
 import { avisoAlEquipoDeSemestre, esFormaDePago, puedePagarSemestre, resumenDeSemestre } from "@/lib/forma-de-pago";
-import { CLAVES_PLAN, esClavePlan } from "@/lib/planes";
+import { CLAVES_PLAN, esClavePlan, pesos } from "@/lib/planes";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { guardarFormaDePago } from "@/lib/queries/forma-de-pago";
 import { planes } from "@/lib/queries/planes";
@@ -116,6 +117,13 @@ export async function elegirFormaDePago(forma: string): Promise<Resultado> {
         texto: avisoAlEquipoDeSemestre({ alCrearLaCuenta: false, total: r.total, meses: r.meses }),
         enlace: `/backoffice/cobros/${institucion.id}`,
       });
+      // Además de la campanita, un mail al equipo (uno por institución y por día: elegir y deshacer en un bucle no lo repite).
+      await encolarParaEquipo(
+        tx,
+        "M67",
+        { institucion: institucion.nombre, total: pesos(r.total), meses: r.meses, alCrearLaCuenta: false, ruta: `/backoffice/cobros/${institucion.id}` },
+        { clave: `M67:${institucion.id}:${hoyAR()}` },
+      );
     }
     return ok();
   });

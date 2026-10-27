@@ -27,7 +27,7 @@ El envío de dos despachos a la vez es seguro: cada mail se reclama con `FOR UPD
 
 - **Avisos opcionales** (grupo `contratacion`: invitaciones, urgentes, preselección, entrevistas, ofertas, postulantes nuevos): no se mandan si la persona los apagó en **Mi cuenta → Avisos por mail** o con el enlace del pie (`usuarios.avisos_por_correo`). Llevan ese enlace y las cabeceras `List-Unsubscribe` / `List-Unsubscribe-Post` (baja de un clic). Los de cuenta, verificación, facturación e internos **no se pueden apagar**.
 - **No repetir:** cada mail puede llevar una `clave`; no se anotan dos filas con la misma clave para el mismo destinatario (índice único `cola_correos_clave_uq`). Es lo que hace que una postulación se avise una sola vez, que M30 sea uno por búsqueda por día (por hora en las búsquedas rápidas) y que cada recordatorio de factura salga una vez.
-- **Topes:** la plantilla puede definir `tope: { max, horas }` y el mail una `topeClave`: M21 (3 por día por persona), M20 (5 por día por persona), M06 (3 por día por destinatario), M62 y M63 (30 por día en total, para que pedir y retirar una baja o un cambio de plan no llene la casilla del equipo), M60 (20 por hora en total, para que Contacto no llene la casilla del equipo) y M61 (30 por hora). Lo que excede se **omite** (queda anotado el motivo).
+- **Topes:** la plantilla puede definir `tope: { max, horas }` y el mail una `topeClave`: M21 (3 por día por persona), M20 (5 por día por persona), M06 (3 por día por destinatario), M62, M63 y M67 (30 por día en total, para que pedir y retirar una baja, un cambio de plan o el pago por semestre no llene la casilla del equipo), M60 (20 por hora en total, para que Contacto no llene la casilla del equipo) y M61 (30 por hora). Lo que excede se **omite** (queda anotado el motivo).
 - **Contactos privados de una institución** (`contactos_institucion`) **no reciben nunca** ningún mail: no tienen cuenta ni dieron su consentimiento. Ninguna función de `eventos.ts` los toca.
 - **Rutas de los enlaces:** se guardan como ruta interna (`/docente/perfil`) y al armar el mail se convierten en URL del sitio. Una ruta que apunte a otro sitio hace fallar ese mail (nunca se manda).
 - **Sin seguimiento:** no hay píxeles ni enlaces con redirección. Revisá que en Resend esté desactivado el seguimiento de aperturas y clics del dominio.
@@ -81,7 +81,8 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M27 | Lo contratan | El docente | contratación |
 | M30 | Se postula alguien | Quienes tienen acceso a la institución (uno por búsqueda por día; por hora en las rápidas) | contratación |
 | M50 | Se crea una factura (cron o carga manual) | Dueño y administradores | facturación |
-| M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días) | Dueño y administradores | facturación |
+| M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días; dice hasta cuándo hay tiempo antes de que se limite la cuenta) | Dueño y administradores | facturación |
+| M68 | Mora: último aviso antes de limitar la cuenta (días 12 a 15 de atraso) y «tu cuenta quedó limitada» (desde el día 16) | Dueño y administradores, también con débito automático | facturación |
 | M53, M54 | Se registra un pago / se anula (si el equipo pidió avisar) | Dueño y administradores | facturación |
 | M55 | Se pide un cambio de plan | Quien lo pidió | facturación |
 | M56 | Se aprueba o rechaza el cambio de plan | Dueño y administradores | facturación |
@@ -90,12 +91,13 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M61 | Un docente sube documentación para revisar | El equipo | interno |
 | M62 | Una cuenta pide la baja | El equipo | interno |
 | M63 | Una institución pide cambiar de plan | El equipo | interno |
+| M67 | Una institución elige pagar el abono por semestre | El equipo | interno |
 
 **Archivar a un postulante no avisa de ninguna forma** (ni campanita ni mail; no existe un M28): la persona solo se entera, si la búsqueda se cierra, por el aviso de cierre de abajo. Hasta entonces ve su postulación como "Postulación enviada". Es una decisión de producto a propósito.
 
 **Cerrar una búsqueda no manda mail:** avisa solo en la campanita (`avisarCierreDeBusqueda`, `src/lib/queries/avisos.ts`) a todos los que estaban en ella con cuenta y sin suspender, menos a quien fue contratado: "cerró la búsqueda «X»: el puesto ya se cubrió. ¡Gracias por postularte! Seguí postulándote a otras búsquedas." (a quien fue invitado y no se postuló, sin el "gracias por postularte"). Pasa al cerrarla con "Cerrar búsqueda" y al contratar con la casilla de cerrar; no se repite si se reabre y se vuelve a cerrar el mismo día. Es una decisión de producto: si algún día se quiere mail, sería un mail nuevo del grupo contratación.
 
-Los recordatorios M51/M52 los anota la tarea diaria para las facturas impagas de instituciones activas (ni suspendidas ni de demostración) que vencen en los próximos 3 días o vencieron en los últimos 30. Una deuda más vieja no se recuerda por mail.
+Los recordatorios M51/M52 los anota la tarea diaria para las facturas impagas de instituciones activas (ni suspendidas ni de demostración) que vencen en los próximos 3 días o vencieron en los últimos 30. Una deuda más vieja no se recuerda por mail. Con los mismos datos la tarea anota los avisos de mora M68 (una vez por factura y etapa); las reglas, los 15 días de gracia y qué se limita están en `src/lib/mora.ts`.
 
 ## Agregar un mail nuevo
 

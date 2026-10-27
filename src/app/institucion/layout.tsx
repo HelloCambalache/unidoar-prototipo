@@ -17,7 +17,10 @@ const NAV: NavItem[] = [
   { href: "/institucion/referidos", label: "Referidos", icono: "apreton" },
 ];
 
-const NAV_PIE: NavItem[] = [{ href: "/institucion/cuenta", label: "Mi cuenta", icono: "cuenta" }];
+const NAV_PIE: NavItem[] = [
+  { href: "/ayuda/instituciones", label: "Ayuda", icono: "ayuda" },
+  { href: "/institucion/cuenta", label: "Mi cuenta", icono: "cuenta" },
+];
 
 export default async function InstitucionLayout({ children }: { children: React.ReactNode }) {
   const { usuario, institucion } = await requerirInstitucion();

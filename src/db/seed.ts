@@ -6,7 +6,7 @@
  *   pnpm db:seed --solo-catalogos
  *   pnpm db:seed --borrar-demo
  */
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { planesPorDefecto } from "@/lib/planes";
@@ -21,7 +21,6 @@ import {
   INSTITUCIONES,
   NOVEDADES,
   POSTULACIONES,
-  TESTIMONIOS,
   ZONAS,
 } from "./seed-data";
 
@@ -50,11 +49,7 @@ async function catalogos() {
     ),
   );
   await db.insert(s.asignaturas).values(filas).onConflictDoNothing();
-
-  const [{ n }] = await db.select({ n: count() }).from(s.testimonios);
-  if (n === 0) {
-    await db.insert(s.testimonios).values(TESTIMONIOS.map((t, orden) => ({ ...t, orden })));
-  }
+  // Los testimonios ya no se siembran: los carga el equipo desde Backoffice → Testimonios (los genéricos de ejemplo se sacaron).
   console.log(`✓ catálogos: ${ZONAS.length} zonas, ${filas.length} asignaturas`);
 }
 

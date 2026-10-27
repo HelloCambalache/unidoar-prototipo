@@ -17,7 +17,7 @@ import { contarSedes } from "@/lib/queries/sedes";
 import { lugarDeBusqueda } from "@/lib/sedes";
 import { busquedaAbierta, RADIO_MAX, tiempoRestante, type FiltrosOportunidades } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
-import { contiene } from "@/lib/sql-texto";
+import { contiene, palabrasDeBusqueda } from "@/lib/sql-texto";
 import { busquedaDeInstitucionActiva, busquedaVigente, institucionVisible } from "@/lib/visibilidad";
 
 type TonoInsignia = ReturnType<typeof estadoParaDocente>["tono"];
@@ -115,13 +115,11 @@ export async function listarOportunidades(
     filtros.rapidas ? eq(busquedas.rapida, true) : undefined,
     filtros.verificadas ? eq(instituciones.verificada, true) : undefined,
     soloFavoritas ? inArray(busquedas.id, [...idsFavoritas]) : undefined,
-    filtros.q
-      ? or(
-          contiene(busquedas.puesto, filtros.q),
-          contiene(busquedas.disciplina, filtros.q),
-          contiene(instituciones.nombre, filtros.q),
-        )
-      : undefined,
+    // Cada palabra tiene que estar en el puesto, la materia o el nombre de la institución (los tres juntos): "San Andrés" encuentra
+    // las de "Colegio San Andrés" y "inglés San Andrés", las de inglés de esa institución. El buscador es uno solo (frase o texto).
+    ...palabrasDeBusqueda(filtros.q ?? "").map((palabra) =>
+      contiene(sql`concat_ws(' ', ${busquedas.puesto}, ${busquedas.disciplina}, ${instituciones.nombre})`, palabra),
+    ),
   ];
 
   const filas = await db

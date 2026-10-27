@@ -26,6 +26,10 @@ export const PAGINA_TESTIMONIOS: Record<CategoriaDocente, string> = {
 /** 1234 → "1.234" */
 export const num = (n: number) => n.toLocaleString("es-AR");
 
+/** Desde cuántos logos la tira "Confían en UNIDOAR" corre como un marquee; con menos se muestran quietos, una sola vez (repetir uno para llenar el ancho lo haría ver como varias instituciones). */
+export const MINIMO_PARA_TIRA_EN_MOVIMIENTO = 6;
+export const logosEnMovimiento = (cantidad: number) => cantidad >= MINIMO_PARA_TIRA_EN_MOVIMIENTO;
+
 /** plural(1, "búsqueda", "búsquedas") → "1 búsqueda" · plural(12, …) → "12 búsquedas" */
 export const plural = (n: number, uno: string, otros: string) => `${num(n)} ${n === 1 ? uno : otros}`;
 

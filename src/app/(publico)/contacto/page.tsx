@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono } from "@/components/icons";
 import { FormularioContacto } from "@/components/publico/formulario-contacto";
@@ -35,6 +36,13 @@ export default function Contacto() {
         </h1>
         <p className="relative m-0 max-w-[46ch] text-[16px] leading-[1.6] text-white/75">
           ¿Tenés dudas sobre tu institución, tu perfil profesional o algo puntual? Escribinos y te respondemos en el día.
+        </p>
+        <p className="relative m-0 mt-3 max-w-[46ch] text-[14.5px] leading-[1.6] text-white/65">
+          Antes de escribir, mirá si te lo resuelve el{" "}
+          <Link href="/ayuda" className="font-semibold text-white underline decoration-white/40 underline-offset-2 hover:decoration-white">
+            centro de ayuda
+          </Link>
+          .
         </p>
       </section>
 

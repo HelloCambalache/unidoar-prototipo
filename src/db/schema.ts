@@ -447,6 +447,8 @@ export const testimonios = pgTable("testimonios", {
   cargo: text("cargo").notNull(),
   fotoUrl: text("foto_url"),
   orden: integer("orden").notNull().default(0),
+  /** Solo los visibles se muestran en el sitio. Los de ejemplo originales quedaron ocultos (`pnpm db:testimonios`). */
+  visible: boolean("visible").notNull().default(true),
 });
 
 /* ───────────────────────────── Relaciones ───────────────────────────── */
@@ -939,11 +941,6 @@ export const planes = pgTable("planes", {
   etiqueta: text("etiqueta").notNull(),
   /** Pesos por mes (por sede en Multisede; por búsqueda en la búsqueda puntual). Los meses ya facturados no cambian: `facturas.monto` guarda lo cobrado. */
   precio: integer("precio").notNull(),
-  /**
-   * Piso del rango de precio (el precio es el tope, la "lista"): hasta dónde puede bajar el equipo el abono de una institución al acordar un
-   * precio con ella (`acuerdos_precio`). null: sin piso, el abono no se negocia. Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar).
-   */
-  precioMinimo: integer("precio_minimo"),
   resumen: text("resumen").notNull().default(""),
   detalle: text("detalle").notNull().default(""),
   vigente: boolean("vigente").notNull().default(true),
@@ -953,7 +950,7 @@ export type PlanFila = typeof planes.$inferSelect;
 
 /**
  * Precio acordado con una institución (a lo sumo uno por institución; sin fila, paga el de lista). Lo carga el equipo desde la ficha de cobros:
- * `abono` es un abono propio dentro del rango del plan (entre el piso y la lista) y `total` un monto mensual fijo a medida (convenio de una red).
+ * `abono` es un abono propio de cualquier monto hasta el de lista y `total` un monto mensual fijo a medida (convenio de una red).
  * Rige desde la próxima factura; las ya emitidas guardan su monto. Tabla aparte de `instituciones` a propósito (agregarle una columna rompe las
  * consultas hasta correr el script). Creada a mano con `pnpm db:planes`, con RLS.
  */

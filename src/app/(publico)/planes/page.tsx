@@ -93,7 +93,7 @@ export default async function Planes() {
     });
   }
 
-  // Al navegador va el catálogo sin el piso de precios, sin el precio base interno de Multisede y sin el valor de fundadora: quedarían a la vista en el código de la página.
+  // Al navegador va el catálogo sin el precio base interno de Multisede y sin el valor de fundadora: quedarían a la vista en el código de la página.
   const catalogoDelNavegador = catalogoParaNavegador(catalogo, { sinPrecioPorSede: true, sinPrecioDeFundador: true });
 
   return (
