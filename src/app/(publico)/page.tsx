@@ -1,7 +1,8 @@
-import { BandaInstituciones } from "@/components/publico/banda-instituciones";
+import { BandaDeCierre } from "@/components/publico/banda-fundador";
 import { CarruselTestimonios } from "@/components/publico/carrusel-testimonios";
 import { ComoFunciona } from "@/components/publico/como-funciona";
 import { FilaEstadisticas } from "@/components/publico/fila-estadisticas";
+import { FundadorasHome } from "@/components/publico/fundadoras-home";
 import { HeroHome } from "@/components/publico/hero-home";
 import { sesionPublica } from "@/components/publico/sesion";
 import { TarjetasCategoria } from "@/components/publico/tarjetas-categoria";
@@ -11,6 +12,7 @@ import { UrgentesHome } from "@/components/publico/urgentes-home";
 import { num } from "@/lib/publico";
 import {
   busquedasUrgentes,
+  fundadorasPublicas,
   logosInstituciones,
   resumenPublico,
   testimoniosDe,
@@ -20,9 +22,10 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function Landing() {
-  const [resumen, logos, testimonios, urgentes, sesion] = await Promise.all([
+  const [resumen, logos, fundadoras, testimonios, urgentes, sesion] = await Promise.all([
     resumenPublico(),
     logosInstituciones(),
+    fundadorasPublicas(),
     testimoniosDe("home"),
     busquedasUrgentes({ limite: 3 }),
     sesionPublica(),
@@ -82,6 +85,7 @@ export default async function Landing() {
 
       <TiposInstitucion tiposEnUso={resumen.tiposInstitucion} />
       <TiraLogos logos={logos} />
+      <FundadorasHome fundadoras={fundadoras} />
       <ComoFunciona />
       <UrgentesHome urgentes={urgentes} cantidadUrgentes={resumen.urgentes} sesion={sesion} />
 
@@ -92,7 +96,7 @@ export default async function Landing() {
         colorNombre="#8A2F1A"
       />
 
-      <BandaInstituciones />
+      <BandaDeCierre />
     </>
   );
 }

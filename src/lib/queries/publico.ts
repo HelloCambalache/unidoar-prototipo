@@ -91,15 +91,30 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
 
 export type LogoInstitucion = { id: string; slug: string; nombre: string; logoUrl: string };
 
-/** Instituciones verificadas con logo, para la tira "Confían en UNIDOAR". */
+/** Instituciones verificadas con logo, para la tira "Confían en UNIDOAR". Las fundadoras van primero (es uno de sus beneficios). */
 export async function logosInstituciones(limite = 24): Promise<LogoInstitucion[]> {
   const filas = await getDb()
     .select({ id: instituciones.id, slug: instituciones.slug, nombre: instituciones.nombre, logoUrl: instituciones.logoUrl })
     .from(instituciones)
     .where(and(eq(instituciones.verificada, true), institucionVisible))
-    .orderBy(asc(instituciones.nombre))
+    .orderBy(desc(sql`${instituciones.plan} = 'fundador'`), asc(instituciones.nombre))
     .limit(limite * 2);
   return filas.flatMap((f) => (f.logoUrl ? [{ ...f, logoUrl: f.logoUrl }] : [])).slice(0, limite);
+}
+
+export type FundadoraPublica = { id: string; slug: string; nombre: string; logoUrl: string | null };
+
+/**
+ * Las instituciones fundadoras que se muestran en la portada: las que tienen el Plan Fundador, están verificadas y son visibles (sin las de
+ * ejemplo si el interruptor está prendido). Se dice cuál es, nunca el plan ni su precio. Por antigüedad: las primeras que se sumaron, primero.
+ */
+export async function fundadorasPublicas(limite = 60): Promise<FundadoraPublica[]> {
+  return getDb()
+    .select({ id: instituciones.id, slug: instituciones.slug, nombre: instituciones.nombre, logoUrl: instituciones.logoUrl })
+    .from(instituciones)
+    .where(and(eq(instituciones.plan, "fundador"), eq(instituciones.verificada, true), institucionVisible))
+    .orderBy(asc(instituciones.creadoEn), asc(instituciones.nombre))
+    .limit(limite);
 }
 
 export type TestimonioPublico = { id: string; cita: string; autor: string; cargo: string; fotoUrl: string | null };
@@ -237,6 +252,8 @@ export type PerfilInstitucionPublico = {
   docentesPlanta: number | null;
   fundada: number | null;
   verificada: boolean;
+  /** Tiene el Plan Fundador: lleva la insignia «Institución fundadora». Solo el hecho, nunca el plan ni su precio. */
+  fundadora: boolean;
   mision: string | null;
   vision: string | null;
   valores: string[];
@@ -292,6 +309,7 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
     docentesPlanta: inst.docentesPlanta,
     fundada: inst.fundada,
     verificada: inst.verificada,
+    fundadora: inst.plan === "fundador",
     mision: inst.mision,
     vision: inst.vision,
     valores: inst.valores,

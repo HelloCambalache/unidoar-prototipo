@@ -7,6 +7,7 @@ import { decidirActivacion, esPlanDebitable, estadoGuardado, suscripcionVigente,
 import { fechaLarga } from "@/lib/fechas-curso";
 import { diferirPrimerCobroActivo } from "@/lib/mercadopago-config";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
+import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
 import { debitoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { puedeGestionarPlan, rolEnInstitucion } from "@/lib/queries/plan";
 import { planes } from "@/lib/queries/planes";
@@ -23,6 +24,8 @@ export type DebitoVista = {
   disponible: boolean;
   /** El plan se cobra mes a mes (la búsqueda puntual no). */
   planDebitable: boolean;
+  /** Es una red de sedes (Multisede) sin convenio a medida: todavía no tiene un monto, así que no se ofrece el débito (ver `precioDefinido`). */
+  sinConvenio: boolean;
   puedeGestionar: boolean;
   /** Lo que cobraría Mercado Pago hoy por mes (plan × sedes), o null si no se pudo calcular. */
   montoActual: number | null;
@@ -68,6 +71,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     acuerdoDe(db, institucion.id),
   ]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
+  const sinConvenio = !P.precioDefinido(institucion.plan, acuerdo);
   // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
   // Mercado Pago, una suscripción autorizada se mostraba como cancelada.
   const estado = susc ? (estadoGuardado(susc.estado) ?? "cancelada") : null;
@@ -89,8 +93,9 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     // Sin token no hay débito; con un token de prueba, solo las instituciones de ejemplo lo ven (una real no puede suscribirse a un cobro de mentira).
     disponible: await debitoDisponiblePara(institucion),
     planDebitable: esPlanDebitable(institucion.plan),
+    sinConvenio,
     puedeGestionar: puedeGestionarPlan(rol),
-    montoActual: Number.isInteger(monto) && monto > 0 ? monto : null,
+    montoActual: !sinConvenio && Number.isInteger(monto) && monto > 0 ? monto : null,
     planReciente,
     primerCobro: decision?.accion === "con-prueba" ? fechaLarga(decision.fecha) : null,
     activarDesde: decision?.accion === "esperar" ? fechaLarga(decision.desde) : null,
@@ -111,8 +116,13 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
 export async function avisoDeDebito(institucion: Institucion, usuarioId: string): Promise<{ monto: number | null } | null> {
   if (!institucion.verificada || institucion.suspendida || !esPlanDebitable(institucion.plan)) return null;
   if (!(await debitoDisponiblePara(institucion))) return null;
-  const [rol, susc] = await Promise.all([rolEnInstitucion(institucion, usuarioId), suscripcionDe(institucion.id)]);
+  const [P, acuerdo] = await Promise.all([planes(), acuerdoDe(getDb(), institucion.id)]);
+  // Una red de sedes sin convenio todavía no tiene un monto que debitar: no se le propone.
+  if (!P.precioDefinido(institucion.plan, acuerdo)) return null;
+  const [rol, susc, forma] = await Promise.all([rolEnInstitucion(institucion, usuarioId), suscripcionDe(institucion.id), formaDePagoDe(institucion.id)]);
   if (!puedeGestionarPlan(rol)) return null;
+  // Quien eligió pagar el semestre por adelantado no necesita que le propongamos un débito mensual (puede activarlo igual desde Plan y facturación).
+  if (forma === "semestral") return null;
   if (susc && suscripcionVigente(susc.estado)) return null;
   // Con el mes ya pago una institución real todavía no puede activarlo: no se le propone.
   const decision = decidirActivacion({
@@ -123,7 +133,7 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
     esDemo: institucion.esDemo,
   });
   if (decision.accion === "esperar") return null;
-  const [P, sedes, acuerdo] = await Promise.all([planes(), cantidadDeSedes(getDb(), [institucion.id]), acuerdoDe(getDb(), institucion.id)]);
+  const sedes = await cantidadDeSedes(getDb(), [institucion.id]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
   return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };
 }

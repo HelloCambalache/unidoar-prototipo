@@ -4,10 +4,13 @@ import { Icono } from "@/components/icons";
 import { BandaCTA } from "@/components/publico/banda-cta";
 import { InterruptorDePago, ProveedorDePlanes } from "@/components/publico/elegir-plan";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
+import { TarjetaFundadoras } from "@/components/publico/tarjeta-fundadoras";
 import { BotonLink } from "@/components/ui/button";
 import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
 import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
+import { cuposDeFundadoras } from "@/lib/queries/fundadoras";
 import { catalogoDePlanes } from "@/lib/queries/planes";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Planes y aranceles",
@@ -38,7 +41,7 @@ const BENEFICIOS_INSTITUCION = [
 const PROMESAS = ["Gratis para profesionales", "Sin comisión por contratación", "Búsquedas ilimitadas con el abono"];
 
 export default async function Planes() {
-  const catalogo = await catalogoDePlanes();
+  const [catalogo, cupos] = await Promise.all([catalogoDePlanes(), cuposDeFundadoras()]);
   const P = crearPlanes(catalogo);
 
   const colegios = P.planDe("colegio");
@@ -82,8 +85,16 @@ export default async function Planes() {
     },
   ];
 
-  // Al navegador va el catálogo sin el piso de precios ni el precio base interno de Multisede: quedarían a la vista en el código de la página.
-  const catalogoDelNavegador = catalogoParaNavegador(catalogo, { sinPrecioPorSede: true });
+  // Las primeras instituciones son fundadoras: la pregunta aparece solo mientras queden lugares, y no dice el valor (se acuerda con cada una).
+  if (cupos.hay) {
+    PREGUNTAS.push({
+      pregunta: "¿Qué es una institución fundadora?",
+      respuesta: `Las primeras ${cupos.total} instituciones que se suman quedan como fundadoras: tienen un valor preferencial mientras sigan en UNIDOAR, la insignia de fundadora en su perfil público y su logo en la portada del sitio. Hoy quedan ${cupos.quedan} lugares. Si te interesa, creá la cuenta de tu institución y quedás como fundadora; si preferís hablarlo antes, escribinos desde Contacto.`,
+    });
+  }
+
+  // Al navegador va el catálogo sin el piso de precios, sin el precio base interno de Multisede y sin el valor de fundadora: quedarían a la vista en el código de la página.
+  const catalogoDelNavegador = catalogoParaNavegador(catalogo, { sinPrecioPorSede: true, sinPrecioDeFundador: true });
 
   return (
     <>
@@ -117,7 +128,7 @@ export default async function Planes() {
           <section aria-label="Planes" className="flex flex-col gap-6">
             {/* «Mensual / Semestral» va afuera de las tarjetas, arriba de las dos. */}
             <InterruptorDePago catalogo={catalogoDelNavegador} />
-            <div className="grid grid-cols-2 items-stretch gap-6 max-[800px]:grid-cols-1">
+            <div className={cn("grid items-stretch gap-6", cupos.hay ? "grid-cols-3 max-[1179px]:grid-cols-2 max-[800px]:grid-cols-1" : "grid-cols-2 max-[800px]:grid-cols-1")}>
               <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
                 <span
                   aria-hidden
@@ -163,6 +174,8 @@ export default async function Planes() {
               </article>
 
               <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoDelNavegador} />
+
+              {cupos.hay && <TarjetaFundadoras cupos={cupos} />}
             </div>
           </section>
         </ProveedorDePlanes>

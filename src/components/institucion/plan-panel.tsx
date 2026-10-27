@@ -62,8 +62,12 @@ export function PlanPanel({
     const p = P.planDe(destino);
     // El plan por sede es un convenio: no tiene un precio de lista para mostrar (la página pública también dice «A convenir»).
     const precio = p.porSede ? "a convenir según el volumen" : `${pesos(p.precio)}${P.sufijoDePrecio(destino)}`;
+    // Una fundadora que pasa a otro plan pierde lo de fundadora (el valor, la insignia y su lugar en la portada) y su lugar se libera: se le avisa antes.
+    const avisoDeFundadora = P.esFundador(plan)
+      ? " Ojo: dejás de ser institución fundadora (el valor de fundadora, la insignia y tu logo en la portada) y tu lugar queda libre para otra."
+      : "";
     const ok = await pedirConfirmacion(
-      `¿Pedir el cambio al ${p.label} (${precio})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.`,
+      `¿Pedir el cambio al ${p.label} (${precio})? No se cobra ni se modifica nada ahora: el equipo de UNIDOAR te confirma el cambio y el cobro.${avisoDeFundadora}`,
     );
     if (!ok) return;
     empezar(async () => {

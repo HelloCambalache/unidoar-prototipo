@@ -19,7 +19,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { describirAcuerdo } from "@/lib/acuerdos";
-import { ETIQUETA_DE_MES, resumenDeMeses } from "@/lib/bonificacion";
+import { bonificacionParaSemestre, ETIQUETA_DE_MES, resumenDeMeses } from "@/lib/bonificacion";
 import { ETIQUETA_DE_CREDITO } from "@/lib/puntual";
 import { esUuid } from "@/lib/busquedas";
 import {
@@ -41,6 +41,7 @@ import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
+import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
 import { planes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -89,7 +90,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const acordado = await acuerdoConNota(getDb(), id);
   const acuerdo = acordado?.acuerdo ?? null;
   // Una institución con búsqueda puntual no tiene abono ni facturas mensuales: paga cada búsqueda (ver src/lib/puntual.ts).
-  const [creditos, saldo, mesesGanados] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id), mesesDe(id)]);
+  const [creditos, saldo, mesesGanados, formaDePago] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id), mesesDe(id), formaDePagoDe(id)]);
   // Los meses ya bonificados por recomendar (sin cobro del débito): registrar un pago de uno de ellos pide confirmación.
   const periodosBonificados = await periodosBonificadosSinCobro(getDb(), id);
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
@@ -141,6 +142,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               )}
               {acuerdo && !acuerdoRige && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-naranja-ink">{avisoDeAcuerdoDeOtroPlan}</div>
+              )}
+              {!P.precioDefinido(plan, acuerdo) && (
+                <div role="status" className="mt-1.5 max-w-[60ch] text-[13px] leading-[1.45] font-medium text-naranja-ink">
+                  Plan Multisede sin convenio: no se factura, no se puede debitar y no suma al MRR hasta que lo cargues en «Precio» (Acordar un precio → convenio a medida).
+                </div>
               )}
               {semestrePagoHasta && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-verde">
@@ -354,6 +360,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 periodosBonificados={periodosBonificados}
               />
             )}
+            {formaDePago === "semestral" && P.planDe(plan).periodo === "mes" && (
+              <p className="m-0 rounded-caja bg-verde-tint px-3.5 py-2.5 text-[13px] leading-normal text-verde">
+                Esta institución eligió pagar por semestre: coordiná el pago y registralo con «Registrar semestre al contado».
+              </p>
+            )}
             {P.planDe(plan).periodo === "mes" && (
               <CobroSemestre
                 institucionId={i.id}
@@ -365,6 +376,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 facturas={facturas.map((f) => ({ periodo: f.periodo, estado: f.estado, mesesCubiertos: f.mesesCubiertos }))}
                 debitoVigente={debitoVigente}
                 periodosBonificados={periodosBonificados}
+                bonificacion={bonificacionParaSemestre(mesesGanados)}
               />
             )}
             {!esPuntual && (

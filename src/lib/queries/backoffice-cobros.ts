@@ -19,7 +19,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { correoDeFacturaNueva } from "@/lib/correo/eventos";
 import type { PlanClave, Planes } from "@/lib/planes";
 import { acuerdoDe, acuerdosDePrecio } from "@/lib/queries/acuerdos";
-import { conDebitoAutorizado, disponiblesPorInstitucion, gastarMesSinCobro, mesesYaBonificados } from "@/lib/queries/bonificaciones";
+import { conDebitoAutorizado, disponiblesPorInstitucion, gastarMesSinCobro, mesesBonificadosCercanos, mesesYaBonificados } from "@/lib/queries/bonificaciones";
 import { planes as cargarPlanes, planesParaCobrar } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { destinatariosDeFacturacion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
@@ -281,7 +281,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "bonificada" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "bonificada" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
@@ -302,7 +302,10 @@ export async function aplicarPlanAlPeriodoActual(
   if (P.esPuntual(plan)) return { resultado: "sin_cambios", motivo: "sin_abono" };
   const periodo = periodoActual(ahora);
   const hoy = hoyAR(ahora);
-  const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, await acuerdoDe(tx, institucion.id));
+  const acuerdo = await acuerdoDe(tx, institucion.id);
+  // Una red de sedes (Multisede) sin convenio a medida todavía no tiene un precio: no se crea ni se ajusta ninguna factura (ver `precioDefinido`).
+  if (!P.precioDefinido(plan, acuerdo)) return { resultado: "sin_cambios", motivo: "sin_convenio" };
+  const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, acuerdo);
 
   const [existente] = await tx
     .select()
@@ -376,7 +379,8 @@ export async function generarFacturasDelPeriodo(ejecutor: EjecutorBo, ahora = ne
     cantidadDeSedes(ejecutor, ids),
     acuerdosDePrecio(ejecutor, ids),
     disponiblesPorInstitucion(ejecutor, ids),
-    mesesYaBonificados(ejecutor, ids, periodo),
+    // Los bonificados de este mes y de los 5 de cada lado: de ahí sale el tope de 1 mes bonificado por semestre.
+    mesesBonificadosCercanos(ejecutor, ids, periodo),
     conDebitoAutorizado(ejecutor, ids),
   ]);
   const [conFacturas, recientes] = await Promise.all([

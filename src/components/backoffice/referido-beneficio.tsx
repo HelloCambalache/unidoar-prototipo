@@ -5,27 +5,24 @@ import { marcarBeneficioDeReferido } from "@/app/actions/backoffice-referidos";
 import { Boton } from "@/components/ui/button";
 import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
-import { mesesTexto, type TipoDeBeneficio } from "@/lib/bonificacion";
+import { mesesBonificadosTexto, mesesTexto, TEXTO_DEL_TOPE } from "@/lib/bonificacion";
 
 /**
- * Marca que el equipo ya aplicó el beneficio de una recomendación (o lo deshace si fue un error). Al aplicarlo se elige cómo: meses
- * bonificados para quien paga mes a mes (si Planes los ofrece y su plan es mensual) o pack por adelantado, que se carga a mano al facturar.
+ * Marca que el equipo ya aplicó el beneficio de una recomendación (o lo deshace si fue un error). Aplicarlo le suma a quien recomendó los meses
+ * bonificados que fija Planes; se gastan de a uno por semestre (ver src/lib/bonificacion.ts).
  */
 export function ReferidoBeneficio({
   referidoId,
   aplicado,
   mesesPorRecomendacion,
-  motivoSinMeses,
   conDebito,
   referidor,
 }: {
   referidoId: string;
   aplicado: boolean;
-  /** Meses que se bonifican por recomendación según Planes (0: no se ofrecen). */
+  /** Meses que se bonifican por recomendación según Planes (0: no se pueden aplicar). */
   mesesPorRecomendacion: number;
-  /** Por qué no se puede bonificar meses a esta institución (por ejemplo, búsqueda puntual); null si se puede. */
-  motivoSinMeses: string | null;
-  /** La institución que recomendó tiene un débito automático autorizado: cada mes bonificado hay que devolverlo a mano en Mercado Pago. */
+  /** La institución que recomendó tiene un débito automático autorizado: el cobro del mes bonificado hay que devolverlo a mano en Mercado Pago. */
   conDebito: boolean;
   referidor: string;
 }) {
@@ -33,53 +30,39 @@ export function ReferidoBeneficio({
   const pedirConfirmacion = useConfirmacion();
   const [pendiente, empezar] = useTransition();
 
-  const enviar = (aplicar: boolean, tipo: TipoDeBeneficio) =>
+  const enviar = (aplicar: boolean) =>
     empezar(async () => {
       try {
-        const r = await marcarBeneficioDeReferido(referidoId, aplicar, tipo);
+        const r = await marcarBeneficioDeReferido(referidoId, aplicar);
         if (!r.ok) toast(r.error, "error");
-        else toast(!aplicar ? "Beneficio devuelto a pendiente" : tipo === "meses" ? "Meses bonificados aplicados" : "Beneficio marcado como aplicado");
+        else toast(aplicar ? "Beneficio aplicado" : "Beneficio devuelto a pendiente");
       } catch {
         toast("No pudimos actualizar el beneficio. Probá de nuevo.", "error");
       }
     });
 
-  const bonificarMeses = async () => {
-    if (conDebito) {
-      const sigue = await pedirConfirmacion(
-        `¿Bonificar ${mesesTexto(mesesPorRecomendacion)} a ${referidor}? Tiene débito automático: Mercado Pago va a seguir cobrando y el cobro de cada mes bonificado hay que devolverlo a mano desde Mercado Pago (te lo avisamos y queda en la pestaña Devoluciones).`,
-      );
-      if (!sigue) return;
-    }
-    enviar(true, "meses");
+  const aplicarBeneficio = async () => {
+    const pregunta = conDebito
+      ? `¿Aplicar ${mesesBonificadosTexto(mesesPorRecomendacion)} a ${referidor}? ${TEXTO_DEL_TOPE} Tiene débito automático: Mercado Pago va a seguir cobrando y el cobro del mes bonificado hay que devolverlo a mano desde Mercado Pago (te lo avisamos y queda en la pestaña Devoluciones).`
+      : `¿Aplicar ${mesesBonificadosTexto(mesesPorRecomendacion)} a ${referidor}? ${TEXTO_DEL_TOPE}`;
+    if (await pedirConfirmacion(pregunta)) enviar(true);
   };
 
   if (aplicado) {
     return (
-      <Boton tamano="sm" variante="fantasma" disabled={pendiente} aria-busy={pendiente} onClick={() => enviar(false, "pack")}>
+      <Boton tamano="sm" variante="fantasma" disabled={pendiente} aria-busy={pendiente} onClick={() => enviar(false)}>
         Deshacer
       </Boton>
     );
   }
 
-  const puedeMeses = mesesPorRecomendacion > 0 && !motivoSinMeses;
+  if (mesesPorRecomendacion < 1) {
+    return <span className="text-[13px] text-apagado">Activá los meses bonificados en Planes para poder aplicarlo.</span>;
+  }
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {puedeMeses && (
-        <Boton tamano="sm" variante="exito" disabled={pendiente} aria-busy={pendiente} onClick={bonificarMeses}>
-          ✓ Bonificar {mesesTexto(mesesPorRecomendacion)}
-        </Boton>
-      )}
-      <Boton
-        tamano="sm"
-        variante={puedeMeses ? "secundario" : "exito"}
-        disabled={pendiente}
-        aria-busy={pendiente}
-        title={!puedeMeses && motivoSinMeses ? motivoSinMeses : undefined}
-        onClick={() => enviar(true, "pack")}
-      >
-        {puedeMeses ? "Pack por adelantado" : "✓ Marcar beneficio aplicado"}
-      </Boton>
-    </div>
+    <Boton tamano="sm" variante="exito" disabled={pendiente} aria-busy={pendiente} onClick={aplicarBeneficio}>
+      ✓ Aplicar {mesesTexto(mesesPorRecomendacion)} bonificado{mesesPorRecomendacion === 1 ? "" : "s"}
+    </Boton>
   );
 }

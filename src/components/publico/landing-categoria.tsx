@@ -13,7 +13,7 @@ import {
   resumenPublico,
   testimoniosDe,
 } from "@/lib/queries/publico";
-import { BandaInstituciones } from "./banda-instituciones";
+import { BandaDeCierre } from "./banda-fundador";
 import { CarruselTestimonios } from "./carrusel-testimonios";
 import { CATEGORIAS_PUBLICAS, estiloBotonAcento, estiloCategoria } from "./categorias";
 import { ListaUrgentes } from "./lista-urgentes";
@@ -273,7 +273,7 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
         className="border-b-0 bg-transparent px-12 pt-16 pb-2 max-[900px]:px-6 max-[560px]:px-6 max-[560px]:pt-12"
       />
 
-      <BandaInstituciones categoria={categoria} />
+      <BandaDeCierre categoria={categoria} />
     </div>
   );
 }

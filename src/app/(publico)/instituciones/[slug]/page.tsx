@@ -89,6 +89,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                   {inst.verificada && (
                     <Insignia tono="verde">Institución verificada</Insignia>
                   )}
+                  {inst.fundadora && <Insignia tono="ambar">Institución fundadora</Insignia>}
                 </div>
                 <div className="mt-[3px] text-sm leading-snug text-apagado">
                   {inst.tipo}

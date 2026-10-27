@@ -1,11 +1,11 @@
 import "server-only";
-import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "@/db";
 import { cobrosMp, instituciones, mesesBonificados, referidosInstituciones, suscripcionesMp } from "@/db/schema";
 import { registrarAuditoria } from "@/lib/auditoria";
-import { estadoDeMes, gastoDelCobro, textoDeMesBonificado, type EstadoDeMes } from "@/lib/bonificacion";
-import { etiquetaPeriodo, periodoActual, type MesBonificadoYa } from "@/lib/cobros";
+import { estadoDeMes, gastoDelCobro, MESES_ENTRE_BONIFICACIONES, puedeBonificarPeriodo, textoDeMesBonificado, type EstadoDeMes } from "@/lib/bonificacion";
+import { etiquetaPeriodo, periodoActual, sumarMeses, type MesBonificadoYa } from "@/lib/cobros";
 import { pesos } from "@/lib/planes";
 import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { destinatariosDeInstitucion, type EjecutorBo } from "@/lib/queries/backoffice-instituciones";
@@ -35,6 +35,36 @@ export async function mesesYaBonificados(ejecutor: EjecutorBo, ids: readonly str
     .from(mesesBonificados)
     .where(and(inArray(mesesBonificados.institucionId, [...ids]), eq(mesesBonificados.periodo, periodo)));
   return filas.flatMap((f) => (f.periodo ? [{ institucionId: f.institucionId, periodo: f.periodo }] : []));
+}
+
+/**
+ * Los meses bonificados de estas instituciones que están a menos de 6 meses de `periodo` (el mismo incluido): con eso se aplica el tope de
+ * 1 mes bonificado por semestre (`puedeBonificarPeriodo`). Cuentan todos los gastados, con o sin cobro del débito.
+ */
+export async function mesesBonificadosCercanos(ejecutor: Pick<EjecutorBo, "select">, ids: readonly string[], periodo: string): Promise<MesBonificadoYa[]> {
+  if (ids.length === 0) return [];
+  const cerca = MESES_ENTRE_BONIFICACIONES - 1;
+  const filas = await ejecutor
+    .select({ institucionId: mesesBonificados.institucionId, periodo: mesesBonificados.periodo })
+    .from(mesesBonificados)
+    .where(
+      and(
+        inArray(mesesBonificados.institucionId, [...ids]),
+        isNotNull(mesesBonificados.periodo),
+        gte(mesesBonificados.periodo, sumarMeses(periodo, -cerca)),
+        lte(mesesBonificados.periodo, sumarMeses(periodo, cerca)),
+      ),
+    );
+  return filas.flatMap((f) => (f.periodo ? [{ institucionId: f.institucionId, periodo: f.periodo }] : []));
+}
+
+/** Todos los meses que ya quedaron bonificados de una institución, gastados con o sin cobro (para las pantallas que anticipan el tope). */
+export async function periodosBonificadosDe(ejecutor: Pick<EjecutorBo, "select">, institucionId: string): Promise<string[]> {
+  const filas = await ejecutor
+    .select({ periodo: mesesBonificados.periodo })
+    .from(mesesBonificados)
+    .where(and(eq(mesesBonificados.institucionId, institucionId), isNotNull(mesesBonificados.periodo)));
+  return filas.flatMap((f) => (f.periodo ? [f.periodo] : [])).sort();
 }
 
 /**
@@ -121,6 +151,9 @@ export async function gastarMesSinCobro(ejecutor: EjecutorBo, institucionId: str
     .where(and(eq(mesesBonificados.institucionId, institucionId), eq(mesesBonificados.periodo, periodo)))
     .limit(1);
   if (ya) return false;
+  // Como máximo 1 por semestre: el cron ya lo miró al planificar, pero acá se vuelve a mirar con la base en la mano (otra pasada pudo adelantarse).
+  const cercanos = await mesesBonificadosCercanos(ejecutor, [institucionId], periodo);
+  if (!puedeBonificarPeriodo(periodo, cercanos.map((m) => m.periodo))) return false;
   const mes = await tomarDisponible(ejecutor, institucionId, periodo, null);
   if (!mes) return false;
 
@@ -160,7 +193,13 @@ export async function gastarMesEnCobro(
         .from(mesesBonificados)
         .where(and(eq(mesesBonificados.institucionId, e.institucionId), isNull(mesesBonificados.periodo)));
 
-  const gasto = gastoDelCobro({ mesAnotado: anotado ?? null, disponibles });
+  // Como máximo 1 por semestre: si ya hay otro mes bonificado a menos de 6 meses, este cobro sale normal y el que sobra espera.
+  const cercanos = anotado ? [] : await mesesBonificadosCercanos(ejecutor, [e.institucionId], e.periodo);
+  const gasto = gastoDelCobro({
+    mesAnotado: anotado ?? null,
+    disponibles,
+    permitido: puedeBonificarPeriodo(e.periodo, cercanos.map((m) => m.periodo)),
+  });
   if (gasto === "ya-estaba" || gasto === "ninguno") return gasto === "ya-estaba";
   // Un cobro de un mes que ya pasó (lo recuperó la revisión diaria o el aviso llegó tarde) no gasta un mes bonificado que se ganó después:
   // el mes sigue disponible para el próximo cobro. Solo se agrega el cobro a un mes que ya estaba anotado.
@@ -199,6 +238,23 @@ export async function gastarMesEnCobro(
     enlace: "/backoffice/referidos?estado=devoluciones",
   });
   return true;
+}
+
+/**
+ * Un semestre pagado de contado gasta un mes bonificado (si la institución tiene uno y el tope de 1 por semestre lo permite): queda anotado
+ * como el último mes que cubre el semestre (`periodo`), sin cobro que devolver. Devuelve el mes tomado o null si no corresponde. El que llama
+ * (el registro del semestre) cobra un mes menos y deja el período en la auditoría, para poder soltarlo si después se anula el pago.
+ */
+export async function tomarMesParaSemestre(ejecutor: EjecutorBo, institucionId: string, periodo: string) {
+  const cercanos = await mesesBonificadosCercanos(ejecutor, [institucionId], periodo);
+  if (!puedeBonificarPeriodo(periodo, cercanos.map((m) => m.periodo))) return null;
+  const mes = await tomarDisponible(ejecutor, institucionId, periodo, null);
+  if (!mes) return null;
+  await registrarAuditoria(
+    { usuarioId: null, accion: "referido.mes_bonificado", entidad: "institucion", entidadId: institucionId, detalle: { periodo, origen: "semestre", conDebito: false } },
+    ejecutor,
+  );
+  return mes;
 }
 
 /** ¿El mes en curso de la institución está bonificado? Cuenta como «ya pago» para activar el débito (no se lo cobraría para devolverlo). */

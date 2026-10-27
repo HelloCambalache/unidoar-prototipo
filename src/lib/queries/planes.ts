@@ -29,6 +29,7 @@ export async function leerCatalogoDePlanes(ejecutor: Ejecutor = getDb()): Promis
           puntualIncluyeCursos: condiciones.puntualIncluyeCursos,
           puntualIncluyeBuscador: condiciones.puntualIncluyeBuscador,
           referidoMesesMensual: condiciones.referidoMesesMensual,
+          cuposFundador: condiciones.cuposFundador,
           packMeses: condiciones.packMeses,
           packMesesPagos: condiciones.packMesesPagos,
           packMesesReferido: condiciones.packMesesReferido,

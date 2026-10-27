@@ -1,5 +1,6 @@
 /*
- * Retira los planes de antes del esquema de 2026-10 (Fundador, Estándar y Anual): pasa cada institución que los tenía al plan que le toca por su
+ * Retira los planes de antes del esquema de 2026-10 (Fundador, Estándar y Anual; **el Plan Fundador volvió el 2026-10-27 como un plan nuevo, con
+ * su propia fila, y por eso ya no está en la lista de retirados: este script no lo toca**): pasa cada institución que los tenía al plan que le toca por su
  * tipo (Colegios o Clubes y academias, igual que una cuenta nueva), repunta lo que los referencia (facturas, planes y suscripciones de
  * Mercado Pago, pedidos de cambio de plan; los MONTOS de las facturas ya emitidas no se tocan), borra sus filas de `planes` y deja el plan por
  * defecto de las instituciones en `colegio` (antes era `fundador`).
@@ -13,7 +14,7 @@ import postgres from "postgres";
 import { CONDICIONES_POR_DEFECTO } from "@/lib/planes";
 import { urlMigraciones } from "./conexion";
 
-const RETIRADOS = ["fundador", "estandar", "anual"];
+const RETIRADOS = ["estandar", "anual"];
 
 const url = urlMigraciones();
 if (!url) {

@@ -17,13 +17,22 @@ export function etiquetaBusquedasAbiertas(n: number) {
  * Tarjeta de una institución en el catálogo: la misma en el panel del docente y en el sitio público.
  * La estrella (guardar en favoritas, o invitación a crear cuenta) la pone quien la usa.
  */
+/** La insignia de las primeras instituciones (Plan Fundador), chica para entrar al lado del nombre. */
+function InsigniaFundadora() {
+  return (
+    <Insignia tono="ambar" className="flex-none px-2 py-[3px] text-[10.5px]">
+      Fundadora
+    </Insignia>
+  );
+}
+
 export function TarjetaInstitucion({
   i,
   href,
   estrella,
   app = false,
 }: {
-  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "busquedasActivas" | "sedes">;
+  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "fundadora" | "busquedasActivas" | "sedes">;
   href: string;
   estrella?: React.ReactNode;
   /** Identidad nueva del área con sesión: sin botón, toda la tarjeta es el link y el pie lleva una flecha. */
@@ -39,6 +48,7 @@ export function TarjetaInstitucion({
             <h2 className="m-0 flex items-center gap-1.5 text-sm leading-[1.3] font-semibold text-tinta">
               <span className="min-w-0">{i.nombre}</span>
               {i.verificada && <Verificado tamano={14} />}
+              {i.fundadora && <InsigniaFundadora />}
             </h2>
             <div className="text-xs leading-[1.35] text-apagado">{[i.tipo, i.zona, resumenDeSedes(i.sedes)].filter(Boolean).join(" · ")}</div>
           </div>
@@ -65,7 +75,7 @@ function TarjetaInstitucionApp({
   href,
   estrella,
 }: {
-  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "busquedasActivas" | "sedes">;
+  i: Pick<InstitucionCatalogo, "nombre" | "tipo" | "zona" | "descripcion" | "logoUrl" | "verificada" | "fundadora" | "busquedasActivas" | "sedes">;
   href: string;
   estrella?: React.ReactNode;
 }) {
@@ -87,6 +97,7 @@ function TarjetaInstitucionApp({
               {i.nombre}
             </Link>
             {i.verificada && <Verificado tamano={15} />}
+            {i.fundadora && <InsigniaFundadora />}
           </h2>
           <div className="mt-1 text-[13px] leading-[1.35] text-apagado">
             {[i.tipo, i.zona, resumenDeSedes(i.sedes)].filter(Boolean).join(" · ")}

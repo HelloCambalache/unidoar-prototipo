@@ -978,6 +978,20 @@ export const acuerdosPrecio = pgTable("acuerdos_precio", {
 export type AcuerdoPrecioFila = typeof acuerdosPrecio.$inferSelect;
 
 /**
+ * Cómo prefiere pagar el abono una institución: una fila por institución que eligió pagar el **semestre** por adelantado (pagás 5, usás 6).
+ * Sin fila, paga mes a mes. Es una preferencia: no cobra nada (el equipo registra el semestre cuando llega el pago) y la institución la elige al
+ * crear la cuenta o desde Plan y facturación. Tabla aparte de `instituciones` a propósito. Creada con `pnpm db:planes` (correrlo ANTES de desplegar).
+ */
+export const formasDePago = pgTable("formas_de_pago", {
+  institucionId: uuid("institucion_id")
+    .primaryKey()
+    .references(() => instituciones.id, { onDelete: "cascade" }),
+  /** Hoy solo `semestral`. */
+  forma: text("forma").notNull(),
+  ...marcasDeTiempo,
+});
+
+/**
  * Búsquedas puntuales pagadas (el plan sin abono: se paga cada búsqueda). Cada fila es UNA búsqueda que la institución pagó: la carga el equipo
  * al registrar el pago y queda **disponible** (`usado_en` null) hasta que la institución publica una búsqueda, que la **consume** (guarda su id,
  * cuándo se usó y cuándo vence). Disponible o usada se decide por `usado_en`, nunca por el enlace: si se borrara la búsqueda, el crédito no
@@ -1024,7 +1038,9 @@ export const planesCondiciones = pgTable("planes_condiciones", {
   puntualIncluyeCursos: boolean("puntual_incluye_cursos").notNull().default(false),
   puntualIncluyeBuscador: boolean("puntual_incluye_buscador").notNull().default(false),
   /** Meses bonificados por recomendación para quien paga mes a mes (0: no se ofrece). Agregada con `pnpm db:planes` (correrlo ANTES de desplegar). */
-  referidoMesesMensual: integer("referido_meses_mensual").notNull().default(2),
+  referidoMesesMensual: integer("referido_meses_mensual").notNull().default(1),
+  /** Cuántas instituciones pueden ser fundadoras (Plan Fundador). Agregada con `pnpm db:planes` (correrlo ANTES de desplegar). */
+  cuposFundador: integer("cupos_fundador").notNull().default(50),
   packMeses: integer("pack_meses").notNull(),
   packMesesPagos: integer("pack_meses_pagos").notNull(),
   packMesesReferido: integer("pack_meses_referido").notNull(),

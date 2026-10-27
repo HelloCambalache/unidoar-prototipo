@@ -11,6 +11,7 @@ import { requerirUsuario } from "@/lib/auth";
 import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
+import { bloquearCuposDeFundadoras, fundadorasActuales } from "@/lib/queries/fundadoras";
 import { planes } from "@/lib/queries/planes";
 import { avisarReferidorDeVerificacion } from "@/lib/queries/referidos";
 import { borrarArchivos } from "@/lib/queries/archivos";
@@ -240,6 +241,17 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
     if (!inst) return fallo(NO_ENCONTRADA);
     if (inst.plan === nuevo) return ok();
 
+    // El Plan Fundador es para las primeras N: no se asigna pasado el cupo (el turno se pide antes de contar, así dos asignaciones a la vez no se pasan).
+    if (P.esFundador(nuevo)) {
+      await bloquearCuposDeFundadoras(tx);
+      if (P.cuposDeFundador(await fundadorasActuales(tx)) <= 0) {
+        return fallo(
+          P.planDe("fundador").vigente
+            ? "Ya están todos los lugares de fundadora ocupados. Podés subir el cupo en Planes (bloque «Fundadoras»)."
+            : "El Plan Fundador está apagado: prendelo en Planes (bloque «Fundadoras») para poder asignarlo.",
+        );
+      }
+    }
     await tx.update(instituciones).set({ plan: nuevo }).where(eq(instituciones.id, inst.id));
     await registrarAuditoria(
       {

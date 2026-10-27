@@ -35,13 +35,18 @@ const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
     "Se asigna a mano desde la ficha de la institución (redes de varias sedes). En la página pública se muestra «A convenir»: este precio por sede es el de base cuando se asigna sin un convenio a medida (que se carga desde Cobros → Precio).",
   puntual:
     "Se asigna a mano desde la ficha de la institución (o al aprobar un pedido de cambio de plan). No tiene abono: se paga cada búsqueda, y el pago lo registra el equipo en la ficha de cobros.",
+  fundador:
+    "Lo reciben solas las primeras instituciones que crean su cuenta (hasta el cupo de abajo), en lugar del arancel de su tipo; el equipo también puede asignarlo desde la ficha. Su precio no se muestra en la parte pública.",
 };
 
 /** Los dos planes que reciben a las instituciones nuevas: no se pueden dejar de ofrecer. */
 const SIEMPRE_VIGENTES: readonly PlanClave[] = ["colegio", "deportiva"];
 
-/** Los planes con abono que se ofrecen hoy: los de la tarjeta «Instituciones». La búsqueda puntual (sin abono) tiene su propio bloque. */
-const VIGENTES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => PLANES_POR_DEFECTO[c].vigente && PLANES_POR_DEFECTO[c].periodo !== "evento");
+/**
+ * Los planes con abono que se ofrecen hoy: los de la tarjeta «Instituciones». La búsqueda puntual (sin abono) y el Plan Fundador (que no se
+ * muestra con precio en la página pública) tienen cada uno su propio bloque.
+ */
+const VIGENTES: readonly PlanClave[] = CLAVES_PLAN.filter((c) => c !== "fundador" && PLANES_POR_DEFECTO[c].vigente && PLANES_POR_DEFECTO[c].periodo !== "evento");
 const PUNTUAL: readonly PlanClave[] = ["puntual"];
 
 const aNumero = (texto: string) => {
@@ -117,7 +122,7 @@ export function PlanesFormulario({
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, puntual: { ...d.condiciones.puntual, [campo]: valor } } }));
   };
 
-  const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra" | "referidoMesesMensual", valor: number) => {
+  const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra" | "referidoMesesMensual" | "cuposFundador", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
   };
@@ -214,9 +219,11 @@ export function PlanesFormulario({
             ayuda={
               base.porSede
                 ? "Uso interno: la página pública y «Cambiar de plan» muestran «A convenir según el volumen». Es lo que se factura por sede si se asigna Multisede sin un convenio a medida."
-                : p.precio > 0
-                  ? `Se ve como ${pesos(p.precio)}`
-                  : undefined
+                : clave === "fundador"
+                  ? `${p.precio > 0 ? `Se ve como ${pesos(p.precio)}. ` : ""}Solo lo ve quien tiene este plan, en su Plan y facturación: la página pública y el alta no lo muestran.`
+                  : p.precio > 0
+                    ? `Se ve como ${pesos(p.precio)}`
+                    : undefined
             }
             requerido
           >
@@ -284,7 +291,9 @@ export function PlanesFormulario({
             <span className="block text-xs text-sutil">
               {SIEMPRE_VIGENTES.includes(clave)
                 ? "Siempre se ofrece: lo reciben las instituciones nuevas según su tipo."
-                : "Se puede elegir al cambiar de plan y aparece en la página pública."}
+                : clave === "fundador"
+                  ? "Si lo apagás, las cuentas nuevas dejan de recibirlo, desaparece la tarjeta de fundadoras de la página pública y quedan igual quienes ya lo tienen."
+                  : "Se puede elegir al cambiar de plan y aparece en la página pública."}
             </span>
           </Casilla>
         </div>
@@ -325,8 +334,9 @@ export function PlanesFormulario({
       )}
 
       <p className="mt-0 mb-5 max-w-[78ch] text-[13.5px] leading-normal text-apagado">
-        Esta pantalla está ordenada como la página pública de aranceles, que tiene dos tarjetas: <b className="font-semibold">Profesionales</b> e{" "}
-        <b className="font-semibold">Instituciones</b>. Lo que cambies en cada bloque cambia esa tarjeta.
+        Esta pantalla está ordenada como la página pública de aranceles, que tiene dos tarjetas (<b className="font-semibold">Profesionales</b> e{" "}
+        <b className="font-semibold">Instituciones</b>) y, mientras queden lugares, una tercera de <b className="font-semibold">Fundadoras</b> que no muestra
+        precio. Lo que cambies en cada bloque cambia esa tarjeta.
       </p>
 
       <div className="mb-6 flex flex-col gap-4">
@@ -348,6 +358,45 @@ export function PlanesFormulario({
           adelantado. Los tipos, las sedes y el pack se editan en «Condiciones», más abajo.
         </p>
         {VIGENTES.map(tarjetaDePlan)}
+      </div>
+
+      <div className="mb-6 flex flex-col gap-4">
+        <EtiquetaSeccion className="mb-0">Tarjeta «Fundadoras»</EtiquetaSeccion>
+        <p className="m-0 -mt-2 text-[13px] leading-normal text-apagado">
+          Para las primeras instituciones que se suman. En la página pública la tarjeta dice «las primeras {datos.condiciones.cuposFundador}» y lista los
+          beneficios (insignia de fundadora en su perfil y su logo en la portada), <b className="font-semibold">sin mostrar el precio</b>: el valor lo cargás acá, como el de
+          cualquier plan.
+        </p>
+        {tarjetaDePlan("fundador")}
+        <Tarjeta como="section" className="p-[22px]" aria-labelledby="cupos-fundador-titulo">
+          <h3 id="cupos-fundador-titulo" className="m-0 mb-1 text-[17px] leading-tight font-semibold">
+            Cupos de fundadoras
+          </h3>
+          <p className="mt-0 mb-4 text-[13px] leading-normal text-apagado">
+            {(() => {
+              const ocupados = cantidades.fundador ?? 0;
+              const quedan = Math.max(0, datos.condiciones.cuposFundador - ocupados);
+              return `Hoy ${plural(ocupados, "institución es fundadora", "instituciones son fundadoras")} y ${quedan === 0 ? "no queda ningún lugar" : `quedan ${plural(quedan, "lugar", "lugares")}`}. Las cuentas nuevas reciben el plan solas hasta completar el cupo; después, el arancel de su tipo.`;
+            })()}
+          </p>
+          <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
+            <Campo
+              etiqueta="Cupos de instituciones fundadoras"
+              ayuda="Cuántas instituciones pueden tener el Plan Fundador al mismo tiempo. Bajarlo no le saca el plan a nadie."
+              error={verError("condiciones.cuposFundador")}
+            >
+              <Input
+                type="number"
+                min={1}
+                max={1000}
+                step={1}
+                value={datos.condiciones.cuposFundador}
+                aria-invalid={!!verError("condiciones.cuposFundador")}
+                onChange={(e) => cambiarCondicion("cuposFundador", aNumero(e.target.value))}
+              />
+            </Campo>
+          </div>
+        </Tarjeta>
       </div>
 
       <Tarjeta como="section" className="mb-6 p-[22px]" aria-labelledby="condiciones-titulo">
@@ -416,7 +465,7 @@ export function PlanesFormulario({
             </Campo>
           </div>
           <p className="mt-2 mb-0 text-xs leading-normal text-sutil">
-            Hoy: contratando {pack.meses} meses por adelantado se pagan {pack.mesesQueSePagan}, y si recomienda a una institución que se suma, {pack.mesesConReferido}. Este último valor es el beneficio del módulo Referidos (lo ve cada institución en su menú y lo aplicás desde Referidos); ya no se muestra en la página de precios.
+            Hoy: contratando {pack.meses} meses por adelantado se pagan {pack.mesesQueSePagan}, y si gasta un mes bonificado por recomendar (módulo Referidos), {pack.mesesConReferido}. Ese semestre con mes bonificado se registra desde la ficha de cobros; el valor ya no se muestra en la página de precios.
           </p>
           <p className="mt-1.5 mb-0 text-xs leading-normal text-sutil">
             El semestre al contado se registra desde la ficha de cobros de cada institución («Registrar semestre al contado»): queda una factura paga que
@@ -439,7 +488,7 @@ export function PlanesFormulario({
           )}
         </fieldset>
 
-        <h4 className="m-0 mb-2.5 text-sm leading-tight font-semibold text-tinta">Referidos, pagando mes a mes</h4>
+        <h4 className="m-0 mb-2.5 text-sm leading-tight font-semibold text-tinta">Referidos</h4>
         <fieldset className="m-0 mb-6 min-w-0 border-0 p-0">
           <legend className="mb-2 p-0 text-xs font-semibold text-apagado">Meses bonificados por recomendación</legend>
           <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
@@ -457,8 +506,8 @@ export function PlanesFormulario({
           </div>
           <p className="mt-2 mb-0 text-xs leading-normal text-sutil">
             {datos.condiciones.referidoMesesMensual > 0
-              ? `Cuando la institución recomendada paga su primera factura, desde Referidos podés bonificarle ${datos.condiciones.referidoMesesMensual} ${datos.condiciones.referidoMesesMensual === 1 ? "mes" : "meses"} a quien la recomendó (si paga mes a mes). Esos meses se descuentan solos de las próximas facturas; con débito automático, Mercado Pago cobra igual y Referidos te avisa para devolverlo a mano.`
-              : "En 0 no se ofrecen meses bonificados: el beneficio solo se aplica como pack por adelantado."}
+              ? `Cuando la institución recomendada paga su primera factura, desde Referidos le sumás ${datos.condiciones.referidoMesesMensual} ${datos.condiciones.referidoMesesMensual === 1 ? "mes bonificado" : "meses bonificados"} a quien la recomendó. Se usa como máximo 1 por semestre (lo que sobra queda guardado): en una factura mensual no se factura ese mes, con débito automático Mercado Pago cobra igual y Referidos te avisa para devolverlo a mano, y en un semestre al contado se paga un mes menos (lo que fijás arriba en «Meses que se pagan con referido»).`
+              : "En 0 no se pueden aplicar beneficios de referidos."}
           </p>
         </fieldset>
 

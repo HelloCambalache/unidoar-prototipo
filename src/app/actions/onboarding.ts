@@ -12,7 +12,12 @@ import { parsear } from "@/lib/acciones";
 import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { avisoAlEquipoDeSemestre, puedePagarSemestre, resumenDeSemestre } from "@/lib/forma-de-pago";
+import { esClavePlan, type Planes } from "@/lib/planes";
+import { guardarFormaDePago } from "@/lib/queries/forma-de-pago";
+import { bloquearCuposDeFundadoras, fundadorasActuales } from "@/lib/queries/fundadoras";
 import { copiarFotoDeGoogle } from "@/lib/queries/foto-de-google";
+import { resumenDeError } from "@/lib/errores";
 import { rechazarInvitacion, sumarseAlEquipo } from "@/lib/queries/equipo";
 import { anotarReferidoDelNavegador } from "@/lib/queries/referidos";
 import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
@@ -123,6 +128,38 @@ async function slugLibre(nombre: string) {
 }
 
 /**
+ * Anota cómo prefiere pagar el abono la institución que acaba de guardar el paso 2 (el semestre por adelantado o mes a mes) y, si pasó a elegir
+ * el semestre, le avisa al equipo en la campanita para que coordine el pago. Es una preferencia: nunca frena el alta (si algo falla, solo queda en
+ * el log). Sin elección (`modalidad` ausente) no toca nada; quien eligió una sola búsqueda o tiene un plan sin precio de lista (Multisede) paga
+ * mes a mes, así que se borra cualquier semestre anterior.
+ */
+async function anotarFormaDePagoDelAlta(
+  institucionId: string,
+  nombre: string,
+  modalidad: "abono" | "semestral" | "puntual" | undefined,
+  alCrearLaCuenta: boolean,
+  P: Planes,
+) {
+  if (!modalidad) return;
+  try {
+    const db = getDb();
+    const [inst] = await db.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, institucionId)).limit(1);
+    if (!inst) return;
+    const semestral = modalidad === "semestral" && puedePagarSemestre(P, inst.plan);
+    const cambio = await guardarFormaDePago(db, institucionId, semestral ? "semestral" : "mensual");
+    if (!cambio || !semestral || !esClavePlan(inst.plan)) return;
+    const r = resumenDeSemestre(P, inst.plan, 1);
+    await avisarAAdmins(db, {
+      titulo: nombre,
+      texto: avisoAlEquipoDeSemestre({ alCrearLaCuenta, total: r.total, meses: r.meses }),
+      enlace: `/backoffice/cobros/${institucionId}`,
+    });
+  } catch (e) {
+    console.error("No se pudo anotar la forma de pago del alta", resumenDeError(e));
+  }
+}
+
+/**
  * Paso 2 de la institución ("Contanos sobre tu institución"). Crea la institución con la cuenta como
  * propietaria y miembro dueño, o —si ya la había creado— actualiza sus datos sin duplicarla ni cambiar su slug.
  */
@@ -201,21 +238,28 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
   if (existente) {
     await transaccion(async (tx) => {
       // El plan sigue al tipo mientras sea el que le tocaba (uno que cambió el equipo a mano no se toca) y respeta si eligió pagar una sola
-      // búsqueda: ver `planDelAlta` (y `planTrasCambiarElTipo` adentro).
+      // búsqueda: ver `planDelAlta` (y `planTrasCambiarElTipo` adentro). Si vuelve del pago por búsqueda al abono y queda un lugar de
+      // fundadora, el abono es el Plan Fundador (el turno se pide antes de contar, así dos altas no se pasan del cupo).
+      await bloquearCuposDeFundadoras(tx);
+      const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx)) > 0;
       await tx
         .update(instituciones)
-        .set({ ...datos, plan: P.planDelAlta({ actual: existente.plan, tipoAnterior: existente.tipo, tipo, modalidad: d.modalidad }) })
+        .set({ ...datos, plan: P.planDelAlta({ actual: existente.plan, tipoAnterior: existente.tipo, tipo, modalidad: d.modalidad, hayCupoFundador }) })
         .where(eq(instituciones.id, existente.id));
       await guardarSedePrincipal(tx, existente.id, ubicacionDeLaSede);
     });
   } else {
     const crear = async (slug: string) =>
       transaccion(async (tx) => {
+        // Las primeras instituciones (hasta el cupo de Planes) reciben el Plan Fundador; el resto, el arancel de su tipo. El turno se pide antes de
+        // contar: dos altas a la vez no se pasan del cupo.
+        await bloquearCuposDeFundadoras(tx);
+        const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx)) > 0;
         const [creada] = await tx
           .insert(instituciones)
-          // El arancel sale del tipo de institución, no de lo que elija (planPorTipo, src/lib/planes.ts: el catálogo editable de /backoffice/planes);
-          // lo único que elige es pagar una sola búsqueda en lugar del abono (`planDelAlta`, solo si ese plan se ofrece).
-          .values({ ...datos, slug, plan: P.planDelAlta({ tipo: d.tipo, modalidad: d.modalidad }), propietarioId: usuario.id, esDemo: false })
+          // El arancel sale del tipo de institución, no de lo que elija (planPorTipo, src/lib/planes.ts: el catálogo editable de /backoffice/planes), salvo
+          // que quede un lugar de fundadora; lo único que elige es pagar una sola búsqueda en lugar del abono (`planDelAlta`, solo si ese plan se ofrece).
+          .values({ ...datos, slug, plan: P.planDelAlta({ tipo: d.tipo, modalidad: d.modalidad, hayCupoFundador }), propietarioId: usuario.id, esDemo: false })
           .returning({ id: instituciones.id });
         await guardarSedePrincipal(tx, creada!.id, ubicacionDeLaSede);
         await tx
@@ -241,7 +285,9 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
     }
     // Si entró por el enlace de otra institución (cookie de /referido/<código>), queda anotada como recomendada. Nunca frena el alta.
     await anotarReferidoDelNavegador({ id: nuevaId, nombre: d.nombre, propietarioId: usuario.id, cuit: datos.cuit });
+    await anotarFormaDePagoDelAlta(nuevaId, d.nombre, d.modalidad, true, P);
   }
+  if (existente) await anotarFormaDePagoDelAlta(existente.id, d.nombre, d.modalidad, false, P);
 
   revalidatePath("/institucion", "layout");
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/institucion/3");

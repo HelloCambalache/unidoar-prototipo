@@ -16,8 +16,10 @@ import { TIPOS_INSTITUCION } from "@/lib/catalogo";
  * Un plan marcado `vigente: false` es uno que el equipo dejó de ofrecer (Multisede o la búsqueda puntual se pueden apagar): sigue acá
  * porque las facturas guardan la clave del plan al momento del cobro (`facturas.plan`) y puede haber cuentas que lo tienen. No se ofrece a
  * nadie nuevo. Las claves son fijas (no se crean ni se borran planes desde el backoffice): una factura o una institución las referencian.
- * Los planes de antes del esquema de 2026-10 (Fundador, Estándar y Anual) se retiraron: las cuentas que los tenían pasaron al plan de su
- * tipo y el precio de fundadora se acuerda por institución (ver «Precio acordado por institución» en CLAUDE.md).
+ * Los planes de antes del esquema de 2026-10 (Estándar y Anual) se retiraron: las cuentas que los tenían pasaron al plan de su tipo. **El Plan
+ * Fundador volvió** (2026-10-27): es para las primeras N instituciones que se suman (`condiciones.cuposFundador`, 50 de lanzamiento), con su
+ * precio editable en Planes como cualquier otro, y **su precio nunca se muestra en la parte pública** (la página dice «las primeras 50» y los
+ * beneficios, no cuánto cuesta). Ver `cuposDeFundador` y `catalogoParaNavegador`.
  */
 
 /** Cada cuánto se cobra un plan: por mes o por evento (la búsqueda puntual: se paga cada búsqueda, sin abono). */
@@ -41,7 +43,7 @@ export type Plan = {
   porSede: boolean;
 };
 
-export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "puntual"] as const;
+export const CLAVES_PLAN = ["colegio", "deportiva", "multisede", "puntual", "fundador"] as const;
 export type PlanClave = (typeof CLAVES_PLAN)[number];
 
 export const esClavePlan = (v: unknown): v is PlanClave => typeof v === "string" && (CLAVES_PLAN as readonly string[]).includes(v);
@@ -87,6 +89,11 @@ export type CondicionesDePlanes = {
    * 0 = no se ofrece: el beneficio solo se aplica como pack por adelantado.
    */
   referidoMesesMensual: number;
+  /**
+   * Cuántas instituciones pueden ser fundadoras (el Plan Fundador es para las primeras que se suman). Con `cupos` ocupados por quienes ya tienen
+   * ese plan, lo que queda es `cuposDeFundador(ocupados)`. Lo edita el equipo en Planes.
+   */
+  cuposFundador: number;
   /** La búsqueda puntual: vigencia, tope de búsquedas abiertas y qué incluye. */
   puntual: CondicionesDePuntual;
   /** Tipos de institución que pagan el arancel de colegios; el resto paga el deportivo. */
@@ -155,13 +162,26 @@ export const PLANES_POR_DEFECTO: Record<PlanClave, Plan> = {
     vigente: true,
     porSede: false,
   },
+  // El precio de lanzamiento es un respaldo neutro (el de Colegios): el valor real lo carga el equipo en Planes y nunca se muestra en la parte
+  // pública. Nadie lo paga antes de que el equipo cargue su primera factura (el cron no factura una cuenta sin facturas previas).
+  fundador: {
+    label: "Plan Fundador",
+    precio: 50_000,
+    precioMinimo: null,
+    periodo: "mes",
+    resumen: "Para las primeras instituciones que se suman: búsquedas ilimitadas, sin comisión por contratación.",
+    detalle: "Un valor de fundadora y el reconocimiento de haber estado desde el día uno.",
+    vigente: true,
+    porSede: false,
+  },
 };
 
 export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
   sedesMultisede: 5,
   descuentoSedeExtra: 50,
   pack: { meses: 6, mesesQueSePagan: 5, mesesConReferido: 4 },
-  referidoMesesMensual: 2,
+  referidoMesesMensual: 1,
+  cuposFundador: 50,
   puntual: { vigenciaDias: 30, busquedasAbiertas: 1, incluyeCursos: false, incluyeBuscador: false },
   tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario", "Universidad"],
 };
@@ -176,11 +196,19 @@ export const pesos = (n: number) => `$ ${n.toLocaleString("es-AR")}`;
  * por recomendar y, con `sinPrecioPorSede`, el precio base interno del plan por sede (la página pública dice «a convenir»). Ningún componente
  * fuera del backoffice usa esos valores; todo lo demás (listas, descuento por sede, pack, condiciones de la búsqueda puntual) queda igual.
  */
-export function catalogoParaNavegador(catalogo: CatalogoDePlanes, opciones: { sinPrecioPorSede?: boolean } = {}): CatalogoDePlanes {
+export function catalogoParaNavegador(
+  catalogo: CatalogoDePlanes,
+  opciones: {
+    sinPrecioPorSede?: boolean;
+    /** Sin el precio del Plan Fundador: la parte pública y el alta no lo muestran (solo lo ve quien lo tiene, en su Plan y facturación). */
+    sinPrecioDeFundador?: boolean;
+  } = {},
+): CatalogoDePlanes {
   const planes = Object.fromEntries(
     CLAVES_PLAN.map((c) => {
       const p = catalogo.planes[c];
-      return [c, { ...p, precioMinimo: null, ...(opciones.sinPrecioPorSede && p.porSede ? { precio: 0 } : {}) }];
+      const sinPrecio = (opciones.sinPrecioPorSede && p.porSede) || (opciones.sinPrecioDeFundador && c === "fundador");
+      return [c, { ...p, precioMinimo: null, ...(sinPrecio ? { precio: 0 } : {}) }];
     }),
   ) as Record<PlanClave, Plan>;
   return {
@@ -207,6 +235,19 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
 
   /** Los que se ofrecen hoy, en orden. */
   const vigentes: PlanClave[] = CLAVES_PLAN.filter((c) => planes[c].vigente);
+
+  /** Es el Plan Fundador (el de las primeras instituciones que se suman). */
+  const esFundador = (clave: string) => clave === "fundador";
+  /**
+   * Cuántos lugares de fundadora quedan, dado cuántas instituciones ya tienen el plan (`ocupados`). Con el plan apagado (el equipo dejó de
+   * ofrecerlo) no queda ninguno: nadie nuevo lo recibe aunque sobren cupos.
+   */
+  const cuposDeFundador = (ocupados: number) => (planes.fundador.vigente ? Math.max(0, condiciones.cuposFundador - Math.max(0, ocupados)) : 0);
+  /**
+   * Los planes que se ofrecen en la parte pública (el selector de precios de /planes): todos los vigentes menos el Fundador, cuyo precio no se
+   * muestra (la página lo presenta aparte, sin valor).
+   */
+  const vigentesPublicos: PlanClave[] = vigentes.filter((c) => !esFundador(c));
 
   /**
    * Las claves que puede elegir un selector: las vigentes más, si la institución está en un plan heredado, el suyo, así el
@@ -238,20 +279,30 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   const planTrasCambiarElTipo = (planActual: string, tipoAnterior: string, tipoNuevo: string): string =>
     planActual === planPorTipo(tipoAnterior) ? planPorTipo(tipoNuevo) : planActual;
   /**
-   * El plan que queda al guardar el alta (paso 2), cuando la persona puede elegir cómo usar UNIDOAR: con el abono de su tipo (`abono`) o pagando
-   * una sola búsqueda (`puntual`, solo si ese plan se sigue ofreciendo). Sin elección (`modalidad` ausente: la opción no se mostró) el plan
+   * El plan que queda al guardar el alta (paso 2), cuando la persona puede elegir cómo usar UNIDOAR: con el abono de su tipo (`abono`, o
+   * `semestral`: el mismo abono pagado por adelantado) o pagando una sola búsqueda (`puntual`, solo si ese plan se sigue ofreciendo). Sin elección (`modalidad` ausente: la opción no se mostró) el plan
    * sigue al tipo como siempre.
    *  - Cuenta nueva (`actual` ausente): `puntual` si lo eligió; si no, el arancel de su tipo.
    *  - Cuenta que ya existe (vuelve al paso 2 antes de verificarse): pasa a `puntual` si lo eligió y estaba en el de su tipo (o ya en puntual);
    *    vuelve al arancel de su tipo si estaba en puntual y eligió el abono; y un plan que el equipo le asignó a mano (Multisede…) no se toca.
    */
-  const planDelAlta = (e: { actual?: string; tipoAnterior?: string; tipo: string; modalidad?: "abono" | "puntual" }): string => {
+  const planDelAlta = (e: {
+    actual?: string;
+    tipoAnterior?: string;
+    tipo: string;
+    modalidad?: "abono" | "semestral" | "puntual";
+    /** Queda algún lugar de fundadora (`cuposDeFundador(...) > 0`): el abono de una cuenta nueva es el Plan Fundador en lugar del arancel de su tipo. */
+    hayCupoFundador?: boolean;
+  }): string => {
+    // El abono con el que arranca quien no elige una sola búsqueda: las primeras instituciones, el Plan Fundador; el resto, el arancel de su tipo.
+    const abonoInicial = (): string => (e.hayCupoFundador ? "fundador" : planPorTipo(e.tipo));
     const quierePuntual = e.modalidad === "puntual" && planes.puntual.vigente;
-    if (e.actual === undefined) return quierePuntual ? "puntual" : planPorTipo(e.tipo);
+    if (e.actual === undefined) return quierePuntual ? "puntual" : abonoInicial();
     const eraPuntual = e.actual === "puntual";
     const eraElDeSuTipo = e.actual === planPorTipo(e.tipoAnterior ?? e.tipo);
-    if (quierePuntual) return eraPuntual || eraElDeSuTipo ? "puntual" : e.actual;
-    if (e.modalidad === "abono" && eraPuntual) return planPorTipo(e.tipo);
+    if (quierePuntual) return eraPuntual || eraElDeSuTipo || esFundador(e.actual) ? "puntual" : e.actual;
+    // «semestral» es el mismo abono de su tipo, pagado por adelantado: para el plan cuenta igual que «abono».
+    if ((e.modalidad === "abono" || e.modalidad === "semestral") && eraPuntual) return abonoInicial();
     return planTrasCambiarElTipo(e.actual, e.tipoAnterior ?? e.tipo, e.tipo);
   };
 
@@ -392,10 +443,18 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   /** "Plan Multisede" → "Multisede" (para tablas y filtros, donde "Plan" sobra). */
   const nombreDePlan = (clave: string) => planDe(clave).label.replace(/^Plan /, "");
 
+  /**
+   * ¿Hay un precio con el que facturar? Todos los planes tienen su precio de lista salvo Multisede (redes y cadenas): su valor se acuerda según el
+   * volumen, o sea un convenio a medida (`total`) cargado desde la ficha de cobros. Sin ese convenio no se factura, no se debita y no entra en el
+   * MRR: el precio por sede de Planes es una base interna que no escala de forma lineal (una red grande no paga la suma de sus sedes).
+   */
+  const precioDefinido = (clave: string, acuerdo: AcuerdoDePrecio | null = null) =>
+    !planDe(clave).porSede || acuerdoQueRige(clave, acuerdo)?.modalidad === "total";
+
   /** Lo que aporta una institución al MRR: lo que paga por mes (un plan por sede, el precio por la cantidad de sedes). */
   const equivalenteMensual = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
-    // La búsqueda puntual no es un ingreso recurrente: no entra en el MRR.
-    if (planDe(clave).periodo === "evento") return 0;
+    // La búsqueda puntual no es un ingreso recurrente: no entra en el MRR. Una red sin convenio todavía no paga nada.
+    if (planDe(clave).periodo === "evento" || !precioDefinido(clave, acuerdo)) return 0;
     return montoDePlan(clave, sedes, acuerdo);
   };
 
@@ -428,6 +487,10 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     errorDeAcuerdo,
     nombreDePlan,
     equivalenteMensual,
+    precioDefinido,
+    esFundador,
+    cuposDeFundador,
+    vigentesPublicos,
   };
 }
 
@@ -459,6 +522,8 @@ export type FilaDeCondiciones = {
   puntualIncluyeBuscador?: boolean;
   /** Meses bonificados por recomendación para quien paga mes a mes: puede faltar en una base sin la columna (vale el de lanzamiento). */
   referidoMesesMensual?: number;
+  /** Cuántas instituciones fundadoras entran: puede faltar en una base sin la columna (vale el de lanzamiento). */
+  cuposFundador?: number;
   packMeses: number;
   packMesesPagos: number;
   packMesesReferido: number;
@@ -505,6 +570,7 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
     },
     pack: packValido ? { meses: c.packMeses, mesesQueSePagan: c.packMesesPagos, mesesConReferido: c.packMesesReferido } : defecto.pack,
     referidoMesesMensual: c && entero(c.referidoMesesMensual, 0, 12) ? c.referidoMesesMensual : defecto.referidoMesesMensual,
+    cuposFundador: c && entero(c.cuposFundador, 1, 1000) ? c.cuposFundador : defecto.cuposFundador,
     tiposColegio: c && Array.isArray(c.tiposColegio) && c.tiposColegio.length > 0 ? [...c.tiposColegio] : [...defecto.tiposColegio],
   };
   return { planes, condiciones };
@@ -544,8 +610,8 @@ const numeroDePack = (min: number, max: number) =>
   z.number({ error: "Escribí un número." }).int("Tiene que ser un número entero.").min(min, `Mínimo ${min}.`).max(max, `Máximo ${max}.`);
 
 /**
- * Lo que manda la pantalla "Planes" al guardar. Los precios y textos de los seis planes, si se ofrecen o no, y las condiciones.
- * Colegios y Clubes no se pueden dejar de ofrecer: son los dos que reciben las instituciones nuevas según su tipo.
+ * Lo que manda la pantalla "Planes" al guardar. Los precios y textos de los planes, si se ofrecen o no, y las condiciones.
+ * Colegios y Clubes no se pueden dejar de ofrecer: son los dos que reciben las instituciones nuevas según su tipo (cuando no hay lugar de fundadora).
  */
 export const edicionDePlanesSchema = z
   .object({
@@ -554,6 +620,7 @@ export const edicionDePlanesSchema = z
       sedesMultisede: numeroDePack(2, 100),
       descuentoSedeExtra: numeroDePack(0, 100),
       referidoMesesMensual: numeroDePack(0, 12),
+      cuposFundador: numeroDePack(1, 1000),
       puntual: z.object({
         vigenciaDias: numeroDePack(1, 365),
         busquedasAbiertas: numeroDePack(1, 20),
@@ -617,6 +684,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
       sedesMultisede: c.condiciones.sedesMultisede,
       descuentoSedeExtra: c.condiciones.descuentoSedeExtra,
       referidoMesesMensual: c.condiciones.referidoMesesMensual,
+      cuposFundador: c.condiciones.cuposFundador,
       puntual: { ...c.condiciones.puntual },
       pack: { ...c.condiciones.pack },
       tiposColegio: TIPOS_INSTITUCION.filter((t) => c.condiciones.tiposColegio.includes(t)),
@@ -655,6 +723,7 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
   if (antes.condiciones.sedesMultisede !== despues.condiciones.sedesMultisede) campos.push("sedes para el plan Multisede");
   if (antes.condiciones.descuentoSedeExtra !== despues.condiciones.descuentoSedeExtra) campos.push("descuento por sede adicional");
   if (antes.condiciones.referidoMesesMensual !== despues.condiciones.referidoMesesMensual) campos.push("meses bonificados por recomendación");
+  if (antes.condiciones.cuposFundador !== despues.condiciones.cuposFundador) campos.push("cupos de instituciones fundadoras");
   const ua = antes.condiciones.puntual;
   const ud = despues.condiciones.puntual;
   if (ua.vigenciaDias !== ud.vigenciaDias || ua.busquedasAbiertas !== ud.busquedasAbiertas || ua.incluyeCursos !== ud.incluyeCursos || ua.incluyeBuscador !== ud.incluyeBuscador) {

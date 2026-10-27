@@ -7,7 +7,7 @@ import { cobrosMp, instituciones, mesesBonificados, referidosInstituciones } fro
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
-import { motivoParaNoDeshacer, mesesTexto, puedeBonificarMeses, TIPOS_DE_BENEFICIO, type TipoDeBeneficio } from "@/lib/bonificacion";
+import { motivoParaNoDeshacer, mesesTexto, TEXTO_DEL_TOPE } from "@/lib/bonificacion";
 import { esUuid } from "@/lib/busquedas";
 import { etiquetaPeriodo } from "@/lib/cobros";
 import { pesos } from "@/lib/planes";
@@ -20,23 +20,22 @@ import { estadoDeReferido, puedeAplicarBeneficio, puedeDeshacerBeneficio } from 
 
 /*
  * Referidos, del lado del equipo. Solo admin. El equipo marca cuándo aplicó el beneficio a la institución que recomendó, o lo deshace si se
- * marcó por error. Se aplica de dos maneras (ver src/lib/bonificacion.ts): como pack por adelantado (se carga al facturar, a mano) o como
- * meses bonificados para quien paga mes a mes (cada mes sin gastar queda anotado y se descuenta solo de la próxima factura; con débito
- * automático el equipo devuelve a mano el cobro de cada uno y lo marca acá). Queda en la actividad de la institución que recomendó y se le
- * avisa en la campanita (sin mail). No se puede aplicar el beneficio de una recomendación cuya institución todavía no pagó una factura.
+ * marcó por error. Aplicarlo suma **meses bonificados** a quien recomendó (la cantidad sale de Planes; 1 de lanzamiento): cada uno queda anotado
+ * y se gasta de a uno por semestre, en una factura mensual, en un débito automático (que el equipo devuelve a mano y marca acá) o en un
+ * semestre pagado de contado (ver src/lib/bonificacion.ts). Queda en la actividad de la institución que recomendó y se le avisa en la
+ * campanita (sin mail). No se puede aplicar el beneficio de una recomendación cuya institución todavía no pagó una factura.
  */
 
 const NO_ENCONTRADO = "No encontramos esa recomendación.";
 const NO_ENCONTRADA_LA_DEVOLUCION = "No encontramos esa devolución.";
 
 /**
- * Marca (o deshace) que el equipo ya aplicó el beneficio de una recomendación. Al aplicar se elige cómo: `pack` (por adelantado, a mano al
- * facturar) o `meses` (meses bonificados que se descuentan solos; la cantidad sale de Planes). Deshacer un beneficio de meses solo se puede
- * si todavía no se gastó ninguno.
+ * Marca (o deshace) que el equipo ya aplicó el beneficio de una recomendación: suma a quien recomendó los meses bonificados que fija Planes.
+ * Deshacerlo solo se puede si todavía no se gastó ninguno de esos meses.
  */
-export async function marcarBeneficioDeReferido(referidoId: string, aplicado: boolean, tipo: TipoDeBeneficio = "pack"): Promise<Resultado> {
+export async function marcarBeneficioDeReferido(referidoId: string, aplicado: boolean): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
-  if (!esUuid(referidoId) || typeof aplicado !== "boolean" || !TIPOS_DE_BENEFICIO.includes(tipo)) return fallo(NO_ENCONTRADO);
+  if (!esUuid(referidoId) || typeof aplicado !== "boolean") return fallo(NO_ENCONTRADO);
   const P = await planes();
 
   const resultado = await transaccion(async (tx) => {
@@ -61,13 +60,12 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
     if (!aplicado && !puedeDeshacerBeneficio(estado)) return fallo("Ese beneficio no estaba aplicado.");
 
     let meses = 0;
-    if (aplicado && tipo === "meses") {
-      // Los meses se descuentan de una mensualidad: solo tiene sentido para quien paga mes a mes.
+    let sinAbono = false;
+    if (aplicado) {
       const [referidora] = await tx.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, fila.referidorId)).limit(1);
       if (!referidora) return fallo(NO_ENCONTRADO);
-      if (!puedeBonificarMeses(P.esPuntual(referidora.plan))) {
-        return fallo("Esta institución no paga mes a mes: aplicale el beneficio como pack por adelantado.");
-      }
+      // Quien paga cada búsqueda no tiene abono del que descontar: los meses le quedan guardados para cuando pase a un plan con abono.
+      sinAbono = P.esPuntual(referidora.plan);
       meses = P.condiciones.referidoMesesMensual;
       if (meses < 1) return fallo("Los meses bonificados no están habilitados: se activan en Planes → Condiciones.");
       await crearMeses(tx, fila.referidorId, fila.id, meses);
@@ -80,7 +78,7 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
 
     await tx
       .update(referidosInstituciones)
-      .set({ beneficioEn: aplicado ? sql`now()` : null, beneficioTipo: aplicado ? tipo : null })
+      .set({ beneficioEn: aplicado ? sql`now()` : null, beneficioTipo: aplicado ? "meses" : null })
       .where(eq(referidosInstituciones.id, fila.id));
     // Se anota sobre la institución que recomendó: así aparece en su actividad, junto con el resto de lo que hizo el equipo con su cuenta.
     await registrarAuditoria(
@@ -92,7 +90,7 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
         detalle: {
           referidoId: fila.referidoId,
           nombre: recomendada.nombre,
-          tipo: aplicado ? tipo : fila.beneficioTipo === "meses" ? "meses" : "pack",
+          tipo: aplicado || fila.beneficioTipo === "meses" ? "meses" : "pack",
           ...(meses > 0 ? { meses } : {}),
         },
       },
@@ -102,10 +100,9 @@ export async function marcarBeneficioDeReferido(referidoId: string, aplicado: bo
       await avisarAVarios(tx, await destinatariosDeInstitucion(tx, fila.referidorId), {
         tipo: "sistema",
         titulo: "UNIDOAR",
-        texto:
-          tipo === "meses"
-            ? `te bonificamos ${mesesTexto(meses)} por recomendar a ${recomendada.nombre}: se descuentan de tus próximas facturas. Si pagás con débito automático, te devolvemos lo cobrado de cada mes bonificado.`
-            : `aplicó tu beneficio por recomendar a ${recomendada.nombre}.`,
+        texto: sinAbono
+          ? `te bonificamos ${mesesTexto(meses)} por recomendar a ${recomendada.nombre}: te quedan guardados para cuando pases a un plan con abono. ${TEXTO_DEL_TOPE}`
+          : `te bonificamos ${mesesTexto(meses)} por recomendar a ${recomendada.nombre}: se descuentan de tus próximas facturas. ${TEXTO_DEL_TOPE} Si pagás con débito automático, te devolvemos lo cobrado del mes bonificado.`,
         enlace: "/institucion/referidos",
       });
     }

@@ -112,7 +112,13 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
         </p>
       )}
 
-      {datos.planDebitable && (!suscripcion || estado === "cancelada") && (
+      {datos.planDebitable && datos.sinConvenio && (!suscripcion || estado === "cancelada") && (
+        <p className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">
+          El valor de tu plan se acuerda según el volumen. Cuando el equipo te pase el monto, vas a poder activar el débito automático desde acá.
+        </p>
+      )}
+
+      {datos.planDebitable && !datos.sinConvenio && (!suscripcion || estado === "cancelada") && (
         <>
           {confirmando ? (
             <p role="status" aria-live="polite" className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">

@@ -53,28 +53,30 @@ describe("planes vigentes y heredados", () => {
     planes: { ...CATALOGO_POR_DEFECTO.planes, multisede: { ...CATALOGO_POR_DEFECTO.planes.multisede, vigente: false } },
   });
 
-  it("hay cuatro planes (los de Fundador, Estándar y Anual se retiraron) y todos se ofrecen de lanzamiento", () => {
-    assert.deepEqual([...CLAVES_PLAN], ["colegio", "deportiva", "multisede", "puntual"]);
-    assert.deepEqual(P.vigentes, ["colegio", "deportiva", "multisede", "puntual"]);
-    for (const retirado of ["fundador", "estandar", "anual"]) assert.equal(esClavePlan(retirado), false, retirado);
+  it("hay cinco planes (Estándar y Anual se retiraron; el Fundador volvió) y todos se ofrecen de lanzamiento", () => {
+    assert.deepEqual([...CLAVES_PLAN], ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
+    assert.deepEqual(P.vigentes, ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
+    for (const retirado of ["estandar", "anual"]) assert.equal(esClavePlan(retirado), false, retirado);
+    assert.equal(esClavePlan("fundador"), true);
   });
 
   it("sigue sabiendo el precio de un plan que el equipo dejó de ofrecer, para las facturas ya emitidas", () => {
     assert.equal(sinMultisede.planDe("multisede").precio, 15_000);
-    assert.deepEqual(sinMultisede.vigentes, ["colegio", "deportiva", "puntual"]);
+    assert.deepEqual(sinMultisede.vigentes, ["colegio", "deportiva", "puntual", "fundador"]);
   });
 
   it("ante una clave desconocida (o de un plan retirado) cae en el plan de colegios", () => {
     assert.equal(P.planDe("lo-que-sea").label, P.planes.colegio.label);
-    assert.equal(P.planDe("fundador").label, P.planes.colegio.label);
+    assert.equal(P.planDe("estandar").label, P.planes.colegio.label);
+    assert.equal(P.planDe("fundador").label, P.planes.fundador.label, "el Plan Fundador existe y tiene su propia fila");
   });
 
   it("un selector ofrece los vigentes y, si la institución está en uno apagado, también el suyo", () => {
-    assert.deepEqual(P.clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede", "puntual"]);
-    assert.deepEqual(sinMultisede.clavesParaElegir("colegio"), ["colegio", "deportiva", "puntual"]);
-    assert.deepEqual(sinMultisede.clavesParaElegir("multisede"), ["colegio", "deportiva", "puntual", "multisede"]);
-    assert.deepEqual(P.clavesParaElegir(undefined), ["colegio", "deportiva", "multisede", "puntual"]);
-    assert.deepEqual(P.clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede", "puntual"]);
+    assert.deepEqual(P.clavesParaElegir("colegio"), ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
+    assert.deepEqual(sinMultisede.clavesParaElegir("colegio"), ["colegio", "deportiva", "puntual", "fundador"]);
+    assert.deepEqual(sinMultisede.clavesParaElegir("multisede"), ["colegio", "deportiva", "puntual", "fundador", "multisede"]);
+    assert.deepEqual(P.clavesParaElegir(undefined), ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
+    assert.deepEqual(P.clavesParaElegir("lo-que-sea"), ["colegio", "deportiva", "multisede", "puntual", "fundador"]);
   });
 
   it("cada plan aporta al MRR lo que paga por mes (la búsqueda puntual no es recurrente)", () => {
@@ -90,10 +92,24 @@ describe("planes vigentes y heredados", () => {
     assert.equal(P.montoDePlan("multisede"), 15_000);
   });
 
-  it("un plan por sede se factura por la cantidad de sedes", () => {
+  it("el precio por sede de un plan por sede es una base interna: el cálculo la multiplica por las sedes", () => {
     assert.equal(P.montoDePlan("multisede", 6), 90_000);
     assert.equal(P.montoDePlan("multisede", 0), 15_000, "nunca menos de una sede");
-    assert.equal(P.equivalenteMensual("multisede", 4), 60_000);
+  });
+
+  it("Multisede solo tiene precio con un convenio a medida (total) acordado para ese plan", () => {
+    const convenio: AcuerdoDePrecio = { modalidad: "total", monto: 400_000, plan: "multisede" };
+    assert.equal(P.precioDefinido("multisede"), false, "sin acuerdo");
+    assert.equal(P.precioDefinido("multisede", { modalidad: "abono", monto: 12_000, plan: "multisede" }), false, "un abono por sede no alcanza");
+    assert.equal(P.precioDefinido("multisede", { ...convenio, plan: "colegio" }), false, "un convenio de otro plan no rige");
+    assert.equal(P.precioDefinido("multisede", convenio), true);
+    assert.equal(P.precioDefinido("multisede", { ...convenio, plan: undefined }), true, "uno anterior al control de plan vale con cualquiera");
+    for (const clave of ["colegio", "deportiva", "puntual"]) assert.equal(P.precioDefinido(clave), true, `${clave} tiene precio de lista`);
+  });
+
+  it("una red sin convenio no entra en el MRR; con convenio aporta el monto acordado", () => {
+    assert.equal(P.equivalenteMensual("multisede", 4), 0);
+    assert.equal(P.equivalenteMensual("multisede", 4, { modalidad: "total", monto: 400_000, plan: "multisede" }), 400_000);
   });
 
   it("en los demás, la primera sede paga el abono y cada adicional la mitad", () => {
@@ -723,8 +739,15 @@ describe("el plan que queda al guardar el alta", () => {
     assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Club o gimnasio", modalidad: "abono" }), "deportiva");
   });
 
+  it("el abono semestral es el mismo arancel de su tipo (cambia cómo paga, no el plan)", () => {
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", modalidad: "semestral" }), "colegio");
+    assert.equal(P.planDelAlta({ tipo: "Club o gimnasio", modalidad: "semestral" }), "deportiva");
+    assert.equal(P.planDelAlta({ actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "semestral" }), "colegio");
+    assert.equal(P.planDelAlta({ actual: "colegio", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "semestral" }), "colegio");
+  });
+
   it("un plan que el equipo asignó a mano no se pisa, elija lo que elija", () => {
-    for (const modalidad of ["abono", "puntual", undefined] as const) {
+    for (const modalidad of ["abono", "semestral", "puntual", undefined] as const) {
       assert.equal(P.planDelAlta({ actual: "multisede", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad }), "multisede", String(modalidad));
     }
   });
@@ -790,8 +813,8 @@ describe("meses bonificados por recomendación (mes a mes)", () => {
   const con = (referidoMesesMensual: number | undefined) =>
     catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), referidoMesesMensual }).condiciones.referidoMesesMensual;
 
-  it("de lanzamiento son 2 meses", () => {
-    assert.equal(CATALOGO_POR_DEFECTO.condiciones.referidoMesesMensual, 2);
+  it("de lanzamiento es 1 mes (regla del cliente)", () => {
+    assert.equal(CATALOGO_POR_DEFECTO.condiciones.referidoMesesMensual, 1);
   });
 
   it("se lee lo que guardó el equipo, incluido 0 (no se ofrece)", () => {
@@ -802,7 +825,7 @@ describe("meses bonificados por recomendación (mes a mes)", () => {
   });
 
   it("un valor roto o una base sin la columna vuelve al de lanzamiento", () => {
-    for (const roto of [-1, 13, 1.5, undefined]) assert.equal(con(roto), 2, `${roto}`);
+    for (const roto of [-1, 13, 1.5, undefined]) assert.equal(con(roto), 1, `${roto}`);
   });
 
   it("la edición acepta de 0 a 12 y rechaza lo demás", () => {
@@ -901,5 +924,128 @@ describe("la búsqueda puntual", () => {
     const roto = edicion();
     roto.planes.puntual.precioMinimo = roto.planes.puntual.precio + 1;
     assert.equal(edicionDePlanesSchema.safeParse(roto).success, false);
+  });
+});
+
+describe("Plan Fundador (las primeras instituciones)", () => {
+  const conCupos = (cuposFundador: number, vigente = true) => {
+    const c = structuredClone(CATALOGO_POR_DEFECTO);
+    c.condiciones.cuposFundador = cuposFundador;
+    c.planes.fundador.vigente = vigente;
+    return crearPlanes(c);
+  };
+
+  it("de lanzamiento son las primeras 50, con un plan mensual común y corriente", () => {
+    assert.equal(CATALOGO_POR_DEFECTO.condiciones.cuposFundador, 50);
+    const p = P.planDe("fundador");
+    assert.equal(p.periodo, "mes");
+    assert.equal(p.porSede, false);
+    assert.equal(P.esFundador("fundador"), true);
+    assert.equal(P.esFundador("colegio"), false);
+    assert.equal(P.esPuntual("fundador"), false);
+  });
+
+  it("su precio se calcula como el de cualquier abono: sedes adicionales con descuento y precio acordado", () => {
+    const base = P.planDe("fundador").precio;
+    assert.equal(P.montoDePlan("fundador", 1), base);
+    assert.equal(P.montoDePlan("fundador", 2), base + Math.round(base / 2));
+    assert.equal(P.montoDePlan("fundador", 1, { modalidad: "total", monto: 33_000, plan: "fundador" }), 33_000);
+    assert.equal(P.precioDefinido("fundador"), true);
+  });
+
+  it("cuenta los lugares que quedan: cupo menos las que ya lo tienen, sin bajar de cero", () => {
+    assert.equal(conCupos(50).cuposDeFundador(0), 50);
+    assert.equal(conCupos(50).cuposDeFundador(12), 38);
+    assert.equal(conCupos(50).cuposDeFundador(50), 0);
+    assert.equal(conCupos(50).cuposDeFundador(60), 0, "si se pasaron (se bajó el cupo), no queda ninguno");
+    assert.equal(conCupos(50).cuposDeFundador(-3), 50, "un conteo raro no suma lugares");
+  });
+
+  it("con el plan apagado no queda ningún lugar aunque sobre cupo: nadie nuevo lo recibe", () => {
+    assert.equal(conCupos(50, false).cuposDeFundador(0), 0);
+  });
+
+  it("una cuenta nueva con lugar disponible arranca como fundadora; sin lugar, con el arancel de su tipo", () => {
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", hayCupoFundador: true }), "fundador");
+    assert.equal(P.planDelAlta({ tipo: "Club o gimnasio", modalidad: "abono", hayCupoFundador: true }), "fundador");
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", modalidad: "semestral", hayCupoFundador: true }), "fundador");
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", hayCupoFundador: false }), "colegio");
+    assert.equal(P.planDelAlta({ tipo: "Club o gimnasio", hayCupoFundador: false }), "deportiva");
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado" }), "colegio", "sin el dato, como siempre");
+  });
+
+  it("quien elige pagar una sola búsqueda no ocupa un lugar de fundadora", () => {
+    assert.equal(P.planDelAlta({ tipo: "Colegio privado", modalidad: "puntual", hayCupoFundador: true }), "puntual");
+  });
+
+  it("al volver al paso 2: la fundadora sigue siéndolo si cambia el tipo, y si elige una sola búsqueda suelta el lugar", () => {
+    const volver = { actual: "fundador", tipoAnterior: "Colegio privado" } as const;
+    assert.equal(P.planDelAlta({ ...volver, tipo: "Club o gimnasio", hayCupoFundador: false }), "fundador");
+    assert.equal(P.planDelAlta({ ...volver, tipo: "Colegio privado", modalidad: "abono", hayCupoFundador: false }), "fundador");
+    assert.equal(P.planDelAlta({ ...volver, tipo: "Colegio privado", modalidad: "puntual", hayCupoFundador: false }), "puntual");
+  });
+
+  it("de una sola búsqueda al abono: fundadora si queda un lugar, el arancel de su tipo si no", () => {
+    const desdePuntual = { actual: "puntual", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad: "abono" } as const;
+    assert.equal(P.planDelAlta({ ...desdePuntual, hayCupoFundador: true }), "fundador");
+    assert.equal(P.planDelAlta({ ...desdePuntual, hayCupoFundador: false }), "colegio");
+  });
+
+  it("un plan que el equipo asignó a mano (Multisede) no se pisa por haber lugar de fundadora", () => {
+    for (const modalidad of ["abono", "semestral", undefined] as const) {
+      assert.equal(P.planDelAlta({ actual: "multisede", tipoAnterior: "Colegio privado", tipo: "Colegio privado", modalidad, hayCupoFundador: true }), "multisede");
+    }
+  });
+
+  it("el selector de precios de la página pública no incluye al Plan Fundador (su valor no se muestra)", () => {
+    assert.deepEqual(P.vigentesPublicos, ["colegio", "deportiva", "multisede", "puntual"]);
+    assert.ok(P.vigentes.includes("fundador"));
+  });
+
+  it("«Cambiar de plan» no ofrece el Plan Fundador: se recibe al crear la cuenta o lo asigna el equipo", () => {
+    assert.ok(!P.planesParaPedir("Colegio privado", 1, "colegio").includes("fundador"));
+    assert.ok(!P.planesParaPedir("Club o gimnasio", 1).includes("fundador"));
+    // Quien ya lo tiene lo ve como su plan actual.
+    assert.ok(P.planesParaPedir("Colegio privado", 1, "fundador").includes("fundador"));
+  });
+
+  it("el valor de fundadora no viaja al navegador de la parte pública ni al de otra institución", () => {
+    const publico = catalogoParaNavegador(CATALOGO_POR_DEFECTO, { sinPrecioDeFundador: true });
+    assert.equal(publico.planes.fundador.precio, 0);
+    assert.equal(publico.planes.colegio.precio, 50_000, "los demás precios siguen");
+    const propio = catalogoParaNavegador(CATALOGO_POR_DEFECTO);
+    assert.equal(propio.planes.fundador.precio, CATALOGO_POR_DEFECTO.planes.fundador.precio, "quien lo tiene ve su valor");
+  });
+
+  it("el cupo se lee de la base, y uno roto o ausente vuelve al de lanzamiento", () => {
+    const con = (cuposFundador: number | undefined) =>
+      catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), cuposFundador }).condiciones.cuposFundador;
+    assert.equal(con(80), 80);
+    assert.equal(con(1), 1);
+    for (const roto of [0, -1, 1001, 2.5, undefined]) assert.equal(con(roto), 50, String(roto));
+  });
+
+  it("la edición acepta de 1 a 1000 cupos y deja anotado el cambio", () => {
+    for (const valor of [1, 50, 1000]) {
+      const e = edicion();
+      e.condiciones.cuposFundador = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, true, String(valor));
+    }
+    for (const valor of [0, -5, 1001, 2.5]) {
+      const e = edicion();
+      e.condiciones.cuposFundador = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, false, String(valor));
+    }
+    const antes = edicion();
+    const despues = edicion();
+    despues.condiciones.cuposFundador = 60;
+    assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["cupos de instituciones fundadoras"] }]);
+  });
+
+  it("su precio se edita como el de cualquier plan y el cambio queda anotado", () => {
+    const antes = edicion();
+    const despues = edicion();
+    despues.planes.fundador.precio = 42_000;
+    assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "precio", plan: "fundador", antes: 50_000, despues: 42_000 }]);
   });
 });

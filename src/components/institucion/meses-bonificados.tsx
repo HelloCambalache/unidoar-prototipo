@@ -1,6 +1,6 @@
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta } from "@/components/ui/tarjeta";
-import { ETIQUETA_DE_MES, mesesTexto, resumenDeMeses, type EstadoDeMes } from "@/lib/bonificacion";
+import { ETIQUETA_DE_MES, mesesTexto, resumenDeMeses, TEXTO_DEL_TOPE, type EstadoDeMes } from "@/lib/bonificacion";
 import { etiquetaPeriodo } from "@/lib/cobros";
 import { fechaCorta } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
@@ -17,10 +17,10 @@ const TONO: Record<EstadoDeMes, "verde" | "azul" | "neutro" | "ambar"> = {
 function detalleDeMes(m: MesVista) {
   const partes: string[] = [];
   if (m.recomendada) partes.push(`Por recomendar a ${m.recomendada}`);
-  if (m.estado === "usado") partes.push("No se te facturó ese mes");
+  if (m.estado === "usado") partes.push("Ese mes no lo pagaste");
   if (m.estado === "a-devolver") partes.push(`Mercado Pago cobró${m.monto ? ` ${pesos(m.monto)}` : ""} y te lo devolvemos`);
   if (m.estado === "devuelto") partes.push(`Te devolvimos el cobro${m.monto ? ` de ${pesos(m.monto)}` : ""}${m.devueltoEn ? ` el ${fechaCorta(m.devueltoEn)}` : ""}`);
-  if (m.estado === "disponible") partes.push("Se descuenta de tu próxima factura");
+  if (m.estado === "disponible") partes.push("Guardado: se usa en tu próximo semestre");
   return partes.join(" · ");
 }
 
@@ -44,8 +44,8 @@ export function MesesBonificados({ meses, className }: { meses: MesVista[]; clas
       </div>
       {r.disponibles > 0 && (
         <p className="m-0 mb-3 text-sm leading-normal text-tinta-2">
-          Tenés {mesesTexto(r.disponibles)} sin cargo por recomendar a otras instituciones. Se descuentan solos de tus próximas facturas; si pagás con débito automático,
-          Mercado Pago cobra igual y te devolvemos lo cobrado.
+          Tenés {mesesTexto(r.disponibles)} sin cargo por recomendar a otras instituciones. {TEXTO_DEL_TOPE} Si pagás mes a mes, el mes bonificado no se te
+          factura; si pagás con débito automático, Mercado Pago cobra igual y te devolvemos lo cobrado; y si pagás el semestre de contado, te sale un mes menos.
         </p>
       )}
       <ul className="m-0 flex list-none flex-col p-0">

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { puedeBonificarPeriodo } from "@/lib/bonificacion";
 import { enlaceWhatsapp } from "@/lib/pipeline";
 import { CLAVES_PLAN, esClavePlan, pesos, planesPorDefecto, type AcuerdoDePrecio, type PlanClave, type Planes } from "@/lib/planes";
 
@@ -152,6 +153,17 @@ export function conflictosDeSemestre(inicio: string, meses: number, facturas: re
 }
 
 /**
+ * ¿El semestre que empieza en `inicio` gasta un mes bonificado por recomendar? Sí si la institución tiene uno sin gastar y el tope de 1 por
+ * semestre lo permite: el mes bonificado queda anotado como el ÚLTIMO que cubre el semestre, y no puede haber otro a menos de 6 meses
+ * (`puedeBonificarPeriodo`). `usados` son los períodos que ya quedaron bonificados. Con el mes bonificado el semestre se paga un mes menos
+ * (`pack.mesesConReferido` de Planes en lugar de `mesesQueSePagan`).
+ */
+export function creditoDeSemestre(inicio: string, meses: number, e: { disponibles: number; usados: readonly string[] }): { usa: boolean; periodo: string } {
+  const periodo = sumarMeses(inicio, meses - 1);
+  return { usa: e.disponibles > 0 && puedeBonificarPeriodo(periodo, e.usados), periodo };
+}
+
+/**
  * El mes en que empieza un semestre se puede elegir de hace un año a dentro de dos meses (cubre un pago que se cargó tarde o uno por
  * adelantado, no un error de tipeo). Devuelve el mensaje de error o null si está bien.
  */
@@ -213,7 +225,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" | "bonificada" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "bonificada" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -222,10 +234,12 @@ export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" |
  *
  *  - plan de búsqueda puntual: no tiene abono mensual, nunca se factura;
  *  - ya tiene factura de ese mes → no se toca;
+ *  - Multisede sin convenio a medida: no hay un precio con el que facturar, se omite (`sin_convenio`) hasta que el equipo lo cargue;
  *  - si un semestre pagado al contado (una factura paga que cubre varios meses) cubre el mes, no se cobra;
  *  - si el mes ya quedó bonificado por recomendar, no se factura (y no se gasta otro mes bonificado);
  *  - si tiene meses bonificados sin gastar y no tiene un débito automático autorizado, este mes se bonifica: no se factura y se devuelve en
- *    `bonificar` para que quien llama anote cuál mes se gastó (con débito, el mes se gasta al llegar el cobro y se devuelve a mano);
+ *    `bonificar` para que quien llama anote cuál mes se gastó (con débito, el mes se gasta al llegar el cobro y se devuelve a mano). Como
+ *    máximo uno por semestre: si ya hay otro mes bonificado a menos de 6 meses de distancia, este se factura y el que sobra espera;
  *  - si el día de cobro del mes ya pasó, se cobra hoy: no nace vencida.
  */
 export function planificarFacturas(
@@ -235,7 +249,7 @@ export function planificarFacturas(
   hoy: string,
   /** Los planes vigentes (de dónde salen el monto y si se cobra por sede); sin pasarlos, los valores de lanzamiento. */
   planes: Planes = planesPorDefecto,
-  /** Los meses que ya quedaron bonificados (de cualquier período). */
+  /** Los meses que ya quedaron bonificados (el de `periodo` y los que están a menos de 6 meses: de ahí sale el tope de 1 por semestre). */
   bonificados: readonly MesBonificadoYa[] = [],
 ): { crear: FacturaPorCrear[]; omitidas: { institucionId: string; motivo: MotivoOmision }[]; bonificar: { institucionId: string; periodo: string }[] } {
   const porInstitucion = new Map<string, FacturaReciente[]>();
@@ -256,11 +270,21 @@ export function planificarFacturas(
     // La búsqueda puntual no tiene abono: se paga cada búsqueda (ver src/lib/puntual.ts), así que no hay factura mensual.
     else if (planes.esPuntual(inst.plan)) omitir("sin_abono");
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
+    // Una red de sedes (Multisede) sin convenio a medida todavía no tiene un precio: no se factura hasta que el equipo lo cargue (ver `precioDefinido`).
+    else if (!planes.precioDefinido(inst.plan, inst.acuerdo ?? null)) omitir("sin_convenio");
     else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
       omitir("cubierta_por_semestre");
     } else if (bonificados.some((b) => b.institucionId === inst.id && b.periodo === periodo)) {
       omitir("bonificada");
-    } else if (!inst.conDebitoActivo && (inst.mesesBonificados ?? 0) > 0) {
+    } else if (
+      !inst.conDebitoActivo &&
+      (inst.mesesBonificados ?? 0) > 0 &&
+      // Como máximo 1 mes bonificado por semestre: los que sobran esperan (no hay otro a menos de 6 meses, ni antes ni después).
+      puedeBonificarPeriodo(
+        periodo,
+        bonificados.filter((b) => b.institucionId === inst.id).map((b) => b.periodo),
+      )
+    ) {
       omitir("bonificada");
       bonificar.push({ institucionId: inst.id, periodo });
     } else {

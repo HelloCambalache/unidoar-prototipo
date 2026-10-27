@@ -90,6 +90,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
                   <path d="M8 12l3 3 5-6" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
+              {i.fundadora && <Insignia tono="ambar">Institución fundadora</Insignia>}
             </div>
             <div className="mt-1 text-[15px] leading-[1.4] text-apagado">
               {[i.tipo, variasSedes ? `${sedes.length} sedes` : i.zona].filter(Boolean).join(" · ")}

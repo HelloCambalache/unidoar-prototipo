@@ -10,9 +10,12 @@ import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { correoDePedidoDePlanRecibido } from "@/lib/correo/eventos";
-import { CLAVES_PLAN } from "@/lib/planes";
+import { avisoAlEquipoDeSemestre, esFormaDePago, puedePagarSemestre, resumenDeSemestre } from "@/lib/forma-de-pago";
+import { CLAVES_PLAN, esClavePlan } from "@/lib/planes";
+import { acuerdoDe } from "@/lib/queries/acuerdos";
+import { guardarFormaDePago } from "@/lib/queries/forma-de-pago";
 import { planes } from "@/lib/queries/planes";
-import { avisarAVarios } from "@/lib/queries/avisos";
+import { avisarAAdmins, avisarAVarios } from "@/lib/queries/avisos";
 import { puedeGestionarPlan, rolEnInstitucion, solicitudPendiente } from "@/lib/queries/plan";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { DEMASIADOS_PEDIDOS, permitirPedidoAlEquipo } from "@/lib/pedidos";
@@ -78,6 +81,42 @@ export async function solicitarCambioPlan(plan: string): Promise<Resultado> {
     await encolarParaEquipo(tx, "M63", { institucion: institucion.nombre, plan: P.nombreDePlan(destino.data), ruta: "/backoffice/cobros" });
     // Quien lo pidió recibe la constancia de que lo recibimos.
     await correoDePedidoDePlanRecibido(tx, { usuarioId: usuario.id, institucion: institucion.nombre, plan: P.nombreDePlan(destino.data) });
+    return ok();
+  });
+
+  if (resultado.ok) revalidarPlan();
+  return resultado;
+}
+
+/**
+ * La institución elige cómo paga el abono: el semestre por adelantado (pagás 5, usás 6) o mes a mes. Solo el dueño y los administradores. Es una
+ * preferencia: no cobra nada ni cambia el plan; cuando elige el semestre se le avisa al equipo en la campanita para que coordine el pago y lo registre
+ * (ver «Semestre al contado» en CLAUDE.md). Solo vale con un abono mensual: la búsqueda puntual y Multisede no tienen un semestre de lista.
+ */
+export async function elegirFormaDePago(forma: string): Promise<Resultado> {
+  const { usuario, institucion } = await requerirInstitucion();
+  if (!permitirPedidoAlEquipo(usuario.id)) return fallo(DEMASIADOS_PEDIDOS);
+  if (!esFormaDePago(forma)) return fallo("Esa forma de pago no existe.");
+  const P = await planes();
+
+  const resultado = await transaccion(async (tx) => {
+    const [vigente] = await tx.select({ plan: instituciones.plan }).from(instituciones).where(eq(instituciones.id, institucion.id)).for("update");
+    if (!vigente) return fallo("No encontramos tu institución.");
+    if (!puedeGestionarPlan(await rolEnInstitucion(institucion, usuario.id, tx))) return fallo(SOLO_ADMINISTRADORES);
+    if (forma === "semestral" && !puedePagarSemestre(P, vigente.plan)) {
+      return fallo("El pago por semestre es para los planes con abono. Si lo necesitás, escribinos desde Contacto.");
+    }
+
+    const cambio = await guardarFormaDePago(tx, institucion.id, forma);
+    if (cambio && forma === "semestral" && esClavePlan(vigente.plan)) {
+      const sedes = (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1;
+      const r = resumenDeSemestre(P, vigente.plan, sedes, await acuerdoDe(tx, institucion.id));
+      await avisarAAdmins(tx, {
+        titulo: institucion.nombre,
+        texto: avisoAlEquipoDeSemestre({ alCrearLaCuenta: false, total: r.total, meses: r.meses }),
+        enlace: `/backoffice/cobros/${institucion.id}`,
+      });
+    }
     return ok();
   });
 

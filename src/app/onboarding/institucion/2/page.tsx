@@ -11,6 +11,8 @@ import { institucionDeMiembro, invitacionDeEmail } from "@/lib/queries/equipo";
 import { opcionesDeUbicacion } from "@/lib/queries/onboarding";
 import { catalogoParaNavegador } from "@/lib/planes";
 import { catalogoDePlanes } from "@/lib/queries/planes";
+import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
+import { cuposDeFundadoras } from "@/lib/queries/fundadoras";
 
 export const metadata: Metadata = { title: "Tu institución" };
 
@@ -39,7 +41,14 @@ export default async function PasoInstitucion2() {
       );
     }
   }
-  const [{ partidos, provincias }, catalogo] = await Promise.all([opcionesDeUbicacion(), catalogoDePlanes()]);
+  const [{ partidos, provincias }, catalogo, forma, cupos] = await Promise.all([
+    opcionesDeUbicacion(),
+    catalogoDePlanes(),
+    institucion ? formaDePagoDe(institucion.id) : Promise.resolve("mensual" as const),
+    cuposDeFundadoras(),
+  ]);
+  // Una cuenta que vuelve a este paso y ya es fundadora lo sigue viendo así aunque el cupo se haya completado con ella.
+  const yaEsFundadora = institucion?.plan === "fundador";
 
   const inicial = {
     nombre: institucion?.nombre,
@@ -63,8 +72,9 @@ export default async function PasoInstitucion2() {
         pedirTerminos={!usuario.terminosAceptadosEn}
         partidos={partidos}
         provincias={provincias}
-        catalogo={catalogoParaNavegador(catalogo)}
-        modalidadInicial={institucion?.plan === "puntual" ? "puntual" : "abono"}
+        catalogo={catalogoParaNavegador(catalogo, { sinPrecioDeFundador: true })}
+        fundadora={yaEsFundadora || cupos.hay ? { quedan: cupos.quedan, total: cupos.total, yaLoEs: yaEsFundadora } : null}
+        modalidadInicial={institucion?.plan === "puntual" ? "puntual" : forma === "semestral" ? "semestral" : "abono"}
       />
     </MarcoOnboarding>
   );

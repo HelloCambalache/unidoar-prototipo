@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, gt, isNull, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { busquedas, cvEnviados, favoritos, institucionMiembros, instituciones, zonas } from "@/db/schema";
 import { sedesDeInstituciones, sedesDeInstitucion } from "@/lib/queries/sedes";
@@ -31,6 +31,8 @@ export type InstitucionCatalogo = {
   descripcion: string | null;
   logoUrl: string | null;
   verificada: boolean;
+  /** Tiene el Plan Fundador (una de las primeras instituciones): lleva la insignia «Fundadora». Solo el hecho, nunca el plan ni su precio. */
+  fundadora: boolean;
   lat: number | null;
   lng: number | null;
   busquedasActivas: number;
@@ -61,6 +63,7 @@ export async function catalogoInstituciones(usuarioId: string | null, filtros: F
         descripcion: instituciones.descripcion,
         logoUrl: instituciones.logoUrl,
         verificada: instituciones.verificada,
+        fundadora: sql<boolean>`${instituciones.plan} = 'fundador'`,
         lat: instituciones.lat,
         lng: instituciones.lng,
         busquedasActivas: count(busquedas.id),
@@ -103,6 +106,7 @@ export async function catalogoInstituciones(usuarioId: string | null, filtros: F
         descripcion: i.descripcion,
         logoUrl: i.logoUrl,
         verificada: i.verificada,
+        fundadora: i.fundadora,
         lat: i.lat,
         lng: i.lng,
         busquedasActivas: i.busquedasActivas,
@@ -145,6 +149,7 @@ export async function perfilInstitucion(slug: string, usuarioId: string, docente
       turnos: instituciones.turnos,
       docentesPlanta: instituciones.docentesPlanta,
       verificada: instituciones.verificada,
+      fundadora: sql<boolean>`${instituciones.plan} = 'fundador'`,
       mision: instituciones.mision,
       vision: instituciones.vision,
       valores: instituciones.valores,

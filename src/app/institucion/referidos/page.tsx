@@ -7,7 +7,7 @@ import { MesesBonificados } from "@/components/institucion/meses-bonificados";
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { requerirInstitucion } from "@/lib/auth";
-import { mesesBonificadosTexto, mesesTexto, puedeBonificarMeses } from "@/lib/bonificacion";
+import { mesesBonificadosTexto, mesesTexto, TEXTO_DEL_TOPE } from "@/lib/bonificacion";
 import { fechaCorta } from "@/lib/fechas";
 import { mesesDe } from "@/lib/queries/bonificaciones";
 import { codigoDeInstitucion, referidosDe } from "@/lib/queries/referidos";
@@ -22,11 +22,8 @@ const PASOS = [
   "Le mandás tu enlace a una institución que todavía no usa UNIDOAR.",
   "Crea su cuenta de institución con ese enlace: queda anotada como recomendada por la tuya.",
   "El equipo la verifica y, cuando paga su primera factura, tu beneficio queda listo.",
-  "Lo aplicamos nosotros: en tu pack por adelantado, o con meses sin cargo si pagás mes a mes.",
+  "Lo aplicamos nosotros: te suma meses bonificados, que se descuentan de tus facturas (de a uno por semestre).",
 ];
-
-/** "1 mes" · "2 meses" */
-const meses = mesesTexto;
 
 export default async function Referidos() {
   const { institucion } = await requerirInstitucion();
@@ -40,9 +37,9 @@ export default async function Referidos() {
   const url = `${origen}${rutaDeReferido(codigo)}`;
   const b = beneficioDeReferido(P.condiciones.pack);
   const resumen = resumenDeReferidos(referidos.map((r) => r.estado));
-  // Los meses sin cargo para quien paga mes a mes: no se ofrecen con la búsqueda puntual (no tiene mensualidad).
-  const mesesMensual = P.condiciones.referidoMesesMensual;
-  const ofreceMeses = mesesMensual > 0 && puedeBonificarMeses(P.esPuntual(institucion.plan));
+  // Los meses bonificados por cada recomendación (0: el equipo no los ofrece por ahora).
+  const mesesPorRecomendacion = P.condiciones.referidoMesesMensual;
+  const ofreceMeses = mesesPorRecomendacion > 0;
 
   return (
     <>
@@ -62,15 +59,26 @@ export default async function Referidos() {
 
         <Tarjeta como="section" className="p-[22px]">
           <h2 className="m-0 mb-1 text-base leading-tight font-semibold">Qué ganás</h2>
-          <p className={`m-0 text-sm leading-normal text-tinta-2 ${ofreceMeses ? "mb-2" : "mb-4"}`}>
-            Por cada institución que recomendás y se suma a la red, en el pack de {b.mesesDelPack} meses por adelantado pagás{" "}
-            <b className="font-semibold text-tinta">{b.pagaConReferido}</b> en lugar de {b.pagaSinReferido}
-            {b.mesesDeMenos > 0 ? `: ${meses(b.mesesDeMenos)} menos` : ""}.
-          </p>
-          {ofreceMeses && (
+          {ofreceMeses ? (
+            <>
+              <p className="m-0 mb-2 text-sm leading-normal text-tinta-2">
+                Por cada institución que recomendás y se suma a la red, ganás{" "}
+                <b className="font-semibold text-tinta">{mesesBonificadosTexto(mesesPorRecomendacion)}</b>:
+              </p>
+              <ul className="m-0 mb-2 flex list-disc flex-col gap-1 pl-5 text-sm leading-normal text-tinta-2">
+                <li>Si pagás mes a mes, ese mes no se te factura (con débito automático, te devolvemos lo cobrado).</li>
+                <li>
+                  Si pagás el semestre de contado, te sale un mes menos: pagás <b className="font-semibold text-tinta">{b.pagaConReferido}</b> meses en lugar de{" "}
+                  {b.pagaSinReferido}.
+                </li>
+              </ul>
+              <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">{TEXTO_DEL_TOPE}</p>
+            </>
+          ) : (
             <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">
-              Si en cambio pagás mes a mes, ganás <b className="font-semibold text-tinta">{meses(mesesMensual)} sin cargo</b> por cada institución que recomendás: se descuentan de tus
-              próximas facturas (si pagás con débito automático, te devolvemos lo cobrado de cada mes).
+              Por cada institución que recomendás y se suma a la red, en el pack de {b.mesesDelPack} meses por adelantado pagás{" "}
+              <b className="font-semibold text-tinta">{b.pagaConReferido}</b> en lugar de {b.pagaSinReferido}
+              {b.mesesDeMenos > 0 ? `: ${mesesTexto(b.mesesDeMenos)} menos` : ""}.
             </p>
           )}
           <ol className="m-0 flex list-none flex-col gap-2.5 p-0">

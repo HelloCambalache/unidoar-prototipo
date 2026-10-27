@@ -175,10 +175,11 @@ export const institucionDatosSchema = z.object({
   contactoRolOtro: textoOpcional(60),
   telefono: texto(6, 40),
   /**
-   * Cómo quiere usar UNIDOAR: con el abono de su tipo («abono») o pagando una sola búsqueda («puntual»). Solo viaja si el plan de la búsqueda
-   * puntual se ofrece; sin el campo, el plan sigue al tipo como siempre (ver `planDelAlta`, src/lib/planes.ts).
+   * Cómo quiere usar UNIDOAR: con el abono de su tipo pagado mes a mes («abono»), con el mismo abono pagando el semestre por adelantado
+   * («semestral», ver src/lib/forma-de-pago.ts) o pagando una sola búsqueda («puntual», solo si ese plan se ofrece). Sin el campo, el plan sigue
+   * al tipo como siempre y la forma de pago no se toca (ver `planDelAlta`, src/lib/planes.ts).
    */
-  modalidad: z.enum(["abono", "puntual"]).optional(),
+  modalidad: z.enum(["abono", "semestral", "puntual"]).optional(),
   cuit: cuitOpcional,
   cue: textoOpcional(20),
   direccion: texto(3, 200),

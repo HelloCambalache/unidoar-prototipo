@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   conflictosDeSemestre,
+  creditoDeSemestre,
   errorDeFechaDePago,
   errorDeInicioDeSemestre,
   estadoEfectivo,
@@ -218,6 +219,35 @@ describe("semestre al contado (una factura paga que cubre varios meses)", () => 
     assert.equal(r.success, true);
     assert.ok(!("monto" in r.data!), "un monto que venga del cliente se descarta");
   });
+
+  describe("un mes bonificado por recomendar en el semestre", () => {
+    it("el mes bonificado queda anotado como el último que cubre el semestre", () => {
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 1, usados: [] }).periodo, "2027-03");
+      assert.equal(creditoDeSemestre("2026-12", 6, { disponibles: 1, usados: [] }).periodo, "2027-05");
+    });
+
+    it("lo gasta si tiene uno disponible y no hay otro mes bonificado a menos de 6 meses", () => {
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 1, usados: [] }).usa, true);
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 3, usados: ["2026-09"] }).usa, true, "septiembre queda a 6 meses de marzo");
+    });
+
+    it("no lo gasta sin meses disponibles", () => {
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 0, usados: [] }).usa, false);
+    });
+
+    it("no lo gasta si el tope de 1 por semestre no lo permite: el que sobra espera", () => {
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 2, usados: ["2026-11"] }).usa, false, "uno en el mismo semestre");
+      assert.equal(creditoDeSemestre("2026-10", 6, { disponibles: 2, usados: ["2027-06"] }).usa, false, "uno 3 meses después");
+    });
+
+    it("dos semestres seguidos pueden gastar uno cada uno: sus meses bonificados quedan a 6 meses", () => {
+      const primero = creditoDeSemestre("2026-10", 6, { disponibles: 2, usados: [] });
+      assert.equal(primero.usa, true);
+      const segundo = creditoDeSemestre("2027-04", 6, { disponibles: 1, usados: [primero.periodo] });
+      assert.equal(segundo.usa, true);
+      assert.equal(segundo.periodo, "2027-09");
+    });
+  });
 });
 
 describe("recordatorio de cobro", () => {
@@ -260,12 +290,36 @@ describe("facturas automáticas (planificarFacturas)", () => {
   const una = (i: InstitucionFacturable, recientes: FacturaReciente[], periodo = P, hoy = HOY) =>
     planificarFacturas([i], recientes, periodo, hoy);
 
-  it("factura una multisede por la cantidad de sedes que tiene", () => {
-    const r = planificarFacturas([{ ...inst("m", "multisede"), sedes: 6 }], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
-    assert.equal(r.crear[0]!.monto, 90_000, "6 sedes × $ 15.000");
-    assert.deepEqual(r.omitidas, []);
-    const sinDato = planificarFacturas([inst("m", "multisede")], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
-    assert.equal(sinDato.crear[0]!.monto, 15_000, "sin saber las sedes, una");
+  it("una multisede con convenio a medida se factura por el monto acordado, sean las sedes que sean", () => {
+    const convenio = { modalidad: "total" as const, monto: 400_000, plan: "multisede" };
+    for (const sedes of [1, 6, 30]) {
+      const r = planificarFacturas([{ ...inst("m", "multisede"), sedes, acuerdo: convenio }], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
+      assert.equal(r.crear[0]!.monto, 400_000, `${sedes} sedes`);
+      assert.deepEqual(r.omitidas, []);
+    }
+  });
+
+  it("una multisede sin convenio no se factura: su valor se acuerda según el volumen, no es la suma de sus sedes", () => {
+    const sinConvenio = planificarFacturas([{ ...inst("m", "multisede"), sedes: 6 }], [f("m", "2026-09", "multisede", "pagada")], P, HOY);
+    assert.equal(sinConvenio.crear.length, 0);
+    assert.deepEqual(sinConvenio.omitidas, [{ institucionId: "m", motivo: "sin_convenio" }]);
+    assert.deepEqual(sinConvenio.bonificar, [], "ni gasta un mes bonificado en algo que no se factura");
+    // Un abono acordado no alcanza: una red necesita un convenio a medida (total), no un abono por sede.
+    const conAbono = planificarFacturas(
+      [{ ...inst("m", "multisede"), acuerdo: { modalidad: "abono" as const, monto: 12_000, plan: "multisede" } }],
+      [f("m", "2026-09", "multisede", "pagada")],
+      P,
+      HOY,
+    );
+    assert.deepEqual(conAbono.omitidas, [{ institucionId: "m", motivo: "sin_convenio" }]);
+    // Un convenio acordado para otro plan no rige con Multisede.
+    const deOtroPlan = planificarFacturas(
+      [{ ...inst("m", "multisede"), acuerdo: { modalidad: "total" as const, monto: 400_000, plan: "colegio" } }],
+      [f("m", "2026-09", "multisede", "pagada")],
+      P,
+      HOY,
+    );
+    assert.deepEqual(deOtroPlan.omitidas, [{ institucionId: "m", motivo: "sin_convenio" }]);
   });
 
   it("no factura los meses cubiertos por un semestre pagado al contado, y retoma al terminar", () => {
@@ -317,7 +371,7 @@ describe("facturas automáticas (planificarFacturas)", () => {
   it("usa el monto de cada plan", () => {
     assert.equal(una(inst("a", "colegio"), []).crear[0]!.monto, 50_000);
     assert.equal(una(inst("a", "deportiva"), []).crear[0]!.monto, 30_000);
-    assert.equal(una(inst("a", "multisede"), []).crear[0]!.monto, 15_000, "una sede");
+    assert.equal(una(inst("a", "multisede"), []).crear.length, 0, "Multisede no tiene precio de lista: se acuerda con un convenio");
   });
 
   it("el monto sale de los planes vigentes: si el equipo cambió el precio, la factura del mes sale con el nuevo", () => {
@@ -412,6 +466,69 @@ describe("facturas automáticas (planificarFacturas)", () => {
       const puntual = planificarFacturas([conMeses(2, { plan: "puntual" })], previa(), P, HOY);
       assert.deepEqual(puntual.omitidas, [{ institucionId: "a", motivo: "sin_abono" }]);
       assert.deepEqual(puntual.bonificar, []);
+    });
+
+    describe("tope de 1 mes bonificado por semestre", () => {
+      const con = (periodosYa: string[], periodo = P, meses = 3) =>
+        planificarFacturas(
+          [conMeses(meses)],
+          [f("a", sumarMeses(periodo, -1), "colegio", "pagada")],
+          periodo,
+          `${periodo}-07`,
+          undefined,
+          periodosYa.map((p) => ({ institucionId: "a", periodo: p })),
+        );
+
+      it("con otro mes bonificado a menos de 6 meses, este se factura y el que sobra espera", () => {
+        for (const cerca of ["2026-09", "2026-05", "2027-02"]) {
+          const r = con([cerca]);
+          assert.equal(r.crear.length, 1, `factura aunque tiene meses (otro en ${cerca})`);
+          assert.deepEqual(r.bonificar, []);
+        }
+      });
+
+      it("a 6 meses de distancia ya es otro semestre: se bonifica", () => {
+        for (const lejos of ["2026-04", "2027-04"]) {
+          const r = con([lejos]);
+          assert.equal(r.crear.length, 0, lejos);
+          assert.deepEqual(r.bonificar, [{ institucionId: "a", periodo: P }]);
+        }
+      });
+
+      it("con dos meses guardados, se gastan de a uno cada 6 meses a lo largo del año", () => {
+        let gastados: string[] = [];
+        let disponibles = 2;
+        const bonificados: string[] = [];
+        for (let k = 0; k < 14; k++) {
+          const periodo = sumarMeses("2026-10", k);
+          const r = con(gastados, periodo, disponibles);
+          if (r.bonificar.length > 0) {
+            bonificados.push(periodo);
+            gastados = [...gastados, periodo];
+            disponibles -= 1;
+          }
+        }
+        assert.deepEqual(bonificados, ["2026-10", "2027-04"], "uno en octubre y el segundo seis meses después, nunca dos en el mismo semestre");
+      });
+
+      it("el mes que ya quedó bonificado sigue sin facturarse aunque haya otro cerca (lo resuelve la regla del mes ya anotado)", () => {
+        const r = con([P, "2026-09"], P, 0);
+        assert.equal(r.crear.length, 0);
+        assert.deepEqual(r.omitidas, [{ institucionId: "a", motivo: "bonificada" }]);
+      });
+
+      it("el tope es de cada institución", () => {
+        const r = planificarFacturas(
+          [conMeses(1), { ...inst("b", "colegio"), mesesBonificados: 1 }],
+          [...previa("a"), ...previa("b")],
+          P,
+          HOY,
+          undefined,
+          [{ institucionId: "a", periodo: "2026-09" }],
+        );
+        assert.deepEqual(r.bonificar, [{ institucionId: "b", periodo: P }], "la otra tiene uno cerca, esta no");
+        assert.deepEqual(r.crear.map((c) => c.institucionId), ["a"]);
+      });
     });
 
     it("cada institución gasta los suyos", () => {

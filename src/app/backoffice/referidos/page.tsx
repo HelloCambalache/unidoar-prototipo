@@ -8,7 +8,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { requerirUsuario } from "@/lib/auth";
-import { mesesBonificadosTexto, puedeBonificarMeses } from "@/lib/bonificacion";
+import { mesesBonificadosTexto, TEXTO_DEL_TOPE } from "@/lib/bonificacion";
 import { etiquetaPeriodo } from "@/lib/cobros";
 import { fechaCorta } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
@@ -36,7 +36,15 @@ function textoDeAplicado(r: ReferidoBackoffice) {
   if (!r.beneficioEn) return "";
   const cuando = `Beneficio aplicado el ${fechaCorta(r.beneficioEn)}`;
   if (r.beneficioTipo === "meses" && r.meses) return ` · ${cuando}: ${mesesBonificadosTexto(r.meses.total)} (${r.meses.usados} ${r.meses.usados === 1 ? "usado" : "usados"})`;
-  return ` · ${cuando}: pack por adelantado`;
+  return ` · ${cuando}: pack por adelantado (anterior)`;
+}
+
+/** Cómo se va a gastar el beneficio de quien recomendó, según cómo paga hoy: lo que el equipo tiene que saber antes de aplicarlo. */
+function comoPaga(conDebito: boolean, esPuntual: boolean) {
+  if (esPuntual) return "paga cada búsqueda (sin abono): los meses bonificados le quedan guardados hasta que pase a un plan con abono.";
+  return conDebito
+    ? "paga con débito automático (el cobro del mes bonificado se devuelve a mano)."
+    : "paga sin débito automático (el mes bonificado no se factura).";
 }
 
 export default async function ReferidosBackoffice({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -62,7 +70,7 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
     <>
       <EncabezadoPagina
         titulo="Referidos"
-        bajada="Instituciones que recomendaron a otras con su enlace. Cuando la recomendada paga su primera factura, la que recomendó tiene su beneficio: lo aplicás desde acá, como meses bonificados (si paga mes a mes) o como pack por adelantado."
+        bajada={`Instituciones que recomendaron a otras con su enlace. Cuando la recomendada paga su primera factura, la que recomendó tiene su beneficio: lo aplicás desde acá y le suma meses bonificados. ${TEXTO_DEL_TOPE}`}
       />
       <Pestanas
         className="mb-4"
@@ -132,9 +140,6 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {lista.map((r) => {
             const info = INFO_ESTADO_REFERIDO[r.estado];
-            const motivoSinMeses = puedeBonificarMeses(P.esPuntual(r.referidor.plan))
-              ? null
-              : "Esta institución no paga mes a mes (búsqueda puntual): el beneficio se aplica como pack por adelantado.";
             return (
               <Tarjeta como="li" key={r.id} className="p-[18px]">
                 <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
@@ -154,7 +159,7 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
                     </p>
                     {puedeAplicarBeneficio(r.estado) && (
                       <p className="m-0 mt-1 text-[13px] leading-snug text-apagado">
-                        {r.referidor.nombre}: {motivoSinMeses ?? (r.referidor.conDebito ? "paga con débito automático (cada mes bonificado se devuelve a mano)." : "paga mes a mes sin débito automático (los meses bonificados no se facturan).")}
+                        {r.referidor.nombre}: {comoPaga(r.referidor.conDebito, P.esPuntual(r.referidor.plan))}
                       </p>
                     )}
                   </div>
@@ -165,7 +170,6 @@ export default async function ReferidosBackoffice({ searchParams }: { searchPara
                         referidoId={r.id}
                         aplicado={r.estado === "beneficio"}
                         mesesPorRecomendacion={mesesPorRecomendacion}
-                        motivoSinMeses={motivoSinMeses}
                         conDebito={r.referidor.conDebito}
                         referidor={r.referidor.nombre}
                       />

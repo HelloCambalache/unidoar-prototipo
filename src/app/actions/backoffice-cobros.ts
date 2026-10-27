@@ -35,10 +35,10 @@ import {
   type SemestreAlContado,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
-import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
+import { avisoDeCobroEnMesBonificado, mesesTexto } from "@/lib/bonificacion";
 import { suscripcionVigente } from "@/lib/debito-automatico";
 import { pesos, type Planes } from "@/lib/planes";
-import { liberarMeses, mesesBonificadosSinCobro } from "@/lib/queries/bonificaciones";
+import { liberarMeses, mesesBonificadosSinCobro, tomarMesParaSemestre } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
@@ -65,6 +65,8 @@ const INSTITUCION_NO_ENCONTRADA = "No encontramos esa institución.";
 const PEDIDO_NO_ENCONTRADO = "No encontramos ese pedido.";
 const PEDIDO_ATENDIDO = "Ese pedido ya fue atendido por otra persona del equipo.";
 const SOLO_POR_BUSQUEDA = "La búsqueda puntual no tiene factura mensual: se paga cada búsqueda desde «Registrar pago de búsqueda puntual».";
+const SIN_CONVENIO =
+  "El plan Multisede se acuerda según el volumen y esta institución todavía no tiene su convenio: cargalo primero en «Precio» (Acordar un precio, convenio a medida) para poder facturar.";
 
 function revalidarCobros(institucionId?: string) {
   revalidatePath("/backoffice/cobros");
@@ -212,7 +214,9 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
         monto = existente.monto;
         await tx.update(facturas).set({ estado: "pagada", pagadaEn, medio: MEDIO }).where(eq(facturas.id, existente.id));
       } else {
-        monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1, await acuerdoParaPlan(tx, institucionId, plan));
+        const acuerdoDelPlan = await acuerdoParaPlan(tx, institucionId, plan);
+        if (!P.precioDefinido(plan, acuerdoDelPlan)) return fallo(SIN_CONVENIO, { plan: SIN_CONVENIO });
+        monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1, acuerdoDelPlan);
         const [nueva] = await tx
           .insert(facturas)
           .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
@@ -345,7 +349,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   const pagadaEn = fecha === hoy ? new Date() : new Date(`${fecha}T12:00:00Z`);
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
-  const { meses, mesesQueSePagan } = P.condiciones.pack;
+  const { meses, mesesQueSePagan, mesesConReferido } = P.condiciones.pack;
   // Los meses que cubre el semestre: si alguno es un mes bonificado por recomendar (la institución no lo paga), hay que confirmarlo.
   const ventana = Array.from({ length: meses }, (_, k) => sumarMeses(periodo, k));
 
@@ -354,6 +358,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   if (!previa) return fallo(INSTITUCION_NO_ENCONTRADA);
   const impedimento = impedimentoDeSemestre(P, previa.plan, periodo, meses, await facturasDelSemestre(getDb(), institucionId, periodo, meses));
   if (impedimento) return fallo(impedimento.error, impedimento.campos);
+  if (!P.precioDefinido(previa.plan, await acuerdoDe(getDb(), institucionId))) return fallo(SIN_CONVENIO);
   const bonificadosAntes = await mesesBonificadosSinCobro(getDb(), institucionId, ventana);
   if (bonificadosAntes.length > 0 && !cobrarMesesBonificados) {
     const aviso = avisoDeCobroEnMesBonificado(bonificadosAntes.map(etiquetaPeriodo), "semestre");
@@ -384,14 +389,21 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
       const cercanas = await facturasDelSemestre(tx, institucionId, periodo, meses);
       const impedido = impedimentoDeSemestre(P, inst.plan, periodo, meses, cercanas);
       if (impedido) return fallo(impedido.error, impedido.campos);
+      if (!P.precioDefinido(inst.plan, await acuerdoDe(tx, institucionId))) return fallo(SIN_CONVENIO);
       const bonificados = await mesesBonificadosSinCobro(tx, institucionId, ventana);
       if (bonificados.length > 0 && !cobrarMesesBonificados) {
         const aviso = avisoDeCobroEnMesBonificado(bonificados.map(etiquetaPeriodo), "semestre");
         return fallo(aviso, { periodo: aviso });
       }
 
+      // Los meses bonificados que el equipo confirmó cobrar igual vuelven a quedar disponibles (antes de ver si el semestre usa uno).
+      const liberados = await liberarMeses(tx, institucionId, bonificados);
+      // Un mes bonificado por recomendar (si tiene uno y el tope de 1 por semestre lo permite) se gasta acá: queda anotado como el último mes que
+      // cubre el semestre y el semestre se paga un mes menos (`mesesConReferido` en lugar de `mesesQueSePagan`).
+      const mesBonificado = await tomarMesParaSemestre(tx, institucionId, sumarMeses(periodo, meses - 1));
+      const mesesAPagar = mesBonificado ? Math.min(mesesConReferido, mesesQueSePagan) : mesesQueSePagan;
       const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
-      const monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesQueSePagan;
+      const monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesAPagar;
       const existente = cercanas.find((f) => f.periodo === periodo);
       let facturaId: string;
       if (existente) {
@@ -417,7 +429,6 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
           .returning({ id: facturas.id });
         facturaId = nueva!.id;
       }
-      const liberados = await liberarMeses(tx, institucionId, bonificados);
 
       await registrarAuditoria(
         {
@@ -436,7 +447,9 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
             semestre: true,
             mesesCubiertos: meses,
             hasta: sumarMeses(periodo, meses - 1),
-            mesesQueSePagan,
+            mesesQueSePagan: mesesAPagar,
+            // El mes bonificado que gastó el semestre: «Anular pago» lo suelta para que la institución no lo pierda.
+            ...(mesBonificado ? { periodoBonificado: sumarMeses(periodo, meses - 1) } : {}),
             debitoCancelado: debitoVivo,
             // Para poder dejar la factura como estaba si después se anula el pago (si era una impaga que se convirtió en la del semestre, con su monto de antes).
             medioAnterior: null,
@@ -453,7 +466,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
         await avisarAVarios(tx, await destinatariosDeInstitucion(tx, institucionId), {
           tipo: "sistema",
           titulo: "UNIDOAR",
-          texto: `registró tu pago de ${etiquetaDeCobertura(periodo, meses)} (${pesos(monto)}). Quedás cubierto hasta ${hasta}${debitoVivo ? " y cancelamos tu débito automático" : ""}. ¡Gracias!`,
+          texto: `registró tu pago de ${etiquetaDeCobertura(periodo, meses)} (${pesos(monto)}${mesBonificado ? `: usamos 1 mes bonificado por recomendar y pagaste ${mesesTexto(mesesAPagar)}` : ""}). Quedás cubierto hasta ${hasta}${debitoVivo ? " y cancelamos tu débito automático" : ""}. ¡Gracias!`,
           enlace: "/institucion/plan",
         });
         await correoDePagoRegistrado(tx, {
@@ -510,7 +523,7 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
       .where(and(eq(auditoria.entidad, "factura"), eq(auditoria.entidadId, factura.id), eq(auditoria.accion, "factura.pagar")))
       .orderBy(desc(auditoria.creadoEn))
       .limit(1);
-    const previo = (registro?.detalle ?? null) as { medioAnterior?: unknown; facturaCreadaConElPago?: unknown; montoAnterior?: unknown } | null;
+    const previo = (registro?.detalle ?? null) as { medioAnterior?: unknown; facturaCreadaConElPago?: unknown; montoAnterior?: unknown; periodoBonificado?: unknown } | null;
     const [institucion] = await tx
       .select({ medioPago: instituciones.medioPago })
       .from(instituciones)
@@ -533,6 +546,9 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
     } else {
       await tx.update(facturas).set({ estado: "pendiente", pagadaEn: null, medio }).where(eq(facturas.id, factura.id));
     }
+    // Si ese pago era un semestre que gastó un mes bonificado por recomendar, el mes vuelve a quedar disponible: la institución no lo pierde.
+    const mesBonificadoLiberado =
+      typeof previo?.periodoBonificado === "string" && (await liberarMeses(tx, factura.institucionId, [previo.periodoBonificado])) > 0;
     await registrarAuditoria(
       {
         usuarioId: admin.id,
@@ -549,6 +565,7 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
           avisoALaInstitucion: datos.data.avisar,
           ...(eliminada ? { facturaEliminada: true } : {}),
           ...(volvioAUnMes ? { volvioAUnMes: true, mesesCubiertos: factura.mesesCubiertos } : {}),
+          ...(mesBonificadoLiberado ? { mesBonificadoLiberado: true } : {}),
         },
       },
       tx,
@@ -591,7 +608,9 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
   if (P.esPuntual(plan)) return fallo(SOLO_POR_BUSQUEDA, { plan: SOLO_POR_BUSQUEDA });
-  const monto = P.montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, await acuerdoParaPlan(getDb(), institucionId, plan));
+  const acuerdoDelPlan = await acuerdoParaPlan(getDb(), institucionId, plan);
+  if (!P.precioDefinido(plan, acuerdoDelPlan)) return fallo(SIN_CONVENIO, { plan: SIN_CONVENIO });
+  const monto = P.montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, acuerdoDelPlan);
 
   try {
     const resultado = await transaccion(async (tx) => {
@@ -715,6 +734,7 @@ function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
   if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
   if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
   if (r.motivo === "bonificada") return " Este mes es un mes bonificado por recomendar a otra institución: no se te factura.";
+  if (r.motivo === "sin_convenio") return " El valor de tu plan lo acordamos según el volumen: el equipo te pasa la propuesta antes de facturar nada.";
   return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
 }
 

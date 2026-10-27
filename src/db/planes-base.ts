@@ -67,13 +67,28 @@ async function main() {
       set plan = i.plan
       from public.instituciones i
       where i.id = a.institucion_id and a.plan is null`;
+    // Cómo prefiere pagar el abono una institución: una fila por institución que eligió pagar el SEMESTRE por adelantado (sin fila: mes a mes).
+    // Tabla aparte de `instituciones` a propósito (agregarle una columna rompe las consultas hasta correr el script). Es una preferencia, no un
+    // cobro: el equipo registra el semestre cuando llega el pago.
+    await tx`
+      create table if not exists public.formas_de_pago (
+        institucion_id uuid primary key references public.instituciones(id) on delete cascade,
+        forma text not null,
+        creado_en timestamptz not null default now(),
+        actualizado_en timestamptz not null default now()
+      )`;
     // La búsqueda puntual (el plan sin abono): días de vigencia, búsquedas abiertas a la vez y qué incluye.
     await tx`alter table public.planes_condiciones add column if not exists puntual_vigencia_dias integer not null default 30`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_busquedas_abiertas integer not null default 1`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_cursos boolean not null default false`;
     await tx`alter table public.planes_condiciones add column if not exists puntual_incluye_buscador boolean not null default false`;
-    // Referidos, opción B: cuántos meses se bonifican por recomendación a quien paga mes a mes (0: no se ofrece).
-    await tx`alter table public.planes_condiciones add column if not exists referido_meses_mensual integer not null default 2`;
+    // Referidos: cuántos meses se bonifican por recomendación (0: no se ofrece). De lanzamiento es 1 (regla del cliente: 1 mes bonificado por
+    // referido y como máximo 1 por semestre). El `set default` es idempotente y no toca lo que ya se editó: el valor de la fila que ya existía se
+    // pasa de 2 a 1 UNA vez, a mano, al desplegar (ver CLAUDE.md).
+    await tx`alter table public.planes_condiciones add column if not exists referido_meses_mensual integer not null default 1`;
+    await tx`alter table public.planes_condiciones alter column referido_meses_mensual set default 1`;
+    // Plan Fundador: cuántas instituciones pueden ser fundadoras (50 de lanzamiento). La fila del plan `fundador` se inserta abajo con el resto.
+    await tx`alter table public.planes_condiciones add column if not exists cupos_fundador integer not null default 50`;
     // Búsquedas puntuales pagadas: una fila por búsqueda que la institución pagó. Disponible mientras usado_en es null; al publicar se consume.
     await tx`
       create table if not exists public.creditos_busqueda (
@@ -92,6 +107,7 @@ async function main() {
     await tx`alter table public.planes enable row level security`;
     await tx`alter table public.planes_condiciones enable row level security`;
     await tx`alter table public.acuerdos_precio enable row level security`;
+    await tx`alter table public.formas_de_pago enable row level security`;
     await tx`alter table public.creditos_busqueda enable row level security`;
 
     let nuevos = 0;

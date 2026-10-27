@@ -80,7 +80,7 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           ¿Qué tipo de institución sos?
         </span>
         <div role="group" aria-labelledby="tipo-institucion" className="flex flex-wrap gap-2">
-          {P.vigentes.map((c) => {
+          {P.vigentesPublicos.map((c) => {
             const elegido = c === clave;
             return (
               <button

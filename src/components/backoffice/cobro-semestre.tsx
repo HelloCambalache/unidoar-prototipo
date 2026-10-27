@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import {
   conflictosDeSemestre,
+  creditoDeSemestre,
   DIAS_MAXIMOS_PAGO_ATRASADO,
   errorDeFechaDePago,
   errorDeInicioDeSemestre,
@@ -41,6 +42,7 @@ export function CobroSemestre({
   facturas,
   debitoVigente,
   periodosBonificados = [],
+  bonificacion = { disponibles: 0, usados: [] },
 }: {
   institucionId: string;
   /** Cuántas sedes tiene (el semestre es el monto mensual, con sus sedes adicionales, por los meses que se pagan). */
@@ -57,9 +59,14 @@ export function CobroSemestre({
   debitoVigente: boolean;
   /** Los meses que esta institución ya tiene bonificados por recomendar (no se facturaron: no los paga). Un semestre que los cubre exige confirmarlo. */
   periodosBonificados?: string[];
+  /**
+   * Los meses bonificados por recomendar de la institución: cuántos tiene sin gastar y qué meses ya gastó. Con uno disponible y el tope de 1 por
+   * semestre a favor, el semestre gasta uno y se paga un mes menos (lo mismo que decide el servidor al registrarlo).
+   */
+  bonificacion?: { disponibles: number; usados: string[] };
 }) {
   const P = crearPlanes(catalogo);
-  const { meses, mesesQueSePagan } = P.condiciones.pack;
+  const { meses, mesesQueSePagan, mesesConReferido } = P.condiciones.pack;
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
   const [abierto, setAbierto] = useState(false);
@@ -85,13 +92,23 @@ export function CobroSemestre({
   };
 
   const mensual = P.montoDePlan(plan, sedes, acuerdo);
-  const total = mensual * mesesQueSePagan;
-  const bonificado = mensual * (meses - mesesQueSePagan);
 
   const valido = PERIODO_VALIDO.test(periodo);
   // Si alguno de los meses que cubre el semestre es un mes bonificado por recomendar (no se paga), hay que confirmarlo.
   const ventana = valido ? Array.from({ length: meses }, (_, k) => sumarMeses(periodo, k)) : [];
   const bonificadosEnLaVentana = periodosBonificados.filter((p) => ventana.includes(p));
+  // Un mes bonificado por recomendar que se gasta en este semestre (si tiene uno y el tope de 1 por semestre lo permite). Los meses de la ventana
+  // que el equipo confirma cobrar igual vuelven a quedar disponibles antes (y dejan de contar para el tope), igual que en el servidor.
+  const sueltos = bonificadosEnLaVentana.length > 0 && registrarIgual ? bonificadosEnLaVentana : [];
+  const conCredito =
+    valido &&
+    creditoDeSemestre(periodo, meses, {
+      disponibles: bonificacion.disponibles + sueltos.length,
+      usados: bonificacion.usados.filter((p) => !sueltos.includes(p)),
+    }).usa;
+  const mesesAPagar = conCredito ? Math.min(mesesConReferido, mesesQueSePagan) : mesesQueSePagan;
+  const total = mensual * mesesAPagar;
+  const bonificado = mensual * (meses - mesesAPagar);
   const { pagos, impagas } = valido ? conflictosDeSemestre(periodo, meses, facturas) : { pagos: [], impagas: [] };
   const errorInicio = valido ? errorDeInicioDeSemestre(periodo, periodoActual()) : null;
   const sePuede = valido && pagos.length === 0 && impagas.length === 0 && !errorInicio;
@@ -108,9 +125,9 @@ export function CobroSemestre({
           ? { clase: "bg-[#F6E6E0] text-[#8F3D28]", texto: `Hay facturas sin pagar dentro de esos meses (${lista(impagas)}): registrales el pago o elegí otro mes.` }
           : {
               clase: "bg-superficie text-tinta-2",
-              texto: `Cubre ${etiquetaDeCobertura(periodo, meses)}. Paga ${pesos(total)} (${mesesQueSePagan} meses de ${pesos(mensual)}): se bonifica ${bonificado > 0 ? pesos(bonificado) : "nada"}. ${
-                convierte ? `La factura de ${etiquetaPeriodo(periodo)}, que está sin pagar, pasa a ser la del semestre.` : "Se crea una sola factura, ya paga."
-              }`,
+              texto: `Cubre ${etiquetaDeCobertura(periodo, meses)}. Paga ${pesos(total)} (${mesesAPagar} meses de ${pesos(mensual)}): se bonifica ${bonificado > 0 ? pesos(bonificado) : "nada"}${
+                conCredito ? `, con 1 mes bonificado por recomendar (queda anotado en ${etiquetaPeriodo(sumarMeses(periodo, meses - 1)).toLowerCase()})` : ""
+              }. ${convierte ? `La factura de ${etiquetaPeriodo(periodo)}, que está sin pagar, pasa a ser la del semestre.` : "Se crea una sola factura, ya paga."}`,
             };
 
   const guardar = () => {

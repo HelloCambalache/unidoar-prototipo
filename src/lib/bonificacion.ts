@@ -1,19 +1,46 @@
 /*
- * Meses bonificados por recomendar (opción B del esquema comercial: «pagando mes a mes, N meses bonificados por institución recomendada»).
- * Cuando una institución recomendada paga su primera factura, el equipo puede aplicar el beneficio de dos maneras: el pack por adelantado
- * (paga menos meses del semestre, se carga al facturar) o, para quien paga mes a mes, **meses bonificados**: cada uno es una fila anotada
- * (`meses_bonificados`) que se gasta en la próxima factura que se genere.
+ * Meses bonificados por recomendar. Cuando una institución recomendada paga su primera factura, el equipo aplica el beneficio a quien la recomendó:
+ * cada recomendación suma **meses bonificados** (1 de lanzamiento, editable en Planes): una fila anotada (`meses_bonificados`) que queda guardada
+ * hasta que se gasta.
  *
- *  - Sin débito automático: el cron no crea la factura de un mes bonificado (no se cobra, no hay recordatorios) y anota qué mes fue.
- *  - Con débito automático autorizado: Mercado Pago cobra igual (cambiar el monto o pausar es riesgoso: una suba puede pedirle a la persona
- *    que apruebe de nuevo). El mes queda anotado con ese cobro y el equipo lo **devuelve a mano** desde Mercado Pago y lo marca.
+ * Regla del cliente (2026-10-27): como máximo **1 mes bonificado por semestre**. Lo que sobra no se pierde: queda guardado y se gasta de a uno,
+ * en los semestres siguientes (`puedeBonificarPeriodo`: nunca dos meses bonificados con menos de 6 meses de distancia). Cómo se gasta:
+ *
+ *  - Paga mes a mes sin débito automático: el cron no crea la factura de ese mes (no se cobra, no hay recordatorios) y anota qué mes fue.
+ *  - Paga mes a mes con débito automático autorizado: Mercado Pago cobra igual (cambiar el monto o pausar es riesgoso: una suba puede pedirle a
+ *    la persona que apruebe de nuevo). El mes queda anotado con ese cobro y el equipo lo **devuelve a mano** desde Mercado Pago y lo marca.
+ *  - Paga el semestre de contado: al registrarlo se gasta un mes bonificado y paga un mes menos (`pack.mesesConReferido` de Planes en lugar de
+ *    `mesesQueSePagan`); el mes queda anotado como el último del semestre.
  *
  * Código puro (sin base ni Next): lo usan el cron, las acciones, las pantallas y las pruebas.
  */
 
-/** Cómo se aplicó el beneficio de una recomendación: pack por adelantado (se carga al facturar) o meses bonificados (se descuentan solos). */
+/**
+ * Cómo se aplicó el beneficio de una recomendación. Hoy siempre es `meses` (créditos que se gastan según la regla de arriba); `pack` es lo de
+ * antes (un pack por adelantado cargado a mano, sin saldo) y solo queda para leer lo ya aplicado.
+ */
 export const TIPOS_DE_BENEFICIO = ["pack", "meses"] as const;
 export type TipoDeBeneficio = (typeof TIPOS_DE_BENEFICIO)[number];
+
+/** Distancia mínima, en meses, entre dos meses bonificados por recomendar: uno por semestre. */
+export const MESES_ENTRE_BONIFICACIONES = 6;
+
+/** Cuántos meses hay de un período ("2026-11") a otro: positivo si `hasta` es posterior. */
+export function mesesEntre(desde: string, hasta: string): number {
+  const valor = (p: string) => Number(p.slice(0, 4)) * 12 + Number(p.slice(5, 7)) - 1;
+  return valor(hasta) - valor(desde);
+}
+
+/**
+ * ¿Se puede bonificar `periodo`? Solo si ningún otro mes bonificado queda a menos de 6 meses de distancia, antes o después: así nunca hay dos en
+ * el mismo semestre. `yaBonificados` son los períodos que ya quedaron bonificados (el mismo `periodo` no cuenta: es el que se está resolviendo).
+ */
+export function puedeBonificarPeriodo(periodo: string, yaBonificados: readonly string[]): boolean {
+  return yaBonificados.every((p) => p === periodo || Math.abs(mesesEntre(p, periodo)) >= MESES_ENTRE_BONIFICACIONES);
+}
+
+/** Lo que se le explica a la institución sobre el tope: se usa de a uno por semestre y lo que sobra queda guardado. */
+export const TEXTO_DEL_TOPE = "Se usa 1 mes bonificado por semestre como máximo: los demás quedan guardados para los semestres siguientes.";
 
 /** Máximo de meses que se pueden bonificar por una recomendación (el valor de Planes y lo que acepta la acción). */
 export const MAX_MESES_BONIFICADOS = 12;
@@ -23,12 +50,6 @@ export const mesesTexto = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 
 /** "1 mes bonificado" · "2 meses bonificados" */
 export const mesesBonificadosTexto = (n: number) => `${mesesTexto(n)} ${n === 1 ? "bonificado" : "bonificados"}`;
-
-/**
- * ¿Se le pueden bonificar meses a una institución con este plan? Solo a quien paga mes a mes: la búsqueda puntual no tiene una mensualidad
- * de la que descontar (a esa se le aplica el beneficio como pack por adelantado, a mano). `esPuntual` sale de `Planes.esPuntual(plan)`.
- */
-export const puedeBonificarMeses = (esPuntual: boolean) => !esPuntual;
 
 /** En qué está un mes bonificado, para mostrarlo. */
 export type EstadoDeMes = "disponible" | "usado" | "a-devolver" | "devuelto";
@@ -62,6 +83,14 @@ export function resumenDeMeses(meses: readonly { estado: EstadoDeMes }[]) {
   };
 }
 
+/** De los meses bonificados de una institución, lo que necesita saber la pantalla del semestre al contado: cuántos tiene sin gastar y cuáles gastó. */
+export function bonificacionParaSemestre(meses: readonly { estado: EstadoDeMes; periodo: string | null }[]) {
+  return {
+    disponibles: meses.filter((m) => m.estado === "disponible").length,
+    usados: meses.flatMap((m) => (m.periodo ? [m.periodo] : [])),
+  };
+}
+
 /**
  * Cómo se gasta un mes bonificado cuando llega el cobro del débito automático de `periodo`. Si el mes ya estaba anotado como bonificado
  * sin cobro (el cron lo bonificó antes de que se activara el débito), ahora tiene un cobro que devolver: se le agrega. Si ya tenía el cobro,
@@ -69,9 +98,14 @@ export function resumenDeMeses(meses: readonly { estado: EstadoDeMes }[]) {
  */
 export type GastoDelCobro = "agregar-cobro" | "ya-estaba" | "tomar-disponible" | "ninguno";
 
-export function gastoDelCobro(e: { mesAnotado: { cobroId: string | null } | null; disponibles: number }): GastoDelCobro {
+export function gastoDelCobro(e: {
+  mesAnotado: { cobroId: string | null } | null;
+  disponibles: number;
+  /** El tope de 1 por semestre permite bonificar este mes (`puedeBonificarPeriodo`); sin dato, sí. Solo cuenta para tomar uno nuevo. */
+  permitido?: boolean;
+}): GastoDelCobro {
   if (e.mesAnotado) return e.mesAnotado.cobroId ? "ya-estaba" : "agregar-cobro";
-  return e.disponibles > 0 ? "tomar-disponible" : "ninguno";
+  return e.disponibles > 0 && (e.permitido ?? true) ? "tomar-disponible" : "ninguno";
 }
 
 /** Lo que el equipo ve al aplicar el beneficio: cuántos meses y cómo. */

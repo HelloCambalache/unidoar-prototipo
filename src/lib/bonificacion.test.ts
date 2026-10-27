@@ -1,28 +1,75 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  bonificacionParaSemestre,
   estadoDeMes,
   ETIQUETA_DE_MES,
   gastoDelCobro,
+  MESES_ENTRE_BONIFICACIONES,
   mesesBonificadosTexto,
+  mesesEntre,
   mesesTexto,
   motivoParaNoDeshacer,
-  puedeBonificarMeses,
+  puedeBonificarPeriodo,
   resumenDeMeses,
+  TEXTO_DEL_TOPE,
   TIPOS_DE_BENEFICIO,
   textoDeBeneficioAplicado,
   avisoDeCobroEnMesBonificado,
   textoDeMesBonificado,
 } from "@/lib/bonificacion";
-import { planesPorDefecto } from "@/lib/planes";
 
-describe("a quién se le pueden bonificar meses", () => {
-  it("a quien paga mes a mes, sea cual sea su plan mensual", () => {
-    for (const plan of ["colegio", "deportiva", "multisede"]) assert.equal(puedeBonificarMeses(planesPorDefecto.esPuntual(plan)), true, plan);
+describe("el tope de 1 mes bonificado por semestre", () => {
+  it("dos meses bonificados tienen que estar al menos a 6 meses de distancia", () => {
+    assert.equal(MESES_ENTRE_BONIFICACIONES, 6);
   });
 
-  it("no a quien no tiene una mensualidad de la que descontar: la búsqueda puntual", () => {
-    assert.equal(puedeBonificarMeses(planesPorDefecto.esPuntual("puntual")), false);
+  it("cuenta los meses entre dos períodos, cruzando de año y con signo", () => {
+    assert.equal(mesesEntre("2026-10", "2026-10"), 0);
+    assert.equal(mesesEntre("2026-10", "2027-04"), 6);
+    assert.equal(mesesEntre("2027-04", "2026-10"), -6);
+    assert.equal(mesesEntre("2026-12", "2027-01"), 1);
+  });
+
+  it("sin otro mes bonificado cerca, se puede", () => {
+    assert.equal(puedeBonificarPeriodo("2026-10", []), true);
+  });
+
+  it("con otro mes bonificado a menos de 6 meses (antes o después) no se puede: sería el segundo del semestre", () => {
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2026-11"]), false, "el mes siguiente");
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2026-05"]), false, "5 meses antes");
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2027-03"]), false, "5 meses después");
+  });
+
+  it("a 6 meses de distancia ya es otro semestre: se puede", () => {
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2026-04"]), true);
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2027-04"]), true);
+  });
+
+  it("el mismo mes que se está resolviendo no cuenta contra sí mismo (el cron corre todos los días)", () => {
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2026-10"]), true);
+  });
+
+  it("alcanza con que uno solo esté cerca", () => {
+    assert.equal(puedeBonificarPeriodo("2026-10", ["2025-01", "2026-09", "2028-01"]), false);
+  });
+
+  it("el recordatorio para la institución dice que son de a uno por semestre y que lo que sobra queda guardado", () => {
+    assert.match(TEXTO_DEL_TOPE, /1 mes bonificado por semestre/);
+    assert.match(TEXTO_DEL_TOPE, /quedan guardados/);
+  });
+
+  it("de los meses de una institución, saca los disponibles y los períodos ya gastados para el semestre al contado", () => {
+    assert.deepEqual(
+      bonificacionParaSemestre([
+        { estado: "disponible", periodo: null },
+        { estado: "disponible", periodo: null },
+        { estado: "usado", periodo: "2026-10" },
+        { estado: "a-devolver", periodo: "2027-04" },
+      ]),
+      { disponibles: 2, usados: ["2026-10", "2027-04"] },
+    );
+    assert.deepEqual(bonificacionParaSemestre([]), { disponibles: 0, usados: [] });
   });
 });
 
@@ -80,6 +127,16 @@ describe("qué se hace con el cobro del débito de un mes", () => {
 
   it("sin meses bonificados el cobro es un cobro común", () => {
     assert.equal(gastoDelCobro({ mesAnotado: null, disponibles: 0 }), "ninguno");
+  });
+
+  it("si el tope de 1 por semestre no lo permite, el cobro es un cobro común y el mes que sobra espera", () => {
+    assert.equal(gastoDelCobro({ mesAnotado: null, disponibles: 3, permitido: false }), "ninguno");
+    assert.equal(gastoDelCobro({ mesAnotado: null, disponibles: 3, permitido: true }), "tomar-disponible");
+  });
+
+  it("el tope no toca un mes que ya estaba bonificado: ese sigue su camino", () => {
+    assert.equal(gastoDelCobro({ mesAnotado: { cobroId: null }, disponibles: 0, permitido: false }), "agregar-cobro");
+    assert.equal(gastoDelCobro({ mesAnotado: { cobroId: "123" }, disponibles: 0, permitido: false }), "ya-estaba");
   });
 });
 

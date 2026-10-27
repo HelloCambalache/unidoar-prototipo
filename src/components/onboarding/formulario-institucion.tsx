@@ -9,10 +9,14 @@ import { Campo, Casilla, Input, Select } from "@/components/ui/campos";
 import { AlertaError, TituloPaso } from "@/components/onboarding/elementos";
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { OTRO, opcionYTexto } from "@/lib/otro";
-import { crearPlanes, pesos, type CatalogoDePlanes } from "@/lib/planes";
+import { resumenDeSemestre } from "@/lib/forma-de-pago";
+import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboarding";
 
-/** Una de las dos maneras de usar UNIDOAR (radio con forma de tarjeta): el abono de su tipo o pagar una sola búsqueda. */
+/** Cómo quiere usar UNIDOAR en el alta: el abono de su tipo mes a mes, el mismo abono por semestre o una sola búsqueda (ver `planDelAlta`). */
+export type Modalidad = "abono" | "semestral" | "puntual";
+
+/** Una de las maneras de usar UNIDOAR (radio con forma de tarjeta). */
 function OpcionDePlan({
   valor,
   marcada,
@@ -21,7 +25,7 @@ function OpcionDePlan({
   precio,
   texto,
 }: {
-  valor: "abono" | "puntual";
+  valor: Modalidad;
   marcada: boolean;
   alElegir: () => void;
   titulo: string;
@@ -56,6 +60,7 @@ export function FormularioInstitucion({
   provincias,
   catalogo,
   modalidadInicial,
+  fundadora,
 }: {
   inicial: DatosForm;
   yaCreada: boolean;
@@ -66,7 +71,12 @@ export function FormularioInstitucion({
   /** Los planes vigentes: de ahí salen los precios que se muestran y si se ofrece pagar una sola búsqueda. */
   catalogo: CatalogoDePlanes;
   /** Con qué opción arranca (la de una cuenta que vuelve a este paso: la que ya tenía). */
-  modalidadInicial: "abono" | "puntual";
+  modalidadInicial: Modalidad;
+  /**
+   * Lugares de institución fundadora: con el abono (mensual o semestral) la cuenta queda con el Plan Fundador y su valor no se muestra acá (lo
+   * define el equipo). null: no hay lugares (o el plan está apagado) y todo se ve como siempre. `yaLoEs`: la cuenta que vuelve a este paso ya es fundadora.
+   */
+  fundadora: null | { quedan: number; total: number; yaLoEs: boolean };
 }) {
   const [estado, accion, pendiente] = useActionState(crearInstitucion, null);
   // Si ya había guardado algo escrito a mano ("Academia de danza"), el desplegable queda en "Otro" y el texto en "¿Cuál?".
@@ -75,7 +85,7 @@ export function FormularioInstitucion({
   const [tipo, setTipo] = useState<string>(inicialTipo.opcion || TIPOS_INSTITUCION[0]);
   const [rol, setRol] = useState<string>(inicialRol.opcion || ROLES_CONTACTO[0]);
   // Cómo quiere usar UNIDOAR: en el estado (no en el DOM) para que sobreviva a un envío que falla y vuelve a mostrar el formulario.
-  const [modalidad, setModalidad] = useState<"abono" | "puntual">(modalidadInicial);
+  const [modalidad, setModalidad] = useState<Modalidad>(modalidadInicial);
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
   const v = (campo: string) => valorDe(estado, inicial, campo);
   const conCue = TIPOS_CON_CUE.includes(tipo);
@@ -83,6 +93,7 @@ export function FormularioInstitucion({
   // El abono que le toca sale del tipo que está eligiendo; pagar una sola búsqueda solo se ofrece si ese plan se sigue ofreciendo.
   const P = crearPlanes(catalogo);
   const abono = P.planDe(P.planPorTipo(tipo));
+  const semestre = resumenDeSemestre(P, P.planPorTipo(tipo) as PlanClave, 1);
   const puntual = P.planDe("puntual");
   const { vigenciaDias, incluyeCursos, incluyeBuscador } = P.condiciones.puntual;
   const noIncluye = [!incluyeBuscador && "el buscador de profesionales", !incluyeCursos && "la difusión de cursos"].filter(Boolean).join(" ni ");
@@ -204,18 +215,35 @@ export function FormularioInstitucion({
           ))}
         </datalist>
 
-        {puntual.vigente && (
-          <fieldset className="m-0 mt-1 min-w-0 border-0 p-0">
-            <legend className="mb-2 p-0 text-sm font-semibold text-tinta">¿Cómo querés usar UNIDOAR?</legend>
-            <div className="flex flex-col gap-2.5">
-              <OpcionDePlan
-                valor="abono"
-                marcada={modalidad === "abono"}
-                alElegir={() => setModalidad("abono")}
-                titulo="Abono mensual"
-                precio={`${pesos(abono.precio)} por mes`}
-                texto="Búsquedas ilimitadas, el buscador de profesionales y la difusión de cursos. Sin comisión por contratación."
-              />
+        <fieldset className="m-0 mt-1 min-w-0 border-0 p-0">
+          <legend className="mb-2 p-0 text-sm font-semibold text-tinta">¿Cómo querés usar UNIDOAR?</legend>
+          {fundadora && (
+            <p role="note" className="mt-0 mb-3 rounded-caja bg-[#FEF1DF] px-3.5 py-3 text-[13px] leading-normal text-[#8A4B07]">
+              <b className="font-semibold">Institución fundadora</b>
+              {fundadora.yaLoEs ? "" : ` · quedan ${fundadora.quedan} de ${fundadora.total} lugares`}
+              {". "}
+              {fundadora.yaLoEs ? "Tu institución es fundadora" : "Con el abono (mensual o semestral) tu institución queda como fundadora"}: valor preferencial, la insignia en tu
+              perfil público y tu logo en la portada del sitio. El equipo te confirma el valor cuando verifique tu cuenta.
+            </p>
+          )}
+          <div className="flex flex-col gap-2.5">
+            <OpcionDePlan
+              valor="abono"
+              marcada={modalidad === "abono"}
+              alElegir={() => setModalidad("abono")}
+              titulo="Abono mensual"
+              precio={fundadora ? "Valor de fundadora" : `${pesos(abono.precio)} por mes`}
+              texto="Búsquedas ilimitadas, el buscador de profesionales y la difusión de cursos. Sin comisión por contratación."
+            />
+            <OpcionDePlan
+              valor="semestral"
+              marcada={modalidad === "semestral"}
+              alElegir={() => setModalidad("semestral")}
+              titulo="Abono semestral"
+              precio={fundadora ? "Valor de fundadora" : `${pesos(semestre.total)} por ${semestre.meses} meses`}
+              texto={`Lo mismo que el abono mensual, pagando el semestre de una vez: pagás ${semestre.mesesQueSePagan} meses y usás ${semestre.meses}. El equipo te ayuda a abonarlo cuando verifique tu cuenta.`}
+            />
+            {puntual.vigente && (
               <OpcionDePlan
                 valor="puntual"
                 marcada={modalidad === "puntual"}
@@ -224,12 +252,12 @@ export function FormularioInstitucion({
                 precio={`${pesos(puntual.precio)} por búsqueda`}
                 texto={`Pagás solo la búsqueda que necesitás, sin abono mensual. Queda publicada ${vigenciaDias} días${noIncluye ? ` y no incluye ${noIncluye}` : ""}. Al terminar el alta te ayudamos a abonarla.`}
               />
-            </div>
-            <p className="mt-2 mb-0 text-xs leading-normal text-apagado">
-              Si más adelante querés cambiar de modalidad, lo pedís desde Plan y facturación o nos escribís por Contacto.
-            </p>
-          </fieldset>
-        )}
+            )}
+          </div>
+          <p className="mt-2 mb-0 text-xs leading-normal text-apagado">
+            Si más adelante querés cambiar de modalidad, lo pedís desde Plan y facturación o nos escribís por Contacto.
+          </p>
+        </fieldset>
 
         {/* Solo si la cuenta no los aceptó al crearse (cuentas anteriores): las nuevas ya los aceptaron en el paso 1. */}
         {pedirTerminos && (

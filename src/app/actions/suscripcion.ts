@@ -62,7 +62,12 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
   const sedes = (await cantidadDeSedes(getDb(), [institucion.id])).get(institucion.id) ?? 1;
-  const monto = P.montoDePlan(institucion.plan, sedes, await acuerdoDe(getDb(), institucion.id));
+  const acuerdo = await acuerdoDe(getDb(), institucion.id);
+  // Una red de sedes (Multisede) sin convenio todavía no tiene un monto: no hay nada que debitar hasta que el equipo lo acuerde (ver `precioDefinido`).
+  if (!P.precioDefinido(institucion.plan, acuerdo)) {
+    return fallo("El valor de tu plan se acuerda según el volumen: el equipo te pasa el monto y, cuando lo tengas, podés activar el débito automático.");
+  }
+  const monto = P.montoDePlan(institucion.plan, sedes, acuerdo);
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
 
   // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, activarlo ahora lo cobraría dos veces. Según el interruptor,
