@@ -13,10 +13,26 @@ import { crearPlanes, pesos, type CatalogoDePlanes } from "@/lib/planes";
 import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboarding";
 
 /** Una de las dos maneras de usar UNIDOAR (radio con forma de tarjeta): el abono de su tipo o pagar una sola búsqueda. */
-function OpcionDePlan({ valor, marcada, titulo, precio, texto }: { valor: "abono" | "puntual"; marcada: boolean; titulo: string; precio: string; texto: string }) {
+function OpcionDePlan({
+  valor,
+  marcada,
+  alElegir,
+  titulo,
+  precio,
+  texto,
+}: {
+  valor: "abono" | "puntual";
+  marcada: boolean;
+  alElegir: () => void;
+  titulo: string;
+  precio: string;
+  texto: string;
+}) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-caja border border-borde bg-white p-3.5 transition-colors has-[:checked]:border-navy-700 has-[:checked]:bg-navy-50 has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30">
-      <input type="radio" name="modalidad" value={valor} defaultChecked={marcada} className="mt-1 size-4 flex-none accent-navy-700" />
+      {/* Controlado por el estado del formulario: React vacía los campos no controlados después de cada envío (también si falló la validación),
+          y una elección de «Una sola búsqueda» volvería sola a «Abono mensual». */}
+      <input type="radio" name="modalidad" value={valor} checked={marcada} onChange={alElegir} className="mt-1 size-4 flex-none accent-navy-700" />
       <span className="min-w-0">
         <span className="flex flex-wrap items-baseline gap-x-2 text-[15px] leading-tight font-semibold text-tinta">
           {titulo}
@@ -58,6 +74,8 @@ export function FormularioInstitucion({
   const inicialRol = opcionYTexto(inicial.contactoRol, ROLES_CONTACTO);
   const [tipo, setTipo] = useState<string>(inicialTipo.opcion || TIPOS_INSTITUCION[0]);
   const [rol, setRol] = useState<string>(inicialRol.opcion || ROLES_CONTACTO[0]);
+  // Cómo quiere usar UNIDOAR: en el estado (no en el DOM) para que sobreviva a un envío que falla y vuelve a mostrar el formulario.
+  const [modalidad, setModalidad] = useState<"abono" | "puntual">(modalidadInicial);
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
   const v = (campo: string) => valorDe(estado, inicial, campo);
   const conCue = TIPOS_CON_CUE.includes(tipo);
@@ -192,14 +210,16 @@ export function FormularioInstitucion({
             <div className="flex flex-col gap-2.5">
               <OpcionDePlan
                 valor="abono"
-                marcada={modalidadInicial === "abono"}
+                marcada={modalidad === "abono"}
+                alElegir={() => setModalidad("abono")}
                 titulo="Abono mensual"
                 precio={`${pesos(abono.precio)} por mes`}
                 texto="Búsquedas ilimitadas, el buscador de profesionales y la difusión de cursos. Sin comisión por contratación."
               />
               <OpcionDePlan
                 valor="puntual"
-                marcada={modalidadInicial === "puntual"}
+                marcada={modalidad === "puntual"}
+                alElegir={() => setModalidad("puntual")}
                 titulo="Una sola búsqueda"
                 precio={`${pesos(puntual.precio)} por búsqueda`}
                 texto={`Pagás solo la búsqueda que necesitás, sin abono mensual. Queda publicada ${vigenciaDias} días${noIncluye ? ` y no incluye ${noIncluye}` : ""}. Al terminar el alta te ayudamos a abonarla.`}
