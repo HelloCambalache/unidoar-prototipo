@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono } from "@/components/icons";
 import { BandaCTA } from "@/components/publico/banda-cta";
+import { InterruptorDePago, ProveedorDePlanes } from "@/components/publico/elegir-plan";
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { BotonLink } from "@/components/ui/button";
 import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
@@ -57,7 +58,7 @@ export default async function Planes() {
     },
     {
       pregunta: "¿Y si solo necesito cubrir un puesto?",
-      respuesta: `Al crear tu cuenta de institución elegís «Una sola búsqueda» (o lo pedís después desde Plan y facturación): pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
+      respuesta: `Al crear tu cuenta de institución elegís «Una sola búsqueda» (o nos escribís desde Contacto): pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
         P.incluye("puntual", "buscador") && P.incluye("puntual", "cursos")
           ? ""
           : ` No incluye ${[!P.incluye("puntual", "buscador") && "el buscador de profesionales", !P.incluye("puntual", "cursos") && "la difusión de cursos"].filter(Boolean).join(" ni ")}: eso es parte del abono mensual.`
@@ -76,10 +77,13 @@ export default async function Planes() {
       }. Desde ${P.condiciones.sedesMultisede} sedes en total el valor se acuerda con nosotros (convenio corporativo).`,
     },
     {
-      pregunta: "¿Cómo funciona el pago por adelantado?",
-      respuesta: `Contratás el pack de ${mesesDelPack} meses y pagás ${mesesQueSePagan}: ${pesos(P.packDe("colegio").anticipado)} en lugar de ${pesos(P.packDe("colegio").lista)} en el plan de colegios, o ${pesos(P.packDe("deportiva").anticipado)} en lugar de ${pesos(P.packDe("deportiva").lista)} en el de clubes y academias.`,
+      pregunta: "¿Cómo funciona el pago semestral?",
+      respuesta: `Arriba de los planes elegí «Semestral» para verlo. Contratás ${mesesDelPack} meses de una vez, por transferencia o en efectivo, y pagás ${mesesQueSePagan}:${pesos(P.packDe("colegio").anticipado)} en lugar de ${pesos(P.packDe("colegio").lista)} en el plan de colegios, o ${pesos(P.packDe("deportiva").anticipado)} en lugar de ${pesos(P.packDe("deportiva").lista)} en el de clubes y academias.`,
     },
   ];
+
+  // Al navegador va el catálogo sin el piso de precios ni el precio base interno de Multisede: quedarían a la vista en el código de la página.
+  const catalogoDelNavegador = catalogoParaNavegador(catalogo, { sinPrecioPorSede: true });
 
   return (
     <>
@@ -109,54 +113,59 @@ export default async function Planes() {
           </ul>
         </section>
 
-        <section aria-label="Planes" className="grid grid-cols-2 items-stretch gap-6 max-[800px]:grid-cols-1">
-          <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -top-[70px] -left-[60px] size-[220px] rounded-full bg-[radial-gradient(circle,rgba(151,18,95,.16),transparent_70%)]"
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -right-[70px] -bottom-[80px] size-[240px] rounded-full bg-[radial-gradient(circle,rgba(130,216,233,.35),transparent_70%)]"
-            />
-            <div className="relative flex flex-wrap items-center justify-between gap-2">
-              <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-rosa uppercase">
-                Profesionales
-              </h2>
-              <span className="rounded-full bg-rosa px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
-                Para siempre
-              </span>
-            </div>
-            <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] text-rosa">
-              100% gratis
-            </div>
-            <p className="relative mb-5 text-sm leading-normal text-[#7A1B4E]/75">
-              Tu talento no tiene costo: creá tu perfil, verificá tus títulos y postulate.
-            </p>
-            <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-[#5E1340]">
-              {BENEFICIOS_DOCENTE.map((b) => (
-                <li key={b} className="flex items-start gap-2.5">
-                  <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-rosa/12 text-rosa">
-                    <Icono nombre="tilde" tamano={11} trazo={2.6} />
+        <ProveedorDePlanes>
+          <section aria-label="Planes" className="flex flex-col gap-6">
+            {/* «Mensual / Semestral» va afuera de las tarjetas, arriba de las dos. */}
+            <InterruptorDePago catalogo={catalogoDelNavegador} />
+            <div className="grid grid-cols-2 items-stretch gap-6 max-[800px]:grid-cols-1">
+              <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-[70px] -left-[60px] size-[220px] rounded-full bg-[radial-gradient(circle,rgba(151,18,95,.16),transparent_70%)]"
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -right-[70px] -bottom-[80px] size-[240px] rounded-full bg-[radial-gradient(circle,rgba(130,216,233,.35),transparent_70%)]"
+                />
+                <div className="relative flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-rosa uppercase">
+                    Profesionales
+                  </h2>
+                  <span className="rounded-full bg-rosa px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
+                    Para siempre
                   </span>
-                  {b}
-                </li>
-              ))}
-            </ul>
-            <BotonLink
-              href={RUTA_REGISTRO_DOCENTE}
-              variante="cta"
-              tamano="lg"
-              bloque
-              className="relative mt-[26px] h-[50px] bg-rosa text-white shadow-[0_4px_10px_rgba(151,18,95,.3)] hover:bg-rosa hover:text-white hover:brightness-110"
-            >
-              Soy profesional
-            </BotonLink>
-          </article>
+                </div>
+                <div className="relative mt-4 mb-1 font-display text-[40px] leading-none font-bold tracking-[-0.03em] text-rosa">
+                  100% gratis
+                </div>
+                <p className="relative mb-5 text-sm leading-normal text-[#7A1B4E]/75">
+                  Tu talento no tiene costo: creá tu perfil, verificá tus títulos y postulate.
+                </p>
+                <ul className="relative m-0 flex flex-1 list-none flex-col gap-3 p-0 text-sm leading-normal text-[#5E1340]">
+                  {BENEFICIOS_DOCENTE.map((b) => (
+                    <li key={b} className="flex items-start gap-2.5">
+                      <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-rosa/12 text-rosa">
+                        <Icono nombre="tilde" tamano={11} trazo={2.6} />
+                      </span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <BotonLink
+                  href={RUTA_REGISTRO_DOCENTE}
+                  variante="cta"
+                  tamano="lg"
+                  bloque
+                  className="relative mt-[26px] h-[50px] bg-rosa text-white shadow-[0_4px_10px_rgba(151,18,95,.3)] hover:bg-rosa hover:text-white hover:brightness-110"
+                >
+                  Soy profesional
+                </BotonLink>
+              </article>
 
-          {/* Al navegador va el catálogo sin el piso de precios ni el precio base interno de Multisede: quedarían a la vista en el código de la página. */}
-          <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoParaNavegador(catalogo, { sinPrecioPorSede: true })} />
-        </section>
+              <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoDelNavegador} />
+            </div>
+          </section>
+        </ProveedorDePlanes>
 
         <section
           aria-labelledby="preguntas"

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Icono } from "@/components/icons";
+import { usePlanElegido } from "@/components/publico/elegir-plan";
 import { BotonLink } from "@/components/ui/button";
 import { crearPlanes, pesos, type CatalogoDePlanes, type Planes, type PlanClave } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
@@ -50,7 +50,9 @@ function detalleDe(P: Planes, clave: PlanClave) {
  */
 export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: readonly string[]; catalogo: CatalogoDePlanes }) {
   const P = crearPlanes(catalogo);
-  const [clave, setClave] = useState<PlanClave>("colegio");
+  // El tipo de institución y cómo se paga el abono (mes a mes o el semestre de una vez: pagás 5 y usás 6) los comparte con el interruptor de
+  // arriba de las tarjetas (`InterruptorDePago`), que está fuera de esta tarjeta. El semestre solo aplica a los aranceles con abono.
+  const { clave, elegirClave, semestral } = usePlanElegido();
   const plan = P.planDe(clave);
   const pack = P.packDe(clave);
   const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
@@ -58,6 +60,10 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
   // Multisede (redes y cadenas) no tiene un precio de lista a la vista: el valor se acuerda según el volumen (convenio corporativo).
   const convenio = plan.porSede;
   const delPuntual = beneficiosPuntual(P);
+  const conPack = !puntual && !convenio;
+  const verSemestral = conPack && semestral;
+  // Una sede adicional por todo el semestre (con su descuento): lo que se suma al pack de la primera sede al sumar una segunda.
+  const sedeExtraDelSemestre = P.packDe(clave, 2).anticipado - pack.anticipado;
 
   return (
     <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta bg-navy-700 px-8 py-9 text-white max-[560px]:px-6">
@@ -80,7 +86,7 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
               <button
                 key={c}
                 type="button"
-                onClick={() => setClave(c)}
+                onClick={() => elegirClave(c)}
                 aria-pressed={elegido}
                 className={cn(
                   "cursor-pointer rounded-full px-3 py-2 text-[13px] leading-none font-semibold whitespace-nowrap transition-colors",
@@ -103,18 +109,29 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           </>
         ) : (
           <>
-            <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(plan.precio)}</span>
-            <span className="text-[15px] leading-none text-white/60">&nbsp;{puntual ? "por búsqueda" : "/ mes"}</span>
+            <span className="font-display text-[38px] leading-none font-bold tracking-[-0.03em]">{pesos(verSemestral ? pack.anticipado : plan.precio)}</span>
+            <span className="text-[15px] leading-none text-white/60">
+              &nbsp;{puntual ? "por búsqueda" : verSemestral ? `por ${mesesDelPack} meses` : "/ mes"}
+            </span>
           </>
         )}
       </div>
+      {verSemestral && (
+        <p className="relative m-0 mb-1 text-[13px] leading-normal text-white/80">
+          Pagás {mesesQueSePagan} meses y usás {mesesDelPack}: equivale a {pesos(Math.round(pack.anticipado / mesesDelPack))} por mes. Te ahorrás{" "}
+          {pesos(pack.lista - pack.anticipado)}.
+        </p>
+      )}
       <p className="relative mb-5 text-sm leading-normal text-white/65">
         {detalleDe(P, clave)}
         {!puntual && !plan.porSede && P.condiciones.descuentoSedeExtra > 0 && P.condiciones.descuentoSedeExtra < 100 && (
           <>
             {" "}
             <span className="text-white/85">
-              Cada sede adicional: {pesos(P.precioDeSedeExtra(clave))} por mes ({P.condiciones.descuentoSedeExtra} % menos).
+              {verSemestral
+                ? `Cada sede adicional: ${pesos(sedeExtraDelSemestre)} por ${mesesDelPack} meses`
+                : `Cada sede adicional: ${pesos(P.precioDeSedeExtra(clave))} por mes`}{" "}
+              ({P.condiciones.descuentoSedeExtra} % menos).
             </span>
           </>
         )}
@@ -155,10 +172,19 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           <span className="inline-block rounded-full bg-verde-tint px-2.5 py-[5px] text-xs leading-none font-semibold text-verde">
             {meses(mesesDelPack - mesesQueSePagan)} {mesesDelPack - mesesQueSePagan === 1 ? "bonificado" : "bonificados"}
           </span>
-          <div className="mt-2.5 text-sm leading-tight font-semibold text-white">Pago por adelantado</div>
+          <div className="mt-2.5 text-sm leading-tight font-semibold text-white">{verSemestral ? "Semestre pagado de contado" : "Pago por adelantado"}</div>
           <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
-            Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
-            <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}.
+            {verSemestral ? (
+              <>
+                Pagás el semestre de una vez, por transferencia o en efectivo, y usás {mesesDelPack} meses:{" "}
+                <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}. Para pagar mes a mes, elegí «Mensual».
+              </>
+            ) : (
+              <>
+                Contratás el pack de {mesesDelPack} meses y pagás {mesesQueSePagan}:{" "}
+                <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}. Elegí «Semestral» arriba para verlo.
+              </>
+            )}
           </p>
         </div>
       )}
