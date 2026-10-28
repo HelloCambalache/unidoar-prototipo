@@ -50,6 +50,7 @@ export const FOCOS: Record<string, string> = {
   "/assets/fundador-ricardo.webp": "46% 30%",
   // Retrato alto: en un círculo se ve una franja cuadrada, así que el punto va arriba para que entre la cabeza completa
   "/assets/fundador-esteban.webp": "52% 8%",
+  "/assets/fundador-ariel.webp": "46% 6%",
   // Instituciones de ejemplo
   "/assets/sanandres-portada-fixed.jpg": "50% 62%",
 };

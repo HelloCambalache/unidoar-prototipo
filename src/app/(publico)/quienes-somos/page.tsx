@@ -70,6 +70,7 @@ type Fundador = {
 const FUNDADORES: Fundador[] = [
   {
     nombre: "Ariel Gómez",
+    foto: "/assets/fundador-ariel.webp",
     enfoque:
       "Mirada territorial: el valor del equipo y el conocimiento profundo de los clubes y natatorios de la región.",
     presentacion: [
