@@ -20,6 +20,7 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M26: { institucion: "Club Atlético", puesto: "Profesor", ruta: "/docente/postulaciones?abrir=1" },
   M27: { institucion: "Club Atlético", puesto: "Profesor", inicio: "01/03/2027", ruta: "/docente/postulaciones?abrir=1" },
   M30: { busqueda: "Profesor de natación", rapida: false, ruta: "/institucion/postulantes?busqueda=1" },
+  M35: { profesional: "Lucía Pérez", puesto: "Profesor de natación", respuesta: "voy", cuando: "jueves, 8 de octubre, 10:30 hs", mensaje: null, ruta: "/institucion/postulantes?busqueda=1" },
   M50: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
   M51: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vence: "10 oct 2026" },
   M52: { institucion: "Club Atlético", periodo: "Octubre de 2026", monto: "$ 45.000", vencio: "10 oct 2026", segundoAviso: false, ultimoDiaDeGracia: "25 oct 2026" },
@@ -66,7 +67,7 @@ describe("plantillas de mails", () => {
 
   it("los grupos opcionales son solo los de contratación", () => {
     const opcionales = (Object.keys(PLANTILLAS) as PlantillaId[]).filter((id) => esGrupoOpcional(PLANTILLAS[id].grupo));
-    assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30"]);
+    assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30", "M35"]);
     for (const id of ["M11", "M12", "M13", "M15", "M16", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
     for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56", "M68"] as const) {
       assert.equal(PLANTILLAS[id].grupo, "facturacion");
@@ -91,6 +92,36 @@ describe("plantillas de mails", () => {
     assert.ok(!m60.html.includes("<img src=x"));
     // El asunto es texto plano: el cliente de correo no lo interpreta como HTML, así que va sin escapar.
     assert.ok(m60.asunto.includes("<img src=x"));
+  });
+
+  it("M35 le cuenta a la institución si el profesional va a la entrevista o no puede ir, con su mensaje", () => {
+    const base = { profesional: "Lucía Pérez", puesto: "Profesor de natación", cuando: "jueves, 8 de octubre, 10:30 hs", ruta: "/institucion/postulantes?busqueda=1" };
+
+    const voy = armarMail("M35", { ...base, respuesta: "voy", mensaje: null }, { origen: ORIGEN, rutaDeBaja: "/avisos/baja?u=1&t=2" });
+    assert.equal(voy.asunto, "Lucía Pérez confirmó la entrevista para Profesor de natación");
+    assert.match(voy.texto, /confirmó que va a la entrevista/);
+    assert.match(voy.texto, /jueves, 8 de octubre, 10:30 hs/);
+    assert.doesNotMatch(voy.texto, /Su mensaje/);
+    assert.doesNotMatch(voy.texto, /reprogramarla/);
+    assert.ok(voy.html.includes("/institucion/postulantes?busqueda=1"), "el botón lleva al tablero de esa búsqueda");
+    assert.ok(voy.urlDeBaja, "es un aviso de contratación: se puede apagar");
+
+    const no = armarMail(
+      "M35",
+      { ...base, respuesta: "no_puedo", mensaje: "El jueves trabajo. ¿Podemos el viernes?" },
+      { origen: ORIGEN },
+    );
+    assert.equal(no.asunto, "Lucía Pérez no puede ir a la entrevista para Profesor de natación");
+    assert.match(no.texto, /no puede ir a la entrevista/);
+    assert.match(no.texto, /Su mensaje:/);
+    assert.match(no.texto, /> El jueves trabajo\. ¿Podemos el viernes\?/);
+    assert.match(no.texto, /Reprogramar la entrevista/);
+    assert.match(no.texto, /otro día desde el tablero/);
+
+    // Lo que escribe la persona se escapa.
+    const hostil = armarMail("M35", { ...base, respuesta: "no_puedo", mensaje: "<script>alert(1)</script>" }, { origen: ORIGEN });
+    assert.ok(!hostil.html.includes("<script>"));
+    assert.ok(hostil.html.includes("&lt;script&gt;"));
   });
 
   it("M67 avisa al equipo que una institución eligió pagar por semestre, distinguiendo la cuenta nueva del pedido posterior", () => {

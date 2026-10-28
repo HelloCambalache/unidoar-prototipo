@@ -100,6 +100,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             {
               lista: [
                 "**Buscador único:** escribí un nombre de institución o una materia, o contá qué buscás con tus palabras (por ejemplo «suplencia de inglés en primaria, de mañana»). Entendemos materias, niveles, turnos y tipo de búsqueda, y te mostramos qué entendimos. Si algo no se pudo aplicar, te lo decimos.",
+                "**Tu categoría:** si no elegís otra, te mostramos las búsquedas de tu categoría (por ejemplo, Docentes), con las de tu materia primero. Para ver las de las demás, elegí **Todas** en el filtro de categoría o tocá «Ver las de todas las categorías».",
                 "**Filtros:** categoría, nivel, turno, tipo (titular, suplencia, temporada, freelance), instituciones verificadas y favoritas, y a cuántos kilómetros de tu zona.",
                 "**Lista o mapa:** cambiás la vista con el selector. En el mapa cada pin es una búsqueda y se ve el radio que elegiste.",
                 "**Favoritas:** tocá la estrella de una búsqueda para guardarla y verla después con el filtro **Favoritos**.",

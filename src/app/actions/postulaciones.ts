@@ -16,7 +16,8 @@ import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirDocente } from "@/lib/auth";
 import { instanteArgentina } from "@/lib/calendario";
 import { postulacionMensajeSchema } from "@/lib/catalogo";
-import { correoDePostulantes } from "@/lib/correo/eventos";
+import { diaHoraLegible } from "@/lib/calendario";
+import { correoDePostulantes, correoDeRespuestaDeEntrevista } from "@/lib/correo/eventos";
 import { archivosDeExamen } from "@/lib/examen-preocupacional";
 import { busquedaAbierta, esId, nombreCompleto } from "@/lib/oportunidades";
 import { avisoDeRespuesta, MAX_MENSAJE_RESPUESTA, motivoParaNoResponder, type RespuestaEntrevista } from "@/lib/entrevista-respuesta";
@@ -326,7 +327,7 @@ const respuestaEntrevistaSchema = z.object({
 
 /**
  * El profesional responde la entrevista que agendó la institución: "voy" o "no puedo" (con un mensaje opcional, p. ej. otro día).
- * Se puede cambiar mientras la entrevista no pase. Avisa a todas las cuentas de la institución por la campanita (sin mail).
+ * Se puede cambiar mientras la entrevista no pase. Avisa a todas las cuentas de la institución por la campanita y por mail (M35).
  */
 export async function responderEntrevista(
   postulacionId: string,
@@ -375,6 +376,18 @@ export async function responderEntrevista(
           enlace: `/institucion/postulantes?busqueda=${busqueda.id}`,
         })),
       );
+      // Y el mail (dentro de la transacción: si se deshace, no sale). El interruptor de avisos por mail de cada persona lo respeta.
+      await correoDeRespuestaDeEntrevista(tx, {
+        usuarioIds: destinatarios,
+        postulacionId,
+        busquedaId: busqueda.id,
+        puesto: busqueda.puesto,
+        profesional: nombreCompleto(docente),
+        respuesta: datos.data.respuesta,
+        cuando: vigente.entrevistaEn!,
+        cuandoTexto: diaHoraLegible(vigente.entrevistaEn!),
+        mensaje: datos.data.mensaje ?? null,
+      });
     }
     return ok();
   });

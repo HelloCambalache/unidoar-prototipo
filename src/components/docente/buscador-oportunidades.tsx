@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { SelectorDeVista } from "@/components/app/selector-vista";
 import { BotonFavorito } from "@/components/docente/boton-favorito";
@@ -8,7 +9,14 @@ import { ControlesBuscador } from "@/components/oportunidades/controles-buscador
 import { pinesDeOfertas } from "@/components/oportunidades/pines";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
-import { hrefOportunidades, RADIO_MAX, urgentesPrimero, type FiltrosOportunidades } from "@/lib/oportunidades";
+import { CATEGORIA_INFO } from "@/lib/catalogo";
+import {
+  CATEGORIA_TODAS,
+  hrefOportunidades,
+  RADIO_MAX,
+  urgentesPrimero,
+  type FiltrosOportunidades,
+} from "@/lib/oportunidades";
 import { listarOportunidades } from "@/lib/queries/oportunidades";
 import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
 
@@ -38,6 +46,10 @@ export async function BuscadorOportunidades({
   const { ofertas, radio, conUbicacion } = await listarOportunidades(docente, usuario.id, consulta);
   const vista = filtros.vista === "mapa" ? "mapa" : "lista";
   const hayFiltros = Object.entries(filtros).some(([clave, valor]) => clave !== "vista" && valor !== undefined);
+  // Sin elegir categoría se muestran las de la suya: se avisa y se ofrece ver las de todas (`?categoria=todas`).
+  const soloMiCategoria = filtros.categoria === undefined;
+  const hrefTodasLasCategorias = hrefOportunidades(base, filtros, { categoria: CATEGORIA_TODAS });
+  const miCategoria = CATEGORIA_INFO[docente.categoria].plural;
 
   const rapidas = modo === "rapidas";
   const n = ofertas.length;
@@ -65,6 +77,7 @@ export async function BuscadorOportunidades({
         filtros={filtros}
         radio={radio}
         radioPorDefecto={docente.radioKm}
+        categoriaPropia={docente.categoria}
         conUbicacion={conUbicacion}
         modo={modo}
         lectura={lectura}
@@ -77,13 +90,28 @@ export async function BuscadorOportunidades({
           />
         }
       >
+        {soloMiCategoria && n > 0 && (
+          <p className="mt-0 mb-4 text-[13.5px] leading-normal text-apagado">
+            Te mostramos las búsquedas de <strong className="font-semibold text-tinta-2">{miCategoria}</strong>, tu categoría.{" "}
+            <Link href={hrefTodasLasCategorias} replace scroll={false} className="font-semibold text-rosa underline">
+              Ver las de todas las categorías
+            </Link>
+          </p>
+        )}
         {n === 0 ? (
           <EstadoVacio
             titulo={hayFiltros ? "Ninguna búsqueda coincide con estos filtros" : "Todavía no hay búsquedas para vos"}
             texto={
               hayFiltros || (conUbicacion && radio < RADIO_MAX)
                 ? "Probá ampliar el rango de búsqueda o sacar algún filtro."
-                : "Cuando una institución publique una búsqueda que te sirva, la vas a ver acá."
+                : `Cuando una institución publique una búsqueda de ${miCategoria} que te sirva, la vas a ver acá.`
+            }
+            accion={
+              soloMiCategoria ? (
+                <BotonLink variante="secundario" tamano="sm" href={hrefTodasLasCategorias}>
+                  Ver las de todas las categorías
+                </BotonLink>
+              ) : undefined
             }
           />
         ) : vista === "mapa" ? (

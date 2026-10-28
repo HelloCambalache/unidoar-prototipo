@@ -80,6 +80,7 @@ Las plantillas son código puro y tienen pruebas (`pnpm test`): `src/lib/correo/
 | M24, M25 | Se agenda (o reprograma) / se cancela la entrevista | El docente | contratación |
 | M27 | Lo contratan | El docente | contratación |
 | M30 | Se postula alguien | Quienes tienen acceso a la institución (uno por búsqueda por día; por hora en las rápidas) | contratación |
+| M35 | El profesional responde «Voy» / «No puedo» a la entrevista | Quienes tienen acceso a la institución (uno por respuesta distinta de cada entrevista) | contratación |
 | M50 | Se crea una factura (cron o carga manual) | Dueño y administradores | facturación |
 | M51, M52 | Falta poco para el vencimiento / está vencida (y a los 7 días; dice hasta cuándo hay tiempo antes de que se limite la cuenta) | Dueño y administradores | facturación |
 | M68 | Mora: último aviso antes de limitar la cuenta (días 12 a 15 de atraso) y «tu cuenta quedó limitada» (desde el día 16) | Dueño y administradores, también con débito automático | facturación |

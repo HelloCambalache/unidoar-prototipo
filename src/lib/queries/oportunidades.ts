@@ -15,7 +15,14 @@ import {
 import { distanciaKm } from "@/lib/geo";
 import { contarSedes } from "@/lib/queries/sedes";
 import { lugarDeBusqueda } from "@/lib/sedes";
-import { busquedaAbierta, RADIO_MAX, tiempoRestante, type FiltrosOportunidades } from "@/lib/oportunidades";
+import {
+  busquedaAbierta,
+  categoriaDeBusqueda,
+  compararOfertas,
+  RADIO_MAX,
+  tiempoRestante,
+  type FiltrosOportunidades,
+} from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { contiene, palabrasDeBusqueda } from "@/lib/sql-texto";
 import { busquedaDeInstitucionActiva, busquedaVigente, institucionVisible } from "@/lib/visibilidad";
@@ -80,6 +87,8 @@ export async function listarOportunidades(
   const db = getDb();
   const ahora = new Date();
   const radio = filtros.radio ?? docente?.radioKm ?? RADIO_MAX;
+  // Sin elegir una categoría, el profesional ve las de la suya (ver `categoriaDeBusqueda`).
+  const categoria = categoriaDeBusqueda(filtros.categoria, docente?.categoria);
   const origen = docente?.lat != null && docente.lng != null ? { lat: docente.lat, lng: docente.lng } : null;
   const conUbicacion = origen !== null;
 
@@ -107,7 +116,7 @@ export async function listarOportunidades(
     eq(busquedas.estado, "activa"),
     busquedaDeInstitucionActiva,
     or(eq(busquedas.rapida, false), isNull(busquedas.venceEn), gt(busquedas.venceEn, ahora)),
-    filtros.categoria ? eq(busquedas.categoria, filtros.categoria) : undefined,
+    categoria ? eq(busquedas.categoria, categoria) : undefined,
     filtros.nivel ? eq(busquedas.nivel, filtros.nivel) : undefined,
     filtros.turno ? eq(busquedas.turno, filtros.turno) : undefined,
     // "Suplencia" trae también las suplencias rápidas: quien busca suplencias las quiere todas.
@@ -177,14 +186,9 @@ export async function listarOportunidades(
     });
   }
 
-  // Las rápidas primero (ya vienen así de la base); dentro de cada grupo, las más cercanas.
-  ofertas.sort((a, b) => {
-    if (a.rapida !== b.rapida) return a.rapida ? -1 : 1;
-    if (a.km !== null && b.km !== null) return a.km - b.km;
-    if (a.km !== null) return -1;
-    if (b.km !== null) return 1;
-    return 0;
-  });
+  // Las rápidas primero; dentro de cada grupo, las de su materia y, entre iguales, las más cercanas.
+  const asignaturas = docente?.asignaturas ?? [];
+  ofertas.sort((a, b) => compararOfertas(a, b, asignaturas));
 
   return { ofertas, radio, conUbicacion };
 }

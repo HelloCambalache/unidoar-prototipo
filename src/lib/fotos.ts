@@ -44,6 +44,12 @@ export const FOCOS: Record<string, string> = {
   "/assets/cat-guardavidas-pileta.jpg": "63% 25%",
   "/assets/hero-guardavidas.jpg": "45% 30%",
   "/assets/bgGuardavidas-fixed.jpg": "45% 30%",
+  // Quiénes somos: el equipo frente al logo (las caras están en el tercio de arriba, el grupo centrado)
+  "/assets/quienes-somos-equipo.webp": "50% 32%",
+  // Fundadores (se muestran en un círculo: la cara tiene que quedar al centro)
+  "/assets/fundador-ricardo.webp": "46% 30%",
+  // Retrato alto: en un círculo se ve una franja cuadrada, así que el punto va arriba para que entre la cabeza completa
+  "/assets/fundador-esteban.webp": "52% 8%",
   // Instituciones de ejemplo
   "/assets/sanandres-portada-fixed.jpg": "50% 62%",
 };

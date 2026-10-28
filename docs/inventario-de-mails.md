@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62, M63, M67 y M68. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M35, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62, M63, M67 y M68. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -61,7 +61,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 | M21 | Suplencia urgente cerca tuyo: {puesto} | Se publica una búsqueda rápida que encaja | Docentes con esa zona y asignatura | En la app | Lanzamiento | Tope de 3 por día por persona; el plazo va en el asunto |
 | M22 | Nueva búsqueda que encaja con tu perfil | Se publica una búsqueda común | Docentes que encajan | En la app | Después | Mejor dentro del resumen semanal (M70) |
 | M23 | Te preseleccionaron para {puesto} | La institución lo mueve a Preseleccionados | Docente | En la app | Pronto | |
-| M24 | Entrevista agendada: {fecha y hora} | La institución la agenda | Docente | En la app | Lanzamiento | Con el día y la hora en el asunto. Botones "Voy a ir", "No puedo ir" y "Ver en la plataforma": los dos primeros abren la postulación con `?entrevista=voy|no-puedo`, que solo preselecciona (se responde con un toque en la app, con sesión). La respuesta avisa a la institución por campanita, sin mail. Idealmente con archivo de calendario |
+| M24 | Entrevista agendada: {fecha y hora} | La institución la agenda | Docente | En la app | Lanzamiento | Con el día y la hora en el asunto. Botones "Voy a ir", "No puedo ir" y "Ver en la plataforma": los dos primeros abren la postulación con `?entrevista=voy|no-puedo`, que solo preselecciona (se responde con un toque en la app, con sesión). La respuesta avisa a la institución por campanita y por mail (M35). Idealmente con archivo de calendario |
 | M25 | Se canceló la entrevista | La institución la cancela | Docente | En la app | Lanzamiento | |
 | M26 | Recibiste una oferta para {puesto} | La institución la envía | Docente | En la app | Lanzamiento | |
 | M27 | ¡Te eligieron para {puesto}! | La institución lo contrata | Docente | En la app | Lanzamiento | |
@@ -77,6 +77,7 @@ M15 importa más de lo que parece: una cuenta suspendida solo ve la pantalla de 
 | M32 | {Docente} retiró su postulación | Se baja de la búsqueda | Dueño y equipo | En la app | Después | Solo en la app |
 | M33 | {Docente} se inscribió a {curso} | Se inscribe | Dueño y equipo | En la app | Después | En un resumen |
 | M34 | {Persona} se sumó al equipo | Acepta la invitación | Dueño | En la app | Pronto | |
+| M35 | {Docente} confirmó la entrevista / no puede ir a la entrevista para {puesto} | El profesional responde «Voy» o «No puedo» a la entrevista agendada | Dueño y equipo con acceso | En la app | Lanzamiento | Un mail por respuesta distinta de cada entrevista (la clave lleva el momento agendado y la respuesta). Con «No puedo» el botón es «Reprogramar la entrevista»; lleva el mensaje del profesional. Grupo contratación: se puede apagar |
 
 ## 4. Cursos (docente)
 

@@ -114,6 +114,41 @@ export async function correoDePostulantes(
   );
 }
 
+/**
+ * M35: el profesional respondió la entrevista («Voy» o «No puedo»). Un mail por respuesta distinta de cada entrevista: la clave lleva el
+ * momento agendado y lo que respondió, así que reprogramarla o cambiar de idea avisa de nuevo, pero apretar el mismo botón dos veces
+ * no repite el mail. Le llega a quienes tienen acceso a la institución, igual que el aviso de la campanita.
+ */
+export async function correoDeRespuestaDeEntrevista(
+  ejecutor: Ejecutor,
+  d: {
+    usuarioIds: string[];
+    postulacionId: string;
+    busquedaId: string;
+    puesto: string;
+    profesional: string;
+    respuesta: "voy" | "no_puedo";
+    cuando: Date;
+    cuandoTexto: string;
+    mensaje: string | null;
+  },
+) {
+  await encolarParaUsuarios(
+    ejecutor,
+    d.usuarioIds,
+    "M35",
+    {
+      profesional: d.profesional,
+      puesto: d.puesto,
+      respuesta: d.respuesta,
+      cuando: d.cuandoTexto,
+      mensaje: d.mensaje,
+      ruta: `/institucion/postulantes?busqueda=${d.busquedaId}`,
+    },
+    { clave: () => `M35:${d.postulacionId}:${d.cuando.getTime()}:${d.respuesta}` },
+  );
+}
+
 /* ───────────────────────────── Facturación y plan (a quienes administran la institución) ───────────────────────────── */
 
 type Factura = { usuarioIds: string[]; institucion: string; periodo: string; monto: number };

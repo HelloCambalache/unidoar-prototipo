@@ -7,8 +7,11 @@ import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/campos";
 import { Insignia } from "@/components/ui/insignia";
+import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import {
+  categoriaDeBusqueda,
+  CATEGORIA_TODAS,
   ETIQUETA_FILTRO_CATEGORIA,
   hrefOportunidades,
   RADIO_MAX,
@@ -31,6 +34,7 @@ export function ControlesBuscador({
   filtros,
   radio,
   radioPorDefecto,
+  categoriaPropia,
   conUbicacion,
   modo,
   publico = false,
@@ -47,6 +51,8 @@ export function ControlesBuscador({
   radio: number;
   /** Radio guardado en el perfil: es el que vuelve al limpiar los filtros. */
   radioPorDefecto: number;
+  /** Categoría del profesional: la que se muestra mientras no elija otra o "Todas" (ver `categoriaDeBusqueda`). Sin ella (público) no hay una por defecto. */
+  categoriaPropia?: CategoriaDocente;
   conUbicacion: boolean;
   modo: "todas" | "rapidas";
   /** Sitio público (sin sesión): sin rango de distancia ni favoritos. */
@@ -79,6 +85,7 @@ export function ControlesBuscador({
         modo={modo}
         radio={radio}
         radioPorDefecto={radioPorDefecto}
+        categoriaPropia={categoriaPropia}
         conUbicacion={conUbicacion}
         publico={publico}
         reinicios={reinicios}
@@ -427,6 +434,7 @@ function PanelFiltrosApp({
   modo,
   radio,
   radioPorDefecto,
+  categoriaPropia,
   conUbicacion,
   publico,
   reinicios,
@@ -437,6 +445,7 @@ function PanelFiltrosApp({
   modo: "todas" | "rapidas";
   radio: number;
   radioPorDefecto: number;
+  categoriaPropia?: CategoriaDocente;
   conUbicacion: boolean;
   publico: boolean;
   reinicios: number;
@@ -444,7 +453,11 @@ function PanelFiltrosApp({
   limpiar: () => void;
 }) {
   const [abierto, setAbierto] = useState(false);
-  const activos = Object.entries(filtros).filter(([clave, valor]) => clave !== "vista" && valor !== undefined).length;
+  // La categoría que se está viendo: la elegida o, sin elegir, la del profesional. Solo cuenta como filtro puesto si no es esa.
+  const categoriaVista = categoriaDeBusqueda(filtros.categoria, categoriaPropia);
+  const activos =
+    Object.entries(filtros).filter(([clave, valor]) => clave !== "vista" && clave !== "categoria" && valor !== undefined).length +
+    (categoriaVista !== categoriaPropia ? 1 : 0);
 
   const opcion = (activa: boolean, color: string, punto: React.ReactNode, texto: string, onClick: () => void) => (
     <button
@@ -520,20 +533,21 @@ function PanelFiltrosApp({
         <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
           <legend className="mb-2 p-0 text-[12px] font-semibold tracking-[.08em] text-apagado uppercase">Categoría</legend>
           {opcion(
-            !filtros.categoria,
+            categoriaVista === undefined,
             "bg-navy-50 ring-navy-700/30",
             <span aria-hidden className="size-2.5 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)]" />,
             "Todas",
-            () => aplicar({ categoria: null }),
+            // Con una categoría propia, "Todas" tiene que pedirse explícitamente: sin elegir nada se ve la propia.
+            () => aplicar({ categoria: categoriaPropia ? CATEGORIA_TODAS : null }),
           )}
           {CATEGORIAS.map((c) => (
             <div key={c}>
               {opcion(
-                filtros.categoria === c,
+                categoriaVista === c,
                 COLOR_CATEGORIA[c].activa,
                 <span aria-hidden className={cn("size-2.5 flex-none rounded-full", COLOR_CATEGORIA[c].punto)} />,
                 ETIQUETA_FILTRO_CATEGORIA[c],
-                () => aplicar({ categoria: c }),
+                () => aplicar({ categoria: c === categoriaPropia ? null : c }),
               )}
             </div>
           ))}

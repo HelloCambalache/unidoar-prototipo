@@ -144,7 +144,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
             },
             {
               pasos: [
-                "**Entrevista:** desde la ficha elegí día y hora. El profesional recibe un aviso y responde **Voy** o **No puedo**; ves su respuesta en la tarjeta («confirmó ✓» o «No puede ir: reprogramá»). Si cambiás o quitás la entrevista, su respuesta se borra.",
+                "**Entrevista:** desde la ficha elegí día y hora. El profesional recibe un aviso y responde **Voy** o **No puedo**; cuando responde te llega un aviso por campanita y por mail, y ves su respuesta en la tarjeta («confirmó ✓» o «No puede ir: reprogramá»). Si cambiás o quitás la entrevista, su respuesta se borra.",
                 "**Contratar:** tocá **Contratar** en la ficha. Podés cerrar la búsqueda en el mismo paso (si todavía necesitás cubrir más cargos, destildalo). Al contratar avisamos a la persona; si la búsqueda se cierra, avisamos al resto.",
               ],
             },
@@ -329,7 +329,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
             {
               lista: [
                 "**Contraseña:** podés cambiarla cuando quieras; se cierran tus otras sesiones.",
-                "**Avisos por mail:** podés apagar el mail que avisa de postulantes nuevos en tus búsquedas. Los de facturación y de tu cuenta se envían siempre, y la campanita sigue avisando (las respuestas a tus entrevistas llegan solo por la campanita).",
+                "**Avisos por mail:** podés apagar los mails que avisan de postulantes nuevos en tus búsquedas y de las respuestas a tus entrevistas. Los de facturación y de tu cuenta se envían siempre, y la campanita sigue avisando.",
                 "**Email de acceso:** no se cambia desde la app; escribinos por [Contacto](/contacto).",
                 "**Darse de baja:** el pedido lo procesa el equipo. Se borran tu equipo, tus búsquedas con sus postulantes, tus cursos y tus datos, pero **se conservan los datos fiscales y las facturas** (nombre, CUIT, condición fiscal, domicilio). Una cuenta dada de baja no se reactiva: si volvés, se crea una nueva.",
               ],

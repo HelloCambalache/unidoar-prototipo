@@ -36,6 +36,8 @@ export type DatosDe = {
   M26: { institucion: string; puesto: string; ruta: string };
   M27: { institucion: string; puesto: string; inicio: string | null; ruta: string };
   M30: { busqueda: string; rapida: boolean; ruta: string };
+  /** El profesional respondió «Voy» o «No puedo» a la entrevista que agendó la institución. `mensaje` es lo que escribió (p. ej. otro día que le quede bien). */
+  M35: { profesional: string; puesto: string; respuesta: "voy" | "no_puedo"; cuando: string; mensaje: string | null; ruta: string };
   M50: { institucion: string; periodo: string; monto: string; vence: string };
   M51: { institucion: string; periodo: string; monto: string; vence: string };
   /** `segundoAviso`: ya pasó más de una semana del vencimiento. */
@@ -340,6 +342,29 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       ],
       boton: { texto: "Ver postulantes", ruta: d.ruta },
     }),
+  },
+  M35: {
+    grupo: "contratacion",
+    remitente: "app",
+    contenido: (d) => {
+      const va = d.respuesta === "voy";
+      return {
+        asunto: va ? `${d.profesional} confirmó la entrevista para ${d.puesto}` : `${d.profesional} no puede ir a la entrevista para ${d.puesto}`,
+        previa: va ? `Va a la entrevista del ${d.cuando}.` : `No puede ir a la entrevista del ${d.cuando}.`,
+        titulo: va ? "Confirmó la entrevista" : "No puede ir a la entrevista",
+        parrafos: [
+          va
+            ? [n(d.profesional), " confirmó que va a la entrevista para ", n(d.puesto), "."]
+            : [n(d.profesional), " avisó que no puede ir a la entrevista para ", n(d.puesto), "."],
+          ["La entrevista está agendada para: ", n(d.cuando)],
+          ...(va ? [] : [["Podés proponerle otro día desde el tablero de postulantes: al reprogramarla, le llega el aviso con la fecha nueva."]]),
+          // "Su mensaje:" va al final, justo antes de la cita que lo muestra.
+          ...(d.mensaje ? [["Su mensaje:"]] : []),
+        ],
+        cita: d.mensaje ?? undefined,
+        boton: { texto: va ? "Ver postulantes" : "Reprogramar la entrevista", ruta: d.ruta },
+      };
+    },
   },
 
   /* ───────── Facturación y plan ───────── */

@@ -231,7 +231,9 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
     suplenciaVence = `${suplencias.length > 1 ? "una vence" : "vence"} en ${cuando}`;
   }
 
-  const recomendadas = [...candidatas]
+  // Solo de su categoría: una búsqueda de guardavidas no es una recomendación para quien enseña Lengua, por pocas que haya.
+  const recomendadas = candidatas
+    .filter(({ b }) => b.categoria === docente.categoria)
     .sort((x, y) => y.porcentaje - x.porcentaje || (x.km ?? Infinity) - (y.km ?? Infinity))
     .slice(0, CUATRO_POR_FILA)
     .map(
