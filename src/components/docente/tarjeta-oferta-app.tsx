@@ -79,8 +79,15 @@ export function TarjetaOfertaApp({
         {oferta.descripcion && (
           <p className="m-0 line-clamp-2 text-[13px] leading-normal text-apagado">{oferta.descripcion}</p>
         )}
-        {(oferta.horario || oferta.postulacion) && (
+        {(oferta.horario || oferta.postulacion || oferta.deSuMateria) && (
           <div className="mt-auto flex flex-wrap gap-1.5">
+            {/* Coincide con una asignatura del perfil: por eso va entre las primeras de su grupo. */}
+            {oferta.deSuMateria && (
+              <Insignia tono="verde" className="h-8 px-3 text-[12.5px]">
+                <Icono nombre="tilde" tamano={13} trazo={2.4} />
+                Tu materia
+              </Insignia>
+            )}
             {oferta.horario && (
               <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-linea bg-white px-3 text-[12.5px] font-medium text-tinta-2">
                 <Icono nombre="reloj" tamano={13} trazo={2} className="text-apagado" />

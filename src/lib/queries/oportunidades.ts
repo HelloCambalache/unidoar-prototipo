@@ -12,6 +12,7 @@ import {
   type Docente,
   type EtapaPostulacion,
 } from "@/db/schema";
+import { coincideAsignatura } from "@/lib/coincidencia";
 import { distanciaKm } from "@/lib/geo";
 import { contarSedes } from "@/lib/queries/sedes";
 import { lugarDeBusqueda } from "@/lib/sedes";
@@ -60,6 +61,8 @@ export type OfertaListada = {
   favorita: boolean;
   /** Si el docente ya figura en esta búsqueda (postulado o invitado). */
   postulacion: { texto: string; tono: TonoInsignia } | null;
+  /** La materia de la búsqueda coincide con una asignatura del perfil del profesional (sin perfil, siempre false). */
+  deSuMateria: boolean;
 };
 
 export type ResultadoOportunidades = {
@@ -158,7 +161,11 @@ export async function listarOportunidades(
   const cantidadDeSedes = await contarSedes([...new Set(filas.map((f) => f.institucion.id))]);
 
   const ofertas: OfertaListada[] = [];
+  const asignaturas = docente?.asignaturas ?? [];
   for (const { busqueda: b, institucion: i, sede } of filas) {
+    const deSuMateria = coincideAsignatura(b.disciplina, asignaturas);
+    // «Solo mi materia» (solo con perfil: la pública no tiene materias a las que ceñirse).
+    if (filtros.materia === "1" && docente && !deSuMateria) continue;
     // Los kilómetros, el mapa y la zona salen de la sede de la búsqueda (o, sin sede, de la institución).
     const lugar = lugarDeBusqueda(sede, i);
     const km = origen && lugar.lat != null && lugar.lng != null ? distanciaKm(origen, { lat: lugar.lat, lng: lugar.lng }) : null;
@@ -183,11 +190,11 @@ export async function listarOportunidades(
       km,
       favorita: idsFavoritas.has(b.id),
       postulacion: estado ? { texto: estado.texto, tono: estado.tono } : null,
+      deSuMateria,
     });
   }
 
   // Las rápidas primero; dentro de cada grupo, las de su materia y, entre iguales, las más cercanas.
-  const asignaturas = docente?.asignaturas ?? [];
   ofertas.sort((a, b) => compararOfertas(a, b, asignaturas));
 
   return { ofertas, radio, conUbicacion };

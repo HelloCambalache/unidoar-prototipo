@@ -23,6 +23,8 @@ export const filtrosOportunidadesSchema = z.object({
   tipo: z.enum(TIPOS_BUSQUEDA).optional().catch(undefined),
   radio: z.coerce.number().int().min(RADIO_MIN).max(RADIO_MAX).optional().catch(undefined),
   rapidas: z.literal("1").optional().catch(undefined),
+  /** «Solo mi materia»: deja solo las búsquedas que coinciden con las asignaturas del perfil del profesional (sin cuenta no hace nada). */
+  materia: z.literal("1").optional().catch(undefined),
   favoritos: z.literal("1").optional().catch(undefined),
   verificadas: z.literal("1").optional().catch(undefined),
   vista: z.enum(["lista", "mapa"]).optional().catch(undefined),

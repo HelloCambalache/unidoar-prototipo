@@ -80,6 +80,7 @@ export async function BuscadorOportunidades({
         radio={radio}
         radioPorDefecto={docente.radioKm}
         categoriaPropia={docente.categoria}
+        conMaterias={docente.asignaturas.length > 0}
         conUbicacion={conUbicacion}
         modo={modo}
         lectura={lecturaVista}
@@ -109,7 +110,12 @@ export async function BuscadorOportunidades({
                 : `Cuando una institución publique una búsqueda de ${miCategoria} que te sirva, la vas a ver acá.`
             }
             accion={
-              soloMiCategoria ? (
+              // El interruptor «Solo mi materia» puede dejar la lista vacía: se ofrece sacarlo antes que ampliar la categoría.
+              filtros.materia ? (
+                <BotonLink variante="secundario" tamano="sm" href={hrefOportunidades(base, filtros, { materia: null })}>
+                  Ver también las de otras materias
+                </BotonLink>
+              ) : soloMiCategoria ? (
                 <BotonLink variante="secundario" tamano="sm" href={hrefTodasLasCategorias}>
                   Ver las de todas las categorías
                 </BotonLink>

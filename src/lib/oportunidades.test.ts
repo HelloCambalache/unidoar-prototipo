@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { categoriaDeBusqueda, compararOfertas, leerFiltrosOportunidades, urgentesPrimero } from "@/lib/oportunidades";
+import { categoriaDeBusqueda, compararOfertas, hrefOportunidades, leerFiltrosOportunidades, urgentesPrimero } from "@/lib/oportunidades";
 
 const o = (id: string, rapida: boolean, postulacion: unknown = null) => ({ id, rapida, postulacion });
 
@@ -33,6 +33,20 @@ describe("leerFiltrosOportunidades: categoría", () => {
     assert.equal(leerFiltrosOportunidades({ categoria: "todas" }).categoria, "todas");
     assert.equal(leerFiltrosOportunidades({ categoria: "cualquiera" }).categoria, undefined);
     assert.equal(leerFiltrosOportunidades({}).categoria, undefined);
+  });
+});
+
+describe("leerFiltrosOportunidades: «Solo mi materia»", () => {
+  it("acepta materia=1 y descarta cualquier otro valor", () => {
+    assert.equal(leerFiltrosOportunidades({ materia: "1" }).materia, "1");
+    assert.equal(leerFiltrosOportunidades({ materia: "0" }).materia, undefined);
+    assert.equal(leerFiltrosOportunidades({ materia: "si" }).materia, undefined);
+    assert.equal(leerFiltrosOportunidades({}).materia, undefined);
+  });
+
+  it("viaja en la dirección con los demás filtros y se quita con null", () => {
+    assert.equal(hrefOportunidades("/docente/oportunidades", { materia: "1", nivel: "Primario" }), "/docente/oportunidades?materia=1&nivel=Primario");
+    assert.equal(hrefOportunidades("/docente/oportunidades", { materia: "1", nivel: "Primario" }, { materia: null }), "/docente/oportunidades?nivel=Primario");
   });
 });
 

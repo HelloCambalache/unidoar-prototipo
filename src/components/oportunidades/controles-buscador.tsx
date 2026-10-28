@@ -35,6 +35,7 @@ export function ControlesBuscador({
   radio,
   radioPorDefecto,
   categoriaPropia,
+  conMaterias = false,
   conUbicacion,
   modo,
   publico = false,
@@ -53,6 +54,8 @@ export function ControlesBuscador({
   radioPorDefecto: number;
   /** Categoría del profesional: la que se muestra mientras no elija otra o "Todas" (ver `categoriaDeBusqueda`). Sin ella (público) no hay una por defecto. */
   categoriaPropia?: CategoriaDocente;
+  /** El profesional tiene asignaturas cargadas en su perfil: solo entonces se ofrece «Solo mi materia». */
+  conMaterias?: boolean;
   conUbicacion: boolean;
   modo: "todas" | "rapidas";
   /** Sitio público (sin sesión): sin rango de distancia ni favoritos. */
@@ -86,6 +89,7 @@ export function ControlesBuscador({
         radio={radio}
         radioPorDefecto={radioPorDefecto}
         categoriaPropia={categoriaPropia}
+        conMaterias={conMaterias}
         conUbicacion={conUbicacion}
         publico={publico}
         reinicios={reinicios}
@@ -449,6 +453,7 @@ function PanelFiltrosApp({
   radio,
   radioPorDefecto,
   categoriaPropia,
+  conMaterias,
   conUbicacion,
   publico,
   reinicios,
@@ -460,6 +465,7 @@ function PanelFiltrosApp({
   radio: number;
   radioPorDefecto: number;
   categoriaPropia?: CategoriaDocente;
+  conMaterias: boolean;
   conUbicacion: boolean;
   publico: boolean;
   reinicios: number;
@@ -589,6 +595,15 @@ function PanelFiltrosApp({
               onCambio={() => aplicar({ rapidas: filtros.rapidas ? null : "1" })}
               app
               urgente
+            />
+          )}
+          {!publico && conMaterias && (
+            <Interruptor
+              activo={filtros.materia === "1"}
+              etiqueta="Solo mi materia"
+              detalle="Las que coinciden con las asignaturas de tu perfil"
+              onCambio={() => aplicar({ materia: filtros.materia ? null : "1" })}
+              app
             />
           )}
           <Interruptor
