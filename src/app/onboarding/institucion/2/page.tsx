@@ -13,7 +13,7 @@ import { catalogoParaNavegador } from "@/lib/planes";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
 import { cuposDeFundadoras } from "@/lib/queries/fundadoras";
-import { codigoPrecargado } from "@/lib/queries/referidos";
+import { hayCodigoRecordado } from "@/lib/queries/referidos";
 
 export const metadata: Metadata = { title: "Tu institución" };
 
@@ -50,10 +50,9 @@ export default async function PasoInstitucion2() {
   ]);
   // Una cuenta que vuelve a este paso y ya es fundadora lo sigue viendo así aunque el cupo se haya completado con ella.
   const yaEsFundadora = institucion?.plan === "fundador";
-  // El código de referido se escribe en el paso 1. Acá vuelve solo si hay uno anotado (por el enlace o por el registro) y solo al crear la institución
-  // (después ya no se anota nada): para confirmarlo, cambiarlo o dejarlo vacío.
-  const precargado = institucion ? "" : await codigoPrecargado();
-  const referido = precargado ? { precargado } : null;
+  // El código de referido se escribe en el paso 1. Acá vuelve el campo (siempre vacío) solo si ya hay un código anotado por un enlace y solo al crear
+  // la institución (después ya no se anota nada): para poder cambiarlo; vacío vale el anotado.
+  const referido = !institucion && (await hayCodigoRecordado()) ? { recordado: true as const } : null;
 
   const inicial = {
     nombre: institucion?.nombre,

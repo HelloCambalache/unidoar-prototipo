@@ -33,6 +33,20 @@ describe("el buscador único de profesionales (lo escrito en ?q=)", () => {
     assert.equal(f.texto, "");
   });
 
+  it("un filtro y un nombre juntos: 'inglés Pérez' filtra por inglés y busca a Pérez", () => {
+    const f = leer({ q: "inglés Pérez" });
+    assert.deepEqual(f.disciplinas, ["Inglés"]);
+    assert.equal(f.texto, "Pérez");
+    assert.equal(leer({ q: "ingles perez" }).texto, "perez");
+  });
+
+  it("al tocar un filtro después, el nombre de la frase no se pierde: pasa a la URL", () => {
+    const f = leer({ q: "inglés Pérez" });
+    const volver = new URL(hrefBuscador("/institucion/buscar-docentes", f, { soloVerificados: true }), "https://x.test").searchParams;
+    assert.equal(volver.get("texto"), "Pérez");
+    assert.deepEqual(volver.getAll("disc"), ["Inglés"]);
+  });
+
   it("puro relleno no busca nada", () => {
     assert.equal(leer({ q: "hola, necesito un profe" }).texto, "");
   });

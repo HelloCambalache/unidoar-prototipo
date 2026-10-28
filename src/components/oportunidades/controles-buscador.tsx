@@ -331,7 +331,16 @@ function RangoDeBusqueda({
 }
 
 /** Lo que se entendió de lo escrito en el buscador (ver `leerFraseDeTrabajo`). */
-export type LecturaDelBuscador = { frase: string; leido: string[]; reconocido: boolean; texto: string; sinEntender: string[] };
+export type LecturaDelBuscador = {
+  frase: string;
+  leido: string[];
+  reconocido: boolean;
+  /** El texto que se está buscando además de los filtros ("" si no hay, o si no se encontró nada con él: ver `sinResultadosConTexto`). */
+  texto: string;
+  sinEntender: string[];
+  /** El texto que, junto con esos filtros, no encontró nada: se muestran los resultados de los filtros solos y se avisa. */
+  sinResultadosConTexto?: string | null;
+};
 
 /**
  * El buscador único: un solo campo para escribir una institución, una materia o contar qué se busca ("suplencia de inglés,
@@ -405,10 +414,15 @@ function BuscadorUnico({
           <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
             Limpiar
           </Link>
+          {lectura.sinResultadosConTexto && (
+            <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
+              No encontramos «{lectura.sinResultadosConTexto}» junto con esos filtros: te mostramos todo lo que coincide con el resto de lo que
+              escribiste.
+            </p>
+          )}
           {lectura.reconocido && lectura.sinEntender.length > 0 && (
             <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
-              No pudimos aplicar como filtro: {lectura.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es el nombre de una institución,
-              buscalo solo, sin el resto de la frase.
+              No pudimos aplicar: {lectura.sinEntender.map((p) => `«${p}»`).join(", ")}. Si querés afinar la búsqueda, usá los filtros de al lado.
             </p>
           )}
         </div>

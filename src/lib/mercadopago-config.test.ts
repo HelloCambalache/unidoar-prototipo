@@ -65,8 +65,9 @@ describe("configuración de Mercado Pago", () => {
     assert.equal(secretoDelWebhook({ MP_WEBHOOK_SECRET: "  " }), undefined);
   });
 
-  it("solo los avisos de suscripción que usamos", () => {
+  it("solo los avisos que usamos: las suscripciones y los pagos del semestre", () => {
+    assert.deepEqual([...AVISOS_QUE_USAMOS], ["subscription_preapproval", "subscription_authorized_payment", "payment"]);
     for (const t of AVISOS_QUE_USAMOS) assert.equal(esAvisoQueUsamos(t), true, t);
-    for (const t of ["payment", "subscription_preapproval_plan", "", null, undefined, 3]) assert.equal(esAvisoQueUsamos(t), false, String(t));
+    for (const t of ["subscription_preapproval_plan", "merchant_order", "point_integration_wh", "", null, undefined, 3]) assert.equal(esAvisoQueUsamos(t), false, String(t));
   });
 });

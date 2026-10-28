@@ -12,8 +12,8 @@ import { sesionPublica, type SesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
 import { hrefOportunidades, RADIO_MAX, urgentesPrimero } from "@/lib/oportunidades";
 import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
-import { listarOportunidades, type OfertaListada } from "@/lib/queries/oportunidades";
-import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
+import type { OfertaListada } from "@/lib/queries/oportunidades";
+import { filtrosConFrase, listarOportunidadesConFrase } from "@/lib/queries/oportunidades-frase";
 
 export const metadata: Metadata = {
   title: "Búsquedas abiertas",
@@ -42,11 +42,17 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
   const sp = await searchParams;
   // Sin cuenta no hay ubicación ni favoritas: esos parámetros de la URL se ignoran. La vista (lista o mapa) sí se respeta.
   const { filtros: delUsuario, lectura } = await filtrosConFrase(sp, { publico: true });
-  const filtros = { ...delUsuario, radio: undefined, favoritos: undefined };
-  const vista = filtros.vista === "mapa" ? "mapa" : "lista";
+  const pedidos = { ...delUsuario, radio: undefined, favoritos: undefined };
+  const vista = pedidos.vista === "mapa" ? "mapa" : "lista";
   const pedida = Math.max(1, Number.parseInt(primero(sp.pagina) ?? "1", 10) || 1);
 
-  const [{ ofertas }, sesion] = await Promise.all([listarOportunidades(null, null, filtros), sesionPublica()]);
+  const [{ ofertas, sinResultadosConTexto }, sesion] = await Promise.all([
+    listarOportunidadesConFrase(null, null, pedidos, lectura),
+    sesionPublica(),
+  ]);
+  // Si el texto de la frase no encontró nada junto con los filtros, se muestran los filtros solos y la pantalla lo refleja y lo avisa.
+  const filtros = sinResultadosConTexto ? { ...pedidos, q: lectura?.qSinTexto } : pedidos;
+  const lecturaVista = lectura && sinResultadosConTexto ? { ...lectura, texto: "", sinResultadosConTexto } : lectura;
 
   const total = ofertas.length;
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
@@ -89,7 +95,7 @@ export default async function BuscarTrabajo({ searchParams }: { searchParams: Pa
           conUbicacion={false}
           modo="todas"
           publico
-          lectura={lectura}
+          lectura={lecturaVista}
           vistaNav={
             <SelectorDeVista
               vista={vista}

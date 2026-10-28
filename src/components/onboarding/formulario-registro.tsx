@@ -33,9 +33,10 @@ export function FormularioRegistro({
   invitacion?: { institucion: string; rol: string; email: string };
   /**
    * El campo «Código de referido (opcional)», solo en el registro de una institución (no en el del profesional ni en el de una invitación al equipo).
-   * `precargado` es el código del enlace de otra institución por el que llegó la persona ("" si no vino por uno). El código viaja con el email y con Google.
+   * `recordado`: ya quedó anotado el código de una institución que la recomendó (llegó por su enlace). El campo nunca se rellena con él: se avisa.
+   * Un código escrito viaja con el email y con Google.
    */
-  referido?: { precargado: string };
+  referido?: { recordado: boolean };
 }) {
   const esDocente = rol === "docente";
   const [otroEmail, setOtroEmail] = useState(false);
@@ -142,10 +143,10 @@ export function FormularioRegistro({
         </Campo>
         {referido && !esDocente && !invitacion && (
           <CampoCodigoDeReferido
-            // Lo escrito en el envío anterior (aunque lo haya borrado) gana sobre el precargado: si lo sacó a propósito, no vuelve solo.
-            defaultValue={typeof valores.codigoReferido === "string" ? valores.codigoReferido : referido.precargado}
+            // Vacío, salvo lo que escribió en el envío anterior (React vacía los campos después de cada envío, también cuando algo falló).
+            defaultValue={typeof valores.codigoReferido === "string" ? valores.codigoReferido : ""}
             error={campos.codigoReferido}
-            ayuda={referido.precargado ? AYUDA_DEL_CODIGO_AL_REGISTRARSE.conEnlace : AYUDA_DEL_CODIGO_AL_REGISTRARSE.sinEnlace}
+            ayuda={referido.recordado ? AYUDA_DEL_CODIGO_AL_REGISTRARSE.conEnlace : AYUDA_DEL_CODIGO_AL_REGISTRARSE.sinEnlace}
           />
         )}
       </div>

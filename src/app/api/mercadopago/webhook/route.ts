@@ -1,10 +1,13 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { leerCobro } from "@/lib/debito-automatico";
 import { resumenDeError } from "@/lib/errores";
 import { esAvisoQueUsamos, mercadoPagoActivo, secretoDelWebhook } from "@/lib/mercadopago-config";
-import { comprobarAviso, ErrorDeMercadoPago, obtenerCobroMp } from "@/lib/mercadopago-cliente";
+import { comprobarAviso, ErrorDeMercadoPago, obtenerCobroMp, obtenerPagoMp } from "@/lib/mercadopago-cliente";
+import { leerPagoMp } from "@/lib/pago-semestre";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { aplicarPagoDeSemestre } from "@/lib/queries/pago-semestre";
 import { aplicarCobro } from "@/lib/queries/suscripcion";
 import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
 
@@ -20,7 +23,8 @@ type CuerpoDeAviso = { type?: unknown; data?: { id?: unknown } };
 
 /**
  * Los avisos de Mercado Pago (se carga esta dirección en su panel: Tus integraciones → Webhooks, con los avisos
- * `subscription_preapproval` y `subscription_authorized_payment`). Reglas, aprendidas también de Biomea (que ya cobra en producción):
+ * `subscription_preapproval`, `subscription_authorized_payment` y `payment`: este último es el del pago único del semestre por adelantado).
+ * Reglas, aprendidas también de Biomea (que ya cobra en producción):
  *
  * - **El aviso no decide nada.** Solo dice "pasó algo con el recurso N": se le pregunta a Mercado Pago (con nuestro token) qué es ese
  *   recurso y se actúa sobre su respuesta. Un aviso falso con un número real solo hace que leamos el estado real; con un número inventado,
@@ -69,6 +73,21 @@ export async function POST(request: Request) {
       const procesada = await procesarSuscripcionDeMp(idDelRecurso);
       const resultado = procesada?.resultado ?? "sin-cambios";
       console.info("[mercadopago] suscripción", { id: idDelRecurso, estado: procesada?.suscripcion.estado, resultado });
+      return NextResponse.json({ ok: true, resultado }, { headers: SIN_CACHE });
+    }
+
+    if (tipo === "payment") {
+      // Un pago único: el semestre por adelantado. También llegan los pagos de las suscripciones (y cualquier otro de la cuenta): no son de ningún
+      // link nuestro (`external_reference` distinto) y `aplicarPagoDeSemestre` los deja pasar sin tocar nada.
+      const pago = leerPagoMp(await obtenerPagoMp(idDelRecurso));
+      if (!pago) return NextResponse.json({ ok: true, ignorado: true }, { headers: SIN_CACHE });
+      const resultado = await aplicarPagoDeSemestre(pago);
+      if (resultado === "registrado" || resultado === "revisar" || resultado === "devuelto") {
+        // Plan y facturación de la institución y la ficha de cobros del equipo muestran otra cosa ahora.
+        revalidatePath("/institucion/plan");
+        revalidatePath("/backoffice/cobros");
+      }
+      console.info("[mercadopago] pago", { id: pago.id, estado: pago.estado, aplicado: resultado });
       return NextResponse.json({ ok: true, resultado }, { headers: SIN_CACHE });
     }
 

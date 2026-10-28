@@ -53,10 +53,12 @@ describe("la frase de un profesional que busca trabajo", () => {
     assert.deepEqual(r.sinEntender, ["Música"]);
   });
 
-  it("una zona no es un filtro de esta pantalla: se avisa en vez de ignorarla", () => {
+  it("una zona no es un filtro de esta pantalla: se busca como texto junto con la materia", () => {
     const r = leer("profe de inglés en olivos");
-    assert.equal(r.filtros.q, "Inglés");
-    assert.deepEqual(r.sinEntender, ["olivos"]);
+    assert.equal(r.filtros.q, "Inglés olivos");
+    assert.equal(r.texto, "olivos");
+    assert.equal(r.qSinTexto, "Inglés", "si con el texto no hay nada, se muestra lo de la materia sola");
+    assert.deepEqual(r.sinEntender, []);
   });
 
   it("favoritos solo existe con cuenta", () => {
@@ -88,11 +90,35 @@ describe("el buscador único del profesional: lo que no pide filtros se busca co
     assert.deepEqual(r.leido, ["Inglés"]);
   });
 
-  it("si la frase pide filtros, lo que sobra se avisa y no se busca", () => {
-    const r = leer("profe de inglés en olivos");
-    assert.equal(r.texto, "");
-    assert.deepEqual(r.filtros, { q: "Inglés" });
-    assert.deepEqual(r.sinEntender, ["olivos"]);
+  it("si la frase pide filtros, lo que sobra se busca además: la materia y la institución", () => {
+    const r = leer("inglés San Andrés");
+    assert.equal(r.texto, "San Andrés");
+    assert.deepEqual(r.filtros, { q: "Inglés San Andrés" });
+    assert.equal(r.qSinTexto, "Inglés");
+    assert.deepEqual(r.leido, ["Inglés"]);
+    assert.deepEqual(r.sinEntender, []);
+  });
+
+  it("el nombre se busca aunque se escriba en minúsculas y sin tildes", () => {
+    const r = leer("ingles perez");
+    assert.deepEqual(r.filtros, { q: "Inglés perez" });
+  });
+
+  it("junto con otros filtros, el texto no pisa nada", () => {
+    const r = leer("inglés Pérez para primaria, de mañana");
+    assert.deepEqual(r.filtros, { q: "Inglés Pérez", nivel: "Primario", turno: "Mañana" });
+    assert.equal(r.qSinTexto, "Inglés");
+  });
+
+  it("sin materia, el texto solo es el q y no hay nada que relajar", () => {
+    const r = leer("colegio San Andrés");
+    assert.equal(r.filtros.q, "San Andrés");
+    assert.equal(r.qSinTexto, undefined);
+  });
+
+  it("el q combinado nunca pasa de 80 caracteres (el largo máximo de la URL)", () => {
+    const r = leer("inglés Alfabeto Bibliografia Circunferencia Dimension Equivalencia Fotosintesis Geografia");
+    assert.ok((r.filtros.q ?? "").length <= 80);
   });
 
   it("sin palabras propias no hay texto", () => {

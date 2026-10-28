@@ -28,7 +28,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               ],
             },
             {
-              p: "Podés usar **Guardar y salir** en cualquier paso y retomar más tarde. Si otra institución te recomendó UNIDOAR, podés entrar por su enlace o, si solo te pasó el código, escribirlo en el campo «Código de referido» de **Tu acceso** (el primer paso): eso queda registrado para que ella reciba su beneficio (ver [Referidos](/ayuda/instituciones/referidos)). En el segundo paso lo vas a ver anotado, por si querés cambiarlo.",
+              p: "Podés usar **Guardar y salir** en cualquier paso y retomar más tarde. Si otra institución te recomendó UNIDOAR, podés entrar por su enlace o, si solo te pasó el código, escribirlo en el campo «Código de referido» de **Tu acceso** (el primer paso): eso queda registrado para que ella reciba su beneficio (ver [Referidos](/ayuda/instituciones/referidos)). El campo siempre arranca vacío: si entraste por el enlace, el código ya queda anotado y no hace falta que escribas nada; si solo tenés el código, escribilo vos.",
             },
             {
               p: "El equipo de UNIDOAR revisa los datos de tu institución (nombre, tipo y CUIT) y la marca como **verificada**: se ve con un sello en el catálogo. Una vez verificada, el nombre y el tipo solo los cambia el equipo: si necesitás corregirlos, escribinos por [Contacto](/contacto).",
@@ -187,7 +187,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
             },
             {
               lista: [
-                "**Un solo buscador:** escribí un nombre, una disciplina o contá qué necesitás («profe de inglés para secundario, turno mañana») y te armamos los filtros. Abajo ves qué entendimos y qué no pudimos aplicar. Un pedido urgente («para mañana mismo») te lleva a la pantalla de **Suplencias** (la que abre el botón **Búsqueda rápida**).",
+                "**Un solo buscador:** escribí un nombre, una disciplina o contá qué necesitás («profe de inglés para secundario, turno mañana») y te armamos los filtros. Lo que no es un filtro, como un nombre («inglés Pérez»), se busca además de los filtros. Abajo ves qué entendimos y qué no pudimos aplicar; si con todo junto no hay resultados, te mostramos lo que dan los filtros solos y te avisamos. Un pedido urgente («para mañana mismo») te lleva a la pantalla de **Suplencias** (la que abre el botón **Búsqueda rápida**).",
                 "**Filtros y orden:** nivel, tipo de búsqueda, disciplinas y zonas, solo verificados, favoritos y orden por recomendados, experiencia, cercanía o nombre.",
                 "**Cercanía:** se mide desde la sede de la búsqueda que elijas o, sin elegir, desde tus sedes: cada profesional, a la más cercana.",
                 "**Favoritos:** la estrella guarda a alguien para tenerlo a mano.",
@@ -257,7 +257,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
                 "**Abono por institución:** según tu tipo, pagás el arancel de colegios o el de clubes y academias (según figura en Planes).",
                 "**Sedes adicionales:** la primera sede paga el abono completo y cada sede adicional paga ese abono con descuento.",
                 "**Redes y grandes cadenas:** el valor se acuerda con el equipo según el volumen. Escribinos por [Contacto](/contacto).",
-                "**Pago semestral:** pagando por adelantado el semestre tenés un descuento. Lo elegís desde Cambiar de plan y el equipo lo coordina y lo registra cuando recibe el pago.",
+                "**Pago semestral:** pagando por adelantado el semestre tenés un descuento. Lo elegís desde Cambiar de plan y el equipo lo coordina y lo registra cuando recibe el pago. Si tu cuenta lo tiene habilitado, también podés pagarlo vos mismo con Mercado Pago desde la tarjeta **Pagar el semestre por adelantado** de esa pantalla: es un pago único (no un débito mensual) y, cuando se aprueba, tu semestre queda registrado solo.",
               ],
             },
             {

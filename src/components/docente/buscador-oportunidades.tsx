@@ -17,8 +17,7 @@ import {
   urgentesPrimero,
   type FiltrosOportunidades,
 } from "@/lib/oportunidades";
-import { listarOportunidades } from "@/lib/queries/oportunidades";
-import { filtrosConFrase } from "@/lib/queries/oportunidades-frase";
+import { filtrosConFrase, listarOportunidadesConFrase } from "@/lib/queries/oportunidades-frase";
 
 const BASES = {
   todas: "/docente/oportunidades",
@@ -38,12 +37,15 @@ export async function BuscadorOportunidades({
 }) {
   const { usuario, docente } = await requerirDocente();
   const base = BASES[modo];
-  // `filtros` es lo que está en la URL; la pantalla de rápidas agrega el suyo solo para consultar.
+  // `pedidos` es lo que está en la URL; la pantalla de rápidas agrega el suyo solo para consultar.
   const { filtros: delUsuario, lectura } = await filtrosConFrase(params);
-  const filtros: FiltrosOportunidades = { ...delUsuario, ...(modo === "rapidas" && { rapidas: undefined }) };
-  const consulta: FiltrosOportunidades = modo === "rapidas" ? { ...filtros, rapidas: "1" } : filtros;
+  const pedidos: FiltrosOportunidades = { ...delUsuario, ...(modo === "rapidas" && { rapidas: undefined }) };
+  const consulta: FiltrosOportunidades = modo === "rapidas" ? { ...pedidos, rapidas: "1" } : pedidos;
 
-  const { ofertas, radio, conUbicacion } = await listarOportunidades(docente, usuario.id, consulta);
+  const { ofertas, radio, conUbicacion, sinResultadosConTexto } = await listarOportunidadesConFrase(docente, usuario.id, consulta, lectura);
+  // Si el texto de la frase no encontró nada junto con los filtros, se muestran los filtros solos y la pantalla lo refleja y lo avisa.
+  const filtros: FiltrosOportunidades = sinResultadosConTexto ? { ...pedidos, q: lectura?.qSinTexto } : pedidos;
+  const lecturaVista = lectura && sinResultadosConTexto ? { ...lectura, texto: "", sinResultadosConTexto } : lectura;
   const vista = filtros.vista === "mapa" ? "mapa" : "lista";
   const hayFiltros = Object.entries(filtros).some(([clave, valor]) => clave !== "vista" && valor !== undefined);
   // Sin elegir categoría se muestran las de la suya: se avisa y se ofrece ver las de todas (`?categoria=todas`).
@@ -80,7 +82,7 @@ export async function BuscadorOportunidades({
         categoriaPropia={docente.categoria}
         conUbicacion={conUbicacion}
         modo={modo}
-        lectura={lectura}
+        lectura={lecturaVista}
         vistaNav={
           <SelectorDeVista
             vista={vista}

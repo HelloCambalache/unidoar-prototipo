@@ -11,11 +11,9 @@ import { esUuid } from "@/lib/busquedas";
 import {
   anulacionSchema,
   aprobacionSchema,
-  conflictosDeSemestre,
   errorDeFechaDePago,
   errorDeInicioDeSemestre,
   esClavePlan,
-  etiquetaDeCobertura,
   etiquetaPeriodo,
   facturaNuevaSchema,
   fechaCobroDelPeriodo,
@@ -29,19 +27,19 @@ import {
   semestreSchema,
   situacionDelMes,
   sumarMeses,
-  type FacturaConCobertura,
   type FacturaNueva,
   type PagoEfectivo,
   type SemestreAlContado,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
-import { avisoDeCobroEnMesBonificado, mesesTexto } from "@/lib/bonificacion";
+import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import { suscripcionVigente } from "@/lib/debito-automatico";
-import { pesos, type Planes } from "@/lib/planes";
-import { liberarMeses, mesesBonificadosSinCobro, tomarMesParaSemestre } from "@/lib/queries/bonificaciones";
+import { pesos } from "@/lib/planes";
+import { liberarMeses, mesesBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
+import { facturasDelSemestre, impedimentoDeSemestre, INSTITUCION_NO_ENCONTRADA, registrarSemestre, SIN_CONVENIO } from "@/lib/queries/semestre";
 import { suscripcionDe } from "@/lib/queries/suscripcion";
 import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -61,12 +59,9 @@ import { resumenDeError } from "@/lib/errores";
  */
 
 const FACTURA_NO_ENCONTRADA = "No encontramos esa factura.";
-const INSTITUCION_NO_ENCONTRADA = "No encontramos esa institución.";
 const PEDIDO_NO_ENCONTRADO = "No encontramos ese pedido.";
 const PEDIDO_ATENDIDO = "Ese pedido ya fue atendido por otra persona del equipo.";
 const SOLO_POR_BUSQUEDA = "La búsqueda puntual no tiene factura mensual: se paga cada búsqueda desde «Registrar pago de búsqueda puntual».";
-const SIN_CONVENIO =
-  "El plan Multisede se acuerda según el volumen y esta institución todavía no tiene su convenio: cargalo primero en «Precio» (Acordar un precio, convenio a medida) para poder facturar.";
 
 function revalidarCobros(institucionId?: string) {
   revalidatePath("/backoffice/cobros");
@@ -303,32 +298,6 @@ async function mensajeSiCubiertoPorSemestre(ejecutor: Ejecutor, institucionId: s
   return hasta ? `${etiquetaPeriodo(periodo)} ya está cubierto por un semestre pago hasta ${etiquetaPeriodo(hasta).toLowerCase()}.` : null;
 }
 
-/** Las facturas de la institución que importan para un semestre: las de la ventana y las anteriores que podrían llegar a cubrirla. */
-async function facturasDelSemestre(ejecutor: Ejecutor, institucionId: string, periodo: string, meses: number) {
-  return ejecutor
-    .select({ id: facturas.id, periodo: facturas.periodo, estado: facturas.estado, mesesCubiertos: facturas.mesesCubiertos, monto: facturas.monto })
-    .from(facturas)
-    .where(and(eq(facturas.institucionId, institucionId), gte(facturas.periodo, sumarMeses(periodo, -11)), lte(facturas.periodo, sumarMeses(periodo, meses - 1))));
-}
-
-/** Qué impide registrar el semestre (null si se puede): un plan que no es mensual, meses ya pagos o facturas sin pagar adentro. */
-function impedimentoDeSemestre(P: Planes, plan: string, periodo: string, meses: number, cercanas: FacturaConCobertura[]) {
-  if (!esClavePlan(plan) || P.planDe(plan).periodo !== "mes") {
-    return { error: "El semestre al contado es para planes con abono mensual: el plan de esta institución no lo tiene (se paga por adelantado o por búsqueda)." };
-  }
-  const { pagos, impagas } = conflictosDeSemestre(periodo, meses, cercanas);
-  const lista = (ps: string[]) => ps.map(etiquetaPeriodo).join(", ");
-  if (pagos.length > 0) {
-    const error = `${lista(pagos)} ya ${pagos.length === 1 ? "figura" : "figuran"} como pago: elegí otro mes para que empiece el semestre.`;
-    return { error, campos: { periodo: error } };
-  }
-  if (impagas.length > 0) {
-    const error = `Hay facturas sin pagar dentro de esos meses (${lista(impagas)}): registrales el pago o elegí otro mes de inicio.`;
-    return { error, campos: { periodo: error } };
-  }
-  return null;
-}
-
 /**
  * Registra un semestre pagado al contado, en efectivo o por transferencia: la institución abona por adelantado los meses del pack (pagás 5,
  * usás 6) y queda UNA factura paga que los cubre desde el mes de inicio (`facturas.meses_cubiertos`): el cron no genera las de los meses
@@ -352,7 +321,7 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   const pagadaEn = fecha === hoy ? new Date() : new Date(`${fecha}T12:00:00Z`);
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
-  const { meses, mesesQueSePagan, mesesConReferido } = P.condiciones.pack;
+  const { meses } = P.condiciones.pack;
   // Los meses que cubre el semestre: si alguno es un mes bonificado por recomendar (la institución no lo paga), hay que confirmarlo.
   const ventana = Array.from({ length: meses }, (_, k) => sumarMeses(periodo, k));
 
@@ -381,107 +350,22 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
 
   try {
     const resultado = await transaccion(async (tx) => {
-      const [inst] = await tx
-        .select({ id: instituciones.id, nombre: instituciones.nombre, plan: instituciones.plan, diaCobro: instituciones.diaCobro })
-        .from(instituciones)
-        .where(eq(instituciones.id, institucionId))
-        .limit(1)
-        .for("update");
-      if (!inst) return fallo(INSTITUCION_NO_ENCONTRADA);
-
-      const cercanas = await facturasDelSemestre(tx, institucionId, periodo, meses);
-      const impedido = impedimentoDeSemestre(P, inst.plan, periodo, meses, cercanas);
-      if (impedido) return fallo(impedido.error, impedido.campos);
-      if (!P.precioDefinido(inst.plan, await acuerdoDe(tx, institucionId))) return fallo(SIN_CONVENIO);
-      const bonificados = await mesesBonificadosSinCobro(tx, institucionId, ventana);
-      if (bonificados.length > 0 && !cobrarMesesBonificados) {
-        const aviso = avisoDeCobroEnMesBonificado(bonificados.map(etiquetaPeriodo), "semestre");
-        return fallo(aviso, { periodo: aviso });
-      }
-
-      // Los meses bonificados que el equipo confirmó cobrar igual vuelven a quedar disponibles (antes de ver si el semestre usa uno).
-      const liberados = await liberarMeses(tx, institucionId, bonificados);
-      // Un mes bonificado por recomendar (si tiene uno y el tope de 1 por semestre lo permite) se gasta acá: queda anotado como el último mes que
-      // cubre el semestre y el semestre se paga un mes menos (`mesesConReferido` en lugar de `mesesQueSePagan`).
-      const mesBonificado = await tomarMesParaSemestre(tx, institucionId, sumarMeses(periodo, meses - 1));
-      const mesesAPagar = mesBonificado ? Math.min(mesesConReferido, mesesQueSePagan) : mesesQueSePagan;
-      const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
-      const monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesAPagar;
-      const existente = cercanas.find((f) => f.periodo === periodo);
-      let facturaId: string;
-      if (existente) {
-        facturaId = existente.id;
-        await tx
-          .update(facturas)
-          .set({ plan: inst.plan, monto, estado: "pagada", pagadaEn, medio, mesesCubiertos: meses })
-          .where(eq(facturas.id, existente.id));
-      } else {
-        const [nueva] = await tx
-          .insert(facturas)
-          .values({
-            institucionId,
-            plan: inst.plan,
-            monto,
-            periodo,
-            fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro),
-            estado: "pagada",
-            pagadaEn,
-            medio,
-            mesesCubiertos: meses,
-          })
-          .returning({ id: facturas.id });
-        facturaId = nueva!.id;
-      }
-
-      await registrarAuditoria(
-        {
-          usuarioId: admin.id,
-          accion: "factura.pagar",
-          entidad: "factura",
-          entidadId: facturaId,
-          detalle: {
-            institucionId,
-            periodo,
-            monto,
-            medio,
-            fechaPago: fecha,
-            ...(nota ? { nota } : {}),
-            ...(liberados > 0 ? { mesesBonificadosLiberados: liberados } : {}),
-            semestre: true,
-            mesesCubiertos: meses,
-            hasta: sumarMeses(periodo, meses - 1),
-            mesesQueSePagan: mesesAPagar,
-            // El mes bonificado que gastó el semestre: «Anular pago» lo suelta para que la institución no lo pierda.
-            ...(mesBonificado ? { periodoBonificado: sumarMeses(periodo, meses - 1) } : {}),
-            debitoCancelado: debitoVivo,
-            // Para poder dejar la factura como estaba si después se anula el pago (si era una impaga que se convirtió en la del semestre, con su monto de antes).
-            medioAnterior: null,
-            estadoAnterior: existente?.estado ?? null,
-            montoAnterior: existente?.monto ?? null,
-            facturaCreadaConElPago: !existente,
-            avisoALaInstitucion: avisar,
-          },
-        },
-        tx,
-      );
-      if (avisar) {
-        const hasta =etiquetaPeriodo(sumarMeses(periodo, meses - 1)).toLowerCase();
-        await avisarAVarios(tx, await destinatariosDeInstitucion(tx, institucionId), {
-          tipo: "sistema",
-          titulo: "UNIDOAR",
-          texto: `registró tu pago de ${etiquetaDeCobertura(periodo, meses)} (${pesos(monto)}${mesBonificado ? `: usamos 1 mes bonificado por recomendar y pagaste ${mesesTexto(mesesAPagar)}` : ""}). Quedás cubierto hasta ${hasta}${debitoVivo ? " y cancelamos tu débito automático" : ""}. ¡Gracias!`,
-          enlace: "/institucion/plan",
-        });
-        await correoDePagoRegistrado(tx, {
-          usuarioIds: await destinatariosDeFacturacion(tx, institucionId),
-          institucion: inst.nombre,
-          periodo,
-          mesesCubiertos: meses,
-          monto,
-          facturaId,
-        });
-      }
-      return ok({ id: facturaId });
+      // Las reglas del registro (meses ya pagos, facturas impagas, meses bonificados, monto, factura, auditoría y avisos) viven en `registrarSemestre`:
+      // las comparte con el pago único por Mercado Pago.
+      const r = await registrarSemestre(tx, {
+        P,
+        institucionId,
+        periodo,
+        medio,
+        pagadaEn,
+        fechaDelPago: fecha,
+        usuarioId: admin.id,
+        nota,
+        avisar,
+        cobrarMesesBonificados: !!cobrarMesesBonificados,
+        debitoCancelado: debitoVivo,
+      });
+      return r.ok ? ok({ id: r.facturaId }) : fallo(r.error, r.campos);
     });
     if (resultado.ok) {
       revalidarCobros(institucionId);

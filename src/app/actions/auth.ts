@@ -16,7 +16,7 @@ import {
   type EstadoAuth,
 } from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
-import { codigoDeRegistro, recordarCodigoDeReferido } from "@/lib/queries/referidos";
+import { codigoDeLaCookie, codigoDeRegistro, recordarCodigoDeReferido } from "@/lib/queries/referidos";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { COOKIE_RECUPERACION, firmarRecuperacion, recuperacionVigente, VIDA_RECUPERACION_SEGUNDOS } from "@/lib/recuperacion";
@@ -106,6 +106,8 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     return { ok: false, error: "Revisá los campos marcados.", campos, valores };
   }
 
+  // Con el campo vacío vale el que dejó el enlace de otra institución (si lo hubo): el campo ya no viene rellenado, así que vacío no es «no la quiero».
+  const referidoDeLaCuenta = codigoDeReferido ?? (traeCodigo ? await codigoDeLaCookie() : null);
   const supabase = await crearClienteServidor();
   const siguiente = PRIMER_PASO_PROTEGIDO[rolValido.data];
   const { data, error } = await supabase.auth.signUp({
@@ -119,7 +121,7 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
         ...(rolValido.data === "docente" && r.data.apellido ? { apellido: r.data.apellido } : {}),
         terminos: codificarAceptacion(),
         // Si confirma el mail desde otro dispositivo, la cookie no llega: el código viaja también en los datos de la cuenta (como los términos).
-        ...(codigoDeReferido ? { referido: codigoDeReferido } : {}),
+        ...(referidoDeLaCuenta ? { referido: referidoDeLaCuenta } : {}),
       },
     },
   });
@@ -129,7 +131,7 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
   // nuevo, y "Revisá tu mail" aclara qué hacer si ya había una cuenta (`ConfirmarMail`).
   if (emailYaRegistrado(error, data.user)) return { ok: true, confirmarEmail: r.data.email };
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
-  // El código queda en el navegador igual que con el enlace de la otra institución: el paso 2 lo muestra y al crear la institución se anota.
+  // Un código escrito queda en el navegador igual que con el enlace de la otra institución: al crear la institución se anota. Vacío no toca nada.
   if (traeCodigo) await recordarCodigoDeReferido(codigoDeReferido);
   if (!data.session) return { ok: true, confirmarEmail: r.data.email };
 

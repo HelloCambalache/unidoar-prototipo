@@ -5,7 +5,7 @@ import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
 import { PRIMER_PASO_PROTEGIDO } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
 import { PASOS_INSTITUCION, PORTADA_ONBOARDING } from "@/lib/onboarding";
-import { codigoPrecargado } from "@/lib/queries/referidos";
+import { hayCodigoRecordado } from "@/lib/queries/referidos";
 import { googleHabilitado } from "@/lib/supabase/proveedores";
 
 export const metadata: Metadata = { title: "Creá tu acceso · Institución" };
@@ -20,8 +20,9 @@ export default async function PasoInstitucion1() {
   const portada = PORTADA_ONBOARDING.institucion;
   return (
     <MarcoAcceso titulo={portada.titulo} bajada={portada.bajada} foto={PASOS_INSTITUCION["1"].fondo}>
-      {/* Si llegó con el enlace de otra institución, su código viene puesto; quien solo tiene el código lo escribe acá (vale lo mismo). */}
-      <FormularioRegistro rol="institucion" conGoogle={await googleHabilitado()} referido={{ precargado: await codigoPrecargado() }} />
+      {/* El campo del código siempre arranca vacío: quien tiene un código lo escribe (vale lo mismo que el enlace). Si llegó con el enlace de otra
+          institución, su código ya quedó anotado y el campo solo lo avisa. */}
+      <FormularioRegistro rol="institucion" conGoogle={await googleHabilitado()} referido={{ recordado: await hayCodigoRecordado() }} />
     </MarcoAcceso>
   );
 }

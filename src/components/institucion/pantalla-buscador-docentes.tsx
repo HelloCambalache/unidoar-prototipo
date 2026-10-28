@@ -5,7 +5,7 @@ import { EstadoVacio } from "@/components/app/estado-vacio";
 import { BotonBusquedaUrgente } from "@/components/institucion/boton-busqueda-urgente";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
-import { interpretarBusqueda } from "@/lib/busqueda-ia";
+import { interpretarBusqueda, palabrasSinAplicar } from "@/lib/busqueda-ia";
 import {
   filtrosActivos,
   hrefBuscador,
@@ -65,16 +65,28 @@ export async function PantallaBuscadorDocentes({
 
   // El id de la búsqueda viene de la URL: solo vale si es de esta institución.
   const contexto = inicial.busqueda ? await busquedaDeContexto(institucion.id, inicial.busqueda) : null;
-  const filtros = contexto ? inicial : { ...inicial, busqueda: null };
+  const pedidos = contexto ? inicial : { ...inicial, busqueda: null };
   const activas = await busquedasActivas(institucion.id);
   const contextoId = contexto && activas.some((a) => a.id === contexto.id) ? contexto.id : null;
   // La cercanía se mide desde la sede de la búsqueda elegida o, sin búsqueda, desde todas las sedes (cada profesional, a la más cercana).
   const puntos = puntosDeReferencia(await sedesDeInstitucion(institucion.id), contexto?.sedeId, { nombre: institucion.nombre, lat: institucion.lat, lng: institucion.lng });
 
-  const [resultado, disciplinas] = await Promise.all([
-    buscarDocentes({ puntos, usuarioId: usuario.id, filtros, rapidas, contexto, activas }),
-    disciplinasParaFiltro(filtros.categoria, filtros.disciplinas),
+  const [encontrados, disciplinas] = await Promise.all([
+    buscarDocentes({ puntos, usuarioId: usuario.id, filtros: pedidos, rapidas, contexto, activas }),
+    disciplinasParaFiltro(pedidos.categoria, pedidos.disciplinas),
   ]);
+
+  // La frase pidió filtros y además trajo un texto («inglés Pérez»): se busca todo junto. Si junto no hay nadie, se muestran los de los
+  // filtros solos y se avisa qué texto no se encontró (una palabra de más no deja la pantalla vacía). Un texto que la persona puso a mano
+  // (con los controles, `f=1`) o una frase que no pidió filtros no se relaja: ahí el vacío es la respuesta.
+  const textoVieneDeLaFrase = !!interpretacion?.reconocido && sp.f !== "1" && sp.texto === undefined && pedidos.texto !== "";
+  const soloFiltros =
+    encontrados.total === 0 && textoVieneDeLaFrase
+      ? await buscarDocentes({ puntos, usuarioId: usuario.id, filtros: { ...pedidos, texto: "" }, rapidas, contexto, activas })
+      : null;
+  const sinResultadosConTexto = soloFiltros && soloFiltros.total > 0 ? pedidos.texto : null;
+  const resultado = sinResultadosConTexto && soloFiltros ? soloFiltros : encontrados;
+  const filtros = sinResultadosConTexto ? { ...pedidos, texto: "" } : pedidos;
 
   const hayFiltros = filtrosActivos(filtros) > 0 || !!filtros.frase;
   const limpiarHref = hrefFrase(ruta, "", filtros.busqueda);
@@ -128,7 +140,16 @@ export async function PantallaBuscadorDocentes({
           rutaOtraPantalla={rutaOtra}
           rapidas={rapidas}
           filtros={filtros}
-          leido={interpretacion ? { etiquetas: interpretacion.leido, reconocido: interpretacion.reconocido, sinEntender: interpretacion.sinEntender } : null}
+          leido={
+            interpretacion
+              ? {
+                  etiquetas: interpretacion.leido,
+                  reconocido: interpretacion.reconocido,
+                  sinEntender: palabrasSinAplicar(interpretacion),
+                  sinResultadosConTexto,
+                }
+              : null
+          }
           sugerencias={sugerencias}
           puedeOrdenarPorCercania={puntos.length > 0}
         />

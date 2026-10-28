@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { reconciliarPagosDeSemestre } from "@/lib/queries/pago-semestre";
 import { cerrarPuntualesVencidas } from "@/lib/queries/puntuales";
 import { reconciliarSuscripciones } from "@/lib/queries/suscripcion-reconciliar";
 import { sincronizarSuscripciones } from "@/lib/queries/suscripcion-sincronizar";
@@ -30,8 +31,8 @@ async function paso<T>(nombre: string, fallidos: string[], fn: () => Promise<T>)
 }
 
 /**
- * Tareas diarias de cobros: cierra las búsquedas puntuales vencidas, crea las facturas del mes en curso (ver `generarFacturasDelPeriodo`) y revisa el
- * débito automático. Corre todos los días: es idempotente, así que un día que falla se recupera al siguiente y los días sin nada que hacer no tocan
+ * Tareas diarias de cobros: cierra las búsquedas puntuales vencidas, crea las facturas del mes en curso (ver `generarFacturasDelPeriodo`), revisa el
+ * débito automático y recupera los pagos de semestre por Mercado Pago cuyo aviso no llegó. Corre todos los días: es idempotente, así que un día que falla se recupera al siguiente y los días sin nada que hacer no tocan
  * la base. Cada paso va por separado (`paso`): lo que falla se reintenta mañana sin frenar lo demás, y el pedido responde error si algo falló, para que
  * se note. Se programa en vercel.json.
  */
@@ -77,6 +78,14 @@ export async function GET(request: Request) {
   const reconciliacion = await paso("reconciliar-suscripciones", fallidos, () => reconciliarSuscripciones());
   const suscripciones = await paso("sincronizar-suscripciones", fallidos, () => sincronizarSuscripciones());
 
+  // 4. Los links de pago del semestre que siguen sin pagar (llaman a Mercado Pago): si alguien pagó y el aviso nunca llegó, se registra ahora.
+  // Sin el token de Mercado Pago no toca nada (ni la base).
+  const pagosDeSemestre = await paso("reconciliar-pagos-de-semestre", fallidos, () => reconciliarPagosDeSemestre());
+  if (pagosDeSemestre && pagosDeSemestre.registrados > 0) {
+    revalidatePath("/institucion/plan");
+    revalidatePath("/backoffice/cobros");
+  }
+
   const bonificadas = resultado?.bonificadas.length ?? 0;
   console.info("Facturas automáticas", {
     periodo: resultado?.periodo,
@@ -85,6 +94,7 @@ export async function GET(request: Request) {
     omitidas: resultado?.omitidas,
     reconciliacion,
     suscripciones,
+    pagosDeSemestre,
     puntuales,
     fallidos,
   });
@@ -97,6 +107,7 @@ export async function GET(request: Request) {
       sinFacturaPrevia: resultado?.sinFacturaPrevia ?? null,
       reconciliacion,
       suscripciones,
+      pagosDeSemestre,
       puntuales,
       ...(fallidos.length > 0 ? { fallidos } : {}),
     },

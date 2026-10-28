@@ -133,6 +133,8 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       const cuando = texto("periodo") ? etiquetaDeCobertura(texto("periodo")!, meses) : "una factura";
       return `Registró el pago de ${cuando}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
     }
+    case "semestre.enlace_de_pago":
+      return `Armó el link para pagar el semestre por Mercado Pago${typeof d.monto === "number" ? ` · ${pesos(d.monto)}` : ""}`;
     case "institucion.precio_acordado": {
       // Solo montos (la nota del acuerdo es interna y no se anota): "precio de lista → abono acordado $ 48.000".
       const acuerdo = (v: unknown) => (typeof v === "object" && v !== null ? paraCalcular(v as { modalidad: string; monto: number }) : null);

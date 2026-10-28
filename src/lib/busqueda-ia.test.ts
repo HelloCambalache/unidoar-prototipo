@@ -4,6 +4,7 @@ import {
   distanciaDeEdicion,
   interpretarBusqueda,
   MAX_PALABRAS_DE_TEXTO,
+  palabrasSinAplicar,
   textoDeLaFrase,
   type VocabularioBusqueda,
 } from "@/lib/busqueda-ia";
@@ -171,17 +172,46 @@ describe("el buscador único: lo que no pide filtros se busca como texto", () =>
     assert.equal(textoDeLaFrase(leer("")), "");
   });
 
-  it("si la frase pide algún filtro, es un pedido: lo que sobra se avisa y no se busca", () => {
+  it("si la frase pide algún filtro, lo que sobra se busca además de los filtros ('inglés Pérez')", () => {
     const r = leer("inglés Pérez");
     assert.equal(r.reconocido, true);
+    assert.deepEqual(r.filtros.disciplinas, ["Inglés"]);
     assert.deepEqual(r.resto, ["Pérez"]);
-    assert.deepEqual(r.sinEntender, ["Pérez"]);
-    assert.equal(textoDeLaFrase(r), "");
+    assert.equal(textoDeLaFrase(r), "Pérez");
+    // Se busca, así que ya no es algo "sin aplicar".
+    assert.deepEqual(palabrasSinAplicar(r), []);
+  });
+
+  it("escrito en minúsculas y sin tildes también ('ingles perez')", () => {
+    const r = leer("ingles perez");
+    assert.deepEqual(r.filtros.disciplinas, ["Inglés"]);
+    assert.equal(textoDeLaFrase(r), "perez");
+  });
+
+  it("un nombre corto y un filtro: 'natación Ana'", () => {
+    const r = leer("natación Ana");
+    assert.deepEqual(r.filtros.disciplinas, ["Natación"]);
+    assert.equal(textoDeLaFrase(r), "Ana");
+  });
+
+  it("el nombre de una institución junto con la materia y la zona", () => {
+    const r = leer("inglés en Olivos para el colegio San Andrés");
+    assert.deepEqual(r.filtros.disciplinas, ["Inglés"]);
+    assert.deepEqual(r.filtros.zonas, ["Olivos"]);
+    assert.equal(textoDeLaFrase(r), "San Andrés");
   });
 
   it("una frase completa de las de antes sigue siendo solo filtros", () => {
     assert.equal(textoDeLaFrase(leer("profe de inglés para secundario, turno mañana")), "");
     assert.equal(textoDeLaFrase(leer("necesito un guardavidas para mañana mismo")), "");
+    assert.equal(textoDeLaFrase(leer("profe de inglés urgente cerca de mi colegio")), "");
+    assert.equal(textoDeLaFrase(leer("busco profesor de matemática con experiencia para secundario")), "");
+  });
+
+  it("las palabras que pasan del tope de seis no se buscan y se avisan como sin aplicar", () => {
+    const r = leer("Ana Eva Lia Mia Ada Zoe Pérez");
+    assert.equal(textoDeLaFrase(r), "Ana Eva Lia Mia Ada Zoe");
+    assert.deepEqual(palabrasSinAplicar(r), ["Pérez"]);
   });
 
   it("busca hasta seis palabras y mantiene cómo las escribió", () => {

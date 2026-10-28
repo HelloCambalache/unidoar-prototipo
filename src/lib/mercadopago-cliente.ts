@@ -5,13 +5,16 @@ import {
   MercadoPagoConfig,
   MercadoPagoError,
   MPNotFoundError,
+  Payment,
   PreApproval,
   PreApprovalPlan,
+  Preference,
   User,
   WebhookSignatureValidator,
 } from "mercadopago";
 import { cuerpoDeNuevoMonto, detalleDeRechazo, esUrlDeMercadoPago, type CobroDeMercadoPago, type cuerpoDePlan } from "@/lib/debito-automatico";
 import { secretoDelWebhook, TOLERANCIA_DE_AVISO_SEGUNDOS, tokenDeMercadoPago } from "@/lib/mercadopago-config";
+import type { CuerpoDePreferencia } from "@/lib/pago-semestre";
 
 /*
  * Lo único que habla con Mercado Pago, por el SDK oficial (`mercadopago`). El resto de la app no importa el SDK: pide estas funciones,
@@ -204,6 +207,47 @@ export async function buscarCobrosMp(suscripcionId: string): Promise<CobroDeMerc
 export async function obtenerCobroMp(id: string): Promise<CobroDeMercadoPago> {
   try {
     return (await new Invoice(configuracion()).get({ id })) as CobroDeMercadoPago;
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+/* ───────────── Pago único (Checkout Pro): el semestre por adelantado ───────────── */
+
+/** El link de pago que creó Mercado Pago: su número y la dirección (de Mercado Pago, https) donde la persona paga. */
+export type PreferenciaDeMercadoPago = { id: string; enlace: string | null };
+
+/**
+ * Crea el link de pago de un semestre (Checkout Pro). El SDK usa una clave de idempotencia por pedido, así que un reintento por un fallo de red no
+ * crea dos. El monto y la referencia salen de `cuerpoDePreferencia`, que arma el servidor.
+ */
+export async function crearPreferenciaMp(cuerpo: CuerpoDePreferencia): Promise<PreferenciaDeMercadoPago> {
+  try {
+    const r = await new Preference(configuracion()).create({ body: cuerpo });
+    if (!r.id) throw new ErrorDeMercadoPago("no-disponible", "Mercado Pago no devolvió el número del link de pago.");
+    return { id: String(r.id), enlace: esUrlDeMercadoPago(r.init_point) ? r.init_point : null };
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+/** Un pago tal cual lo informa Mercado Pago (se lee con `leerPagoMp`, que no se fía de nada que no reconozca). */
+export async function obtenerPagoMp(id: string): Promise<unknown> {
+  try {
+    return await new Payment(configuracion()).get({ id });
+  } catch (e) {
+    throw traducir(e);
+  }
+}
+
+/**
+ * Los pagos que Mercado Pago le asocia a una referencia nuestra (el número de un intento), los más nuevos primero. Es lo que permite recuperar un
+ * pago cuyo aviso nunca llegó, o confirmarlo cuando la persona vuelve de pagar sin esperar el aviso.
+ */
+export async function buscarPagosDeReferenciaMp(referencia: string): Promise<unknown[]> {
+  try {
+    const r = await new Payment(configuracion()).search({ options: { external_reference: referencia, sort: "date_created", criteria: "desc", limit: 20 } });
+    return r.results ?? [];
   } catch (e) {
     throw traducir(e);
   }

@@ -85,16 +85,30 @@ export async function institucionPorCodigo(codigo: string) {
   return fila ?? null;
 }
 
+/** El código de referido que dejó el enlace `/referido/<código>` (o el registro) en este navegador, ya normalizado; null si no hay. */
+export async function codigoDeLaCookie(): Promise<string | null> {
+  return normalizarCodigo((await cookies()).get(COOKIE_REFERIDO)?.value) ?? null;
+}
+
 /**
- * El código de referido que ya trae la persona, para precargar el campo «Código de referido» del alta: el del enlace `/referido/<código>` o el que
- * escribió en el registro (cookie `unidoar_referido`) o, si confirmó el mail desde otro dispositivo y la cookie no está, el que quedó en los datos
- * de su cuenta. "" si no hay o si ya no sirve (institución dada de baja o suspendida). No dice a quién pertenece.
+ * El código que ya quedó anotado para esta persona: el de la cookie o, si confirmó el mail desde otro dispositivo y la cookie no está, el que quedó
+ * en los datos de su cuenta (ya normalizado). null si no hay.
  */
-export async function codigoPrecargado(): Promise<string> {
-  const delNavegador = normalizarCodigo((await cookies()).get(COOKIE_REFERIDO)?.value);
-  const codigo = delNavegador ?? (await datosDeSesion().catch(() => null))?.referido ?? null;
-  if (!codigo) return "";
-  return (await institucionPorCodigo(codigo).catch(() => null)) ? codigo : "";
+async function codigoRecordado(): Promise<string | null> {
+  const delNavegador = await codigoDeLaCookie();
+  if (delNavegador) return delNavegador;
+  return normalizarCodigo((await datosDeSesion().catch(() => null))?.referido) ?? null;
+}
+
+/**
+ * ¿Ya hay un código de referido anotado (por el enlace de otra institución) que todavía sirve? Es lo que decide si el alta avisa «ya quedó
+ * anotado». **El campo «Código de referido» nunca se rellena con él** (2026-10-28: una cookie vieja de una prueba lo dejaba completado en
+ * cuentas nuevas): se avisa y listo. No dice a quién pertenece. false si ya no sirve (institución dada de baja o suspendida).
+ */
+export async function hayCodigoRecordado(): Promise<boolean> {
+  const codigo = await codigoRecordado();
+  if (!codigo) return false;
+  return !!(await institucionPorCodigo(codigo).catch(() => null));
 }
 
 /** Lo que decide el alta sobre la recomendación: el código a anotar (null: ninguno) o el error para mostrar en el campo. */
@@ -127,24 +141,23 @@ export async function codigoDeRegistro(escrito: string, claveDeTope: string): Pr
 }
 
 /**
- * Deja el código del registro en el navegador, igual que el enlace `/referido/<código>`: el paso 2 lo precarga y la recomendación se anota al crear
- * la institución. Sin código (el campo quedó vacío) saca el que hubiera: si la persona lo borró, no quiere esa recomendación.
+ * Deja el código del registro en el navegador, igual que el enlace `/referido/<código>`: la recomendación se anota al crear la institución. Sin
+ * código (el campo quedó vacío) no toca lo que hubiera: un código que dejó un enlace sigue valiendo, porque el campo ya no viene rellenado y
+ * vacío no quiere decir «no la quiero».
  */
 export async function recordarCodigoDeReferido(codigo: string | null) {
-  const jar = await cookies();
-  if (codigo) jar.set(COOKIE_REFERIDO, codigo, OPCIONES_DE_COOKIE_REFERIDO);
-  else if (jar.get(COOKIE_REFERIDO)) jar.delete(COOKIE_REFERIDO);
+  if (!codigo) return;
+  (await cookies()).set(COOKIE_REFERIDO, codigo, OPCIONES_DE_COOKIE_REFERIDO);
 }
 
 /**
- * Qué recomendación lleva el alta que se está por crear (paso 2): el código del campo «Código de referido» o, si el formulario no lo traía, el
- * de la cookie. Es lo mismo que el enlace: los dos terminan en `anotarReferidoDelAlta`. Se llama **antes** de crear la institución: un código
- * que la persona cambió o escribió y no existe vuelve como error del campo para que lo corrija (o lo deje vacío) y no se crea nada a medias.
- * El que ya venía anotado del registro no frena el alta: si ya no sirve, simplemente no se anota.
+ * Qué recomendación lleva el alta que se está por crear (paso 2): el código que la persona escribió en el campo «Código de referido» o, con el
+ * campo vacío, el que ya quedó anotado (el del enlace). Es lo mismo que el enlace: los dos terminan en `anotarReferidoDelAlta`. Se llama **antes**
+ * de crear la institución: un código escrito que no existe vuelve como error del campo para que lo corrija (o lo deje vacío) y no se crea nada a
+ * medias. El que ya venía anotado no frena el alta: si ya no sirve, simplemente no se anota.
  */
 export async function referidoDelAlta(escrito: string | null, cuentaId: string): Promise<ReferidoDelAlta> {
-  const jar = await cookies();
-  const decision = codigoParaElAlta(escrito, normalizarCodigo(jar.get(COOKIE_REFERIDO)?.value));
+  const decision = codigoParaElAlta(escrito, await codigoRecordado());
   if (decision.tipo === "ninguno") return { ok: true, codigo: null };
   if (decision.tipo === "invalido") return { ok: false, error: ERROR_DE_CODIGO_DE_REFERIDO };
   if (!decision.escrito) return { ok: true, codigo: decision.codigo };

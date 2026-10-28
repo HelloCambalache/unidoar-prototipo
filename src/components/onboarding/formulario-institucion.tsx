@@ -67,11 +67,11 @@ export function FormularioInstitucion({
   inicial: DatosForm;
   yaCreada: boolean;
   /**
-   * El campo «Código de referido»: se escribe en el paso 1 (registro) y acá solo vuelve si ya hay uno anotado, para confirmarlo, cambiarlo o dejarlo
-   * vacío (null: no se muestra, ni si ya creó la institución ni si no hay código). `precargado` es el código anotado; lo que esté en el campo al
-   * enviar es lo que vale.
+   * El campo «Código de referido»: se escribe en el paso 1 (registro) y acá solo vuelve si ya hay un código anotado por un enlace (`true`), para
+   * poder cambiarlo; nunca se rellena con él (null: no se muestra, ni si ya creó la institución ni si no hay código anotado). Lo que esté escrito en
+   * el campo al enviar es lo que vale; vacío vale el anotado.
    */
-  referido: { precargado: string } | null;
+  referido: { recordado: true } | null;
   /** La cuenta no tiene la constancia de los términos (se creó antes de que se aceptaran en el paso 1): se piden acá. */
   pedirTerminos: boolean;
   partidos: string[];
@@ -269,10 +269,10 @@ export function FormularioInstitucion({
 
         {referido && (
           <CampoCodigoDeReferido
-            // Lo escrito en el envío anterior (aunque lo haya borrado) gana sobre el anotado: si lo sacó a propósito, no vuelve solo.
-            defaultValue={valorDe(estado, { codigoReferido: referido.precargado }, "codigoReferido")}
+            // Vacío, salvo lo que escribió en el envío anterior (React vacía los campos después de cada envío, también cuando algo falló).
+            defaultValue={valorDe(estado, { codigoReferido: "" }, "codigoReferido")}
             error={campos.codigoReferido}
-            ayuda="Quedó anotado el código de la institución que te recomendó. Podés cambiarlo, o dejar el campo vacío si no querés usar ninguno."
+            ayuda="Ya quedó anotado el código de la institución que te recomendó, no hace falta que escribas nada. Si tenés otro código, escribilo acá."
           />
         )}
 

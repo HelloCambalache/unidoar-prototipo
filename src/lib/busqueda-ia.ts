@@ -34,7 +34,7 @@ export type Interpretacion = {
   sinEntender: string[];
   /**
    * Todas las palabras que quedaron sin convertir en filtro y no son relleno ("Ana", "Pérez", "ajedrez"), tal como las escribió
-   * la persona. Con ellas el buscador único busca por nombre o disciplina cuando la frase no pidió ningún filtro:
+   * la persona. Con ellas el buscador único busca por nombre o disciplina, además de los filtros que la frase haya pedido:
    * ver `textoDeLaFrase`.
    */
   resto: string[];
@@ -183,7 +183,7 @@ const RELLENO = new Set(
     "tenes tenia tenian queres tienen nivel niveles uno dos tres cuatro cinco seis siete ocho nueve diez toque toca tocar " +
     "contratar contrate contratamos incorporar sumar preferentemente preferiblemente ideal idealmente cerca zona zonas lugar lado nuestro nuestra nuestros nuestras " +
     "colegio escuela instituto club institucion buena bueno buen buenos experiencia horas hora semana semanas mes meses anos " +
-    "ano dia dias vez veces cada todo toda todos todas otro otra otros otras nada demas incluso"
+    "ano dia dias vez veces cada todo toda todos todas otro otra otros otras nada demas incluso mismo misma mismos mismas"
   ).split(" "),
 );
 
@@ -400,11 +400,20 @@ const MAX_LARGO_DE_TEXTO = 80;
 
 /**
  * Lo que una frase pide buscar por nombre, disciplina o lugar (el buscador único: un solo campo para "Ana Pérez",
- * "natación" o "profe de inglés para secundario"). Solo cuando la frase no pidió ningún filtro: si se reconoció alguno,
- * la frase se lee como un pedido y las palabras que sobran se avisan, no se buscan. Sin palabras propias (la frase era
- * puro relleno, como "hola") no hay texto que buscar.
+ * "natación" o "inglés Pérez"). Son las palabras que no se convirtieron en filtro y no son relleno, y **se buscan además de
+ * los filtros que la frase haya pedido**: "inglés Pérez" es el filtro Inglés más el texto «Pérez». Sin palabras propias (la
+ * frase era puro relleno, como "hola") no hay texto que buscar. Si la combinación no encuentra a nadie, la pantalla muestra
+ * lo que dan los filtros solos y avisa (así una palabra de más no deja la pantalla vacía).
  */
-export function textoDeLaFrase(i: Pick<Interpretacion, "reconocido" | "resto">): string {
-  if (i.reconocido) return "";
+export function textoDeLaFrase(i: Pick<Interpretacion, "resto">): string {
   return i.resto.slice(0, MAX_PALABRAS_DE_TEXTO).join(" ").slice(0, MAX_LARGO_DE_TEXTO).trim();
+}
+
+/**
+ * Las palabras "sin entender" que además NO se buscan como texto (por ejemplo las que pasan del tope de palabras): solo esas son
+ * las que hay que avisar como no aplicadas.
+ */
+export function palabrasSinAplicar(i: Pick<Interpretacion, "resto" | "sinEntender">): string[] {
+  const buscadas = new Set(textoDeLaFrase(i).split(" ").map(normalizarTexto));
+  return i.sinEntender.filter((p) => !buscadas.has(normalizarTexto(p)));
 }

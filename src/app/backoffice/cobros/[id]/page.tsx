@@ -44,6 +44,7 @@ import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
+import { intentosDeSemestreDe } from "@/lib/queries/pago-semestre";
 import { planes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -97,6 +98,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const periodosBonificados = await periodosBonificadosSinCobro(getDb(), id);
   // Con un débito automático vivo, registrar un semestre pago lo cancela (si no, Mercado Pago cobraría meses ya pagos).
   const debitoVigente = suscripcionVigente((await suscripcionDe(id))?.estado);
+  // Los links de pago del semestre por Mercado Pago de esta institución (el equipo tiene que ver sobre todo los que quedaron para revisar).
+  const intentosDeSemestre = await intentosDeSemestreDe(id);
+  const intentosParaRevisar = intentosDeSemestre.filter((x) => x.estado === "revisar");
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
@@ -169,6 +173,14 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               Ver institución →
             </Link>
           </Tarjeta>
+
+          {intentosParaRevisar.length > 0 && (
+            <div role="status" className="rounded-caja border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
+              <b className="font-semibold">Hay un pago de semestre por Mercado Pago para revisar:</b> la institución pagó (pago{" "}
+              {intentosParaRevisar.map((x) => x.pagoId ?? "sin número").join(", ")}) y no se pudo registrar solo. Mirá el detalle en «Pagos del semestre por
+              Mercado Pago», más abajo, y registrá el semestre a mano si corresponde.
+            </div>
+          )}
 
           {d.pedidosPendientes.length > 0 && (
             <div role="status" className="rounded-caja border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
@@ -341,6 +353,28 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               );
             })()}
           </Seccion>
+
+          {intentosDeSemestre.length > 0 && (
+            <Seccion titulo="Pagos del semestre por Mercado Pago">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                {intentosDeSemestre.map((x) => (
+                  <li key={x.id} className="flex flex-col gap-1 text-[13px] leading-[1.4]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Insignia tono={x.estado === "pagado" ? "verde" : x.estado === "revisar" ? "naranja" : "azul"}>
+                        {x.estado === "pagado" ? "Pagado" : x.estado === "revisar" ? "Para revisar" : "Link sin pagar"}
+                      </Insignia>
+                      <span className="font-semibold text-tinta">{pesos(x.monto)}</span>
+                      <span className="text-apagado">{haceTiempo(x.creadoEn, ahora)}</span>
+                    </div>
+                    <div className="text-apagado">
+                      {etiquetaDeCobertura(x.periodo, x.meses)} · se pagan {x.mesesAPagar} meses{x.usaMesBonificado ? " (con un mes bonificado)" : ""}
+                    </div>
+                    {x.pagoId && <div className="text-apagado">Pago de Mercado Pago: {x.pagoId}</div>}
+                  </li>
+                ))}
+              </ul>
+            </Seccion>
+          )}
 
           <Seccion titulo="Facturación">
             <div className="flex flex-col gap-2">

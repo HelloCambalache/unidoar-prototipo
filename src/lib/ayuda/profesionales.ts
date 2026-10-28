@@ -99,7 +99,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             { p: "En [Buscar trabajo](/docente/oportunidades) ves las búsquedas abiertas de las instituciones, con las urgentes primero. También podés mirarlas sin cuenta en [Búsquedas abiertas](/buscar-trabajo)." },
             {
               lista: [
-                "**Buscador único:** escribí un nombre de institución o una materia, o contá qué buscás con tus palabras (por ejemplo «suplencia de inglés en primaria, de mañana»). Entendemos materias, niveles, turnos y tipo de búsqueda, y te mostramos qué entendimos. Si algo no se pudo aplicar, te lo decimos.",
+                "**Buscador único:** escribí un nombre de institución o una materia, o contá qué buscás con tus palabras (por ejemplo «suplencia de inglés en primaria, de mañana»). Entendemos materias, niveles, turnos y tipo de búsqueda, y te mostramos qué entendimos. Lo que no es un filtro (por ejemplo el nombre de una institución, como en «inglés San Andrés») se busca igual en el puesto, la materia y la institución. Si con todo junto no hay resultados, te mostramos lo que dan los filtros solos y te avisamos.",
                 "**Tu categoría:** si no elegís otra, te mostramos las búsquedas de tu categoría (por ejemplo, Docentes), con las de tu materia primero. Para ver las de las demás, elegí **Todas** en el filtro de categoría o tocá «Ver las de todas las categorías».",
                 "**Filtros:** categoría, nivel, turno, tipo (titular, suplencia, temporada, freelance), instituciones verificadas y favoritas, y a cuántos kilómetros de tu zona.",
                 "**Lista o mapa:** cambiás la vista con el selector. En el mapa cada pin es una búsqueda y se ve el radio que elegiste.",

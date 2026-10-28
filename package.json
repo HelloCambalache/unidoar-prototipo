@@ -24,6 +24,7 @@
     "db:testimonios": "dotenv -e .env.local -- tsx src/db/testimonios-base.ts",
     "db:planes-retirar": "dotenv -e .env.local -- tsx src/db/planes-retirar.ts",
     "db:mercadopago": "dotenv -e .env.local -- tsx src/db/mercadopago-base.ts",
+    "db:semestre-mp": "dotenv -e .env.local -- tsx src/db/semestre-mp-base.ts",
     "db:mercadopago-limpiar": "dotenv -e .env.local -- tsx src/db/mercadopago-limpiar.ts",
     "db:storage": "dotenv -e .env.local -- tsx src/db/storage.ts",
     "db:setup": "pnpm db:push && pnpm db:rls && pnpm db:storage && pnpm db:seed",

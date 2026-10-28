@@ -741,6 +741,43 @@ export const planesMp = pgTable(
 );
 
 /**
+ * Cada link de pago del semestre por Mercado Pago (un pago único por adelantado, ver src/lib/pago-semestre.ts): el «intento». Guarda lo que se acordó
+ * al crearlo (monto, desde qué mes, cuántos meses cubre y si gasta un mes bonificado); el pago que avisa Mercado Pago se compara con eso. Su `id` viaja
+ * como `external_reference` y es lo único que dice de quién es el pago. Estados: `pendiente` (esperando el pago), `pagado` (se registró el semestre) y
+ * `revisar` (se pagó pero no se pudo registrar solo: lo resuelve el equipo). Creada con `pnpm db:semestre-mp`, con RLS.
+ */
+export const pagosSemestreMp = pgTable(
+  "pagos_semestre_mp",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    plan: text("plan").notNull(),
+    /** Primer mes que cubre ("AAAA-MM"). */
+    periodo: text("periodo").notNull(),
+    meses: integer("meses").notNull(),
+    mesesAPagar: integer("meses_a_pagar").notNull(),
+    /** Pesos acordados al crear el link. */
+    monto: integer("monto").notNull(),
+    usaMesBonificado: boolean("usa_mes_bonificado").notNull().default(false),
+    /** El número de la preferencia en Mercado Pago (null hasta que Mercado Pago la crea). */
+    preferenciaId: text("preferencia_id"),
+    /** La dirección de Mercado Pago donde se paga (se reutiliza mientras el link siga vigente). */
+    enlace: text("enlace"),
+    estado: text("estado").notNull().default("pendiente"),
+    /** El número del pago en Mercado Pago que se aplicó (único: un pago nunca se registra dos veces). */
+    pagoId: text("pago_id").unique(),
+    facturaId: uuid("factura_id").references(() => facturas.id, { onDelete: "set null" }),
+    pagadoEn: timestamp("pagado_en", { withTimezone: true }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("pagos_semestre_mp_institucion_idx").on(t.institucionId), index("pagos_semestre_mp_estado_idx").on(t.estado, t.creadoEn)],
+);
+export type PagoSemestreMp = typeof pagosSemestreMp.$inferSelect;
+
+/**
  * Meses bonificados por recomendar (opción B de Referidos, reglas en src/lib/bonificacion.ts): una fila por mes. Se crean al aplicar el
  * beneficio como «meses» y están **disponibles mientras `periodo` es null**; el cron (sin débito) o el cobro del débito automático los gastan
  * y les ponen el mes. Si se gastó sobre un cobro del débito (`cobro_id`), hay que devolver ese cobro a mano en Mercado Pago y se marca con

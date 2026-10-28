@@ -115,16 +115,17 @@ export type CodigoDelAlta =
   | { tipo: "codigo"; codigo: string; escrito: boolean };
 
 /**
- * Elige el código del alta. `escrito` es lo que llegó en el campo (null si el formulario no lo traía: una pantalla vieja) y `delNavegador` el de
- * la cookie del enlace (ya normalizado). El campo viene precargado con el del enlace, así que **lo que está en el campo manda**: si la persona
- * lo borra, no hay recomendación aunque la cookie siga ahí. Sin el campo, vale la cookie, como siempre.
+ * Elige el código del alta. `escrito` es lo que llegó en el campo (null si el formulario no lo traía) y `recordado` el que ya quedó anotado: el del
+ * enlace de otra institución (cookie) o, si confirmó el mail en otro dispositivo, el de los datos de su cuenta (ya normalizado). **El campo nunca
+ * viene rellenado** (2026-10-28): lo que la persona escribe gana sobre el anotado; con el campo vacío vale el anotado (el enlace anota solo, sin que
+ * tenga que escribir nada) y sin ninguno de los dos no hay recomendación. Un código escrito igual al anotado no cuenta como escrito: no frena el alta.
  */
-export function codigoParaElAlta(escrito: string | null, delNavegador: string | null): CodigoDelAlta {
-  if (escrito === null) return delNavegador ? { tipo: "codigo", codigo: delNavegador, escrito: false } : { tipo: "ninguno" };
-  if (!escrito.trim()) return { tipo: "ninguno" };
-  const codigo = codigoDeTexto(escrito);
+export function codigoParaElAlta(escrito: string | null, recordado: string | null): CodigoDelAlta {
+  const texto = escrito?.trim() ?? "";
+  if (!texto) return recordado ? { tipo: "codigo", codigo: recordado, escrito: false } : { tipo: "ninguno" };
+  const codigo = codigoDeTexto(texto);
   if (!codigo) return { tipo: "invalido" };
-  return { tipo: "codigo", codigo, escrito: codigo !== delNavegador };
+  return { tipo: "codigo", codigo, escrito: codigo !== recordado };
 }
 
 /** Cómo se guarda el código en el navegador (el enlace `/referido/<código>` y el campo del registro dejan la misma cookie, 30 días). */

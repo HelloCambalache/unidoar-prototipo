@@ -125,13 +125,18 @@ describe("código escrito a mano en el alta", () => {
     }
   });
 
-  it("el campo manda: lo escrito gana sobre la cookie y vacío significa «sin recomendación»", () => {
+  it("lo que la persona escribe gana sobre el código que dejó un enlace", () => {
     assert.deepEqual(codigoParaElAlta("AAAAAAAA", "K7M2XQ9D"), { tipo: "codigo", codigo: "AAAAAAAA", escrito: true });
-    assert.deepEqual(codigoParaElAlta("", "K7M2XQ9D"), { tipo: "ninguno" }, "lo borró a propósito");
+  });
+
+  it("el campo nunca viene rellenado: vacío vale el código del enlace y sin ninguno no hay recomendación", () => {
+    assert.deepEqual(codigoParaElAlta("", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
+    assert.deepEqual(codigoParaElAlta("   ", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
+    assert.deepEqual(codigoParaElAlta("", null), { tipo: "ninguno" });
     assert.deepEqual(codigoParaElAlta("   ", null), { tipo: "ninguno" });
   });
 
-  it("el código precargado desde el enlace no cuenta como escrito (no frena el alta si dejó de servir)", () => {
+  it("escribir el mismo código que ya estaba anotado no cuenta como escrito (no frena el alta si dejó de servir)", () => {
     assert.deepEqual(codigoParaElAlta("K7M2XQ9D", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
     assert.deepEqual(codigoParaElAlta("k7m2xq9d", "K7M2XQ9D"), { tipo: "codigo", codigo: "K7M2XQ9D", escrito: false });
   });

@@ -1,4 +1,4 @@
-import { interpretarBusqueda, textoDeLaFrase } from "@/lib/busqueda-ia";
+import { interpretarBusqueda, palabrasSinAplicar, textoDeLaFrase } from "@/lib/busqueda-ia";
 import { NIVELES, TURNOS } from "@/lib/catalogo";
 import { ETIQUETA_FILTRO_CATEGORIA, type FiltrosOportunidades } from "@/lib/oportunidades";
 
@@ -6,8 +6,9 @@ import { ETIQUETA_FILTRO_CATEGORIA, type FiltrosOportunidades } from "@/lib/opor
  * "Contanos qué buscás" para el profesional: la misma lectura de frase libre que usa la institución
  * (`interpretarBusqueda`), pero llevada a los filtros de las ofertas (`FiltrosOportunidades`). Función pura y sin
  * costo: no hay ningún modelo detrás. Solo se aplica lo que esta pantalla sabe filtrar; lo demás se devuelve en
- * `sinEntender` para decirlo, en vez de ignorarlo en silencio. Si la frase no pide ningún filtro, se busca como texto
- * (el buscador de ofertas es uno solo: la misma caja sirve para "inglés en primaria" y para "San Andrés").
+ * `sinEntender` para decirlo, en vez de ignorarlo en silencio. Las palabras que no son filtro ni relleno se buscan como texto
+ * (el buscador de ofertas es uno solo: la misma caja sirve para "inglés en primaria", para "San Andrés" y para "inglés San Andrés",
+ * que es la materia más el nombre de la institución).
  */
 
 export type LecturaDeFrase = {
@@ -17,10 +18,15 @@ export type LecturaDeFrase = {
   leido: string[];
   reconocido: boolean;
   /**
-   * Lo que se busca como texto en el puesto, la materia y la institución de las ofertas ("San Andrés"): solo cuando la frase
-   * no pidió ningún filtro (un nombre o una materia sueltos). Ya viene aplicado en `filtros.q`.
+   * Lo que se busca como texto en el puesto, la materia y la institución de las ofertas ("San Andrés"), además de los filtros
+   * que la frase pidió. Ya viene aplicado en `filtros.q` (junto con la materia, si hay).
    */
   texto: string;
+  /**
+   * `filtros.q` sin el texto, o sea solo la materia (o nada): lo que se busca si la combinación con el texto no encuentra nada y
+   * la pantalla muestra lo que dan los filtros solos.
+   */
+  qSinTexto: string | undefined;
   /** Lo que la frase pedía y no se pudo aplicar. */
   sinEntender: string[];
 };
@@ -33,7 +39,8 @@ export function leerFraseDeTrabajo(frase: string, disciplinas: string[], opcione
   const r = interpretarBusqueda(frase, { disciplinas }, { buscaTrabajo: true });
   const filtros: FiltrosOportunidades = {};
   const leido: string[] = [];
-  const sinEntender = [...r.sinEntender];
+  // Lo que se avisa como no aplicado es lo que no se pudo convertir en filtro NI se busca como texto (esto último ya se ve en «Entendimos»).
+  const sinEntender = [...palabrasSinAplicar(r)];
 
   // La materia se busca como texto en el puesto y la disciplina de la oferta: con una sola alcanza.
   const [materia, ...otras] = r.filtros.disciplinas ?? [];
@@ -84,9 +91,12 @@ export function leerFraseDeTrabajo(frase: string, disciplinas: string[], opcione
     }
   }
 
-  // El buscador es uno solo: lo escrito que no pide ningún filtro ("Colegio San Andrés", "ajedrez") se busca como texto.
+  // El buscador es uno solo: lo escrito que no es filtro ("San Andrés", "ajedrez") se busca como texto, junto con la materia si la hay:
+  // cada palabra de `q` tiene que estar en el puesto, la materia o la institución, así que «inglés San Andrés» es el inglés de esa institución.
   const texto = textoDeLaFrase(r);
-  if (texto) filtros.q = texto;
+  const qSinTexto = filtros.q;
+  // (80 es el largo máximo de `q` en la URL: un valor más largo se descartaría entero al volver a leerlo.)
+  if (texto) filtros.q = [filtros.q, texto].filter(Boolean).join(" ").slice(0, 80).trim();
 
-  return { filtros, leido, reconocido: leido.length > 0, texto, sinEntender: [...new Set(sinEntender)].slice(0, 4) };
+  return { filtros, leido, reconocido: leido.length > 0, texto, qSinTexto, sinEntender: [...new Set(sinEntender)].slice(0, 4) };
 }

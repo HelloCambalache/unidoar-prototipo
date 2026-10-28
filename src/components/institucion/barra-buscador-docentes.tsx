@@ -42,7 +42,7 @@ export function BarraBuscadorDocentes({
   rapidas: boolean;
   filtros: FiltrosDocentes;
   /** Lo que se entendió de lo escrito; null si no se escribió nada. */
-  leido: { etiquetas: string[]; reconocido: boolean; sinEntender: string[] } | null;
+  leido: { etiquetas: string[]; reconocido: boolean; sinEntender: string[]; sinResultadosConTexto: string | null } | null;
   sugerencias: string[];
   puedeOrdenarPorCercania: boolean;
 }) {
@@ -110,10 +110,15 @@ export function BarraBuscadorDocentes({
             <Link href={limpiarHref} className="ml-auto text-[12.5px] leading-none font-medium text-sutil hover:text-tinta">
               Limpiar
             </Link>
+            {leido?.sinResultadosConTexto && (
+              <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
+                No encontramos «{leido.sinResultadosConTexto}» junto con esos filtros: te mostramos todos los profesionales que coinciden con el
+                resto de lo que escribiste.
+              </p>
+            )}
             {leido && leido.reconocido && leido.sinEntender.length > 0 && (
               <p className="m-0 basis-full text-[12.5px] leading-normal text-apagado">
-                No pudimos aplicar como filtro: {leido.sinEntender.map((p) => `«${p}»`).join(", ")}. Si es un nombre, buscalo solo, sin el
-                resto de la frase; si es otra cosa, usá los filtros de al lado.
+                No pudimos aplicar: {leido.sinEntender.map((p) => `«${p}»`).join(", ")}. Si querés afinar la búsqueda, usá los filtros de al lado.
               </p>
             )}
           </div>

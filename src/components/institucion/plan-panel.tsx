@@ -28,6 +28,7 @@ export function PlanPanel({
   solicitud,
   puedeCambiar,
   formaDePago,
+  conMercadoPago,
 }: {
   /** Los planes vigentes (los lee el servidor de la base). */
   catalogo: CatalogoDePlanes;
@@ -48,6 +49,8 @@ export function PlanPanel({
   puedeCambiar: boolean;
   /** Cómo prefiere pagar el abono (el semestre por adelantado o mes a mes): se elige en «Cambiar de plan». */
   formaDePago: FormaDePago;
+  /** Se puede pagar el semestre por Mercado Pago desde esta misma pantalla (la tarjeta «Pagar el semestre por adelantado»). */
+  conMercadoPago: boolean;
 }) {
   const P = crearPlanes(catalogo);
   const toast = useToast();
@@ -255,7 +258,11 @@ export function PlanPanel({
                 <span className="text-[13px] font-normal text-apagado"> por {resumenSemestre.meses} meses</span>
               </div>
               <p className="m-0 mb-3.5 text-[13px] leading-normal text-apagado">
-                {textoDeSemestre(resumenSemestre)} Lo coordina el equipo (transferencia o efectivo); hasta entonces seguís con tu abono mensual.
+                {textoDeSemestre(resumenSemestre)}{" "}
+                {conMercadoPago
+                  ? "Lo pagás con Mercado Pago desde la tarjeta «Pagar el semestre por adelantado» de esta pantalla, o lo coordina el equipo (transferencia o efectivo)."
+                  : "Lo coordina el equipo (transferencia o efectivo)."}{" "}
+                Hasta entonces seguís con tu abono mensual.
               </p>
               <Boton variante="secundario" tamano="sm" onClick={() => elegirSemestre(!semestral)} disabled={pendiente} aria-busy={pendiente}>
                 {pendiente ? "Guardando…" : semestral ? "Volver a mes a mes" : "Elegir"}

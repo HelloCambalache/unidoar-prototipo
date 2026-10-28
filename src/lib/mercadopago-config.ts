@@ -55,8 +55,11 @@ export const TOLERANCIA_DE_AVISO_SEGUNDOS = 15 * 60;
 /** La ruta que Mercado Pago llama cuando pasa algo (se carga en su panel: https://<dominio>/api/mercadopago/webhook). */
 export const RUTA_DEL_WEBHOOK = "/api/mercadopago/webhook";
 
-/** Los tipos de aviso que usamos (se activan en el panel de Mercado Pago, en Webhooks). */
-export const AVISOS_QUE_USAMOS = ["subscription_preapproval", "subscription_authorized_payment"] as const;
+/**
+ * Los tipos de aviso que usamos (se activan en el panel de Mercado Pago, en Webhooks): las suscripciones del débito automático y los pagos
+ * (`payment`: el semestre por adelantado; también llegan los de las suscripciones, que se ignoran porque no son de ningún link nuestro).
+ */
+export const AVISOS_QUE_USAMOS = ["subscription_preapproval", "subscription_authorized_payment", "payment"] as const;
 export type TipoDeAviso = (typeof AVISOS_QUE_USAMOS)[number];
 
 export const esAvisoQueUsamos = (tipo: unknown): tipo is TipoDeAviso =>

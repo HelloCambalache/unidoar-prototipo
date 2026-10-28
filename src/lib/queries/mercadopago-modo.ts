@@ -46,3 +46,9 @@ export async function debitoDisponiblePara(institucion: { esDemo: boolean }): Pr
   if (modo === null) return false;
   return modo !== "prueba" || institucion.esDemo;
 }
+
+/**
+ * ¿Se le ofrece pagar por Mercado Pago (el semestre por adelantado)? La misma regla que el débito automático: sin token no, y con un token de
+ * PRUEBA solo a las instituciones de ejemplo (un pago real no puede entrar a una cuenta de prueba).
+ */
+export const pagoPorMercadoPagoDisponiblePara = debitoDisponiblePara;
