@@ -17,6 +17,7 @@ import { mensajeDeBusqueda, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { kmLegible } from "@/lib/geo";
 import { esId } from "@/lib/oportunidades";
 import { estadoParaDocente } from "@/lib/postulaciones";
+import { habilitacionParaBusqueda } from "@/lib/queries/habilitacion";
 import { detalleOferta, horarioDeBusqueda, type DetalleOferta } from "@/lib/queries/oportunidades";
 import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,9 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
   const { busqueda, institucion, postulacion } = detalle;
   const estado = postulacion ? estadoParaDocente(postulacion.etapa, busqueda.estado, postulacion.examenRealizado) : null;
   const cierre = motivoCierre(detalle);
+  // Solo se postula a la categoría y a las materias o áreas del perfil (ver `src/lib/habilitacion.ts`): si no, en lugar del formulario va el motivo.
+  const habilitacion = !postulacion && !cierre ? await habilitacionParaBusqueda(docente, busqueda) : null;
+  const noHabilitada = habilitacion && !habilitacion.habilitado ? habilitacion : null;
   const km = kmLegible(detalle.km);
   const horario = horarioDeBusqueda(busqueda);
   const zona = busqueda.zona ?? institucion.zona;
@@ -279,6 +283,18 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
               <Boton variante="secundario" bloque disabled className="min-h-12 rounded-full">
                 Postulación cerrada
               </Boton>
+            ) : noHabilitada ? (
+              <div className="flex flex-col gap-3">
+                <Boton variante="secundario" bloque disabled className="min-h-12 rounded-full">
+                  Fuera de tu perfil
+                </Boton>
+                <p role="status" className="m-0 text-[13px] leading-normal text-tinta-2">
+                  {noHabilitada.mensaje}
+                </p>
+                <BotonLink variante="secundario" bloque className="rounded-full" href="/docente/perfil">
+                  Revisar mi perfil
+                </BotonLink>
+              </div>
             ) : (
               <FormularioPostular busquedaId={busqueda.id} />
             )}

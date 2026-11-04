@@ -244,7 +244,10 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
     { clave: "cv", etiqueta: "CV (PDF)", estado: curriculum, enlaces: <Enlaces docs={[{ etiqueta: "Descargar", d: cv }]} /> },
   ];
 
-  const enCola = d.onboardingCompleto && (d.verificacion === "pendiente" || d.verificacion === "correccion");
+  // La cola de verificación solo lista a quien subió documentación (o tiene una corrección pedida): ver `colaVerificacion`.
+  const subioDocumentacion = (["dniFrente", "dniDorso", "credencial", "constancia", "conducta"] as const).some((c) => doc(c)?.subido);
+  const sinDocumentacionParaCola = d.onboardingCompleto && d.verificacion === "pendiente" && !subioDocumentacion;
+  const enCola = d.onboardingCompleto && !sinDocumentacionParaCola && (d.verificacion === "pendiente" || d.verificacion === "correccion");
 
   return (
     <Tarjeta como="section" className="p-[22px]">
@@ -268,8 +271,17 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
           <b className="font-semibold">Falta:</b> {ficha.faltantes.join(" · ")}
         </p>
       )}
+      {sinDocumentacionParaCola && (
+        <p className="m-0 mt-4 text-[13px] leading-normal text-apagado">
+          Todavía no subió documentación: no entra a la cola de verificación hasta que la suba.
+        </p>
+      )}
       {enCola && (
-        <Link href={`/backoffice/verificacion#d-${d.id}`} className="mt-4 inline-block text-[13px] font-medium text-navy-700 hover:underline">
+        // Abre la cola ya filtrada por su nombre (la búsqueda por nombre y apellido), así llegás a su tarjeta sin buscarla entre las demás.
+        <Link
+          href={`/backoffice/verificacion?q=${encodeURIComponent(`${d.nombre} ${d.apellido}`.trim())}`}
+          className="mt-4 inline-block text-[13px] font-medium text-navy-700 hover:underline"
+        >
           Revisar en la cola de verificación →
         </Link>
       )}

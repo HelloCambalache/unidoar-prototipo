@@ -2,7 +2,7 @@ import Link from "next/link";
 import { DocInsigniaSuspendida, DocInsigniaVerificacion } from "@/components/backoffice/doc-insignias";
 import { VerifAcciones } from "@/components/backoffice/verif-acciones";
 import { VerifDocumento } from "@/components/backoffice/verif-documento";
-import { Avatar } from "@/components/ui/insignia";
+import { Avatar, Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { cuilLegible, dniLegible } from "@/lib/backoffice-docentes";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
@@ -37,7 +37,8 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
         <div className="min-w-0 flex-[1_1_260px]">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <h2 className="m-0 text-[17px] leading-[1.25] font-semibold tracking-[-0.01em]">{item.nombre}</h2>
-            <DocInsigniaVerificacion estado={item.verificacion} />
+            {/* «Observado» (corrección pedida) o «Modificado» (se le observó algo y volvió a subir): lo que el equipo busca en esas pestañas. */}
+            {item.modificado ? <Insignia tono="azul">Modificado tras la observación</Insignia> : <DocInsigniaVerificacion estado={item.verificacion} />}
             {item.suspendido && <DocInsigniaSuspendida />}
           </div>
           <div className="text-[13px] leading-snug text-apagado">
@@ -46,7 +47,9 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
           <div className="mt-1 text-xs leading-snug text-sutil">
             {item.verificacion === "correccion" && item.revisadaEn
               ? `Corrección pedida ${haceTiempo(item.revisadaEn)}`
-              : `Se registró ${haceTiempo(item.creadoEn)} (${fechaCorta(item.creadoEn)})`}
+              : item.modificado && item.revisadaEn
+                ? `Se le pidió una corrección ${haceTiempo(item.revisadaEn)} y volvió a subir documentación`
+                : `Se registró ${haceTiempo(item.creadoEn)} (${fechaCorta(item.creadoEn)})`}
             {contacto && ` · ${contacto}`}
           </div>
         </div>
@@ -85,9 +88,10 @@ export function VerifTarjeta({ item }: { item: ItemCola }) {
               {item.identidad.estudia ? etiquetaDeEstudiante(item.identidad.porcentajeMaterias) : "Ya se recibió"}
             </Dato>
           </dl>
-          {item.verificacion === "correccion" && item.nota && (
+          {(item.verificacion === "correccion" || item.modificado) && item.nota && (
             <div className="mt-4 rounded-caja bg-[#FEF1DF] px-3.5 py-2.5 text-[13px] leading-normal text-[#8A4B07]">
               <b className="font-semibold">Corrección que se pidió:</b> {item.nota}
+              {item.modificado && <> Revisá si lo que subió ahora lo resuelve.</>}
             </div>
           )}
         </div>

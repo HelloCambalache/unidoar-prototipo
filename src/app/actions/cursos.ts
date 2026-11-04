@@ -6,7 +6,7 @@ import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
-import { cursos, inscripcionesCurso } from "@/db/schema";
+import { cursos, inscripcionesCurso, inscripcionesCursoInstitucion, instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
@@ -19,8 +19,10 @@ import {
 } from "@/lib/cursos";
 import { hoyArgentina } from "@/lib/fechas-curso";
 import { avisar, avisarAVarios } from "@/lib/queries/avisos";
-import { cursoPropio, inscripcionPropia, inscriptosDelCurso } from "@/lib/queries/cursos-institucion";
+import { cursoPropio, inscripcionPropia, inscriptosDelCurso, institucionesInscriptasEnCurso } from "@/lib/queries/cursos-institucion";
+import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
 import { planes } from "@/lib/queries/planes";
+import { institucionVisible } from "@/lib/visibilidad";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { esUrlPublicaPropia } from "@/lib/subidas";
 import { claveDeDireccion } from "@/lib/ubicacion";
@@ -149,6 +151,15 @@ export async function borrarCurso(cursoId: string, confirmado = false): Promise<
         enlace: "/docente/cursos",
       },
     );
+    // Las instituciones que anotaron a su staff también se enteran (a quienes administran cada una).
+    const anotadas = await institucionesInscriptasEnCurso(curso.id, tx);
+    const usuariosDeAnotadas = [...new Set((await Promise.all(anotadas.map((a) => usuariosDeInstitucion(a.institucionId)))).flat())];
+    await avisarAVarios(tx, usuariosDeAnotadas, {
+      tipo: "curso",
+      titulo: institucion.nombre,
+      texto: `canceló el curso «${curso.titulo}», al que tu institución estaba inscripta.`,
+      enlace: "/institucion/cursos/explorar",
+    });
     fotoDelCurso = curso.fotoUrl;
     await tx.delete(cursos).where(and(eq(cursos.id, curso.id), eq(cursos.institucionId, institucion.id)));
     return ok();
@@ -159,6 +170,77 @@ export async function borrarCurso(cursoId: string, confirmado = false): Promise<
     revalidarCursos();
   }
   return resultado;
+}
+
+/* ───────────────────────────── Anotar a la institución en un curso de otra ───────────────────────────── */
+
+const SIN_EXPLORAR = "Tu plan de búsqueda puntual no incluye los cursos.";
+
+/**
+ * La institución de la sesión se anota en un curso de OTRA institución (para su staff o para la institución). Es la misma regla que cuando se
+ * anota un profesional (el curso tiene que verse, no haber terminado y ser de una institución con difusión de cursos), más que no sea propio.
+ * Le llega un aviso a quienes administran la institución que lo ofrece.
+ */
+export async function inscribirInstitucionAlCurso(cursoId: string): Promise<Resultado> {
+  const { institucion } = await requerirInstitucion();
+  if (!(await planes()).incluye(institucion.plan, "cursos")) return fallo(SIN_EXPLORAR);
+  if (!esUuid(cursoId)) return fallo("Curso inválido.");
+
+  const db = getDb();
+  const [curso] = await db
+    .select({ id: cursos.id, titulo: cursos.titulo, fechaFinal: cursos.fechaFinal, institucionId: cursos.institucionId, plan: instituciones.plan })
+    .from(cursos)
+    .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
+    .where(and(eq(cursos.id, cursoId), institucionVisible))
+    .limit(1);
+  if (!curso) return fallo("Ese curso ya no existe.");
+  if (curso.institucionId === institucion.id) return fallo("Es un curso de tu institución: lo administrás desde Mis cursos.");
+  // Los cursos de una institución cuyo plan no incluye la difusión de cursos no se ven en el listado: tampoco se puede anotar quien llegue por el enlace.
+  if (!(await planes()).incluye(curso.plan, "cursos")) return fallo("Ese curso ya no existe.");
+  if (curso.fechaFinal && curso.fechaFinal < hoyArgentina()) return fallo("Este curso ya terminó y no admite inscripciones.");
+
+  const [nueva] = await db
+    .insert(inscripcionesCursoInstitucion)
+    .values({ cursoId: curso.id, institucionId: institucion.id })
+    .onConflictDoNothing()
+    .returning({ cursoId: inscripcionesCursoInstitucion.cursoId });
+  if (nueva) {
+    await avisarAVarios(db, await usuariosDeInstitucion(curso.institucionId), {
+      tipo: "curso",
+      titulo: institucion.nombre,
+      texto: `inscribió a su institución en «${curso.titulo}».`,
+      enlace: `/institucion/cursos/${curso.id}/inscriptos`,
+    });
+  }
+
+  revalidarCursos();
+  return ok();
+}
+
+/** La institución de la sesión cancela su inscripción en un curso de otra (solo lo propio). */
+export async function cancelarInscripcionDeInstitucion(cursoId: string): Promise<Resultado> {
+  const { institucion } = await requerirInstitucion();
+  if (!esUuid(cursoId)) return fallo("Curso inválido.");
+
+  const db = getDb();
+  const [cancelada] = await db
+    .delete(inscripcionesCursoInstitucion)
+    .where(and(eq(inscripcionesCursoInstitucion.cursoId, cursoId), eq(inscripcionesCursoInstitucion.institucionId, institucion.id)))
+    .returning({ cursoId: inscripcionesCursoInstitucion.cursoId });
+  if (!cancelada) return fallo("No estabas inscripta en ese curso.");
+
+  const [curso] = await db.select({ titulo: cursos.titulo, institucionId: cursos.institucionId }).from(cursos).where(eq(cursos.id, cursoId)).limit(1);
+  if (curso) {
+    await avisarAVarios(db, await usuariosDeInstitucion(curso.institucionId), {
+      tipo: "curso",
+      titulo: institucion.nombre,
+      texto: `canceló la inscripción de su institución en «${curso.titulo}».`,
+      enlace: `/institucion/cursos/${cursoId}/inscriptos`,
+    });
+  }
+
+  revalidarCursos();
+  return ok();
 }
 
 /* ───────────────────────────── Inscriptos ───────────────────────────── */

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { cancelarInscripcionDeInstitucion, inscribirInstitucionAlCurso } from "@/app/actions/cursos";
 import { cancelarInscripcion, inscribirseCurso } from "@/app/actions/docente";
 import { Icono } from "@/components/icons";
 import { useToast } from "@/components/ui/toast";
@@ -8,25 +9,36 @@ import { useToast } from "@/components/ui/toast";
 /**
  * Inscribirse o cancelar la inscripción. La página se vuelve a renderizar sola cuando la acción
  * termina (revalida /docente/cursos), así el botón y las tarjetas muestran el estado real de la base.
+ * Con `para="institucion"` (Explorar cursos) anota o desanota a la institución de la sesión, para su staff o para la institución.
  */
 export function CursoInscripcionBoton({
   cursoId,
   inscripto,
   lugar,
+  para = "docente",
 }: {
   cursoId: string;
   inscripto: boolean;
   /** Dónde se dicta un curso presencial: se repite en el aviso de "quedaste inscripto/a". */
   lugar?: string | null;
+  para?: "docente" | "institucion";
 }) {
   const toast = useToast();
   const [pendiente, empezar] = useTransition();
+  const deInstitucion = para === "institucion";
 
   const alternar = () =>
     empezar(async () => {
-      const r = inscripto ? await cancelarInscripcion(cursoId) : await inscribirseCurso(cursoId);
+      const r = deInstitucion
+        ? inscripto
+          ? await cancelarInscripcionDeInstitucion(cursoId)
+          : await inscribirInstitucionAlCurso(cursoId)
+        : inscripto
+          ? await cancelarInscripcion(cursoId)
+          : await inscribirseCurso(cursoId);
       if (!r.ok) toast(r.error, "error");
-      else if (inscripto) toast("Cancelamos tu inscripción");
+      else if (inscripto) toast(deInstitucion ? "Cancelamos la inscripción de tu institución" : "Cancelamos tu inscripción");
+      else if (deInstitucion) toast(lugar ? `Listo, tu institución quedó inscripta. Se dicta en ${lugar}.` : "Listo, tu institución quedó inscripta en el curso");
       else toast(lugar ? `Listo, quedaste inscripto/a. Se dicta en ${lugar}.` : "Listo, quedaste inscripto/a en el curso");
     });
 
@@ -35,7 +47,7 @@ export function CursoInscripcionBoton({
       <div className="flex max-w-[420px] flex-wrap items-center gap-x-4 gap-y-2">
         <span className="inline-flex min-h-12 items-center gap-2 rounded-full bg-verde-tint px-5 text-[15px] font-semibold text-verde">
           <Icono nombre="tilde" tamano={16} trazo={2.6} />
-          Ya estás inscripto/a
+          {deInstitucion ? "Tu institución está inscripta" : "Ya estás inscripto/a"}
         </span>
         <button
           type="button"
@@ -59,7 +71,7 @@ export function CursoInscripcionBoton({
       className="group inline-flex min-h-[52px] w-full max-w-[340px] items-center justify-center gap-2.5 rounded-full bg-naranja px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(221,85,63,.28)] transition-[background-color,transform,box-shadow] hover:-translate-y-0.5 hover:bg-[#c44a35] hover:shadow-[0_12px_26px_rgba(221,85,63,.34)] focus-visible:ring-[3px] focus-visible:ring-naranja/40 focus-visible:outline-none disabled:translate-y-0 disabled:opacity-60"
     >
       <Icono nombre="cursos" tamano={18} trazo={2} />
-      {pendiente ? "Inscribiéndote…" : "Inscribirme al curso"}
+      {pendiente ? (deInstitucion ? "Inscribiendo…" : "Inscribiéndote…") : deInstitucion ? "Inscribir a mi institución" : "Inscribirme al curso"}
       <Icono nombre="flecha" tamano={17} trazo={2.2} className="transition-transform group-hover:translate-x-0.5" />
     </button>
   );

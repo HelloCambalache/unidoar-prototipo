@@ -23,6 +23,7 @@ import { busquedaAbierta, esId, nombreCompleto } from "@/lib/oportunidades";
 import { avisoDeRespuesta, MAX_MENSAJE_RESPUESTA, motivoParaNoResponder, type RespuestaEntrevista } from "@/lib/entrevista-respuesta";
 import { estadoParaDocente } from "@/lib/postulaciones";
 import { borrarArchivos } from "@/lib/queries/archivos";
+import { habilitacionParaBusqueda } from "@/lib/queries/habilitacion";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
 import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
 
@@ -91,6 +92,13 @@ export async function postular(
     .limit(1);
   // Ya se había postulado: nada que hacer. Si solo la invitaron, sigue (acepta la invitación).
   if (existente && existente.origen !== "invitacion") return fallo("Ya te postulaste a esta búsqueda.");
+
+  // Solo se postula a las búsquedas de su categoría y de las materias o áreas de su perfil (ver `src/lib/habilitacion.ts`). Una invitación de
+  // la institución sí se puede aceptar: ella eligió a esa persona.
+  if (!existente) {
+    const habilitacion = await habilitacionParaBusqueda(docente, busqueda);
+    if (!habilitacion.habilitado) return fallo(habilitacion.mensaje);
+  }
 
   const destinatarios = await usuariosConAcceso(institucion);
   const nombre = nombreCompleto(docente);

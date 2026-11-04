@@ -1,7 +1,7 @@
 import "server-only";
-import { and, asc, count, desc, eq, getTableColumns, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { cursos, docentes, inscripcionesCurso, instituciones } from "@/db/schema";
+import { cursos, docentes, inscripcionesCurso, inscripcionesCursoInstitucion, instituciones } from "@/db/schema";
 import { normalizar } from "@/lib/coincidencia";
 import { avancePorFechas, hoyArgentina } from "@/lib/fechas-curso";
 import { distanciaKm } from "@/lib/geo";
@@ -79,12 +79,19 @@ function base(f: typeof cursos.$inferSelect, inst: CursoBase["institucion"]): Cu
   };
 }
 
-/** Todos los cursos con cuántos anotados tienen y si el docente está anotado. */
-async function consultar(docenteId: string, soloId?: string): Promise<CursoVista[]> {
+/** Quién mira los cursos: un profesional (se anota él) o una institución (anota a la suya, para su staff o para la institución). */
+type Espectador = { tipo: "docente" | "institucion"; id: string };
+
+/**
+ * Todos los cursos con cuántos anotados tienen (profesionales e instituciones) y si quien mira está anotado. Para una institución, sin los cursos
+ * que publicó ella misma: esos se administran en «Mis cursos» (`listarCursosDeInstitucion`).
+ */
+async function consultar(espectador: Espectador, soloId?: string): Promise<CursoVista[]> {
   const db = getDb();
+  const esInstitucion = espectador.tipo === "institucion";
   // Una institución con búsquedas puntuales que no incluyen la difusión de cursos no los muestra (lo decide el equipo en Planes).
   const sinCursos = (await planes()).incluye("puntual", "cursos") ? undefined : ne(instituciones.plan, "puntual");
-  const [filas, mias, [origen]] = await Promise.all([
+  const [filas, mias, [origen], deInstituciones] = await Promise.all([
     db
       .select({
         curso: columnasCurso,
@@ -98,27 +105,48 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
       .innerJoin(instituciones, eq(instituciones.id, cursos.institucionId))
       .leftJoin(inscripcionesCurso, eq(inscripcionesCurso.cursoId, cursos.id))
       // Los cursos de una institución suspendida no se ven ni admiten inscripciones.
-      .where(and(soloId ? eq(cursos.id, soloId) : undefined, institucionVisible, sinCursos))
+      .where(
+        and(
+          soloId ? eq(cursos.id, soloId) : undefined,
+          institucionVisible,
+          sinCursos,
+          esInstitucion ? ne(cursos.institucionId, espectador.id) : undefined,
+        ),
+      )
       .groupBy(cursos.id, instituciones.id)
       .orderBy(asc(cursos.fechaInicio), asc(cursos.titulo)),
+    esInstitucion
+      ? db
+          .select({ cursoId: inscripcionesCursoInstitucion.cursoId, terminoEn: sql<string | null>`null`, certificadoEnviado: sql<boolean>`false` })
+          .from(inscripcionesCursoInstitucion)
+          .where(eq(inscripcionesCursoInstitucion.institucionId, espectador.id))
+      : db
+          .select({
+            cursoId: inscripcionesCurso.cursoId,
+            terminoEn: inscripcionesCurso.terminoEn,
+            certificadoEnviado: inscripcionesCurso.certificadoEnviado,
+          })
+          .from(inscripcionesCurso)
+          .where(eq(inscripcionesCurso.docenteId, espectador.id)),
+    esInstitucion
+      ? db.select({ lat: instituciones.lat, lng: instituciones.lng }).from(instituciones).where(eq(instituciones.id, espectador.id)).limit(1)
+      : db.select({ lat: docentes.lat, lng: docentes.lng }).from(docentes).where(eq(docentes.id, espectador.id)).limit(1),
+    // Las instituciones anotadas también cuentan como anotados del curso.
     db
-      .select({
-        cursoId: inscripcionesCurso.cursoId,
-        terminoEn: inscripcionesCurso.terminoEn,
-        certificadoEnviado: inscripcionesCurso.certificadoEnviado,
-      })
-      .from(inscripcionesCurso)
-      .where(eq(inscripcionesCurso.docenteId, docenteId)),
-    db.select({ lat: docentes.lat, lng: docentes.lng }).from(docentes).where(eq(docentes.id, docenteId)).limit(1),
+      .select({ cursoId: inscripcionesCursoInstitucion.cursoId, n: count() })
+      .from(inscripcionesCursoInstitucion)
+      .where(soloId ? eq(inscripcionesCursoInstitucion.cursoId, soloId) : undefined)
+      .groupBy(inscripcionesCursoInstitucion.cursoId),
   ]);
   const porCurso = new Map(mias.map((m) => [m.cursoId, m]));
+  const institucionesPorCurso = new Map(deInstituciones.map((i) => [i.cursoId, i.n]));
   return filas.map((f) => {
     const mia = porCurso.get(f.curso.id);
     return {
       ...base(f.curso, { id: f.instId, nombre: f.instNombre, slug: f.instSlug, logoUrl: f.instLogo }),
       // La contraseña de la sala es solo de quienes se inscribieron (igual que el link, pero esta ni siquiera sale del servidor).
       linkClave: mia ? f.curso.linkClave : null,
-      inscriptos: f.inscriptos,
+      inscriptos: f.inscriptos + (institucionesPorCurso.get(f.curso.id) ?? 0),
       inscripto: !!mia,
       distanciaKm:
         origen?.lat != null && origen.lng != null && f.curso.modalidad === "Presencial" && f.curso.lat != null && f.curso.lng != null
@@ -136,7 +164,21 @@ async function consultar(docenteId: string, soloId?: string): Promise<CursoVista
  */
 export async function cursosParaDocente(docenteId: string) {
   const hoy = hoyArgentina();
-  return (await consultar(docenteId)).filter((c) => c.inscripto || !c.fechaFinal || c.fechaFinal >= hoy);
+  return (await consultar({ tipo: "docente", id: docenteId })).filter((c) => c.inscripto || !c.fechaFinal || c.fechaFinal >= hoy);
+}
+
+/**
+ * Cursos que ve una institución en «Explorar cursos»: los de las demás instituciones que no terminaron todavía y aquellos en los que
+ * está anotada (aunque hayan terminado). Los filtros se aplican después con `filtrarCursos`.
+ */
+export async function cursosParaInstitucion(institucionId: string) {
+  const hoy = hoyArgentina();
+  return (await consultar({ tipo: "institucion", id: institucionId })).filter((c) => c.inscripto || !c.fechaFinal || c.fechaFinal >= hoy);
+}
+
+/** Un curso de otra institución tal como lo ve la que explora (null si no existe, es propio o su institución no se muestra). */
+export async function cursoParaInstitucionPorId(institucionId: string, cursoId: string) {
+  return (await consultar({ tipo: "institucion", id: institucionId }, cursoId))[0] ?? null;
 }
 
 /** Filtros en memoria, así "Matematica" encuentra "Matemática". */
@@ -149,7 +191,7 @@ export function filtrarCursos(lista: CursoVista[], filtros: FiltrosCursos) {
 }
 
 export async function cursoPorId(docenteId: string, cursoId: string) {
-  return (await consultar(docenteId, cursoId))[0] ?? null;
+  return (await consultar({ tipo: "docente", id: docenteId }, cursoId))[0] ?? null;
 }
 
 export function estadoCursado(

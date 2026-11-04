@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
   asignaturas,
@@ -20,7 +20,9 @@ import { urlFirmada } from "@/lib/almacenamiento";
 import { bajaDocenteSolicitadaEn } from "@/lib/queries/cuenta";
 import {
   POR_PAGINA_BO,
+  modificadoTrasObservacion,
   type DocumentoBo,
+  type EstadoCola,
   type EstadoVerificacionDocente,
   type FiltrosBoDocentes,
 } from "@/lib/backoffice-docentes";
@@ -28,7 +30,7 @@ import { MS } from "@/lib/fechas";
 import { CATEGORIA_ALTA } from "@/lib/onboarding";
 import { pendientesDePerfil } from "@/lib/perfil";
 import { desgloseScoring, porcentajePerfilParaScoring } from "@/lib/scoring";
-import { contiene, textoPlano } from "@/lib/sql-texto";
+import { contiene, palabrasDeBusqueda, textoPlano } from "@/lib/sql-texto";
 import { OCULTAR_EJEMPLOS } from "@/lib/visibilidad";
 
 /*
@@ -394,7 +396,6 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
 /* ───────────────────────────── Cola de verificación ───────────────────────────── */
 
 export const POR_PAGINA_COLA = 10;
-export type EstadoCola = "todos" | "pendiente" | "correccion";
 
 export type ItemCola = {
   id: string;
@@ -403,6 +404,8 @@ export type ItemCola = {
   fotoUrl: string | null;
   subtitulo: string | null;
   verificacion: "pendiente" | "correccion";
+  /** Se le había observado algo y volvió a subir documentación (pestaña «Modificados»). */
+  modificado: boolean;
   /** Motivo de la corrección pedida antes (si hubo). */
   nota: string | null;
   /** Cuándo se le pidió la corrección. */
@@ -422,28 +425,63 @@ export type ColaVerificacion = {
   total: number;
   pagina: number;
   paginas: number;
-  cantidades: { todos: number; pendiente: number; correccion: number };
+  cantidades: { todos: number; pendiente: number; correccion: number; modificados: number };
+  /** Completaron el alta pero todavía no subieron ninguna documentación: no entran a la cola hasta que la suban. */
+  sinDocumentacion: number;
 };
 
 /**
- * Docentes con el alta completa y la verificación pendiente o con corrección pedida, los más antiguos primero.
+ * Subió al menos un documento de los que se revisan (DNI, título o matrícula, constancia o certificado de conducta). El CV no cuenta: no
+ * es algo que se verifique. Mirar `docente_detalle.documentos` directo evita traer los archivos para decidir quién entra a la cola.
+ */
+const CON_DOCUMENTACION = sql`(exists (
+  select 1 from docente_detalle dd, jsonb_each_text(coalesce(dd.documentos, '{}'::jsonb)) as doc(clave, ruta)
+  where dd.docente_id = ${docentes.id}
+    and doc.clave in ('dniFrente', 'dniDorso', 'credencial', 'constancia', 'conducta')
+    and btrim(doc.ruta) <> ''
+))`;
+/** Ya se le observó algo antes (la nota se conserva cuando vuelve a la cola): ver `modificadoTrasObservacion`. */
+const CON_OBSERVACION_PREVIA = sql`(coalesce(btrim(${docentes.verificacionNota}), '') <> '')`;
+
+/**
+ * Docentes con el alta completa que hay que revisar, los más antiguos primero. **Solo entra a la cola quien subió documentación**
+ * (2026-11-04, pedido del cliente: «enviar perfiles a verificar solo si suben documentación»); quien tiene una corrección pedida siempre
+ * figura, haya o no documentos, para que el equipo no lo pierda de vista. Con `q` filtra por nombre y apellido.
  * Cada uno viene con su DNI, CUIL y documentos (enlaces firmados): esta lectura es solo del backoffice.
  */
-export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: number }): Promise<ColaVerificacion> {
+export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: number; q?: string }): Promise<ColaVerificacion> {
   const db = getDb();
-  const enCola = and(EXISTE_CON_ALTA, inArray(docentes.verificacion, ["pendiente", "correccion"]));
+  const nombreCompleto = sql`coalesce(${docentes.nombre}, '') || ' ' || coalesce(${docentes.apellido}, '')`;
+  const palabras = palabrasDeBusqueda(opciones.q ?? "").map((p) => contiene(nombreCompleto, p));
+  const sinBuscar = and(EXISTE_CON_ALTA, inArray(docentes.verificacion, ["pendiente", "correccion"]));
+  const enCola = and(sinBuscar, ...palabras);
 
-  const conteos = await db
-    .select({ estado: docentes.verificacion, n: count() })
+  const nuevos = sql`(${docentes.verificacion} = 'pendiente' and ${CON_DOCUMENTACION} and not ${CON_OBSERVACION_PREVIA})`;
+  const modificados = sql`(${docentes.verificacion} = 'pendiente' and ${CON_DOCUMENTACION} and ${CON_OBSERVACION_PREVIA})`;
+  const observados = sql`(${docentes.verificacion} = 'correccion')`;
+  const deLaPestana = {
+    todos: or(nuevos, modificados, observados),
+    pendiente: nuevos,
+    modificados,
+    correccion: observados,
+  } as const;
+
+  const [conteo] = await db
+    .select({
+      pendiente: sql<number>`count(*) filter (where ${nuevos})`.mapWith(Number),
+      modificados: sql<number>`count(*) filter (where ${modificados})`.mapWith(Number),
+      correccion: sql<number>`count(*) filter (where ${observados})`.mapWith(Number),
+      sinDocumentacion: sql<number>`count(*) filter (where ${docentes.verificacion} = 'pendiente' and not ${CON_DOCUMENTACION})`.mapWith(Number),
+    })
     .from(docentes)
-    .where(enCola)
-    .groupBy(docentes.verificacion);
+    .where(enCola);
   const cantidades = {
-    pendiente: conteos.find((c) => c.estado === "pendiente")?.n ?? 0,
-    correccion: conteos.find((c) => c.estado === "correccion")?.n ?? 0,
+    pendiente: conteo?.pendiente ?? 0,
+    modificados: conteo?.modificados ?? 0,
+    correccion: conteo?.correccion ?? 0,
     todos: 0,
   };
-  cantidades.todos = cantidades.pendiente + cantidades.correccion;
+  cantidades.todos = cantidades.pendiente + cantidades.modificados + cantidades.correccion;
 
   const total = cantidades[opciones.estado];
   const paginas = Math.max(1, Math.ceil(total / POR_PAGINA_COLA));
@@ -454,7 +492,7 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
     .from(docentes)
     .leftJoin(usuarios, eq(usuarios.id, docentes.usuarioId))
     .leftJoin(docenteDetalle, eq(docenteDetalle.docenteId, docentes.id))
-    .where(and(enCola, opciones.estado === "todos" ? undefined : eq(docentes.verificacion, opciones.estado)))
+    .where(and(enCola, deLaPestana[opciones.estado]))
     .orderBy(asc(docentes.creadoEn), asc(docentes.id))
     .limit(POR_PAGINA_COLA)
     .offset((pagina - 1) * POR_PAGINA_COLA);
@@ -474,6 +512,7 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
         fotoUrl: d.fotoUrl,
         subtitulo: d.subtitulo,
         verificacion: d.verificacion === "correccion" ? "correccion" : "pendiente",
+        modificado: modificadoTrasObservacion(d.verificacion, d.verificacionNota),
         nota: d.verificacionNota,
         revisadaEn: d.verificacionRevisadaEn,
         creadoEn: d.creadoEn,
@@ -499,5 +538,5 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
     }),
   );
 
-  return { items, total, pagina, paginas, cantidades };
+  return { items, total, pagina, paginas, cantidades, sinDocumentacion: conteo?.sinDocumentacion ?? 0 };
 }

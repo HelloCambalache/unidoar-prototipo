@@ -223,19 +223,22 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
         },
         {
           slug: "cursos",
-          titulo: "Publicar cursos",
-          resumen: "Cómo ofrecer capacitaciones a los profesionales y gestionar a los inscriptos.",
+          titulo: "Cursos: publicar y explorar",
+          resumen: "Cómo ofrecer capacitaciones, gestionar a los inscriptos y anotar a tu institución en los cursos de otras.",
           bloques: [
-            { p: "En [Mis cursos](/institucion/cursos) publicás capacitaciones para los profesionales de la plataforma." },
+            { p: "[Cursos](/institucion/cursos) tiene dos partes: **Mis cursos**, lo que ofrecés vos, y **Explorar cursos**, lo que ofrecen las demás instituciones." },
             {
               lista: [
-                "En **Mis cursos** ves y gestionás **solo los cursos que publicó tu institución**: los de otras instituciones no se muestran. Los profesionales, en cambio, ven los cursos de todas las instituciones en su sección de Cursos.",
+                "En **Mis cursos** ves y gestionás **los cursos que publicó tu institución**. Los profesionales los ven en su sección de Cursos.",
                 "Un curso puede ser **online** o **presencial**. En un curso presencial la **dirección es obligatoria**: los profesionales ven siempre dónde se dicta y a cuántos kilómetros les queda.",
-                "Cada curso muestra quiénes se inscribieron. Cuando terminan podés marcar que lo completaron y **enviarles el certificado**.",
-                "Podés editar un curso o borrarlo; si ya tiene inscriptos te pedimos confirmar.",
+                "Cada curso muestra quiénes se inscribieron, **profesionales e instituciones**. Cuando los profesionales terminan podés marcar que lo completaron y **enviarles el certificado**.",
+                "Podés editar un curso o borrarlo; si ya tiene inscriptos te pedimos confirmar y les avisamos.",
               ],
             },
-            { nota: "Por lo general, la opción de una sola búsqueda no incluye la difusión de cursos." },
+            {
+              p: "**Explorar cursos:** en [Explorar cursos](/institucion/cursos/explorar) ves los cursos de **todas las demás instituciones** y los podés buscar por nombre o institución y filtrar por modalidad. Abrí uno para ver el detalle (fechas, horario, dónde se dicta) y tocá **Inscribir a mi institución**: sirve para anotar a tu equipo o a la institución. Quien ofrece el curso ve a tu institución en su lista de inscriptos y le llega un aviso. Podés cancelar la inscripción cuando quieras.",
+            },
+            { nota: "Por lo general, la opción de una sola búsqueda no incluye los cursos: ni publicarlos ni explorarlos." },
           ],
         },
       ],

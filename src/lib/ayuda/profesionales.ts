@@ -147,6 +147,9 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             {
               p: "Si cambiaste de idea, abrí la postulación en [Postulaciones](/docente/postulaciones) y tocá **Retirar postulación**: avisamos a la institución y se borran tus notas de esa búsqueda. Una postulación en la que ya te contrataron no se puede retirar.",
             },
+            {
+              p: "**Solo podés postularte a las búsquedas de tu categoría y de tus materias o áreas.** Si una búsqueda es de otra materia, en lugar de **Postularme** ves el motivo y un botón para revisar tu perfil: por ejemplo, quien da Literatura puede postularse a Historia (la misma área) pero no a Educación Física. Si también dictás esa materia, sumala en [Mi perfil](/docente/perfil). Si una institución te **invita**, siempre podés aceptar la invitación.",
+            },
             { nota: "No podés postularte con la verificación rechazada, ni a una búsqueda que ya se cerró." },
           ],
         },

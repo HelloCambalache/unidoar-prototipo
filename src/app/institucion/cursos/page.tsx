@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CursoTarjeta } from "@/components/institucion/curso-tarjeta";
+import { CursosSecciones } from "@/components/institucion/cursos-secciones";
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
 import { exigirBeneficio } from "@/lib/queries/puntuales";
@@ -18,14 +19,15 @@ export default async function MisCursos() {
     <>
       <EncabezadoPagina
         titulo="Mis cursos"
-        bajada="Cursos cortos o certificaciones que ofrecés. Los profesionales los ven en su sección de Cursos y se inscriben desde ahí."
-        className="mb-5"
+        bajada="Cursos cortos o certificaciones que ofrecés. Los profesionales los ven en su sección de Cursos y se inscriben desde ahí. Los de otras instituciones están en Explorar cursos."
+        className="mb-4"
         acciones={
           <BotonLink href="/institucion/cursos/nuevo" variante="cta" tamano="lg" className="text-[15px]">
             + Crear curso
           </BotonLink>
         }
       />
+      <CursosSecciones activa="mios" />
 
       {cursos.length === 0 ? (
         <EstadoVacio

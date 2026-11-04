@@ -11,6 +11,7 @@ import { esUuid } from "@/lib/busquedas";
 import { esEnlaceWeb, etiquetaInscriptos, PUNTAJE_POR_DEFECTO } from "@/lib/cursos";
 import { etiquetaFechas } from "@/lib/fechas-curso";
 import { cursoConInscriptos } from "@/lib/queries/cursos-institucion";
+import { iniciales } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Curso" };
 
@@ -45,7 +46,9 @@ export default async function FichaCurso({
   if (!esUuid(id)) notFound();
   const datos = await cursoConInscriptos(institucion.id, id);
   if (!datos) notFound();
-  const { curso: c, inscriptos } = datos;
+  const { curso: c, inscriptos, instituciones: anotadas } = datos;
+  // «Inscriptos» cuenta a los profesionales y a las instituciones que anotaron a su staff.
+  const totalInscriptos = inscriptos.length + anotadas.length;
 
   const avisoTexto = AVISOS[Array.isArray(aviso) ? (aviso[0] ?? "") : (aviso ?? "")];
   // Los links se cargan validados, pero un valor viejo que no sea http(s) se muestra como texto, nunca como enlace.
@@ -126,26 +129,48 @@ export default async function FichaCurso({
 
         <section aria-labelledby="inscriptos-curso" className="max-w-[420px] rounded-tarjeta border border-linea bg-white p-5">
           <h2 id="inscriptos-curso" className="m-0 mb-3 text-[15px] leading-none font-semibold">
-            {etiquetaInscriptos(inscriptos.length)}
+            {etiquetaInscriptos(totalInscriptos)}
           </h2>
-          {inscriptos.length > 0 ? (
+          {totalInscriptos > 0 ? (
             <>
-              <ul className="m-0 mb-4 flex list-none flex-col gap-2 p-0">
-                {inscriptos.slice(0, MAX_NOMBRES).map((i) => (
-                  <li key={i.docenteId} className="flex items-center gap-2.5 text-sm leading-[1.4] text-tinta-2">
-                    <Avatar iniciales={i.iniciales} fotoUrl={i.fotoUrl} tamano={30} />
-                    {i.perfilVisible ? (
-                      <Link href={`/institucion/docente/${i.docenteId}`} className="text-tinta-2 hover:text-navy-700 hover:underline">
-                        {i.nombre}
-                      </Link>
-                    ) : (
-                      i.nombre
-                    )}
-                  </li>
-                ))}
-              </ul>
+              {inscriptos.length > 0 && (
+                <ul className="m-0 mb-4 flex list-none flex-col gap-2 p-0">
+                  {inscriptos.slice(0, MAX_NOMBRES).map((i) => (
+                    <li key={i.docenteId} className="flex items-center gap-2.5 text-sm leading-[1.4] text-tinta-2">
+                      <Avatar iniciales={i.iniciales} fotoUrl={i.fotoUrl} tamano={30} />
+                      {i.perfilVisible ? (
+                        <Link href={`/institucion/docente/${i.docenteId}`} className="text-tinta-2 hover:text-navy-700 hover:underline">
+                          {i.nombre}
+                        </Link>
+                      ) : (
+                        i.nombre
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {inscriptos.length > MAX_NOMBRES && (
                 <p className="m-0 mb-4 text-[13px] leading-none text-apagado">y {inscriptos.length - MAX_NOMBRES} más</p>
+              )}
+              {anotadas.length > 0 && (
+                <>
+                  <div className="mb-2 text-[11px] leading-none font-semibold tracking-[.05em] text-sutil uppercase">
+                    {anotadas.length === 1 ? "Institución inscripta" : "Instituciones inscriptas"}
+                  </div>
+                  <ul className="m-0 mb-4 flex list-none flex-col gap-2 p-0">
+                    {anotadas.slice(0, MAX_NOMBRES).map((i) => (
+                      <li key={i.institucionId} className="flex items-center gap-2.5 text-sm leading-[1.4] text-tinta-2">
+                        <Avatar iniciales={iniciales(i.nombre)} fotoUrl={i.logoUrl} tamano={30} />
+                        <Link href={`/instituciones/${i.slug}`} className="min-w-0 text-tinta-2 hover:text-navy-700 hover:underline">
+                          {i.nombre}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {anotadas.length > MAX_NOMBRES && (
+                    <p className="m-0 mb-4 text-[13px] leading-none text-apagado">y {anotadas.length - MAX_NOMBRES} más</p>
+                  )}
+                </>
               )}
               <BotonLink href={`/institucion/cursos/${c.id}/inscriptos`} variante="secundario" tamano="sm">
                 Detalle de inscriptos

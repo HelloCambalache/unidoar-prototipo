@@ -413,6 +413,27 @@ export const inscripcionesCurso = pgTable(
   (t) => [primaryKey({ columns: [t.cursoId, t.docenteId] })],
 );
 
+/**
+ * Una institución anotada en un curso de otra (para su staff o para la institución). Aparte de `inscripcionesCurso` a propósito: esa tiene la clave en
+ * `docente_id`. Agregada a mano con `pnpm db:cursos-instituciones` (con RLS).
+ */
+export const inscripcionesCursoInstitucion = pgTable(
+  "inscripciones_curso_institucion",
+  {
+    cursoId: uuid("curso_id")
+      .notNull()
+      .references(() => cursos.id, { onDelete: "cascade" }),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.cursoId, t.institucionId] }),
+    index("inscripciones_curso_institucion_inst_idx").on(t.institucionId),
+  ],
+);
+
 /* ───────────────────────────── Catálogos y contenido ───────────────────────────── */
 
 /** categoría → rubro → asignatura. Lo edita el backoffice (Categorías). */

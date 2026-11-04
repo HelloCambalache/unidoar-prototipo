@@ -19,6 +19,7 @@
     "db:planes": "dotenv -e .env.local -- tsx src/db/planes-base.ts",
     "db:entrevista": "dotenv -e .env.local -- tsx src/db/entrevista-base.ts",
     "db:curso-clave": "dotenv -e .env.local -- tsx src/db/curso-clave-base.ts",
+    "db:cursos-instituciones": "dotenv -e .env.local -- tsx src/db/cursos-instituciones-base.ts",
     "db:referidos": "dotenv -e .env.local -- tsx src/db/referidos-base.ts",
     "db:semestral": "dotenv -e .env.local -- tsx src/db/semestral-base.ts",
     "db:testimonios": "dotenv -e .env.local -- tsx src/db/testimonios-base.ts",

@@ -137,7 +137,9 @@ export function AppShell({
   );
 
   return (
-    <div className="flex h-screen gap-5 bg-lienzo min-[861px]:p-4">
+    // Se conserva la clase `h-screen` (las hojas para imprimir la buscan) y se suma `h-dvh` donde el navegador la entiende: en el celular
+    // 100vh es más alto que lo que se ve con la barra de direcciones y el final de cada pantalla quedaba cortado.
+    <div className="flex h-screen gap-5 bg-lienzo supports-[height:100dvh]:h-dvh min-[861px]:p-4">
       {menuAbierto && (
         <div onClick={() => setMenuAbierto(false)} className="fixed inset-0 z-[44] bg-navy-950/35 min-[861px]:hidden" />
       )}

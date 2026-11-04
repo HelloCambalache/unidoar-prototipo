@@ -18,17 +18,23 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   );
 }
 
-/** Detalle de un curso (se abre con ?curso=<id>) con el botón de inscripción. */
-export function CursoDetalle({ c }: { c: CursoVista }) {
+/**
+ * Detalle de un curso (se abre con ?curso=<id>) con el botón de inscripción. Con `para="institucion"` es el de «Explorar cursos» de una
+ * institución: vuelve a su listado, enlaza al perfil público de quien lo ofrece y anota a la institución (no a una persona).
+ */
+export function CursoDetalle({ c, para = "docente" }: { c: CursoVista; para?: "docente" | "institucion" }) {
   const terminado = !!c.fechaFinal && c.fechaFinal < hoyArgentina();
   const completado = !!c.terminoEn;
   const online = c.modalidad === "Online";
   const lugar = lugarDeCurso(c);
+  const deInstitucion = para === "institucion";
+  const volverHref = deInstitucion ? "/institucion/cursos/explorar" : "/docente/cursos";
+  const perfilDeLaInstitucion = deInstitucion ? `/instituciones/${c.institucion.slug}` : `/docente/instituciones/${c.institucion.slug}`;
 
   return (
     <>
       <Link
-        href="/docente/cursos"
+        href={volverHref}
         className="mb-4 inline-flex items-center gap-1 text-[13px] leading-none font-medium text-sutil hover:text-tinta"
       >
         ‹ Volver a cursos
@@ -39,7 +45,7 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
           <h1 className="m-0 mb-1 text-[28px] leading-tight font-semibold tracking-[-0.018em] max-[860px]:text-[24px]">{c.titulo}</h1>
           {c.subtitulo && <div className="mb-1.5 text-[15px] leading-[1.3] font-medium text-navy-700">{c.subtitulo}</div>}
           <div className="mb-[18px] flex flex-wrap items-center gap-2 text-[13px] leading-none text-apagado">
-            <Link href={`/docente/instituciones/${c.institucion.slug}`} className="font-medium text-navy-700 hover:underline">
+            <Link href={perfilDeLaInstitucion} className="font-medium text-navy-700 hover:underline">
               {c.institucion.nombre}
             </Link>
             {c.certifica && (
@@ -48,7 +54,7 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
                 <Insignia className="bg-[#FDF1C7] font-semibold text-[#7A5900]">{etiquetaPuntos(c.puntaje)}</Insignia>
               </>
             )}
-            {c.inscripto && !completado && <Insignia tono="azul">Ya te inscribiste</Insignia>}
+            {c.inscripto && !completado && <Insignia tono="azul">{deInstitucion ? "Tu institución está inscripta" : "Ya te inscribiste"}</Insignia>}
             {completado && <Insignia tono="verde">Curso completado</Insignia>}
           </div>
 
@@ -107,13 +113,17 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
               ) : lugar ? (
                 <>
                   <div className="text-base leading-[1.35] font-semibold text-tinta">{lugar}</div>
-                  {kmLegible(c.distanciaKm) && <div className="mt-0.5 text-apagado">{kmLegible(c.distanciaKm)} de tus zonas</div>}
+                  {kmLegible(c.distanciaKm) && (
+                    <div className="mt-0.5 text-apagado">
+                      {kmLegible(c.distanciaKm)} {deInstitucion ? "de tu institución" : "de tus zonas"}
+                    </div>
+                  )}
                 </>
               ) : (
                 <p className="m-0">
                   <span className="font-semibold text-tinta">La institución todavía no cargó la dirección de este curso.</span>{" "}
                   Podés consultarla en el{" "}
-                  <Link href={`/docente/instituciones/${c.institucion.slug}`} className="font-medium text-navy-700 underline">
+                  <Link href={perfilDeLaInstitucion} className="font-medium text-navy-700 underline">
                     perfil de {c.institucion.nombre}
                   </Link>
                   .
@@ -131,7 +141,14 @@ export function CursoDetalle({ c }: { c: CursoVista }) {
           ) : terminado && !c.inscripto ? (
             <p className="m-0 text-sm text-apagado">Este curso ya terminó y no admite inscripciones.</p>
           ) : (
-            <CursoInscripcionBoton cursoId={c.id} inscripto={c.inscripto} lugar={online ? null : lugar} />
+            <>
+              {deInstitucion && !c.inscripto && (
+                <p className="m-0 mb-3 max-w-[60ch] text-[13px] leading-normal text-apagado">
+                  Sirve para anotar a tu equipo o a la institución. Quien ofrece el curso ve a tu institución en su lista de inscriptos y le llega un aviso.
+                </p>
+              )}
+              <CursoInscripcionBoton cursoId={c.id} inscripto={c.inscripto} lugar={online ? null : lugar} para={para} />
+            </>
           )}
         </div>
       </div>

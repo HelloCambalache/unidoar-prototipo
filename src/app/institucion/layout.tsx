@@ -13,7 +13,8 @@ const NAV: NavItem[] = [
   { href: "/institucion/base-de-docentes", label: "Profesionales", icono: "profesionales" },
   { href: "/institucion/vitrina", label: "Mi perfil", icono: "vitrina" },
   { href: "/institucion/sedes", label: "Sedes", icono: "ubicacion" },
-  { href: "/institucion/cursos", label: "Mis cursos", icono: "cursos" },
+  // «Cursos» abarca los propios («Mis cursos») y los de las demás instituciones («Explorar cursos»).
+  { href: "/institucion/cursos", label: "Cursos", icono: "cursos" },
   { href: "/institucion/equipo", label: "Equipo", icono: "equipo" },
   { href: "/institucion/plan", label: "Plan", icono: "plan" },
   { href: "/institucion/referidos", label: "Referidos", icono: "apreton" },

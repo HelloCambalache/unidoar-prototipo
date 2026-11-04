@@ -43,7 +43,10 @@ export function Cajon({
         aria-label={titulo}
         style={{ width: ancho }}
         className={cn(
-          "fixed top-0 right-0 z-[51] flex h-screen max-w-[92vw] flex-col overflow-y-auto bg-white p-[26px] shadow-[-8px_0_24px_rgba(22,33,79,.18)]",
+          // `h-dvh` y no `h-screen`: en el navegador del celular 100vh es la altura con la barra de direcciones escondida, así que con la barra
+          // a la vista el cajón quedaba más alto que la pantalla y lo de abajo (el último cuadro y sus botones) quedaba cortado, sin poder llegar.
+          // El relleno de abajo suma la zona segura del equipo (barra de gestos).
+          "fixed top-0 right-0 z-[51] flex h-screen max-w-[92vw] flex-col overflow-y-auto bg-white p-[26px] pb-[calc(26px+env(safe-area-inset-bottom,0px))] shadow-[-8px_0_24px_rgba(22,33,79,.18)] supports-[height:100dvh]:h-dvh",
           "animate-slide-in-right",
         )}
       >

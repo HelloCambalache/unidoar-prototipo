@@ -13,7 +13,8 @@ export const RUTA_REGISTRO_DOCENTE = "/onboarding/docente/1";
 export const CONTACTO_SITIO: { email: string; whatsapp: string | null; horario: string } = {
   email: "unidoar@gmail.com",
   whatsapp: "11 5473-5876",
-  horario: "Lunes a viernes, 9 a 21 hs · Sábados, 10 a 13 hs",
+  // Fijo, definido por el cliente (2026-11-04): de lunes a viernes de 9 a 18 hs y nada más (antes también atendía sábados).
+  horario: "Lunes a viernes, 9 a 18 hs",
 };
 
 /** Valor de `testimonios.pagina` de cada categoría. */

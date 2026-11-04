@@ -74,7 +74,10 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
           resumen: "La cola de verificación: qué revisar y cómo verificar, pedir una corrección o rechazar.",
           bloques: [
             {
-              p: "[Verificación](/backoffice/verificacion) lista a los profesionales con el alta completa que esperan revisión, los más antiguos primero. Las pestañas separan **Toda la cola**, **En cola** y **Corrección pedida**.",
+              p: "[Verificación](/backoffice/verificacion) lista a los profesionales que **subieron documentación** y esperan revisión, los más antiguos primero. Quien completó el alta pero todavía no subió nada no entra a la cola (arriba te avisa cuántos son y te lleva a Profesionales). Las pestañas separan **Toda la cola**, **En cola** (subieron documentación y nunca se les observó nada), **Observados** (se les pidió una corrección y todavía no la subieron) y **Modificados** (se les observó algo y volvieron a subir documentación: esperan la nueva revisión; la tarjeta muestra qué se les había pedido).",
+            },
+            {
+              p: "**La lupa** busca por nombre y apellido (sin importar tildes ni mayúsculas) dentro de la pestaña elegida, para no depender del orden de llegada. Desde la ficha de un profesional, «Revisar en la cola de verificación» abre la cola ya buscada por su nombre.",
             },
             {
               pasos: [
@@ -87,7 +90,7 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
               lista: [
                 "**Verificar borra las fotos del DNI** de la persona: hoy se borran en ese mismo momento. A la persona se le promete que se eliminan **dentro de las 24 horas de verificada su identidad**; el plazo corre desde la verificación, no desde que las subió, y mientras el perfil esté en corrección o rechazado las fotos se conservan. Se conserva el número de DNI (y el CUIL) como constancia. El título, el certificado de buena conducta y la constancia no se borran. La persona lo sabe: se le explica en el alta.",
                 "Verificar a un **estudiante nunca marca su título** como verificado.",
-                "Con **Corrección pedida** la persona sube lo que falta desde Mi perfil y vuelve a la cola.",
+                "Con **Corrección pedida** el perfil queda en **Observados**. Cuando la persona sube lo que falta desde Mi perfil, pasa a **Modificados** para que lo revises de nuevo.",
                 "Un perfil **rechazado** puede reabrirse con **Reabrir la revisión** desde su ficha: pasa a «Corrección pedida» con un mensaje y puede volver a subir su documentación.",
                 "Si una persona verificada se recibe y sube su título, le llega un mail al equipo: validalo con **Verificar título** en su ficha. Solo toca el título, no la identidad.",
               ],

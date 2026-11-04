@@ -12,6 +12,7 @@ import {
   facturas,
   favoritos,
   institucionFotos,
+  inscripcionesCursoInstitucion,
   institucionMiembros,
   institucionNovedades,
   institucionSedes,
@@ -242,6 +243,8 @@ export async function borrarDatosDeLaInstitucion(
   /* ── Lo que cuelga de la institución: se borra todo menos las facturas. ── */
   await tx.delete(busquedas).where(eq(busquedas.institucionId, institucionId)); // y en cascada, postulaciones y sus notas
   await tx.delete(cursos).where(eq(cursos.institucionId, institucionId)); // y en cascada, inscripciones
+  // Y las inscripciones de la propia institución en cursos de otras: su fila no se borra (se conserva lo fiscal), así que no se van solas en cascada.
+  await tx.delete(inscripcionesCursoInstitucion).where(eq(inscripcionesCursoInstitucion.institucionId, institucionId));
   await tx.delete(cvEnviados).where(eq(cvEnviados.institucionId, institucionId));
   await tx.delete(contactosInstitucion).where(eq(contactosInstitucion.institucionId, institucionId));
   await tx.delete(institucionNovedades).where(eq(institucionNovedades.institucionId, institucionId));

@@ -29,6 +29,26 @@ export const puedeReabrirRevision = (verificacion: EstadoVerificacionDocente) =>
  */
 export const MENSAJE_REAPERTURA = "Subí de nuevo la documentación que haga falta (por ejemplo, las dos fotos del DNI) y la revisamos.";
 
+/**
+ * Pestañas de la cola de verificación (2026-11-04, pedido del cliente: «si les observamos algo, una columna donde queden observados o
+ * modificados»). La cola solo lista a quien SUBIÓ documentación para revisar (ver `colaVerificacion`):
+ *  - `pendiente` («En cola»): subió documentación y nunca se le observó nada.
+ *  - `correccion` («Observados»): se le pidió una corrección y todavía no volvió a subir.
+ *  - `modificados` («Modificados»): se le observó algo y volvió a subir documentación: espera la nueva revisión.
+ */
+export const PESTANAS_COLA = ["todos", "pendiente", "correccion", "modificados"] as const;
+export type EstadoCola = (typeof PESTANAS_COLA)[number];
+
+/** La pestaña de la URL; un valor que no existe es «Toda la cola». */
+export const leerEstadoCola = (valor: string): EstadoCola => PESTANAS_COLA.find((e) => e === valor) ?? "todos";
+
+/**
+ * Un perfil «modificado»: está en la cola (pendiente) pero ya tuvo una observación, así que volvió a subir documentación después de que
+ * se le pidió una corrección. La nota de la observación se conserva al volver a la cola (solo verificar la borra): es la marca.
+ */
+export const modificadoTrasObservacion = (verificacion: EstadoVerificacionDocente, nota: string | null | undefined) =>
+  verificacion === "pendiente" && !!nota?.trim();
+
 /** Opciones del filtro "Verificación" del listado. `suspendido` filtra por el estado de la cuenta, no por la verificación. */
 export const FILTROS_VERIFICACION = [
   { valor: "verificado", etiqueta: "Verificado" },

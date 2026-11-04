@@ -28,11 +28,14 @@ function Medalla() {
   );
 }
 
-/** Tarjeta de un curso en la vista Lista. Toda la tarjeta lleva al detalle. */
-export function CursoTarjeta({ c }: { c: CursoVista }) {
+/**
+ * Tarjeta de un curso en la vista Lista. Toda la tarjeta lleva al detalle (el del profesional por defecto; «Explorar cursos» de una
+ * institución le pasa el suyo en `href`).
+ */
+export function CursoTarjeta({ c, href }: { c: CursoVista; href?: string }) {
   return (
     <Link
-      href={`/docente/cursos?curso=${c.id}`}
+      href={href ?? `/docente/cursos?curso=${c.id}`}
       className="flex flex-col overflow-hidden rounded-tarjeta border border-linea bg-white transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(31,36,33,.1)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-navy-700/30"
     >
       <div className="relative">
