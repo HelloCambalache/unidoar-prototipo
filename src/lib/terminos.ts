@@ -4,11 +4,14 @@
  */
 
 /** Versión vigente de /terminos. Cambia cuando se actualiza el texto: ahí hay que pedir una nueva aceptación. */
-export const VERSION_TERMINOS = "2026-10";
+export const VERSION_TERMINOS = "2026-11";
 /** Lo que dice la página de términos como "Última actualización". */
-export const TERMINOS_ACTUALIZADOS = "octubre de 2026";
+export const TERMINOS_ACTUALIZADOS = "4 de noviembre de 2026";
+/** El «Versión:» de la página de términos (el documento de la titular es la versión 2). */
+export const TERMINOS_NUMERO_DE_VERSION = "2";
 /** Lo mismo para la política de privacidad (/privacidad). */
-export const PRIVACIDAD_ACTUALIZADA = "octubre de 2026";
+export const PRIVACIDAD_ACTUALIZADA = "4 de noviembre de 2026";
+export const PRIVACIDAD_NUMERO_DE_VERSION = "2";
 
 /** Cookie de corta vida que lleva la aceptación del docente que se registra con Google (no hay otro medio de pasarla). */
 export const COOKIE_TERMINOS = "unidoar_terminos";
