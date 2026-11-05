@@ -63,6 +63,7 @@ import {
   X,
   Zap,
   Sparkles,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import type { CategoriaDocente } from "@/db/schema";
@@ -101,6 +102,7 @@ const ICONOS = {
   salir: LogOut,
   campana: Bell,
   menu: Menu,
+  filtros: SlidersHorizontal,
   cerrar: X,
   mas: Plus,
   chevron: ChevronDown,

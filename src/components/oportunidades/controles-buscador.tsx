@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { BotonDeFiltros, PieDeFiltros, cerrarYVerResultados } from "@/components/app/filtros-celular";
 import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/campos";
 import { Insignia } from "@/components/ui/insignia";
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
+import { ID_DE_RESULTADOS } from "@/lib/filtros-celular";
 import {
   categoriaDeBusqueda,
   CATEGORIA_TODAS,
@@ -97,7 +99,8 @@ export function ControlesBuscador({
         limpiar={limpiar}
       />
 
-      <div className="min-w-0 flex-1 max-[760px]:w-full">
+      {/* `scroll-mt`: el panel de filtros queda pegado arriba en el celular y no tiene que tapar el principio de los resultados al venir de «Continuar». */}
+      <div id={ID_DE_RESULTADOS} className="min-w-0 flex-1 max-[760px]:w-full max-[760px]:scroll-mt-20">
         <BuscadorUnico
           base={base}
           vista={filtros.vista}
@@ -473,6 +476,7 @@ function PanelFiltrosApp({
   limpiar: () => void;
 }) {
   const [abierto, setAbierto] = useState(false);
+  const botonDeFiltros = useRef<HTMLButtonElement>(null);
   // La categoría que se está viendo: la elegida o, sin elegir, la del profesional. Solo cuenta como filtro puesto si no es esa.
   const categoriaVista = categoriaDeBusqueda(filtros.categoria, categoriaPropia);
   const activos =
@@ -506,20 +510,13 @@ function PanelFiltrosApp({
       )}
     >
       {/* En el celular el panel se pliega: este botón lo abre y dice cuántos filtros hay puestos. */}
-      <button
-        type="button"
-        aria-expanded={abierto}
-        aria-controls="panel-filtros-app"
+      <BotonDeFiltros
+        ref={botonDeFiltros}
+        abierto={abierto}
+        activos={activos}
+        controla="panel-filtros-app"
         onClick={() => setAbierto((v) => !v)}
-        className={cn("hidden min-h-11 w-full items-center gap-2 rounded-caja px-2 text-[15px] font-semibold max-[760px]:flex", FOCO)}
-      >
-        <Icono nombre="menu" tamano={18} trazo={2} />
-        Filtros
-        {activos > 0 && (
-          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-navy-900 px-2 text-xs text-white">{activos}</span>
-        )}
-        <Icono nombre="chevron" tamano={16} trazo={2.2} className={cn("ml-auto transition-transform", abierto && "rotate-180")} />
-      </button>
+      />
 
       <div id="panel-filtros-app" className={cn("flex flex-col gap-5 max-[760px]:hidden", abierto && "max-[760px]:mt-3 max-[760px]:flex")}>
         <div className="flex items-center gap-2 max-[760px]:hidden">
@@ -614,6 +611,9 @@ function PanelFiltrosApp({
             app
           />
         </div>
+
+        {/* Solo en el celular: los filtros ya se aplicaron al tocarlos; esto cierra el panel y lleva a los resultados. */}
+        <PieDeFiltros onContinuar={() => cerrarYVerResultados(() => setAbierto(false), botonDeFiltros.current)} />
       </div>
     </aside>
   );

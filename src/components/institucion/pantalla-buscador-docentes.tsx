@@ -6,6 +6,7 @@ import { BotonBusquedaUrgente } from "@/components/institucion/boton-busqueda-ur
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
 import { interpretarBusqueda, palabrasSinAplicar } from "@/lib/busqueda-ia";
+import { ID_DE_RESULTADOS } from "@/lib/filtros-celular";
 import { explicarVacio, type ExplicacionDelVacio } from "@/lib/buscador-vacio";
 import {
   filtrosActivos,
@@ -137,9 +138,11 @@ export async function PantallaBuscadorDocentes({
         zonasSugeridas={vocabulario.zonas}
         limpiarHref={limpiarHref}
         hayFiltros={hayFiltros}
+        total={resultado.total}
       />
 
-      <div className="min-w-0 flex-1">
+      {/* `scroll-mt`: el panel de filtros queda pegado arriba en el celular y no tiene que tapar el principio de los resultados al venir de «Continuar». */}
+      <div id={ID_DE_RESULTADOS} className="min-w-0 flex-1 max-[760px]:scroll-mt-20">
         <EncabezadoPagina titulo={titulo} bajada={bajada} className="mb-3.5" />
 
         {contexto && (

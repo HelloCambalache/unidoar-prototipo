@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { BotonDeFiltros, PieDeFiltros, cerrarYVerResultados } from "@/components/app/filtros-celular";
 import { Icono } from "@/components/icons";
 import { Input } from "@/components/ui/campos";
 import { EtiquetaSeccion } from "@/components/ui/tarjeta";
 import { normalizarTexto } from "@/lib/busqueda-ia";
 import { CATEGORIAS, CATEGORIA_INFO, DISPONIBILIDAD } from "@/lib/catalogo";
+import { filtrosDelPanel, resumenDeResultados } from "@/lib/filtros-celular";
 import type { FiltrosDocentes } from "@/lib/filtros-docentes";
 import { cn } from "@/lib/utils";
 import { useFiltrosEnUrl } from "./usar-filtros-docentes";
@@ -39,6 +41,8 @@ const Divisor = () => <div className="mb-4 h-px bg-borde" />;
 /**
  * Panel lateral de filtros. En desktop siempre está a la vista; por debajo de 760px queda plegado,
  * pegado arriba, y se abre con el botón "Filtros" (así se solapa con el listado en vez de empujarlo).
+ * Abierto, termina en un "Continuar" que lo cierra y lleva a los resultados: los filtros se aplican solos al
+ * tocarlos, así que sin ese botón no era evidente cómo salir del panel.
  */
 export function PanelFiltrosDocentes({
   ruta,
@@ -47,6 +51,7 @@ export function PanelFiltrosDocentes({
   zonasSugeridas,
   limpiarHref,
   hayFiltros,
+  total,
 }: {
   ruta: string;
   filtros: FiltrosDocentes;
@@ -54,10 +59,13 @@ export function PanelFiltrosDocentes({
   zonasSugeridas: string[];
   limpiarHref: string;
   hayFiltros: boolean;
+  /** Cuántos profesionales hay con los filtros puestos: se muestra al lado de "Continuar" en el celular. */
+  total?: number;
 }) {
   const { filtros, aplicar, pendiente } = useFiltrosEnUrl(ruta, delServidor);
   const [abierto, setAbierto] = useState(false);
   const [nuevaZona, setNuevaZona] = useState("");
+  const botonDeFiltros = useRef<HTMLButtonElement>(null);
 
   const agregarZona = () => {
     const zona = nuevaZona.trim();
@@ -74,20 +82,17 @@ export function PanelFiltrosDocentes({
       aria-label="Filtros"
       className={cn(
         "w-[250px] flex-none rounded-tarjeta border border-linea bg-white p-[18px] transition-opacity",
-        "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:w-full max-[760px]:overflow-auto max-[760px]:px-4 max-[760px]:py-3.5",
+        "max-[760px]:sticky max-[760px]:top-0 max-[760px]:z-30 max-[760px]:max-h-[82vh] max-[760px]:w-full max-[760px]:overflow-auto max-[760px]:p-3",
         pendiente && "opacity-70",
       )}
     >
-      <button
-        type="button"
-        aria-expanded={abierto}
-        aria-controls="cuerpo-filtros-docentes"
+      <BotonDeFiltros
+        ref={botonDeFiltros}
+        abierto={abierto}
+        activos={filtrosDelPanel(filtros)}
+        controla="cuerpo-filtros-docentes"
         onClick={() => setAbierto((v) => !v)}
-        className="hidden w-full items-center justify-between gap-2 rounded text-sm leading-none font-semibold text-tinta max-[760px]:flex"
-      >
-        Filtros
-        <Icono nombre="chevron" tamano={14} trazo={2.2} className={cn("transition-transform duration-200", abierto && "rotate-180")} />
-      </button>
+      />
 
       <div id="cuerpo-filtros-docentes" className={cn("max-[760px]:mt-3.5", !abierto && "max-[760px]:hidden")}>
         <div className="mb-4 flex items-center justify-between max-[760px]:justify-end">
@@ -196,6 +201,11 @@ export function PanelFiltrosDocentes({
             />
           ))}
         </div>
+
+        <PieDeFiltros
+          resumen={total === undefined ? undefined : resumenDeResultados(total)}
+          onContinuar={() => cerrarYVerResultados(() => setAbierto(false), botonDeFiltros.current)}
+        />
       </div>
     </section>
   );
