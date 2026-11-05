@@ -43,7 +43,8 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
     <>
       <EncabezadoPagina titulo="Publicaciones" className="mb-3" />
       {/* Debajo del título y no en la punta derecha de la pantalla, donde en una pantalla ancha quedaba lejos de lo que se mira (pedido del cliente, 2026-11-05). */}
-      <BotonLink href="/institucion/publicar" variante="cta" tamano="lg" className="max-[860px]:w-full">
+      {/* `self-start`: el contenedor de la pantalla es una columna y estiraba el botón a todo el ancho; en el celular sí va a lo ancho. */}
+      <BotonLink href="/institucion/publicar" variante="cta" tamano="lg" className="self-start max-[860px]:self-stretch">
         + Publicar una búsqueda
       </BotonLink>
 
