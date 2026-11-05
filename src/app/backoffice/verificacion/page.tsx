@@ -43,7 +43,7 @@ export default async function VerificacionPage({ searchParams }: { searchParams:
         bajada="Profesionales que subieron su documentación y esperan que revisemos su identidad y sus antecedentes. Los más antiguos van primero."
       />
 
-      <VerifBuscador q={q} estado={estado} hayBusqueda={!!q} />
+      <VerifBuscador q={q} estado={estado} />
 
       <Pestanas
         className="mb-2"

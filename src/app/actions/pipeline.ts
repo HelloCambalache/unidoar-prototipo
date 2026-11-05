@@ -99,7 +99,8 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
 }
 
 /**
- * Archiva a un postulante (etapa interna `descartado`: sale del tablero, queda en "Archivados" y se puede recuperar).
+ * Descarta a un postulante (etapa interna `descartado`: sale del tablero, queda en "Descartados" y se puede recuperar). Hasta el 2026-11-05 la
+ * pantalla lo llamaba «Archivar»; el cliente buscaba «descartar», así que la palabra es esa (el comportamiento no cambió).
  * Es SILENCIOSO a propósito: no se le manda ninguna notificación ni mail a la persona. Se entera, si la búsqueda se cierra,
  * por el aviso de cierre (`avisarCierreDeBusqueda`); hasta entonces su postulación solo cambia de estado en su pantalla.
  */
@@ -113,7 +114,7 @@ export async function descartarPostulacion(postulacionId: string): Promise<Resul
     if (fila.busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
     if (fila.postulacion.etapa === "descartado") return ok();
     if (fila.postulacion.etapa === "contratado") {
-      return fallo("Esta persona ya está contratada. Movela de etapa antes de archivarla.");
+      return fallo("Esta persona ya está contratada. Movela de etapa antes de descartarla.");
     }
 
     await tx
@@ -255,7 +256,7 @@ export async function contratarPostulacion(
     const fila = await postulacionPropia(institucion.id, postulacionId, tx);
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda, docente } = fila;
-    if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala antes de contratar.");
+    if (postulacion.etapa === "descartado") return fallo("Esta postulación está descartada. Recuperala antes de contratar.");
     if (docente.suspendido) return fallo(PERFIL_SUSPENDIDO);
     if (busqueda.estado === "cerrada" && postulacion.etapa !== "contratado") return fallo(BUSQUEDA_CERRADA);
     if (faltaExamenPreocupacional(postulacion) && datos.data.sinExamen !== "on") {
@@ -335,7 +336,7 @@ export async function agendarEntrevista(
     if (!fila) return fallo(NO_ENCONTRADA);
     const { postulacion, busqueda, docente } = fila;
     if (busqueda.estado === "cerrada") return fallo(BUSQUEDA_CERRADA);
-    if (postulacion.etapa === "descartado") return fallo("Esta postulación está archivada. Recuperala para agendar.");
+    if (postulacion.etapa === "descartado") return fallo("Esta postulación está descartada. Recuperala para agendar.");
     if (docente.suspendido) return fallo(PERFIL_SUSPENDIDO);
     if (postulacion.etapa === "contratado") return fallo("Esta persona ya está contratada.");
 

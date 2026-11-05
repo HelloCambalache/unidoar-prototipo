@@ -41,15 +41,11 @@ export default async function Publicaciones({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <EncabezadoPagina
-        titulo="Publicaciones"
-        className="mb-1.5"
-        acciones={
-          <BotonLink href="/institucion/publicar" variante="cta" tamano="lg">
-            Publicar
-          </BotonLink>
-        }
-      />
+      <EncabezadoPagina titulo="Publicaciones" className="mb-3" />
+      {/* Debajo del título y no en la punta derecha de la pantalla, donde en una pantalla ancha quedaba lejos de lo que se mira (pedido del cliente, 2026-11-05). */}
+      <BotonLink href="/institucion/publicar" variante="cta" tamano="lg" className="max-[860px]:w-full">
+        + Publicar una búsqueda
+      </BotonLink>
 
       {publicada !== null && Number.isFinite(publicada) && (
         <p role="status" className="mt-3 mb-0 rounded-caja bg-verde-tint px-4 py-3 text-[13.5px] leading-normal text-verde">

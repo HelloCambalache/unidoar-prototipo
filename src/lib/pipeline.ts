@@ -112,7 +112,7 @@ export const ETAPA_MENU: Record<EtapaPostulacion, string> = {
   oferta: "Oferta enviada",
   examen_preocupacional: "Examen preocupacional",
   contratado: "Contratado",
-  descartado: "Archivado",
+  descartado: "Descartado",
 };
 
 /** Etapas visibles como columna, con el color del punto del encabezado (prototipo). */

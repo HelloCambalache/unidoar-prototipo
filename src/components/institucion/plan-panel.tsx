@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { cancelarSolicitudPlan, elegirFormaDePago, solicitarCambioPlan } from "@/app/actions/plan";
 import { BotonAccion } from "@/components/institucion/boton-accion";
@@ -62,6 +63,8 @@ export function PlanPanel({
   const desglose = P.desgloseDeMonto(plan, sedes, acuerdo);
   // Con un precio acordado (o varias sedes) lo que se paga por período no es el precio de lista del plan: se muestra el total y de dónde sale.
   const mostrarTotal = desglose.sedes > 1 || desglose.acordado;
+  // Multisede es un convenio: sin uno cargado por el equipo no hay un precio que mostrar (el precio por sede de Planes es una base interna que no se cobra).
+  const aConvenir = actual.porSede && !P.precioDefinido(plan, acuerdo);
   const conVariasSedes = desglose.sedes > 1;
   const sedesAdicionales = `${desglose.adicionales} ${desglose.adicionales === 1 ? "sede adicional" : "sedes adicionales"}`;
 
@@ -126,9 +129,24 @@ export function PlanPanel({
             <Insignia className="bg-white/[.14] text-navy-100">{actual.label}</Insignia>
           </div>
           <div className="text-[26px] leading-[1.2] font-semibold">
-            {pesos(mostrarTotal ? desglose.total : actual.precio)}
-            <span className="text-sm leading-none font-normal text-white/60">{P.sufijoDePrecio(plan)}</span>
+            {aConvenir ? (
+              "A convenir según el volumen"
+            ) : (
+              <>
+                {pesos(mostrarTotal ? desglose.total : actual.precio)}
+                <span className="text-sm leading-none font-normal text-white/60">{P.sufijoDePrecio(plan)}</span>
+              </>
+            )}
           </div>
+          {aConvenir && (
+            <div className="mt-1 text-[13px] leading-normal text-white/65">
+              El valor de tu plan se acuerda con UNIDOAR según la cantidad de sedes. Hasta que se cargue el convenio no se te factura nada. Escribinos desde{" "}
+              <Link href="/contacto" className="font-semibold text-white underline">
+                Contacto
+              </Link>{" "}
+              para armar la propuesta.
+            </div>
+          )}
           {desglose.acordado && (
             <div className="mt-1 text-[13px] leading-normal text-white/65">
               {desglose.convenio
@@ -136,7 +154,7 @@ export function PlanPanel({
                 : `Precio acordado con UNIDOAR${conVariasSedes ? "" : " (el de lista era " + pesos(actual.precio) + ")"}.`}
             </div>
           )}
-          {conVariasSedes && !desglose.convenio && (
+          {conVariasSedes && !desglose.convenio && !aConvenir && (
             <div className="mt-1 text-[13px] leading-normal text-white/65">
               {actual.porSede
                 ? `${desglose.sedes} sedes × ${pesos(desglose.base)}`

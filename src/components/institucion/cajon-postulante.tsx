@@ -224,6 +224,12 @@ function Ficha({
             Contratar
           </BotonLink>
         )}
+        {/* Descartar sale del tablero sin avisarle a la persona y se puede recuperar: «Descartados» (antes «Archivados»; el cliente buscaba «descartar»). */}
+        {!soloLectura && p.etapa !== "contratado" && p.etapa !== "descartado" && (
+          <Boton variante="secundario" bloque className="text-[#b91c1c] hover:text-[#b91c1c]" onClick={() => onMover(p.id, "descartado")}>
+            Descartar
+          </Boton>
+        )}
         {!soloLectura && p.etapa === "descartado" && (
           <Boton variante="primario" bloque onClick={() => onMover(p.id, "nuevos")}>
             Recuperar postulación
@@ -255,11 +261,6 @@ function Ficha({
             >
               Descargar CV
             </a>
-          )}
-          {!soloLectura && p.etapa !== "descartado" && p.etapa !== "contratado" && (
-            <Boton variante="fantasma" tamano="sm" className="text-[#b91c1c] hover:text-[#b91c1c]" onClick={() => onMover(p.id, "descartado")}>
-              Archivar
-            </Boton>
           )}
         </div>
       </section>

@@ -129,7 +129,7 @@ export function MenuEtapas({
                 {ETAPA_MENU[e]}
               </button>
             ))}
-            {/* Quien ya está archivado solo se mueve de etapa (eso lo recupera): ni se contrata ni se vuelve a archivar. */}
+            {/* Quien ya está descartado solo se mueve de etapa (eso lo recupera): ni se contrata ni se vuelve a descartar. */}
             {etapa !== "descartado" && (
               <>
                 <Link
@@ -151,7 +151,7 @@ export function MenuEtapas({
                   className={cn(ITEM, "text-[#b91c1c]")}
                 >
                   <span className="w-3.5" />
-                  Archivar
+                  Descartar
                 </button>
               </>
             )}

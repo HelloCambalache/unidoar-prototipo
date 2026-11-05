@@ -140,7 +140,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               ],
             },
             {
-              p: "La mayoría de los cambios de etapa le llegan al profesional como aviso en la campanita (y por mail, según la etapa); pasar a alguien a **Nuevos** no avisa. **Archivar** a alguien es silencioso: no se le avisa. Tocando una tarjeta abrís su ficha: perfil, CV, teléfono y email, las notas internas del equipo y la agenda.",
+              p: "La mayoría de los cambios de etapa le llegan al profesional como aviso en la campanita (y por mail, según la etapa); pasar a alguien a **Nuevos** no avisa. **Descartar** a alguien (en el menú ⋯ de la tarjeta o en su ficha) es silencioso: no se le avisa; queda en la columna **Descartados** y lo podés recuperar cuando quieras. Tocando una tarjeta abrís su ficha: perfil, CV, teléfono y email, las notas internas del equipo y la agenda.",
             },
             {
               pasos: [
@@ -191,6 +191,8 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
                 "**Filtros y orden:** nivel, tipo de búsqueda, disciplinas y zonas, solo verificados, favoritos y orden por recomendados, experiencia, cercanía o nombre.",
                 "**Cercanía:** se mide desde la sede de la búsqueda que elijas o, sin elegir, desde tus sedes: cada profesional, a la más cercana.",
                 "**Favoritos:** la estrella guarda a alguien para tenerlo a mano.",
+                "**Si no encuentra a nadie**, te decimos por qué: por ejemplo, que todavía no hay profesionales de esa disciplina en UNIDOAR (la búsqueda está bien hecha: se van sumando) o que hay, pero ninguno en esa zona, con un botón para verlos sin elegir zona. Si necesitás cubrir el puesto igual, publicá una búsqueda: los profesionales que se sumen la ven al entrar a buscar trabajo.",
+                "**Se acuerda de tu última búsqueda:** si salís a mirar una publicación y volvés a Buscar profesionales desde el menú, retomás con tus filtros y la búsqueda para la que estabas invitando (hasta un día). Para arrancar de cero, tocá **Limpiar la búsqueda**. Y en el tablero de cada publicación, **+ Invitar profesionales** te lleva al buscador ya con esa búsqueda elegida.",
               ],
             },
             {
@@ -367,8 +369,8 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
       ],
     },
     {
-      pregunta: "¿Puedo archivar a un postulante sin avisarle?",
-      respuesta: [{ p: "Sí. Archivar es silencioso: no le llega ningún aviso. Si cerrás la búsqueda, todas las personas que estaban en ella reciben un aviso de cierre." }],
+      pregunta: "¿Puedo descartar a un postulante sin avisarle?",
+      respuesta: [{ p: "Sí. Descartar es silencioso: no le llega ningún aviso, y queda en la columna Descartados por si querés recuperarlo. Si cerrás la búsqueda, todas las personas que estaban en ella reciben un aviso de cierre." }],
     },
     {
       pregunta: "¿Cómo invito a otra persona de mi institución?",

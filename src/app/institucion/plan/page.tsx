@@ -65,7 +65,8 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
       <AvisoDePlanSinPago enPlan />
       <PlanPanel
         // El valor de fundadora solo lo ve quien tiene ese plan: a las demás instituciones no les viaja en el código de la página.
-        catalogo={catalogoParaNavegador(catalogo, { sinPrecioDeFundador: datos.plan !== "fundador" })}
+        // El precio base por sede de Multisede es de uso interno (no se cobra sin un convenio): no viaja en el código de la página.
+        catalogo={catalogoParaNavegador(catalogo, { sinPrecioDeFundador: datos.plan !== "fundador", sinPrecioPorSede: true })}
         plan={datos.plan}
         tipo={institucion.tipo}
         sedes={datos.sedes}

@@ -12,7 +12,9 @@ import { BotonCompartir } from "@/components/ui/compartir";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { mensajeDeBusqueda, rutaDeOferta, urlCompleta } from "@/lib/compartir";
+import { RUTA_BUSCADOR } from "@/lib/filtros-docentes";
 import { busquedaPorDefecto, opcionesDeBusqueda, pipelineDeBusqueda } from "@/lib/queries/pipeline";
+import { motivoSinBeneficio } from "@/lib/queries/puntuales";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
@@ -46,11 +48,12 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
     );
   }
 
-  const [datos, opciones, sedes, origen] = await Promise.all([
+  const [datos, opciones, sedes, origen, sinBuscador] = await Promise.all([
     pipelineDeBusqueda(institucion, usuario.id, busquedaId),
     consultaOpciones,
     sedesDeInstitucion(institucion.id),
     origenSitio(),
+    motivoSinBeneficio(institucion.plan, "buscador"),
   ]);
   if (!datos) notFound();
   const { busqueda, postulantes } = datos;
@@ -86,6 +89,12 @@ export default async function Postulantes({ searchParams }: { searchParams: Prom
       <BotonLink href={`/institucion/publicar?editar=${busqueda.id}`} variante="secundario" tamano="sm">
         ✎ Editar búsqueda
       </BotonLink>
+      {/* Al buscador con ESTA búsqueda de contexto: los resultados vienen ordenados según lo que pide y cada «Invitar» ya apunta a ella (pedido del cliente, 2026-11-05). */}
+      {busqueda.estado === "activa" && !sinBuscador && (
+        <BotonLink href={`${RUTA_BUSCADOR}?busqueda=${busqueda.id}`} variante="secundario" tamano="sm">
+          + Invitar profesionales
+        </BotonLink>
+      )}
       {/* Una búsqueda cerrada o pausada no se comparte: el enlace diría «ya no está abierta». */}
       {busqueda.estado === "activa" && (
         <BotonCompartir

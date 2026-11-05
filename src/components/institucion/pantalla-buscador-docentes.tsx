@@ -6,6 +6,7 @@ import { BotonBusquedaUrgente } from "@/components/institucion/boton-busqueda-ur
 import { BotonLink } from "@/components/ui/button";
 import { requerirInstitucion } from "@/lib/auth";
 import { interpretarBusqueda, palabrasSinAplicar } from "@/lib/busqueda-ia";
+import { explicarVacio, type ExplicacionDelVacio } from "@/lib/buscador-vacio";
 import {
   filtrosActivos,
   hrefBuscador,
@@ -14,6 +15,7 @@ import {
   RUTA_BUSCADOR,
   RUTA_RAPIDAS,
   TERMINOS_ROL,
+  type FiltrosDocentes,
 } from "@/lib/filtros-docentes";
 import {
   buscarDocentes,
@@ -28,6 +30,7 @@ import { puntosDeReferencia } from "@/lib/sedes";
 import { BarraBuscadorDocentes } from "./barra-buscador-docentes";
 import { PaginacionLista } from "./paginacion-lista";
 import { PanelFiltrosDocentes } from "./panel-filtros-docentes";
+import { RecordarBusqueda } from "./recordar-busqueda";
 import { TarjetaDocente } from "./tarjeta-docente";
 
 export type ParametrosDePagina = Promise<Record<string, string | string[] | undefined>>;
@@ -107,8 +110,26 @@ export async function PantallaBuscadorDocentes({
 
   const sinFavoritos = filtros.soloFavoritos && filtrosActivos(filtros) === 1 && resultado.total === 0;
 
+  // Sin resultados y con una disciplina o una zona pedidas: se cuenta qué hay si se afloja la búsqueda para decir POR QUÉ no se encontró a nadie
+  // (casi siempre es que todavía no hay profesionales de esa disciplina, no que la búsqueda esté mal hecha). Solo en el catálogo: en suplencias
+  // el universo es el de «disponibles ya».
+  let explicacionDelVacio: ExplicacionDelVacio = null;
+  if (resultado.docentes.length === 0 && !sinFavoritos && !rapidas && (filtros.disciplinas.length > 0 || filtros.zonas.length > 0)) {
+    const contar = async (f: FiltrosDocentes) =>
+      (await buscarDocentes({ puntos, usuarioId: usuario.id, filtros: { ...f, pagina: 1 }, rapidas, contexto, activas })).total;
+    const [deLaDisciplina, sinLaZona] = await Promise.all([
+      filtros.disciplinas.length > 0
+        ? contar({ ...filtros, zonas: [], disponibilidad: [], nivel: null, tipo: null, soloVerificados: false, soloFavoritos: false, texto: "" })
+        : Promise.resolve(null),
+      filtros.zonas.length > 0 ? contar({ ...filtros, zonas: [] }) : Promise.resolve(null),
+    ]);
+    explicacionDelVacio = explicarVacio({ disciplinas: filtros.disciplinas, zonas: filtros.zonas, deLaDisciplina, sinLaZona });
+  }
+
   return (
     <div className="flex items-start gap-[22px] max-[760px]:flex-col max-[760px]:items-stretch">
+      {/* Se acuerda de la última búsqueda (con sus filtros y la búsqueda para la que se invita) por si se sale a mirar una publicación y se vuelve. */}
+      <RecordarBusqueda clave={`unidoar:buscador:${institucion.id}:${modo}`} />
       <PanelFiltrosDocentes
         ruta={ruta}
         filtros={filtros}
@@ -176,6 +197,32 @@ export async function PantallaBuscadorDocentes({
               <BotonLink href={hrefBuscador(ruta, filtros, { soloFavoritos: false })} variante="secundario">
                 Ver todos los profesionales
               </BotonLink>
+            }
+          />
+        ) : explicacionDelVacio ? (
+          <EstadoVacio
+            titulo={explicacionDelVacio.titulo}
+            texto={explicacionDelVacio.texto}
+            accion={
+              explicacionDelVacio.tipo === "ninguno-en-la-zona" ? (
+                <div className="flex flex-wrap justify-center gap-2.5">
+                  <BotonLink href={hrefBuscador(ruta, filtros, { zonas: [] })} variante="primario">
+                    {explicacionDelVacio.cantidad === 1 ? "Ver a la persona sin elegir zona" : `Ver los ${explicacionDelVacio.cantidad} sin elegir zona`}
+                  </BotonLink>
+                  <BotonLink href={limpiarHref} variante="secundario">
+                    Limpiar la búsqueda
+                  </BotonLink>
+                </div>
+              ) : (
+                <div className="flex flex-wrap justify-center gap-2.5">
+                  <BotonLink href="/institucion/publicar" variante="cta">
+                    Publicar una búsqueda
+                  </BotonLink>
+                  <BotonLink href={limpiarHref} variante="secundario">
+                    Limpiar la búsqueda
+                  </BotonLink>
+                </div>
+              )
             }
           />
         ) : (

@@ -116,13 +116,43 @@ export function hrefBuscador(ruta: string, filtros: FiltrosDocentes, cambios: Pa
   return `${ruta}?${p.toString()}`;
 }
 
-/** URL para una frase nueva de "Buscá con IA": reemplaza todos los filtros y deja que el servidor interprete. */
+/**
+ * URL para una frase nueva de "Buscá con IA": reemplaza todos los filtros y deja que el servidor interprete. Sin frase ni búsqueda es «empezar de
+ * cero» y lleva `?nuevo=1`: la pantalla de la ruta pelada retoma la última búsqueda (ver `RecordarBusqueda`) y esa marca es la forma de pedirle que no.
+ */
 export function hrefFrase(ruta: string, frase: string, busqueda: string | null) {
   const p = new URLSearchParams();
   if (frase.trim()) p.set("q", frase.trim());
   if (busqueda) p.set("busqueda", busqueda);
   const qs = p.toString();
-  return qs ? `${ruta}?${qs}` : ruta;
+  return qs ? `${ruta}?${qs}` : `${ruta}?${PARAMETRO_EMPEZAR_DE_CERO}=1`;
+}
+
+/** `?nuevo=1`: una búsqueda en blanco a propósito (la ruta sin parámetros retoma la última). */
+export const PARAMETRO_EMPEZAR_DE_CERO = "nuevo";
+
+/** Cuánto se recuerda la última búsqueda del navegador: pasado ese tiempo, la ruta pelada abre en blanco como siempre. */
+export const HORAS_QUE_SE_RECUERDA_LA_BUSQUEDA = 24;
+
+/**
+ * Qué hacer con la dirección actual de Buscar profesionales (`search` es `location.search`: «» o «?a=b»):
+ *  - sin parámetros: retomar la última búsqueda guardada, si es reciente;
+ *  - «?nuevo=1»: empezar de cero, se olvida lo guardado;
+ *  - cualquier otra: es la búsqueda vigente, se guarda.
+ * Pura para poder probarla; `RecordarBusqueda` la aplica con el almacenamiento del navegador.
+ */
+export function decidirMemoriaDeBusqueda(
+  search: string,
+  guardada: { search: string; en: number } | null,
+  ahora: number,
+): { accion: "retomar"; search: string } | { accion: "guardar"; search: string } | { accion: "olvidar" } | { accion: "nada" } {
+  if (search === "" || search === "?") {
+    const vigente = guardada && guardada.search.startsWith("?") && ahora - guardada.en < HORAS_QUE_SE_RECUERDA_LA_BUSQUEDA * 3_600_000;
+    return vigente && guardada ? { accion: "retomar", search: guardada.search } : { accion: "nada" };
+  }
+  const solo = new URLSearchParams(search);
+  if (solo.get(PARAMETRO_EMPEZAR_DE_CERO) === "1" && [...solo.keys()].length === 1) return { accion: "olvidar" };
+  return { accion: "guardar", search };
 }
 
 /** Cantidad de condiciones que achican el listado (para el "Limpiar" y el estado vacío). */

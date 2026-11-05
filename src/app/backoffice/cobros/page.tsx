@@ -3,6 +3,7 @@ import { requerirUsuario } from "@/lib/auth";
 import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { BuscadorLista } from "@/components/backoffice/buscador-lista";
 import { CobroMarcarVencidas } from "@/components/backoffice/cobro-marcar-vencidas";
 import { CobroPedidos } from "@/components/backoffice/cobro-pedidos";
 import { InsigniaCobro } from "@/components/backoffice/inst-insignias";
@@ -11,6 +12,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Pestanas } from "@/components/ui/pestanas";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
+import { filtrarPorNombre } from "@/lib/buscar-por-nombre";
 import { etiquetaPeriodo, fechaDeColumna, type EstadoCobro } from "@/lib/cobros";
 import { haceTiempo } from "@/lib/fechas";
 import { pesos } from "@/lib/planes";
@@ -49,9 +51,12 @@ export default async function CobrosBackoffice({
   const sp = await searchParams;
   const pedido = Array.isArray(sp.estado) ? sp.estado[0] : sp.estado;
   const filtro = FILTROS.find((f) => f.clave === pedido)?.clave ?? "todas";
+  const q = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim().slice(0, 80) ?? "";
 
-  const [{ resumen, filas }, pedidos, P] = await Promise.all([tablaDeCobros(), pedidosDePlanPendientes(), planes()]);
+  const [{ resumen, filas: todasLasFilas }, pedidos, P] = await Promise.all([tablaDeCobros(), pedidosDePlanPendientes(), planes()]);
   const ahora = new Date();
+  // La lupa busca por el nombre de la institución; las pestañas cuentan lo que se encontró (el resumen de arriba sigue siendo de todas).
+  const filas = filtrarPorNombre(todasLasFilas, q);
   const cantidades: Record<EstadoCobro | "todas", number> = {
     todas: filas.length,
     vencida: filas.filter((f) => f.estado === "vencida").length,
@@ -59,6 +64,13 @@ export default async function CobrosBackoffice({
     aldia: filas.filter((f) => f.estado === "aldia").length,
   };
   const visibles = filtro === "todas" ? filas : filas.filter((f) => f.estado === filtro);
+  const hrefDe = (estado: string) => {
+    const p = new URLSearchParams();
+    if (estado !== "todas") p.set("estado", estado);
+    if (q) p.set("q", q);
+    const qs = p.toString();
+    return qs ? `/backoffice/cobros?${qs}` : "/backoffice/cobros";
+  };
 
   return (
     <>
@@ -101,6 +113,13 @@ export default async function CobrosBackoffice({
         <EtiquetaSeccion className="mb-3" id="cobros-titulo">
           Cobros por institución
         </EtiquetaSeccion>
+        <BuscadorLista
+          accion="/backoffice/cobros"
+          q={q}
+          conservar={{ estado: filtro === "todas" ? "" : filtro }}
+          etiqueta="Buscar institución por nombre"
+          placeholder="Buscar institución por nombre"
+        />
         <Pestanas
           className="mb-3.5"
           activa={filtro}
@@ -108,13 +127,19 @@ export default async function CobrosBackoffice({
             clave: f.clave,
             etiqueta: f.etiqueta,
             cantidad: cantidades[f.clave],
-            href: f.clave === "todas" ? "/backoffice/cobros" : `/backoffice/cobros?estado=${f.clave}`,
+            href: hrefDe(f.clave),
           }))}
         />
         {visibles.length === 0 ? (
           <EstadoVacio
-            titulo={filas.length === 0 ? "Todavía no hay instituciones" : "No hay instituciones en este estado"}
-            texto={filas.length === 0 ? undefined : "Probá con otra pestaña."}
+            titulo={
+              q && filas.length === 0
+                ? "No encontramos ninguna institución con ese nombre"
+                : todasLasFilas.length === 0
+                  ? "Todavía no hay instituciones"
+                  : "No hay instituciones en este estado"
+            }
+            texto={q && filas.length === 0 ? "Revisá cómo está escrito o probá con una sola palabra del nombre." : todasLasFilas.length === 0 ? undefined : "Probá con otra pestaña."}
           />
         ) : (
           <Tabla>

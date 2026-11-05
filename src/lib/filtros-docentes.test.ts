@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { interpretarBusqueda, type VocabularioBusqueda } from "@/lib/busqueda-ia";
-import { hrefBuscador, hrefFrase, leerFiltros } from "@/lib/filtros-docentes";
+import { decidirMemoriaDeBusqueda, hrefBuscador, hrefFrase, leerFiltros } from "@/lib/filtros-docentes";
 
 const VOCABULARIO: VocabularioBusqueda = {
   disciplinas: ["Inglés", "Música", "Natación", "Matemática"],
@@ -77,5 +77,44 @@ describe("el buscador único de profesionales (lo escrito en ?q=)", () => {
 
   it("una frase nueva arranca de cero: solo viaja la frase", () => {
     assert.equal(hrefFrase("/institucion/buscar-docentes", "Ana Pérez", null), "/institucion/buscar-docentes?q=Ana+P%C3%A9rez");
+  });
+
+  it("empezar de cero (sin frase ni búsqueda) lleva ?nuevo=1: la ruta pelada retoma la última búsqueda", () => {
+    assert.equal(hrefFrase("/institucion/buscar-docentes", "", null), "/institucion/buscar-docentes?nuevo=1");
+    assert.equal(hrefFrase("/institucion/buscar-docentes", "   ", null), "/institucion/buscar-docentes?nuevo=1");
+    // Con una búsqueda de contexto no hace falta: ya tiene parámetros.
+    assert.equal(hrefFrase("/institucion/buscar-docentes", "", "b1"), "/institucion/buscar-docentes?busqueda=b1");
+  });
+});
+
+describe("recordar la última búsqueda del buscador de profesionales", () => {
+  const HORA = 3_600_000;
+  const guardada = (search: string, haceHoras: number) => ({ search, en: 1_000 * HORA - haceHoras * HORA });
+  const ahora = 1_000 * HORA;
+
+  it("con la ruta pelada retoma la última búsqueda si es reciente", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("", guardada("?q=hockey&f=1&busqueda=b1", 2), ahora), { accion: "retomar", search: "?q=hockey&f=1&busqueda=b1" });
+    assert.deepEqual(decidirMemoriaDeBusqueda("?", guardada("?q=hockey", 2), ahora), { accion: "retomar", search: "?q=hockey" });
+  });
+
+  it("si la guardada es vieja (más de un día) no se retoma: abre en blanco como siempre", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("", guardada("?q=hockey", 25), ahora), { accion: "nada" });
+  });
+
+  it("sin nada guardado, o con algo que no es una dirección, no hace nada", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("", null, ahora), { accion: "nada" });
+    assert.deepEqual(decidirMemoriaDeBusqueda("", guardada("javascript:alert(1)", 1), ahora), { accion: "nada" });
+  });
+
+  it("una búsqueda con parámetros es la vigente: se guarda", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("?q=ingles&f=1", null, ahora), { accion: "guardar", search: "?q=ingles&f=1" });
+  });
+
+  it("?nuevo=1 es empezar de cero: se olvida lo guardado y no se retoma", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("?nuevo=1", guardada("?q=hockey", 1), ahora), { accion: "olvidar" });
+  });
+
+  it("?nuevo=1 con otros parámetros no es empezar de cero: es una búsqueda más", () => {
+    assert.deepEqual(decidirMemoriaDeBusqueda("?nuevo=1&q=x", null, ahora), { accion: "guardar", search: "?nuevo=1&q=x" });
   });
 });

@@ -163,7 +163,7 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
           resumen: "Cómo se generan las facturas y cómo registrar un pago.",
           bloques: [
             {
-              p: "[Cobros](/backoffice/cobros) lista las cuentas con su plan, su estado de pago y el próximo cobro. Cada cuenta tiene su ficha con las secciones **Medio de pago**, **Búsquedas puntuales**, **Meses bonificados**, **Precio** y **Facturación**.",
+              p: "[Cobros](/backoffice/cobros) lista las cuentas con su plan, su estado de pago y el próximo cobro. **La lupa** de arriba busca una institución por su nombre (sin importar tildes, mayúsculas ni el orden de las palabras) y las pestañas cuentan lo que se encontró. Cada cuenta tiene su ficha con las secciones **Medio de pago**, **Búsquedas puntuales**, **Meses bonificados**, **Precio** y **Facturación**.",
             },
             {
               lista: [

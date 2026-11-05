@@ -204,7 +204,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
               ],
             },
             {
-              nota: "Si una institución archiva tu postulación no te avisamos en el momento: la ves como **Postulación enviada** hasta que la búsqueda se cierra. Que no te contesten enseguida no significa que te hayan descartado.",
+              nota: "Si una institución descarta tu postulación no te avisamos en el momento: la ves como **Postulación enviada** hasta que la búsqueda se cierra. Que no te contesten enseguida puede ser que todavía no la revisaron o que ya decidieron otra cosa.",
             },
           ],
         },
@@ -336,7 +336,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
     {
       pregunta: "Me postulé y no me contestan, ¿me descartaron?",
       respuesta: [
-        { p: "No necesariamente. Si una institución archiva tu postulación no te lo avisamos, y la ves como «Postulación enviada» hasta que la búsqueda se cierra. Ver [Seguir tus postulaciones](/ayuda/profesionales/seguir-tus-postulaciones)." },
+        { p: "No necesariamente. Si una institución descarta tu postulación no te lo avisamos, y la ves como «Postulación enviada» hasta que la búsqueda se cierra. Ver [Seguir tus postulaciones](/ayuda/profesionales/seguir-tus-postulaciones)." },
       ],
     },
     {

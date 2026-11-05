@@ -33,11 +33,11 @@ const COLUMNA_VACIA: Record<EtapaPostulacion, string> = {
   oferta: "Arrastrá una tarjeta acá cuando mandes la oferta.",
   examen_preocupacional: "Arrastrá acá a quienes tengan que hacerse el examen preocupacional antes de ingresar.",
   contratado: "Todavía nadie. Cuando confirmes una contratación, la persona queda acá.",
-  descartado: "Acá quedan quienes archivés. No se les avisa.",
+  descartado: "Acá quedan quienes descartés. No se les avisa y podés recuperarlos cuando quieras.",
 };
 
-/** Las columnas del tablero: las etapas del proceso y, al final, los archivados (etapa interna `descartado`). */
-const COLUMNAS: { key: EtapaPostulacion; columna: string }[] = [...ETAPAS, { key: "descartado", columna: "Archivados" }];
+/** Las columnas del tablero: las etapas del proceso y, al final, los descartados (etapa interna `descartado`). */
+const COLUMNAS: { key: EtapaPostulacion; columna: string }[] = [...ETAPAS, { key: "descartado", columna: "Descartados" }];
 
 const COMPARAR: Record<Orden, (a: PostulanteTarjeta, b: PostulanteTarjeta) => number> = {
   recientes: (a, b) => b.etapaDesde.localeCompare(a.etapaDesde),
@@ -91,7 +91,7 @@ export function TableroPipeline({
       try {
         const r = etapa === "descartado" ? await descartarPostulacion(id) : await moverPostulacion(id, etapa);
         if (!r.ok) toast(r.error, "error");
-        else toast(etapa === "descartado" ? `Archivaste la postulación de ${p.nombre}.` : `${p.nombre} pasó a ${ETAPA_MENU[etapa]}.`);
+        else toast(etapa === "descartado" ? `Descartaste a ${p.nombre}: queda en Descartados y no se le avisa.` : `${p.nombre} pasó a ${ETAPA_MENU[etapa]}.`);
       } catch {
         // Al terminar la transición la tarjeta vuelve sola a su columna.
         toast("No pudimos mover la postulación. Probá de nuevo.", "error");
@@ -104,7 +104,7 @@ export function TableroPipeline({
     .filter((p) => !soloVerificados || p.cv.verificado)
     .filter((p) => !zona || p.zonas.includes(zona))
     .sort(COMPARAR[orden]);
-  // En la tabla, los archivados van al final.
+  // En la tabla, los descartados van al final.
   const visibles = [...filtrados.filter((p) => p.etapa !== "descartado"), ...filtrados.filter((p) => p.etapa === "descartado")];
   const seleccionado = lista.find((p) => p.id === abiertoId) ?? null;
 
