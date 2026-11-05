@@ -574,6 +574,9 @@ export const contactosInstitucion = pgTable(
     telefono: text("telefono"),
     disciplina: text("disciplina"),
     nota: text("nota"),
+    /** CV adjunto (un PDF, opcional): path del bucket privado `<usuario>/cvcontactos/<uuid>.pdf` y el nombre con el que se subió. Ver src/lib/contacto-cv.ts. */
+    cvPath: text("cv_path"),
+    cvNombre: text("cv_nombre"),
     /** manual | csv */
     origen: text("origen").notNull().default("manual"),
     creadoPor: uuid("creado_por").references(() => usuarios.id, { onDelete: "set null" }),

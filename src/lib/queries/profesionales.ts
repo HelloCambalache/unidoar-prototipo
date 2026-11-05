@@ -19,6 +19,7 @@ import {
 } from "@/db/schema";
 import { ETAPA_LABEL } from "@/lib/catalogo";
 import { normalizarTexto } from "@/lib/busqueda-ia";
+import { nombreDeCvParaMostrar } from "@/lib/contacto-cv";
 import { grillaDesdeLista } from "@/lib/disponibilidad";
 import type { FiltrosDocentes } from "@/lib/filtros-docentes";
 import { esEstudiante } from "@/lib/estudiantes";
@@ -625,6 +626,8 @@ export type ContactoVista = {
   telefono: string | null;
   disciplina: string | null;
   nota: string | null;
+  /** Nombre del CV adjunto, o null si no tiene. Nunca el path del archivo: se abre por `/api/cv/contacto/<id>`. */
+  cvNombre: string | null;
 };
 
 export type FilaBase = {
@@ -725,6 +728,8 @@ export async function baseDeDocentes(
         telefono: contactosInstitucion.telefono,
         disciplina: contactosInstitucion.disciplina,
         nota: contactosInstitucion.nota,
+        cvPath: contactosInstitucion.cvPath,
+        cvNombre: contactosInstitucion.cvNombre,
         creadoEn: contactosInstitucion.creadoEn,
       })
       .from(contactosInstitucion)
@@ -787,7 +792,15 @@ export async function baseDeDocentes(
     mapa.set(clave, {
       clave,
       docenteId: null,
-      contacto: { id: c.id, nombre: c.nombre, email: c.email, telefono: c.telefono, disciplina: c.disciplina, nota: c.nota },
+      contacto: {
+        id: c.id,
+        nombre: c.nombre,
+        email: c.email,
+        telefono: c.telefono,
+        disciplina: c.disciplina,
+        nota: c.nota,
+        cvNombre: nombreDeCvParaMostrar(c.cvPath, c.cvNombre),
+      },
       nombre: c.nombre,
       email: c.email,
       suspendido: false,

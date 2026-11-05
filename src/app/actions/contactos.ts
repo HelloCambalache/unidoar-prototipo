@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, isNotNull } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import { contactosInstitucion } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { MAX_CVS_POR_INSTITUCION, aplicarCambioDeCv, cabeOtroCv, leerCambioDeCv, type CvGuardado } from "@/lib/contacto-cv";
 import {
   MAX_CONTACTOS_POR_INSTITUCION,
   MAX_FILAS_IMPORTACION,
@@ -15,7 +16,9 @@ import {
   filasCrudasSchema,
   validarFilas,
 } from "@/lib/contactos";
+import { quitados } from "@/lib/archivos";
 import { resumenDeError } from "@/lib/errores";
+import { borrarArchivos } from "@/lib/queries/archivos";
 
 /*
  * Contactos privados de la institución (Profesionales → "Cargar perfil" e "Importar CSV"). Cualquier persona del
@@ -25,6 +28,7 @@ import { resumenDeError } from "@/lib/errores";
 
 const NO_ENCONTRADO = "No encontramos ese contacto.";
 const EMAIL_REPETIDO = "Ya tenés un contacto con ese email.";
+const TOPE_DE_CV = `Llegaste al máximo de ${MAX_CVS_POR_INSTITUCION} contactos con CV adjunto. Quitale el CV a alguno para sumar otro.`;
 
 const refrescar = () => revalidatePath("/institucion/base-de-docentes");
 
@@ -33,7 +37,21 @@ function esViolacionUnica(e: unknown): boolean {
   return codigo === "23505";
 }
 
-/** Crea un contacto, o lo edita si el formulario trae su `id`. Recibe el FormData del diálogo. */
+/** Cuántos contactos de la institución ya tienen un CV adjunto (cuenta contra `MAX_CVS_POR_INSTITUCION`). */
+async function contactosConCv(ejecutor: Pick<ReturnType<typeof getDb>, "select">, institucionId: string): Promise<number> {
+  const [fila] = await ejecutor
+    .select({ n: count() })
+    .from(contactosInstitucion)
+    .where(and(eq(contactosInstitucion.institucionId, institucionId), isNotNull(contactosInstitucion.cvPath)));
+  return fila?.n ?? 0;
+}
+
+/**
+ * Crea un contacto, o lo edita si el formulario trae su `id`. Recibe el FormData del diálogo. El CV (opcional, un PDF) llega como
+ * `cvAccion` (igual | quitar | nuevo) y, con «nuevo», el path que acaba de subir el navegador (`cvPath`, `cvNombre`): el servidor solo
+ * lo acepta si es de esta cuenta y de la carpeta de CV de contactos (`leerCambioDeCv`). El archivo que se reemplaza o se quita se borra
+ * de Storage después de guardar.
+ */
 export async function guardarContacto(_previo: Resultado<{ id: string }> | null, formData: FormData): Promise<Resultado<{ id: string }>> {
   const { usuario, institucion } = await requerirInstitucion();
   const datos = parsear(contactoSchema, formData);
@@ -46,20 +64,42 @@ export async function guardarContacto(_previo: Resultado<{ id: string }> | null,
     disciplina: disciplina ?? null,
     nota: nota ?? null,
   };
+  const lectura = leerCambioDeCv(
+    { accion: formData.get("cvAccion"), path: formData.get("cvPath"), nombre: formData.get("cvNombre") },
+    usuario.id,
+  );
+  if (!lectura.ok) return fallo(lectura.error);
+  const { cambio } = lectura;
 
   const db = getDb();
   const id = formData.get("id");
+  let archivoQuitado: string | null = null;
   try {
     if (typeof id === "string" && id !== "") {
       if (!esUuid(id)) return fallo(NO_ENCONTRADO);
-      const [editado] = await db
-        .update(contactosInstitucion)
-        .set(valores)
-        .where(and(eq(contactosInstitucion.id, id), eq(contactosInstitucion.institucionId, institucion.id)))
-        .returning({ id: contactosInstitucion.id });
-      if (!editado) return fallo(NO_ENCONTRADO);
+      const resultado = await transaccion(async (tx) => {
+        // Se relee y se bloquea la fila: el CV que había se decide con lo que hay ahora, no con lo que la pantalla creía.
+        const [actual] = await tx
+          .select({ id: contactosInstitucion.id, cvPath: contactosInstitucion.cvPath, cvNombre: contactosInstitucion.cvNombre })
+          .from(contactosInstitucion)
+          .where(and(eq(contactosInstitucion.id, id), eq(contactosInstitucion.institucionId, institucion.id)))
+          .limit(1)
+          .for("update");
+        if (!actual) return fallo(NO_ENCONTRADO);
+        const guardado: CvGuardado = actual.cvPath ? { path: actual.cvPath, nombre: actual.cvNombre ?? "" } : null;
+        const nuevo = aplicarCambioDeCv(guardado, cambio);
+        if (nuevo && !guardado && !cabeOtroCv(await contactosConCv(tx, institucion.id))) return fallo(TOPE_DE_CV);
+        await tx
+          .update(contactosInstitucion)
+          .set({ ...valores, cvPath: nuevo?.path ?? null, cvNombre: nuevo?.nombre ?? null })
+          .where(eq(contactosInstitucion.id, actual.id));
+        archivoQuitado = quitados([guardado?.path], [nuevo?.path])[0] ?? null;
+        return ok({ id: actual.id });
+      });
+      if (!resultado.ok) return resultado;
+      await borrarArchivos([archivoQuitado]);
       refrescar();
-      return ok({ id: editado.id });
+      return resultado;
     }
 
     const [cargados] = await db
@@ -69,9 +109,18 @@ export async function guardarContacto(_previo: Resultado<{ id: string }> | null,
     if ((cargados?.n ?? 0) >= MAX_CONTACTOS_POR_INSTITUCION) {
       return fallo(`Llegaste al máximo de ${MAX_CONTACTOS_POR_INSTITUCION} contactos cargados. Borrá algunos para sumar nuevos.`);
     }
+    const cv = aplicarCambioDeCv(null, cambio);
+    if (cv && !cabeOtroCv(await contactosConCv(db, institucion.id))) return fallo(TOPE_DE_CV);
     const [nuevo] = await db
       .insert(contactosInstitucion)
-      .values({ ...valores, institucionId: institucion.id, origen: "manual", creadoPor: usuario.id })
+      .values({
+        ...valores,
+        cvPath: cv?.path ?? null,
+        cvNombre: cv?.nombre ?? null,
+        institucionId: institucion.id,
+        origen: "manual",
+        creadoPor: usuario.id,
+      })
       .returning({ id: contactosInstitucion.id });
     refrescar();
     return ok({ id: nuevo!.id });
@@ -89,8 +138,10 @@ export async function borrarContacto(contactoId: string): Promise<Resultado> {
   const [borrado] = await getDb()
     .delete(contactosInstitucion)
     .where(and(eq(contactosInstitucion.id, contactoId), eq(contactosInstitucion.institucionId, institucion.id)))
-    .returning({ id: contactosInstitucion.id });
+    .returning({ id: contactosInstitucion.id, cvPath: contactosInstitucion.cvPath });
   if (!borrado) return fallo(NO_ENCONTRADO);
+  // Su CV (si tenía) ya no lo usa ninguna fila: se borra de Storage después de confirmar la base y nunca rompe el borrado.
+  await borrarArchivos([borrado.cvPath]);
   refrescar();
   return ok();
 }

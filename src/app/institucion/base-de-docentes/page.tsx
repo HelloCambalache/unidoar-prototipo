@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
+import { Icono } from "@/components/icons";
 import { AccionesContacto, AccionesContactos } from "@/components/institucion/contactos-privados";
 import { PaginacionLista } from "@/components/institucion/paginacion-lista";
 import { BotonLink } from "@/components/ui/button";
@@ -163,6 +164,12 @@ export default async function BaseDeDocentesPage({ searchParams }: Props) {
                           </div>
                         ) : (
                           contactoDe && <div className="text-xs leading-snug text-sutil">{contactoDe}</div>
+                        )}
+                        {f.contacto?.cvNombre && (
+                          <div className="mt-0.5 inline-flex items-center gap-1 text-xs leading-snug font-medium text-verde">
+                            <Icono nombre="archivo" tamano={12} trazo={1.8} />
+                            CV adjunto
+                          </div>
                         )}
                         {f.contacto?.nota && (
                           <div className="line-clamp-1 max-w-[260px] text-xs leading-snug text-apagado" title={f.contacto.nota}>

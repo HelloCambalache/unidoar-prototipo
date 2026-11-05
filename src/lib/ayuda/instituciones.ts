@@ -214,12 +214,13 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
             {
               lista: [
                 "**Cargar perfil:** sumás a una persona a mano. Hace falta el nombre y un email o un teléfono.",
+                "**CV adjunto:** a cada contacto le podés guardar su **CV en PDF** (uno por contacto, hasta 500 contactos con CV). Lo adjuntás al cargar el perfil o después, con **Editar**; en la lista ves la marca «CV adjunto» y lo abrís con **Ver CV**. Para cambiarlo o quitarlo, también desde **Editar**. Si borrás el contacto, se borra su CV.",
                 "**Importar CSV:** subís un archivo de hasta 500 filas (512 KB), con coma, punto y coma o tabulación, y ves una vista previa antes de confirmar. Hay un máximo de 2.000 contactos por institución.",
                 "No se duplican por email (ni por teléfono, cuando no hay email).",
               ],
             },
             {
-              nota: "Los contactos que cargás son **privados de tu institución**: no son usuarios de UNIDOAR, no se mezclan con las búsquedas y **nunca reciben mails** de la plataforma. Cargá solo datos de personas que aceptaron que los tengas.",
+              nota: "Los contactos que cargás son **privados de tu institución**: no son usuarios de UNIDOAR, no se mezclan con las búsquedas y **nunca reciben mails** de la plataforma. Sus CV quedan en un espacio privado: solo los abre tu equipo. Cargá solo datos (y CV) de personas que aceptaron que los tengas.",
             },
           ],
         },

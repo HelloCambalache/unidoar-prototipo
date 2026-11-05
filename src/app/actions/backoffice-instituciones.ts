@@ -403,11 +403,11 @@ export async function procesarBajaInstitucion(institucionId: string, entrada: { 
 
   const hecho = await transaccion((tx) => borrarDatosDeLaInstitucion(tx, admin.id, institucionId, datos.data.confirmacion));
   if (!hecho.ok) return hecho;
-  const { cuentasABorrar, imagenes, archivosDeExamen } = hecho.data;
+  const { cuentasABorrar, imagenes, archivosDeExamen, cvsDeContactos } = hecho.data;
 
   // La base ya está limpia. Lo que sigue es Storage y los usuarios de acceso: no se deshace lo anterior si algo falla.
   await borrarArchivos(imagenes);
-  let archivosCompletos = await borrarPathsPrivados(archivosDeExamen);
+  let archivosCompletos = await borrarPathsPrivados([...archivosDeExamen, ...cvsDeContactos]);
   const sinBorrarElAcceso: string[] = [];
   for (const cuentaId of cuentasABorrar) {
     if (!(await borrarArchivosDeLaCuenta(cuentaId)).completo) archivosCompletos = false;

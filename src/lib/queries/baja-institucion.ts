@@ -105,6 +105,11 @@ export type BajaHecha = {
   imagenes: string[];
   /** Estudios del examen preocupacional (dato de salud) que la institución guardó sobre sus postulantes. */
   archivosDeExamen: string[];
+  /**
+   * CV (PDF) que la institución adjuntó a sus contactos propios. Viven en la carpeta de quien los subió, que puede ser alguien que ya salió
+   * del equipo y cuya cuenta no se borra con la baja: por eso se borran uno por uno y no solo con «todo lo de `<usuario>/…`».
+   */
+  cvsDeContactos: string[];
   detalle: DetalleDeBajaInstitucion;
 };
 
@@ -160,7 +165,7 @@ export async function borrarDatosDeLaInstitucion(
   const emails = [...new Set([...miembros.map((m) => m.email), ...cuentas.map((c) => c.email)].filter(Boolean).map((e) => e.toLowerCase()))];
 
   // Lo que hay que borrar de Storage después: se anota ahora, antes de que las filas desaparezcan.
-  const [fotos, fotosDeCursos, conExamen, lasBusquedas] = await Promise.all([
+  const [fotos, fotosDeCursos, conExamen, lasBusquedas, conCv] = await Promise.all([
     tx.select({ url: institucionFotos.url }).from(institucionFotos).where(eq(institucionFotos.institucionId, institucionId)),
     tx
       .select({ url: cursos.fotoUrl })
@@ -172,9 +177,14 @@ export async function borrarDatosDeLaInstitucion(
       .innerJoin(busquedas, eq(busquedas.id, postulaciones.busquedaId))
       .where(eq(busquedas.institucionId, institucionId)),
     tx.select({ id: busquedas.id }).from(busquedas).where(eq(busquedas.institucionId, institucionId)),
+    tx
+      .select({ path: contactosInstitucion.cvPath })
+      .from(contactosInstitucion)
+      .where(and(eq(contactosInstitucion.institucionId, institucionId), isNotNull(contactosInstitucion.cvPath))),
   ]);
   const imagenes = [inst.logoUrl, inst.portadaUrl, ...fotos.map((f) => f.url), ...fotosDeCursos.map((c) => c.url)].filter((u): u is string => Boolean(u));
   const archivosDeExamen = conExamen.flatMap((p) => p.archivos.map((a) => a.path));
+  const cvsDeContactos = conCv.flatMap((c) => (c.path ? [c.path] : []));
   const idsDeBusquedas = lasBusquedas.map((b) => b.id);
 
   /* ── Avisos que llevan a la institución o a sus búsquedas (a profesionales, al equipo de UNIDOAR). Los del propio equipo se van con sus cuentas. ── */
@@ -319,7 +329,7 @@ export async function borrarDatosDeLaInstitucion(
     { usuarioId: adminId, accion: ACCION_BAJA_DE_INSTITUCION, entidad: "institucion", entidadId: institucionId, detalle },
     tx,
   );
-  return ok({ cuentasABorrar, imagenes, archivosDeExamen, detalle });
+  return ok({ cuentasABorrar, imagenes, archivosDeExamen, cvsDeContactos, detalle });
 }
 
 /** Borra de Storage estos paths del bucket privado (de a cien). Devuelve si pudo con todos. */

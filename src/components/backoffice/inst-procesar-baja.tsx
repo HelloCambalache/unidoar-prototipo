@@ -85,7 +85,7 @@ export function InstProcesarBaja({
           </li>
           <li>
             {plural(resumen.cursos, "curso", "cursos")} con sus inscripciones, y{" "}
-            {plural(resumen.contactos, "contacto privado", "contactos privados")} cargados por la institución.
+            {plural(resumen.contactos, "contacto privado", "contactos privados")} cargados por la institución, con los CV que les adjuntó.
           </li>
           <li>Su perfil público (descripción, logo, portada, galería y novedades), las sedes y el teléfono y la persona de contacto.</li>
           <li>Sus avisos, los mails que se mandaron sobre ella y los mensajes que su equipo haya enviado por Contacto.</li>

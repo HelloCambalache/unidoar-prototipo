@@ -46,6 +46,8 @@ describe("carpetas permitidas", () => {
     assert.equal(tipoDeCarpeta("publico", "logos"), "imagen");
     assert.equal(tipoDeCarpeta("privado", "cv"), "pdf");
     assert.equal(tipoDeCarpeta("privado", "documentos"), "imagen-o-pdf");
+    assert.equal(tipoDeCarpeta("privado", "cvcontactos"), "pdf", "el CV de un contacto propio de una institución: solo PDF y privado");
+    assert.equal(tipoDeCarpeta("publico", "cvcontactos"), null);
     assert.equal(tipoDeCarpeta("privado", "logos"), null);
     assert.equal(tipoDeCarpeta("publico", "cv"), null);
     assert.equal(tipoDeCarpeta("privado", "../otra"), null);

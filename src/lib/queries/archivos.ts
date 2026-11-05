@@ -1,7 +1,7 @@
 import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { cursos, docenteDetalle, docentes, institucionFotos, instituciones, postulaciones, testimonios } from "@/db/schema";
+import { contactosInstitucion, cursos, docenteDetalle, docentes, institucionFotos, instituciones, postulaciones, testimonios } from "@/db/schema";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { objetoDeArchivo } from "@/lib/archivos";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -31,6 +31,7 @@ async function estaEnUso(valor: string, path: string) {
       or exists (select 1 from ${testimonios} where ${testimonios.fotoUrl} = ${valor})
       or exists (select 1 from ${docenteDetalle} where position(${path} in ${docenteDetalle.documentos}::text) > 0)
       or exists (select 1 from ${postulaciones} where position(${path} in ${postulaciones.examenPreocupacionalArchivos}::text) > 0)
+      or exists (select 1 from ${contactosInstitucion} where ${contactosInstitucion.cvPath} = ${valor})
     ) as en_uso`);
   return Boolean((filas[0] as { en_uso?: boolean } | undefined)?.en_uso);
 }

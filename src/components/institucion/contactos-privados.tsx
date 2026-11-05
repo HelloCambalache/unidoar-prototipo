@@ -4,10 +4,13 @@ import { useActionState, useState, useTransition } from "react";
 import { borrarContacto, guardarContacto, importarContactos } from "@/app/actions/contactos";
 import { Boton } from "@/components/ui/button";
 import { Campo, Input, Textarea } from "@/components/ui/campos";
+import { Icono } from "@/components/icons";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useConfirmacion } from "@/components/ui/confirmacion";
+import { SubirArchivo } from "@/components/ui/subir-archivo";
 import { useToast } from "@/components/ui/toast";
 import type { Resultado } from "@/lib/acciones";
+import { CARPETA_CV_CONTACTO, rutaDeCvDeContacto } from "@/lib/contacto-cv";
 import {
   CSV_MODELO,
   MAX_BYTES_CSV,
@@ -28,10 +31,79 @@ import type { ContactoVista } from "@/lib/queries/profesionales";
 const AYUDA_CSV =
   "Tiene que traer los títulos en la primera fila: nombre, email, teléfono, disciplina y nota. Alcanza con nombre y un email o un teléfono por fila.";
 
+/* ───────────────────────────── CV adjunto ───────────────────────────── */
+
+/** Lo que la persona hizo con el CV en este formulario: lo dejó como estaba, lo quitó o subió uno nuevo. Viaja al servidor como `cvAccion`. */
+type CambioDeCvEnFormulario = { tipo: "igual" } | { tipo: "quitar" } | { tipo: "nuevo"; path: string; nombre: string };
+
+/**
+ * El CV del contacto (un PDF, opcional). El archivo se sube apenas se elige (por la subida de siempre, al espacio privado) y recién queda
+ * guardado en el contacto al apretar «Guardar»: si se cancela, no se pierde nada del contacto. La pantalla nunca tiene el path del archivo
+ * que ya estaba guardado, solo su nombre: «Ver» lo abre por un enlace que comprueba la cuenta.
+ */
+function CampoCv({ contacto, cambio, onCambio }: { contacto?: ContactoVista; cambio: CambioDeCvEnFormulario; onCambio: (c: CambioDeCvEnFormulario) => void }) {
+  // Cada subida reinicia el botón (si no, se quedaría marcado como «✓» y no se vería que se puede reemplazar de nuevo).
+  const [subidas, setSubidas] = useState(0);
+  const nombreActual = cambio.tipo === "nuevo" ? cambio.nombre : cambio.tipo === "igual" ? (contacto?.cvNombre ?? null) : null;
+  const guardado = cambio.tipo === "igual" && contacto?.cvNombre ? rutaDeCvDeContacto(contacto.id) : null;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <input type="hidden" name="cvAccion" value={cambio.tipo} />
+      {cambio.tipo === "nuevo" && (
+        <>
+          <input type="hidden" name="cvPath" value={cambio.path} />
+          <input type="hidden" name="cvNombre" value={cambio.nombre} />
+        </>
+      )}
+      <span className="text-xs font-semibold text-apagado">CV (opcional)</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {nombreActual && (
+          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-medium text-tinta">
+            <Icono nombre="archivo" tamano={15} trazo={1.6} className="flex-none text-apagado" />
+            <span className="truncate">{nombreActual}</span>
+            {cambio.tipo === "nuevo" && <span className="flex-none text-xs font-normal text-sutil">(se guarda al apretar Guardar)</span>}
+          </span>
+        )}
+        {guardado && (
+          <a href={guardado} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium text-navy-700 underline">
+            Ver
+          </a>
+        )}
+        <SubirArchivo
+          key={subidas}
+          bucket="privado"
+          carpeta={CARPETA_CV_CONTACTO}
+          nombre="cvArchivo"
+          etiqueta="CV del contacto"
+          variante="boton"
+          textoBoton={nombreActual ? "Reemplazar" : "Adjuntar CV"}
+          onCambio={(path, nombre) => {
+            if (!path) return;
+            onCambio({ tipo: "nuevo", path, nombre: nombre ?? "" });
+            setSubidas((n) => n + 1);
+          }}
+        />
+        {nombreActual && (
+          <Boton variante="fantasma" tamano="sm" className="text-[#b91c1c] hover:text-[#b91c1c]" onClick={() => onCambio({ tipo: "quitar" })}>
+            Quitar
+          </Boton>
+        )}
+      </div>
+      <p className="m-0 text-xs leading-snug text-sutil">
+        {cambio.tipo === "quitar" && contacto?.cvNombre
+          ? "Se quita el CV al apretar Guardar."
+          : "Un PDF por contacto. Queda en un espacio privado y solo lo ve tu institución."}
+      </p>
+    </div>
+  );
+}
+
 /* ───────────────────────────── Formulario (crear y editar) ───────────────────────────── */
 
 function ContactoFormulario({ contacto, onCerrar }: { contacto?: ContactoVista; onCerrar: () => void }) {
   const toast = useToast();
+  const [cv, setCv] = useState<CambioDeCvEnFormulario>({ tipo: "igual" });
   const [valores, setValores] = useState({
     nombre: contacto?.nombre ?? "",
     email: contacto?.email ?? "",
@@ -78,6 +150,7 @@ function ContactoFormulario({ contacto, onCerrar }: { contacto?: ContactoVista; 
       <Campo etiqueta="Nota" ayuda="Solo la ves vos y tu equipo." error={errores.nota}>
         <Textarea name="nota" value={valores.nota} onChange={poner("nota")} maxLength={500} aria-invalid={Boolean(errores.nota)} />
       </Campo>
+      <CampoCv contacto={contacto} cambio={cv} onCambio={setCv} />
       {errorGeneral && (
         <p role="alert" className="m-0 text-[13px] text-[#b91c1c]">
           {errorGeneral}
@@ -241,7 +314,7 @@ export function AccionesContactos() {
       <Boton onClick={() => setAbierto("cargar")}>+ Cargar perfil</Boton>
       <DialogoModal abierto={abierto === "cargar"} onCerrar={cerrar} titulo="Cargar perfil" ancho={520}>
         <p className="m-0 text-[13.5px] leading-normal text-apagado">
-          Sumá a alguien que ya conocés. Queda en tu lista de Profesionales y solo lo ve tu institución: no es un perfil de UNIDOAR.
+          Sumá a alguien que ya conocés, con su CV si lo tenés. Queda en tu lista de Profesionales y solo lo ve tu institución: no es un perfil de UNIDOAR.
         </p>
         <ContactoFormulario onCerrar={cerrar} />
       </DialogoModal>
@@ -276,6 +349,17 @@ export function AccionesContacto({ contacto }: { contacto: ContactoVista }) {
 
   return (
     <div className="flex items-center justify-end gap-1">
+      {contacto.cvNombre && (
+        <a
+          href={rutaDeCvDeContacto(contacto.id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Abrir el CV: ${contacto.cvNombre}`}
+          className="px-2 text-[13px] leading-none font-medium whitespace-nowrap text-navy-700"
+        >
+          Ver CV
+        </a>
+      )}
       {whatsapp && (
         <a
           href={whatsapp}
