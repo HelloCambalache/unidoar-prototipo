@@ -12,7 +12,7 @@ import {
   type FormaDeCobro,
 } from "./pago-manual";
 
-const entrada = { habilitadaManual: false, mercadoPagoDisponible: true, esPuntual: false, precioDefinido: true };
+const entrada = { habilitadaManual: false, mercadoPagoDisponible: true, precioDefinido: true };
 const FORMAS: FormaDeCobro[] = ["solo-mercadopago", "las-dos", "manual"];
 const SIN_MANO = /transferencia|efectivo/i;
 
@@ -30,15 +30,41 @@ describe("cómo paga una institución", () => {
     assert.equal(formaDeCobroDe({ ...entrada, mercadoPagoDisponible: false, habilitadaManual: true }), "manual");
   });
 
-  it("la búsqueda puntual y Multisede sin convenio no tienen camino por Mercado Pago: siguen como siempre", () => {
-    assert.equal(formaDeCobroDe({ ...entrada, esPuntual: true }), "manual");
+  it("Multisede sin convenio no tiene un monto que cobrar por Mercado Pago: sigue como siempre", () => {
     assert.equal(formaDeCobroDe({ ...entrada, precioDefinido: false }), "manual");
-    assert.equal(formaDeCobroDe({ ...entrada, esPuntual: true, habilitadaManual: true }), "manual");
+    assert.equal(formaDeCobroDe({ ...entrada, precioDefinido: false, habilitadaManual: true }), "manual");
+  });
+
+  it("la búsqueda puntual SÍ paga con Mercado Pago (un pago único por búsqueda): sigue la misma regla que los demás planes", () => {
+    // Antes la búsqueda puntual era siempre «manual»; desde 2026-11-10 se puede pagar por Mercado Pago (pedido del cliente).
+    assert.equal(formaDeCobroDe(entrada), "solo-mercadopago");
+    assert.equal(formaDeCobroDe({ ...entrada, habilitadaManual: true }), "las-dos");
+    assert.equal(formaDeCobroDe({ ...entrada, mercadoPagoDisponible: false }), "manual");
   });
 
   it("solo «solo Mercado Pago» no puede pagar en mano, y solo «manual» no puede pagar con Mercado Pago", () => {
     assert.deepEqual(FORMAS.map(puedePagarEnMano), [false, true, true]);
     assert.deepEqual(FORMAS.map(puedePagarConMercadoPago), [true, true, false]);
+  });
+});
+
+describe("el aviso de Plan y facturación de quien paga cada búsqueda", () => {
+  it("habla de pagar cada búsqueda, no del débito mensual ni del semestre", () => {
+    for (const forma of ["solo-mercadopago", "las-dos"] as const) {
+      const a = avisoDeFormaDePago(forma, true)!;
+      assert.doesNotMatch(a.texto, /débito|semestre/i, forma);
+      assert.match(a.texto, /búsqueda/i, forma);
+    }
+  });
+
+  it("a quien paga solo con Mercado Pago no se le habla de transferencia ni de efectivo; a quien el equipo habilitó, sí", () => {
+    const solo = avisoDeFormaDePago("solo-mercadopago", true)!;
+    assert.doesNotMatch(solo.texto + solo.titulo, SIN_MANO);
+    assert.match(avisoDeFormaDePago("las-dos", true)!.texto, SIN_MANO);
+  });
+
+  it("sin Mercado Pago (forma manual) no hay nada que aclarar", () => {
+    assert.equal(avisoDeFormaDePago("manual", true), null);
   });
 });
 

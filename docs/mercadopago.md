@@ -117,3 +117,12 @@ Además del débito mensual, una institución con abono mensual puede pagar **el
 ## Qué falta comprobar contra Mercado Pago real
 
 La primera suscripción de punta a punta (que la suscripción nazca con el plan que esperamos y que el aviso lo traiga), el aspecto de la pantalla de Mercado Pago, que el primer cobro salga al suscribirse, un cobro aprobado y uno rechazado, la cancelación y qué pasa al aumentar un monto.
+
+## Pago de una búsqueda puntual (2026-11-10)
+
+La búsqueda puntual (el plan sin abono) también se paga con Mercado Pago, como un **pago único por búsqueda** (Checkout Pro; no una suscripción): la misma cuenta y el mismo token que el débito automático y el pago del semestre. No hace falta configurar nada nuevo en Mercado Pago: el evento `payment` del webhook (el mismo del semestre) ya cubre este pago.
+
+- Antes de desplegar el código: `pnpm db:puntual-mp` (crea `pagos_puntual_mp`, con RLS).
+- La institución paga desde Plan y facturación («Pagar una búsqueda con Mercado Pago»); cuando se aprueba, queda una búsqueda pagada y disponible para publicar. El equipo no tiene que registrar nada.
+- Un pago que no coincide (monto, moneda, cobro doble, plan que cambió) queda **para revisar** en la ficha de cobros y llega un aviso a la campanita del equipo.
+- Se puede probar con una institución de ejemplo con plan de búsqueda puntual y un token de prueba; como con el semestre, un pago de prueba en una institución real deja una búsqueda pagada de verdad (se deshace con «Anular pago» si todavía no se usó).

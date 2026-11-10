@@ -60,6 +60,8 @@ export default async function Planes() {
     {
       pregunta: "¿Y si solo necesito cubrir un puesto?",
       respuesta: `Al crear tu cuenta de institución elegís «Una sola búsqueda» (o nos escribís desde Contacto): pagás ${pesos(P.planDe("puntual").precio)} por búsqueda, sin abono mensual. Tu búsqueda queda publicada ${P.condiciones.puntual.vigenciaDias} días y recibís las postulaciones como en cualquier plan.${
+        conMercadoPago ? " Se paga con Mercado Pago, un pago único por cada búsqueda." : ""
+      }${
         P.incluye("puntual", "buscador") && P.incluye("puntual", "cursos")
           ? ""
           : ` No incluye ${[!P.incluye("puntual", "buscador") && "el buscador de profesionales", !P.incluye("puntual", "cursos") && "la difusión de cursos"].filter(Boolean).join(" ni ")}: eso es parte del abono mensual.`

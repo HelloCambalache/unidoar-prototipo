@@ -864,6 +864,37 @@ export const pagosSemestreMp = pgTable(
 export type PagoSemestreMp = typeof pagosSemestreMp.$inferSelect;
 
 /**
+ * Cada link de pago de UNA búsqueda puntual por Mercado Pago (un pago único, ver src/lib/pago-puntual.ts): el «intento». Igual que el del semestre: guarda
+ * el monto que se acordó al crearlo, su `id` viaja como `external_reference` y es lo único que dice de quién es el pago. Estados: `pendiente`,
+ * `pagado` (quedó una búsqueda pagada, `credito_id`) y `revisar` (se pagó y no se pudo registrar solo: lo resuelve el equipo). Creada con
+ * `pnpm db:puntual-mp` (correrlo ANTES de desplegar), con RLS.
+ */
+export const pagosPuntualMp = pgTable(
+  "pagos_puntual_mp",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    institucionId: uuid("institucion_id")
+      .notNull()
+      .references(() => instituciones.id, { onDelete: "cascade" }),
+    plan: text("plan").notNull(),
+    /** Pesos acordados al crear el link. */
+    monto: integer("monto").notNull(),
+    preferenciaId: text("preferencia_id"),
+    enlace: text("enlace"),
+    estado: text("estado").notNull().default("pendiente"),
+    /** El número del pago en Mercado Pago que se aplicó (único: un pago nunca se registra dos veces). */
+    pagoId: text("pago_id").unique(),
+    /** La búsqueda pagada que quedó al registrar el pago (null si se anuló ese pago o todavía no se registró). */
+    creditoId: uuid("credito_id").references(() => creditosBusqueda.id, { onDelete: "set null" }),
+    pagadoEn: timestamp("pagado_en", { withTimezone: true }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("pagos_puntual_mp_institucion_idx").on(t.institucionId), index("pagos_puntual_mp_estado_idx").on(t.estado, t.creadoEn)],
+);
+export type PagoPuntualMp = typeof pagosPuntualMp.$inferSelect;
+
+/**
  * Meses bonificados por recomendar (opción B de Referidos, reglas en src/lib/bonificacion.ts): una fila por mes. Se crean al aplicar el
  * beneficio como «meses» y están **disponibles mientras `periodo` es null**; el cron (sin débito) o el cobro del débito automático los gastan
  * y les ponen el mes. Si se gastó sobre un cobro del débito (`cobro_id`), hay que devolver ese cobro a mano en Mercado Pago y se marca con

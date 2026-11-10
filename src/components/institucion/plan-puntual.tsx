@@ -15,7 +15,8 @@ const TONO: Record<EstadoDeCredito, "verde" | "azul" | "neutro" | "ambar"> = {
 
 /**
  * «Tus búsquedas puntuales» (Plan y facturación de una institución sin abono): cuántas búsquedas pagadas tiene, cuántas abiertas, la vigencia, qué
- * incluye y no incluye su plan, y cada pago con en qué está. Para publicar otra se paga la tarifa: el pago lo registra el equipo (Contacto).
+ * incluye y no incluye su plan, y cada pago con en qué está. Para publicar otra se paga la tarifa: con Mercado Pago desde la tarjeta de arriba (un pago único
+ * por búsqueda) o, si el equipo lo habilitó o Mercado Pago no está disponible, por transferencia o efectivo: el pago lo registra el equipo (Contacto).
  */
 export function PlanPuntual({
   creditos,
@@ -25,6 +26,7 @@ export function PlanPuntual({
   precio,
   incluyeCursos,
   incluyeBuscador,
+  puedePagarEnMano,
 }: {
   creditos: CreditoVista[];
   disponibles: number;
@@ -34,6 +36,8 @@ export function PlanPuntual({
   precio: string;
   incluyeCursos: boolean;
   incluyeBuscador: boolean;
+  /** Puede pagar por transferencia o efectivo (lo registra el equipo): con «solo Mercado Pago» el pago es desde su tarjeta de Mercado Pago, más arriba. */
+  puedePagarEnMano: boolean;
 }) {
   const noIncluye = [!incluyeCursos && "la difusión de cursos", !incluyeBuscador && "el buscador y la base de profesionales"].filter(Boolean) as string[];
 
@@ -85,10 +89,14 @@ export function PlanPuntual({
             Publicar mi búsqueda
           </BotonLink>
         )}
-        <BotonLink href="/contacto" variante="secundario">
-          {disponibles > 0 ? "Abonar otra búsqueda" : "Abonar una búsqueda"}
-        </BotonLink>
-        <span className="text-[13px] leading-normal text-sutil">Escribinos y, apenas registremos el pago, la habilitamos.</span>
+        {puedePagarEnMano && (
+          <>
+            <BotonLink href="/contacto" variante="secundario">
+              {disponibles > 0 ? "Abonar otra búsqueda" : "Abonar una búsqueda"}
+            </BotonLink>
+            <span className="text-[13px] leading-normal text-sutil">Escribinos y, apenas registremos el pago, la habilitamos.</span>
+          </>
+        )}
       </div>
     </Tarjeta>
   );

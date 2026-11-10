@@ -98,10 +98,20 @@ export type CuerpoDePreferencia = {
  * que dice de quién es. El monto es el que calculó el servidor. `origen` es la dirección pública del sitio (https): Mercado Pago no acepta
  * `localhost` en las direcciones de vuelta ni en la del aviso.
  */
-export function cuerpoDePreferencia(e: { referencia: string; titulo: string; descripcion: string; monto: number; origen: string; rutaDelAviso: string; ahora?: Date }): CuerpoDePreferencia {
+export function cuerpoDePreferencia(e: {
+  referencia: string;
+  titulo: string;
+  descripcion: string;
+  monto: number;
+  origen: string;
+  rutaDelAviso: string;
+  /** El parámetro que agregan las direcciones de vuelta a Plan y facturación: `pago_semestre` (el semestre) o `pago_puntual` (una búsqueda puntual). */
+  parametroDeVuelta?: string;
+  ahora?: Date;
+}): CuerpoDePreferencia {
   const ahora = e.ahora ?? new Date();
   const hasta = new Date(ahora.getTime() + DIAS_DE_VIGENCIA_DEL_LINK * 24 * 60 * 60 * 1000);
-  const vuelta = (resultado: "ok" | "pendiente" | "error") => `${e.origen}/institucion/plan?pago_semestre=${resultado}`;
+  const vuelta = (resultado: "ok" | "pendiente" | "error") => `${e.origen}/institucion/plan?${e.parametroDeVuelta ?? "pago_semestre"}=${resultado}`;
   return {
     items: [{ id: e.referencia, title: e.titulo, description: e.descripcion, quantity: 1, currency_id: "ARS", unit_price: e.monto }],
     external_reference: e.referencia,
@@ -171,13 +181,13 @@ export type DecisionDelPago =
  * Qué se hace con un pago de Mercado Pago de un intento. El monto tiene que ser exactamente el que acordamos al crear el link y en pesos: ante
  * cualquier diferencia no se registra solo. Un pago que no se conoce o no está aprobado no mueve plata.
  */
-export function decidirPagoDeSemestre(e: { intento: { estado: string; monto: number; pagoId: string | null }; pago: PagoLeido }): DecisionDelPago {
+export function decidirPagoDeSemestre(e: { intento: { estado: string; monto: number; pagoId: string | null }; pago: PagoLeido }, cosa = "un semestre"): DecisionDelPago {
   const { intento, pago } = e;
   if (pago.estado === "devuelto") return intento.estado === "pagado" ? { accion: "devuelto" } : { accion: "esperar" };
   if (pago.estado !== "aprobado") return { accion: "esperar" };
   if (intento.estado === "pagado") {
     // El mismo pago repetido es un aviso repetido; otro pago aprobado sobre un intento ya pago es un cobro de más.
-    return intento.pagoId === pago.id ? { accion: "ya-registrado" } : { accion: "revisar", motivo: "Hay otro pago aprobado para un semestre que ya estaba pago (posible cobro doble)." };
+    return intento.pagoId === pago.id ? { accion: "ya-registrado" } : { accion: "revisar", motivo: `Hay otro pago aprobado para ${cosa} que ya estaba pago (posible cobro doble).` };
   }
   if (pago.moneda !== "ARS") return { accion: "revisar", motivo: `El pago no está en pesos (${pago.moneda ?? "sin moneda"}).` };
   if (pago.monto === null || Math.round(pago.monto) !== intento.monto) {

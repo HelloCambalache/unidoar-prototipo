@@ -206,7 +206,7 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
               nota: "El plan **Multisede sin convenio a medida no se factura**: el valor de las redes se acuerda con cada una. Hasta cargar el convenio no se crean facturas ni se ofrece el débito automático.",
             },
             {
-              p: "**Búsquedas puntuales:** una institución en el plan de una sola búsqueda paga por adelantado cada búsqueda. Cuando lo recibís, usás **Registrar pago de búsqueda puntual** en la sección Búsquedas puntuales de su ficha: queda una búsqueda disponible que la institución consume al publicar (y que vence con el plazo que figura en Planes). Un pago solo se puede anular si todavía no se usó. No son facturas: no aparecen en el «Historial de facturación» de la institución.",
+              p: "**Búsquedas puntuales:** una institución en el plan de una sola búsqueda paga por adelantado cada búsqueda. Cuando lo recibís, usás **Registrar pago de búsqueda puntual** en la sección Búsquedas puntuales de su ficha: queda una búsqueda disponible que la institución consume al publicar (y que vence con el plazo que figura en Planes). Un pago solo se puede anular si todavía no se usó. No son facturas: no aparecen en el «Historial de facturación» de la institución. **Si la institución la paga con Mercado Pago** desde Plan y facturación (un pago único por búsqueda), queda registrada sola con el medio «Mercado Pago», sin que hagas nada: aparece en el reporte de Pagos y se le avisa. Lo que Mercado Pago aprueba y no se puede registrar solo (un monto distinto, un cobro doble, un plan que cambió) queda **para revisar** en «Pagos de búsquedas por Mercado Pago» de la ficha de cobros y se te avisa en la campanita.",
             },
           ],
         },

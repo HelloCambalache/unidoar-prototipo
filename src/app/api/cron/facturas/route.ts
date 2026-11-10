@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { transaccion } from "@/db";
 import { cronAutorizado } from "@/lib/cron";
 import { generarFacturasDelPeriodo } from "@/lib/queries/backoffice-cobros";
+import { reconciliarPagosDePuntual } from "@/lib/queries/pago-puntual";
 import { reconciliarPagosDeSemestre } from "@/lib/queries/pago-semestre";
 import { cerrarPuntualesVencidas } from "@/lib/queries/puntuales";
 import { reconciliarSuscripciones } from "@/lib/queries/suscripcion-reconciliar";
@@ -86,6 +87,15 @@ export async function GET(request: Request) {
     revalidatePath("/backoffice/cobros");
   }
 
+  // 5. Lo mismo para los links de pago de una búsqueda puntual.
+  const pagosDePuntual = await paso("reconciliar-pagos-de-puntual", fallidos, () => reconciliarPagosDePuntual());
+  if (pagosDePuntual && pagosDePuntual.registrados > 0) {
+    revalidatePath("/institucion/plan");
+    revalidatePath("/institucion/publicar");
+    revalidatePath("/backoffice/cobros");
+    revalidatePath("/backoffice/cobros/pagos");
+  }
+
   const bonificadas = resultado?.bonificadas.length ?? 0;
   console.info("Facturas automáticas", {
     periodo: resultado?.periodo,
@@ -95,6 +105,7 @@ export async function GET(request: Request) {
     reconciliacion,
     suscripciones,
     pagosDeSemestre,
+    pagosDePuntual,
     puntuales,
     fallidos,
   });
@@ -108,6 +119,7 @@ export async function GET(request: Request) {
       reconciliacion,
       suscripciones,
       pagosDeSemestre,
+      pagosDePuntual,
       puntuales,
       ...(fallidos.length > 0 ? { fallidos } : {}),
     },

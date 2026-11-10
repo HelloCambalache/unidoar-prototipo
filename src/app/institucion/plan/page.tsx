@@ -4,6 +4,7 @@ import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
 import { AvisoDePlanSinPago } from "@/components/institucion/plan-activo";
 import { MesesBonificados } from "@/components/institucion/meses-bonificados";
 import { AvisoDeFormaDePago } from "@/components/institucion/aviso-forma-de-pago";
+import { PagoDeBusquedaPuntual } from "@/components/institucion/pago-de-busqueda-puntual";
 import { PagoDelSemestre } from "@/components/institucion/pago-del-semestre";
 import { PlanDebito } from "@/components/institucion/plan-debito";
 import { PlanHistorial } from "@/components/institucion/plan-historial";
@@ -16,6 +17,8 @@ import { vueltaDelPago } from "@/lib/pago-semestre";
 import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
 import { pagoPorMercadoPagoDisponiblePara } from "@/lib/queries/mercadopago-modo";
 import { formaDePagoDeCobro } from "@/lib/queries/pago-manual";
+import { puedePagarConMercadoPago, puedePagarEnMano } from "@/lib/pago-manual";
+import { datosDePagoDePuntual } from "@/lib/queries/pago-puntual";
 import { datosDePagoDeSemestre } from "@/lib/queries/pago-semestre";
 import { datosDePlan } from "@/lib/queries/plan";
 import { mesesDe } from "@/lib/queries/bonificaciones";
@@ -32,7 +35,7 @@ const ID_DE_MERCADO_PAGO = /^[0-9A-Za-z_-]{1,64}$/;
 
 export default async function PlanYFacturacion({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin, pago_semestre: pagoSemestreVuelta }, saldo, creditos, mesesGanados, formaDePago, mora, formaDeCobro] = await Promise.all([
+  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin, pago_semestre: pagoSemestreVuelta, pago_puntual: pagoPuntualVuelta }, saldo, creditos, mesesGanados, formaDePago, mora, formaDeCobro] = await Promise.all([
     datosDePlan(institucion, usuario.id),
     catalogoDePlanes(),
     datosDeDebito(institucion, usuario.id),
@@ -58,6 +61,10 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
   const mercadoPagoDisponible = mercadoPagoActivo() && (await pagoPorMercadoPagoDisponiblePara(institucion));
   const pagoSemestre = await datosDePagoDeSemestre(institucion.id, mercadoPagoDisponible && !datos.semestrePagoHasta);
   const vueltaDelPagoDelSemestre = mercadoPagoDisponible ? vueltaDelPago(pagoSemestreVuelta) : null;
+  // Pagar UNA búsqueda por Mercado Pago (plan de búsqueda puntual): lo mismo, con el precio de la búsqueda calculado en el servidor.
+  const conMercadoPagoPuntual = esPuntual && puedePagarConMercadoPago(formaDeCobro);
+  const pagoPuntual = await datosDePagoDePuntual(institucion.id, conMercadoPagoPuntual);
+  const vueltaDelPagoPuntual = conMercadoPagoPuntual ? vueltaDelPago(pagoPuntualVuelta) : null;
 
   return (
     <>
@@ -67,7 +74,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
       />
       <AvisoDeMora mora={mora} enPlan />
       <AvisoDePlanSinPago enPlan />
-      <AvisoDeFormaDePago forma={formaDeCobro} />
+      <AvisoDeFormaDePago forma={formaDeCobro} puntual={esPuntual} />
       <PlanPanel
         // El valor de fundadora solo lo ve quien tiene ese plan: a las demás instituciones no les viaja en el código de la página.
         // El precio base por sede de Multisede es de uso interno (no se cobra sin un convenio): no viaja en el código de la página.
@@ -117,6 +124,17 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
           precio={pesos(P.montoDePlan(datos.plan, 1, datos.acuerdo))}
           incluyeCursos={P.incluye(datos.plan, "cursos")}
           incluyeBuscador={P.incluye(datos.plan, "buscador")}
+          puedePagarEnMano={puedePagarEnMano(formaDeCobro)}
+        />
+      )}
+      {conMercadoPagoPuntual && (
+        <PagoDeBusquedaPuntual
+          oferta={pagoPuntual.cotizacion ? { total: pagoPuntual.cotizacion.monto, vigenciaDias: pagoPuntual.cotizacion.vigenciaDias } : null}
+          motivo={pagoPuntual.motivo}
+          hayLinkPendiente={pagoPuntual.hayLinkPendiente}
+          paraRevisar={pagoPuntual.paraRevisar}
+          vuelta={vueltaDelPagoPuntual}
+          puedeGestionar={datos.puedeCambiar}
         />
       )}
       <MesesBonificados meses={mesesGanados} className="mt-5 max-w-[980px] p-[22px]" />

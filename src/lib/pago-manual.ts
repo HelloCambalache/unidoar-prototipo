@@ -10,8 +10,8 @@
  *  - `las-dos`: igual, pero el equipo la habilitó: puede pagar con Mercado Pago o por transferencia o efectivo.
  *  - `manual`: como hasta ahora (transferencia o efectivo, lo registra el equipo). Es lo que pasa **mientras Mercado Pago no esté disponible PARA ELLA**
  *    (sin token; o con un token de PRUEBA si se prendió la protección `MP_PRUEBA_SOLO_EJEMPLO` y es una institución real: ver `debitoDisponiblePara`; sin
- *    esto nadie podría pagar) y con los planes que no tienen camino por Mercado Pago: la búsqueda puntual (se paga cada búsqueda, no hay cobro en línea)
- *    y Multisede sin convenio (no tiene un monto que cobrar).
+ *    esto nadie podría pagar) y con el plan que no tiene camino por Mercado Pago: Multisede sin convenio (no tiene un monto que cobrar). La búsqueda
+ *    puntual SÍ tiene: se paga cada búsqueda con un pago único (ver src/lib/pago-puntual.ts).
  *
  * Código puro (sin base ni Next) para poder cuidarlo con una prueba. La lectura de la habilitación y de si Mercado Pago está disponible vive en
  * `src/lib/queries/pago-manual.ts`.
@@ -24,12 +24,10 @@ export function formaDeCobroDe(e: {
   habilitadaManual: boolean;
   /** Mercado Pago está disponible PARA ELLA (token cargado; con uno de prueba, también las reales salvo la protección `MP_PRUEBA_SOLO_EJEMPLO`): `debitoDisponiblePara`. */
   mercadoPagoDisponible: boolean;
-  /** Su plan es la búsqueda puntual: no hay abono que debitar ni cobro en línea. */
-  esPuntual: boolean;
   /** Su plan tiene un monto mensual que cobrar (Multisede sin convenio no lo tiene). */
   precioDefinido: boolean;
 }): FormaDeCobro {
-  if (!e.mercadoPagoDisponible || e.esPuntual || !e.precioDefinido) return "manual";
+  if (!e.mercadoPagoDisponible || !e.precioDefinido) return "manual";
   return e.habilitadaManual ? "las-dos" : "solo-mercadopago";
 }
 
@@ -84,7 +82,22 @@ export function fraseDelCartelSinPago(forma: FormaDeCobro, queSeLimita: string):
  * Lo que dice Plan y facturación arriba de todo sobre cómo paga la institución (null si no hay nada que aclarar: es el caso `manual`, que se ve como
  * siempre).
  */
-export function avisoDeFormaDePago(forma: FormaDeCobro): { titulo: string; texto: string } | null {
+export function avisoDeFormaDePago(forma: FormaDeCobro, puntual = false): { titulo: string; texto: string } | null {
+  // Quien paga cada búsqueda (plan de búsqueda puntual) no tiene débito ni semestre: paga cada búsqueda con un pago único.
+  if (puntual && forma === "solo-mercadopago") {
+    return {
+      titulo: "Tu institución paga con Mercado Pago",
+      texto:
+        "Pagás cada búsqueda con Mercado Pago desde esta pantalla: nosotros nunca vemos ni guardamos tu tarjeta. Cuando se acredita el pago, la búsqueda queda lista para publicar.",
+    };
+  }
+  if (puntual && forma === "las-dos") {
+    return {
+      titulo: "Podés pagar con Mercado Pago o por transferencia o efectivo",
+      texto:
+        "El equipo habilitó a tu institución a pagar también por transferencia o en efectivo: si preferís esa forma, escribinos desde Contacto y coordinamos el pago (lo registramos nosotros). Con Mercado Pago la búsqueda queda lista apenas se acredita.",
+    };
+  }
   if (forma === "solo-mercadopago") {
     return {
       titulo: "Tu institución paga con Mercado Pago",

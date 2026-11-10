@@ -43,7 +43,6 @@ const calcular = cache(async (id: string, esDemo: boolean, plan: string): Promis
   return formaDeCobroDe({
     habilitadaManual: await habilitadaParaPagoManual(id),
     mercadoPagoDisponible: true,
-    esPuntual: P.esPuntual(plan),
     precioDefinido,
   });
 });

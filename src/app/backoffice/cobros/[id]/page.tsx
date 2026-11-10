@@ -47,6 +47,7 @@ import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { comprobantesDeFacturas } from "@/lib/queries/comprobantes";
 import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
+import { intentosDePuntualDe } from "@/lib/queries/pago-puntual";
 import { intentosDeSemestreDe } from "@/lib/queries/pago-semestre";
 import { formaDePagoParaElEquipo } from "@/lib/queries/pago-manual";
 import { planes } from "@/lib/queries/planes";
@@ -105,6 +106,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   // Los links de pago del semestre por Mercado Pago de esta institución (el equipo tiene que ver sobre todo los que quedaron para revisar).
   const intentosDeSemestre = await intentosDeSemestreDe(id);
   const intentosParaRevisar = intentosDeSemestre.filter((x) => x.estado === "revisar");
+  // Los links de pago de una búsqueda puntual por Mercado Pago (lo mismo: lo que quedó para revisar se resuelve a mano).
+  const intentosDePuntual = await intentosDePuntualDe(id);
+  const puntualesParaRevisar = intentosDePuntual.filter((x) => x.estado === "revisar");
   // Cómo paga: con Mercado Pago o, si el equipo la habilitó, también por transferencia o efectivo (ver src/lib/pago-manual.ts).
   const pagoManual = await formaDePagoParaElEquipo({ id: d.institucion.id, esDemo: d.institucion.esDemo, plan: d.institucion.plan });
 
@@ -187,6 +191,14 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               <b className="font-semibold">Hay un pago de semestre por Mercado Pago para revisar:</b> la institución pagó (pago{" "}
               {intentosParaRevisar.map((x) => x.pagoId ?? "sin número").join(", ")}) y no se pudo registrar solo. Mirá el detalle en «Pagos del semestre por
               Mercado Pago», más abajo, y registrá el semestre a mano si corresponde.
+            </div>
+          )}
+
+          {puntualesParaRevisar.length > 0 && (
+            <div role="status" className="rounded-caja border border-[#F2D9B3] bg-[#FEF1DF] px-[18px] py-3.5 text-[13.5px] leading-normal text-[#8A4B07]">
+              <b className="font-semibold">Hay un pago de una búsqueda puntual por Mercado Pago para revisar:</b> la institución pagó (pago{" "}
+              {puntualesParaRevisar.map((x) => x.pagoId ?? "sin número").join(", ")}) y no se pudo registrar solo. Mirá el detalle en «Pagos de búsquedas por Mercado
+              Pago», más abajo, y registrá el pago de la búsqueda a mano si corresponde.
             </div>
           )}
 
@@ -390,6 +402,25 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                     </div>
                     <div className="text-apagado">
                       {etiquetaDeCobertura(x.periodo, x.meses)} · se pagan {x.mesesAPagar} meses{x.usaMesBonificado ? " (con un mes bonificado)" : ""}
+                    </div>
+                    {x.pagoId && <div className="text-apagado">Pago de Mercado Pago: {x.pagoId}</div>}
+                  </li>
+                ))}
+              </ul>
+            </Seccion>
+          )}
+
+          {intentosDePuntual.length > 0 && (
+            <Seccion titulo="Pagos de búsquedas por Mercado Pago">
+              <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                {intentosDePuntual.map((x) => (
+                  <li key={x.id} className="flex flex-col gap-1 text-[13px] leading-[1.4]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Insignia tono={x.estado === "pagado" ? "verde" : x.estado === "revisar" ? "naranja" : "azul"}>
+                        {x.estado === "pagado" ? "Pagado" : x.estado === "revisar" ? "Para revisar" : "Link sin pagar"}
+                      </Insignia>
+                      <span className="font-semibold text-tinta">{pesos(x.monto)}</span>
+                      <span className="text-apagado">{haceTiempo(x.creadoEn, ahora)}</span>
                     </div>
                     {x.pagoId && <div className="text-apagado">Pago de Mercado Pago: {x.pagoId}</div>}
                   </li>

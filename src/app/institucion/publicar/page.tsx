@@ -13,7 +13,9 @@ import { TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { plazoLegible } from "@/lib/fechas";
 import { permisoParaPublicarPuntual } from "@/lib/puntual";
 import { asignaturasPorCategoria, busquedaPropia } from "@/lib/queries/busquedas";
+import { puedePagarConMercadoPago, puedePagarEnMano } from "@/lib/pago-manual";
 import { moraDeInstitucion } from "@/lib/queries/mora";
+import { formaDePagoDeCobro } from "@/lib/queries/pago-manual";
 import { planes } from "@/lib/queries/planes";
 import { saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
@@ -45,6 +47,7 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
 
   // Búsqueda puntual (el plan sin abono): para publicar una nueva hace falta una búsqueda pagada. Editar una ya publicada no pide nada.
   const puntual = P.esPuntual(institucion.plan);
+  const formaDeCobro = puntual && !existente ? await formaDePagoDeCobro(institucion) : null;
   const permiso =
     puntual && !existente
       ? permisoParaPublicarPuntual({
@@ -112,9 +115,21 @@ export default async function PublicarBusqueda({ searchParams }: { searchParams:
           <h2 className="m-0 mb-1.5 text-base leading-tight font-semibold">Todavía no podés publicar una búsqueda nueva</h2>
           <p className="m-0 mb-4 text-sm leading-normal text-tinta-2">{permiso.error}</p>
           <div className="flex flex-wrap gap-3">
-            <BotonLink href="/contacto" variante="primario">
-              Escribirnos para abonarla
-            </BotonLink>
+            {/* Con Mercado Pago el pago se hace en Plan y facturación (un pago único por búsqueda); por transferencia o efectivo lo registra el equipo. */}
+            {formaDeCobro && puedePagarConMercadoPago(formaDeCobro) ? (
+              <BotonLink href="/institucion/plan" variante="primario">
+                Pagar con Mercado Pago
+              </BotonLink>
+            ) : (
+              <BotonLink href="/contacto" variante="primario">
+                Escribirnos para abonarla
+              </BotonLink>
+            )}
+            {formaDeCobro && puedePagarConMercadoPago(formaDeCobro) && puedePagarEnMano(formaDeCobro) && (
+              <BotonLink href="/contacto" variante="secundario">
+                Pagar por transferencia o efectivo
+              </BotonLink>
+            )}
             <BotonLink href="/institucion/plan" variante="secundario">
               Ver mis búsquedas
             </BotonLink>

@@ -43,7 +43,7 @@ export function permisoParaPublicarPuntual(e: { disponibles: number; abiertas: n
   if (e.disponibles < 1) {
     return {
       ok: false,
-      error: `Tu plan es de búsqueda puntual y no tenés una búsqueda pagada disponible. Para publicar, abonala (${e.precio}): escribinos desde Contacto y la habilitamos.`,
+      error: `Tu plan es de búsqueda puntual y no tenés una búsqueda pagada disponible. Para publicar, abonala (${e.precio}) desde Plan y facturación.`,
     };
   }
   if (e.abiertas >= e.maxAbiertas) {

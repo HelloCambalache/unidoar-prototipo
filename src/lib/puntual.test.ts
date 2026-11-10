@@ -51,12 +51,12 @@ describe("si puede publicar con el plan de búsqueda puntual", () => {
     assert.deepEqual(permisoParaPublicarPuntual({ ...base, disponibles: 3, abiertas: 1, maxAbiertas: 2 }), { ok: true });
   });
 
-  it("sin una búsqueda pagada no, y el mensaje dice cuánto sale y a dónde escribir", () => {
+  it("sin una búsqueda pagada no, y el mensaje dice cuánto sale y dónde se abona", () => {
     const r = permisoParaPublicarPuntual({ ...base, disponibles: 0 });
     assert.equal(r.ok, false);
     if (!r.ok) {
       assert.match(r.error, /\$ 110\.000/);
-      assert.match(r.error, /Contacto/);
+      assert.match(r.error, /Plan y facturación/);
       assert.equal(r.campo, undefined);
     }
   });

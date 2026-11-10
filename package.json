@@ -30,6 +30,7 @@
     "db:semestre-mp": "dotenv -e .env.local -- tsx src/db/semestre-mp-base.ts",
     "db:pago-manual": "dotenv -e .env.local -- tsx src/db/pago-manual-base.ts",
     "db:comprobantes": "dotenv -e .env.local -- tsx src/db/comprobantes-base.ts",
+    "db:puntual-mp": "dotenv -e .env.local -- tsx src/db/puntual-mp-base.ts",
     "db:mercadopago-limpiar": "dotenv -e .env.local -- tsx src/db/mercadopago-limpiar.ts",
     "db:storage": "dotenv -e .env.local -- tsx src/db/storage.ts",
     "db:setup": "pnpm db:push && pnpm db:rls && pnpm db:storage && pnpm db:seed",

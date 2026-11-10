@@ -25,6 +25,10 @@ export const permitirLinkDeSemestre = crearTope(8, 60 * 60 * 1000);
  */
 export const permitirConfirmarSemestre = crearTope(40, 10 * 60 * 1000);
 
+/** Lo mismo para el pago de una búsqueda puntual: armar el link (8 por hora y por cuenta) y confirmar al volver (40 cada 10 minutos). */
+export const permitirLinkDePuntual = crearTope(8, 60 * 60 * 1000);
+export const permitirConfirmarPuntual = crearTope(40, 10 * 60 * 1000);
+
 /**
  * Códigos de referido que una cuenta puede probar a mano en el alta por hora: el campo dice si un código existe o no, así que sin un tope
  * serviría para ir adivinándolos. Con 8 letras y números nadie los adivina, pero el tope lo deja explícito; alcanza de sobra para quien se

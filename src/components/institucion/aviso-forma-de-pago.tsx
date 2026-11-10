@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  * Mercado Pago» o, si el equipo la habilitó, que también puede pagar por transferencia o efectivo. Quien paga como siempre (Mercado Pago no
  * está disponible o su plan no se paga así) no ve nada: no hay nada que aclarar.
  */
-export function AvisoDeFormaDePago({ forma, className }: { forma: FormaDeCobro; className?: string }) {
-  const aviso = avisoDeFormaDePago(forma);
+export function AvisoDeFormaDePago({ forma, puntual = false, className }: { forma: FormaDeCobro; /** Su plan es el de búsqueda puntual: se paga cada búsqueda. */ puntual?: boolean; className?: string }) {
+  const aviso = avisoDeFormaDePago(forma, puntual);
   if (!aviso) return null;
   return (
     <section

@@ -7,6 +7,7 @@ import { esAvisoQueUsamos, mercadoPagoActivo, secretoDelWebhook } from "@/lib/me
 import { comprobarAviso, ErrorDeMercadoPago, obtenerCobroMp, obtenerPagoMp } from "@/lib/mercadopago-cliente";
 import { leerPagoMp } from "@/lib/pago-semestre";
 import { avisarAAdmins } from "@/lib/queries/avisos";
+import { aplicarPagoDePuntual } from "@/lib/queries/pago-puntual";
 import { aplicarPagoDeSemestre } from "@/lib/queries/pago-semestre";
 import { aplicarCobro } from "@/lib/queries/suscripcion";
 import { procesarSuscripcionDeMp } from "@/lib/queries/suscripcion-estado";
@@ -77,15 +78,18 @@ export async function POST(request: Request) {
     }
 
     if (tipo === "payment") {
-      // Un pago único: el semestre por adelantado. También llegan los pagos de las suscripciones (y cualquier otro de la cuenta): no son de ningún
-      // link nuestro (`external_reference` distinto) y `aplicarPagoDeSemestre` los deja pasar sin tocar nada.
+      // Un pago único: el semestre por adelantado o una búsqueda puntual. También llegan los pagos de las suscripciones (y cualquier otro de la cuenta): no
+      // son de ningún link nuestro (`external_reference` distinto) y las dos funciones los dejan pasar sin tocar nada (`sin-intento`).
       const pago = leerPagoMp(await obtenerPagoMp(idDelRecurso));
       if (!pago) return NextResponse.json({ ok: true, ignorado: true }, { headers: SIN_CACHE });
-      const resultado = await aplicarPagoDeSemestre(pago);
+      let resultado = await aplicarPagoDeSemestre(pago);
+      if (resultado === "sin-intento") resultado = await aplicarPagoDePuntual(pago);
       if (resultado === "registrado" || resultado === "revisar" || resultado === "devuelto") {
-        // Plan y facturación de la institución y la ficha de cobros del equipo muestran otra cosa ahora.
+        // Plan y facturación y Publicar de la institución, y la ficha de cobros y el reporte de pagos del equipo, muestran otra cosa ahora.
         revalidatePath("/institucion/plan");
+        revalidatePath("/institucion/publicar");
         revalidatePath("/backoffice/cobros");
+        revalidatePath("/backoffice/cobros/pagos");
       }
       console.info("[mercadopago] pago", { id: pago.id, estado: pago.estado, aplicado: resultado });
       return NextResponse.json({ ok: true, resultado }, { headers: SIN_CACHE });

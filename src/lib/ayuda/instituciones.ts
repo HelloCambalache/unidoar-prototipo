@@ -296,7 +296,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
             },
             {
               lista: [
-                "El pago lo registra el equipo cuando lo recibe. Hasta entonces no podés publicar: pedilo por [Contacto](/contacto).",
+                "**Se paga cada búsqueda con Mercado Pago** desde [Plan y facturación](/institucion/plan) (cuando está disponible para tu institución): es un pago único, sin suscripción, y apenas se acredita la búsqueda queda lista para publicar. Si tu institución está habilitada a pagar por transferencia o efectivo, escribinos por [Contacto](/contacto) y el equipo registra el pago. Hasta que haya una búsqueda pagada no podés publicar.",
                 "Cada pago habilita **una búsqueda**, en una sola sede, que está abierta durante un plazo (figura en Plan).",
                 "Al vencer el plazo, la búsqueda se cierra sola y avisamos a quienes se postularon.",
                 "Por lo general no incluye el buscador de profesionales, la base de profesionales ni los cursos (lo que incluye tu plan figura en Plan).",
@@ -396,7 +396,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
           lista: [
             "**Tu plan todavía no está activo:** una cuenta nueva con abono se habilita cuando el equipo registra su primer pago. Escribinos por [Contacto](/contacto) y coordinamos.",
             "**Tenés una factura vencida hace más de 15 días:** al registrarse el pago se levanta sola. Mirá [Plan](/institucion/plan).",
-            "**Estás en «Una sola búsqueda»:** necesitás una búsqueda pagada y disponible. Ver [Una sola búsqueda](/ayuda/instituciones/una-sola-busqueda).",
+            "**Estás en «Una sola búsqueda»:** necesitás una búsqueda pagada y disponible: pagala desde [Plan y facturación](/institucion/plan). Ver [Una sola búsqueda](/ayuda/instituciones/una-sola-busqueda).",
           ],
         },
       ],
