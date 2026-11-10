@@ -12,6 +12,7 @@ export function hrefDePagos(f: FiltrosDePagos, cambios: Partial<FiltrosDePagos> 
   const p = new URLSearchParams({ desde: x.desde, hasta: x.hasta });
   if (x.medio) p.set("medio", x.medio);
   if (x.q) p.set("q", x.q);
+  if (x.adjunto) p.set("adjunto", x.adjunto);
   if (x.conEjemplo) p.set("ejemplo", "1");
   return `${ruta}?${p.toString()}`;
 }
@@ -62,6 +63,14 @@ export function PagosFiltros({ filtros, hoy }: { filtros: FiltrosDePagos; hoy: s
                 {m}
               </option>
             ))}
+          </Select>
+        </label>
+        <label className="block text-[12.5px] font-semibold text-apagado">
+          Comprobante de pago
+          <Select name="adjunto" defaultValue={filtros.adjunto} className="mt-1">
+            <option value="">Todos</option>
+            <option value="con">Con comprobante adjunto</option>
+            <option value="sin">Sin comprobante adjunto</option>
           </Select>
         </label>
         <label className="block text-[12.5px] font-semibold text-apagado">

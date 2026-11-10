@@ -9,6 +9,7 @@ import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-p
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
 import { CobroPuntualAnular, CobroPuntualPago } from "@/components/backoffice/cobro-puntual";
 import { CobroAcuerdo } from "@/components/backoffice/cobro-acuerdo";
+import { ComprobanteDePago } from "@/components/backoffice/comprobante-de-pago";
 import { InstFormaDePago } from "@/components/backoffice/inst-forma-de-pago";
 import { CobroSemestre } from "@/components/backoffice/cobro-semestre";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
@@ -43,6 +44,7 @@ import { moraDe, SIN_MORA } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
 import { detalleDeCobros, type FacturaBo } from "@/lib/queries/backoffice-cobros";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
+import { comprobantesDeFacturas } from "@/lib/queries/comprobantes";
 import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
 import { intentosDeSemestreDe } from "@/lib/queries/pago-semestre";
@@ -107,6 +109,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const pagoManual = await formaDePagoParaElEquipo({ id: d.institucion.id, esDemo: d.institucion.esDemo, plan: d.institucion.plan });
 
   const { institucion: i, facturas, proximo } = d;
+  // El comprobante de pago que el equipo adjuntó a cada factura paga (el archivo no viaja a la página: solo su id y su nombre).
+  const comprobantes = await comprobantesDeFacturas(facturas.map((f) => f.id));
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "colegio";
   const esPuntual = P.esPuntual(plan);
@@ -223,6 +227,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                     <th>Monto</th>
                     <th>Medio</th>
                     <th>Estado</th>
+                    <th>Comprobante de pago</th>
                     <th>
                       <span className="sr-only">Acciones</span>
                     </th>
@@ -242,6 +247,17 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                         <InsigniaFactura estado={f.estado} />
                         {f.estado === "pagada" && f.pagadaEn && (
                           <span className="mt-1 block text-xs text-sutil">el {fechaCorta(f.pagadaEn)}</span>
+                        )}
+                      </td>
+                      <td>
+                        {f.estado === "pagada" ? (
+                          <ComprobanteDePago
+                            destino={{ tipo: "factura", id: f.id }}
+                            comprobante={comprobantes.get(f.id) ?? null}
+                            descripcion={etiquetaDeCobertura(f.periodo, f.mesesCubiertos)}
+                          />
+                        ) : (
+                          <span className="text-sutil">—</span>
                         )}
                       </td>
                       <td className="text-right whitespace-nowrap">

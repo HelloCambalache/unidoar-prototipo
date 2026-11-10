@@ -169,6 +169,9 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
               p: "**Reporte de pagos:** la pestaña **Pagos (reporte)** de [Cobros](/backoffice/cobros/pagos) muestra todo lo que se cobró, de cualquier institución, **con el método de pago de cada uno** (transferencia, efectivo, débito automático, Mercado Pago o tarjeta). Por defecto muestra el mes en curso; podés elegir otro rango, filtrar por método o por institución, ver cuánto entró en total y por cada método, y **descargar el CSV** (con los mismos filtros) para abrirlo en Excel. No cuenta los pagos de las instituciones de ejemplo salvo que lo tildes. Un semestre cuenta una sola vez, con el día en que se pagó, y la búsqueda puntual aparece como un pago más (sin número de comprobante: no es una factura). Un pago anotado sin método figura como «Sin dato».",
             },
             {
+              p: "**Comprobante de pago:** al registrar el pago de una factura podés **adjuntar la captura o el PDF de la transferencia** (o el recibo del efectivo); es optativo. También lo adjuntás después, desde la fila del pago en **Pagos (reporte)** o en el **Historial de cobros** de la ficha de la institución (**Adjuntar comprobante**, y luego **Ver**, **Reemplazar** o **Quitar**). **Solo lo ve el equipo**: la institución no. Si anulás el pago, el comprobante se borra con él. En el reporte, el filtro **Comprobante de pago** te muestra los pagos **sin comprobante** para completarlos, y el CSV indica con Sí o No si tienen uno.",
+            },
+            {
               lista: [
                 "**Las facturas de cada mes se crean solas** todos los días a las 9:00 (hora de Argentina), para las cuentas que no están suspendidas ni son de ejemplo y que **ya tienen una factura cargada**. La primera factura de cada cuenta la cargás vos con **Cargar factura**.",
                 "**Registrar pago:** en una factura impaga, para anotar que se pagó.",

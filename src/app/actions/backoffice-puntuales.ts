@@ -13,7 +13,9 @@ import { correoDePagoRegistrado } from "@/lib/correo/eventos";
 import { resumenDeError } from "@/lib/errores";
 import { pesos } from "@/lib/planes";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
+import { borrarArchivos } from "@/lib/queries/archivos";
 import { avisarAVarios } from "@/lib/queries/avisos";
+import { quitarComprobanteDelPago } from "@/lib/queries/comprobantes";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
 import { planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 
@@ -115,6 +117,7 @@ export async function anularPagoDeBusquedaPuntual(creditoId: string, entrada: { 
   if (!datos.ok) return fallo(datos.campos?.motivo ?? datos.error, datos.campos);
 
   let institucionId: string | undefined;
+  let archivosDeComprobante: string[] = [];
   try {
     const resultado = await transaccion(async (tx) => {
       const [credito] = await tx.select().from(creditosBusqueda).where(eq(creditosBusqueda.id, creditoId)).limit(1).for("update");
@@ -122,6 +125,9 @@ export async function anularPagoDeBusquedaPuntual(creditoId: string, entrada: { 
       institucionId = credito.institucionId;
       if (credito.usadoEn) return fallo("Esa búsqueda ya se publicó: no se puede anular su pago.");
 
+      // El comprobante de un pago que se anula se va con él. Se toma ANTES de borrar el pago (que lo arrastraría en cascada y se perdería el path del archivo);
+      // el archivo se borra de Storage después de confirmar. La fila del pago está bloqueada y sin usar: el borrado de abajo no puede fallar.
+      archivosDeComprobante = await quitarComprobanteDelPago(tx, { tipo: "puntual", id: credito.id });
       const borrado = await tx
         .delete(creditosBusqueda)
         .where(and(eq(creditosBusqueda.id, credito.id), isNull(creditosBusqueda.usadoEn)))
@@ -148,7 +154,11 @@ export async function anularPagoDeBusquedaPuntual(creditoId: string, entrada: { 
       }
       return ok();
     });
-    if (resultado.ok && institucionId) revalidar(institucionId);
+    if (resultado.ok) await borrarArchivos(archivosDeComprobante);
+    if (resultado.ok && institucionId) {
+      revalidar(institucionId);
+      revalidatePath("/backoffice/cobros/pagos");
+    }
     return resultado;
   } catch (e) {
     console.error("No se pudo anular el pago de la búsqueda puntual", resumenDeError(e));

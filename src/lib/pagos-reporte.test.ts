@@ -6,6 +6,7 @@ import {
   csvDePagos,
   diasDelRango,
   fechaParaCsv,
+  filtrarPagosPorAdjunto,
   filtrarPagosPorInstitucion,
   leerFiltrosDePagos,
   medioDelPago,
@@ -24,6 +25,7 @@ const HOY = "2026-11-10";
 
 const pago = (extra: Partial<PagoDelReporte> = {}): PagoDelReporte => ({
   clave: "f:1",
+  pagoId: "1",
   fecha: "2026-11-05",
   institucionId: "i1",
   institucion: "Colegio San Andrés",
@@ -34,17 +36,18 @@ const pago = (extra: Partial<PagoDelReporte> = {}): PagoDelReporte => ({
   medio: "Transferencia",
   monto: 50_000,
   comprobante: "AB12CD34",
+  adjunto: null,
   ...extra,
 });
 
 describe("el reporte de pagos: filtros", () => {
   it("sin nada en la dirección muestra el mes en curso hasta hoy", () => {
-    assert.deepEqual(leerFiltrosDePagos({}, HOY), { desde: "2026-11-01", hasta: HOY, medio: "", q: "", conEjemplo: false });
+    assert.deepEqual(leerFiltrosDePagos({}, HOY), { desde: "2026-11-01", hasta: HOY, medio: "", q: "", conEjemplo: false, adjunto: "" });
   });
 
   it("lee fechas, medio, nombre y ejemplos de la dirección", () => {
     const f = leerFiltrosDePagos({ desde: "2026-10-01", hasta: "2026-10-31", medio: "Efectivo", q: "  san andres ", ejemplo: "1" }, HOY);
-    assert.deepEqual(f, { desde: "2026-10-01", hasta: "2026-10-31", medio: "Efectivo", q: "san andres", conEjemplo: true });
+    assert.deepEqual(f, { desde: "2026-10-01", hasta: "2026-10-31", medio: "Efectivo", q: "san andres", conEjemplo: true, adjunto: "" });
   });
 
   it("una fecha que no existe o mal escrita vuelve al mes en curso, y los extremos al revés se dan vuelta", () => {
@@ -137,6 +140,24 @@ describe("el reporte de pagos: qué se muestra", () => {
   });
 });
 
+describe("el reporte de pagos: comprobante adjunto", () => {
+  const con = pago({ clave: "a", adjunto: { id: "c1", nombre: "transferencia.pdf" } });
+  const sin = pago({ clave: "b" });
+
+  it("se pueden ver solo los pagos con comprobante, solo los que no lo tienen, o todos", () => {
+    assert.deepEqual(filtrarPagosPorAdjunto([con, sin], "con").map((p) => p.clave), ["a"]);
+    assert.deepEqual(filtrarPagosPorAdjunto([con, sin], "sin").map((p) => p.clave), ["b"]);
+    assert.equal(filtrarPagosPorAdjunto([con, sin], "").length, 2);
+  });
+
+  it("el filtro de la dirección solo acepta con, sin o nada", () => {
+    assert.equal(leerFiltrosDePagos({ adjunto: "con" }, HOY).adjunto, "con");
+    assert.equal(leerFiltrosDePagos({ adjunto: "sin" }, HOY).adjunto, "sin");
+    assert.equal(leerFiltrosDePagos({ adjunto: "todos" }, HOY).adjunto, "");
+    assert.equal(leerFiltrosDePagos({}, HOY).adjunto, "");
+  });
+});
+
 describe("el reporte de pagos: CSV", () => {
   it("una celda lleva comillas escapadas y neutraliza las fórmulas", () => {
     assert.equal(celdaCsv('Colegio "San Andrés"'), '"Colegio ""San Andrés"""');
@@ -148,16 +169,16 @@ describe("el reporte de pagos: CSV", () => {
   });
 
   it("el archivo trae encabezado, una fila por pago con su medio, y el total al final; con BOM y separado por punto y coma", () => {
-    const csv = csvDePagos([pago(), pago({ clave: "p:2", tipo: "puntual", concepto: "Búsqueda puntual", plan: "puntual", medio: "Efectivo", monto: 110_000, comprobante: null, cuit: null })], (c) =>
+    const csv = csvDePagos([pago({ adjunto: { id: "c1", nombre: "transferencia.pdf" } }), pago({ clave: "p:2", tipo: "puntual", concepto: "Búsqueda puntual", plan: "puntual", medio: "Efectivo", monto: 110_000, comprobante: null, cuit: null })], (c) =>
       c === "puntual" ? "Búsqueda puntual" : "Plan Colegios",
     );
     assert.ok(csv.startsWith("﻿"), "BOM para Excel");
     const lineas = csv.trimEnd().split("\r\n");
     assert.equal(lineas.length, 4, "encabezado + 2 pagos + total");
-    assert.equal(lineas[0], '"Fecha de pago";"Institución";"CUIT";"Concepto";"Plan";"Medio de pago";"Monto";"N.º de comprobante"'.replace(/^/, "﻿"));
-    assert.equal(lineas[1], '"05/11/2026";"Colegio San Andrés";"30-71234567-1";"Noviembre 2026";"Plan Colegios";"Transferencia";"50000";"AB12CD34"');
-    assert.equal(lineas[2], '"05/11/2026";"Colegio San Andrés";"";"Búsqueda puntual";"Búsqueda puntual";"Efectivo";"110000";""');
-    assert.equal(lineas[3], '"Total";"";"";"";"";"";"160000";""');
+    assert.equal(lineas[0], '"Fecha de pago";"Institución";"CUIT";"Concepto";"Plan";"Medio de pago";"Monto";"N.º de comprobante (UNIDOAR)";"Comprobante de pago adjunto"'.replace(/^/, "﻿"));
+    assert.equal(lineas[1], '"05/11/2026";"Colegio San Andrés";"30-71234567-1";"Noviembre 2026";"Plan Colegios";"Transferencia";"50000";"AB12CD34";"Sí"');
+    assert.equal(lineas[2], '"05/11/2026";"Colegio San Andrés";"";"Búsqueda puntual";"Búsqueda puntual";"Efectivo";"110000";"";"No"');
+    assert.equal(lineas[3], '"Total";"";"";"";"";"";"160000";"";""');
   });
 
   it("sin pagos el archivo igual lleva el encabezado y el total en cero", () => {

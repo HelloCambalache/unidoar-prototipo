@@ -1,10 +1,10 @@
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { creditosBusqueda, facturas, instituciones } from "@/db/schema";
+import { comprobantesPago, creditosBusqueda, facturas, instituciones } from "@/db/schema";
 import { etiquetaDeCobertura } from "@/lib/cobros";
 import { numeroDeComprobante } from "@/lib/facturacion";
-import { filtrarPagosPorInstitucion, medioDelPago, ordenarPagos, type FiltrosDePagos, type PagoDelReporte } from "@/lib/pagos-reporte";
+import { filtrarPagosPorAdjunto, filtrarPagosPorInstitucion, medioDelPago, ordenarPagos, type FiltrosDePagos, type PagoDelReporte } from "@/lib/pagos-reporte";
 
 /*
  * Lectura del reporte de pagos del backoffice (Cobros → Pagos). Reúne en una sola lista todos los pagos que entraron en el rango pedido: cada factura
@@ -38,9 +38,12 @@ export async function pagosDelReporte(filtros: FiltrosDePagos): Promise<PagoDelR
         plan: facturas.plan,
         medio: facturas.medio,
         monto: facturas.monto,
+        adjuntoId: comprobantesPago.id,
+        adjuntoNombre: comprobantesPago.nombre,
       })
       .from(facturas)
       .innerJoin(instituciones, eq(instituciones.id, facturas.institucionId))
+      .leftJoin(comprobantesPago, eq(comprobantesPago.facturaId, facturas.id))
       .where(
         and(
           eq(facturas.estado, "pagada"),
@@ -58,9 +61,12 @@ export async function pagosDelReporte(filtros: FiltrosDePagos): Promise<PagoDelR
         cuit: instituciones.cuit,
         medio: creditosBusqueda.medio,
         monto: creditosBusqueda.monto,
+        adjuntoId: comprobantesPago.id,
+        adjuntoNombre: comprobantesPago.nombre,
       })
       .from(creditosBusqueda)
       .innerJoin(instituciones, eq(instituciones.id, creditosBusqueda.institucionId))
+      .leftJoin(comprobantesPago, eq(comprobantesPago.creditoId, creditosBusqueda.id))
       .where(
         and(sql`${diaDeCredito} between ${filtros.desde} and ${filtros.hasta}`, filtros.conEjemplo ? undefined : eq(instituciones.esDemo, false)),
       )
@@ -70,6 +76,7 @@ export async function pagosDelReporte(filtros: FiltrosDePagos): Promise<PagoDelR
   const todos: PagoDelReporte[] = [
     ...deFacturas.map((r) => ({
       clave: `f:${r.id}`,
+      pagoId: r.id,
       fecha: r.dia,
       institucionId: r.institucionId,
       institucion: r.institucion,
@@ -80,9 +87,11 @@ export async function pagosDelReporte(filtros: FiltrosDePagos): Promise<PagoDelR
       medio: medioDelPago(r.medio),
       monto: r.monto,
       comprobante: numeroDeComprobante(r.id),
+      adjunto: r.adjuntoId ? { id: r.adjuntoId, nombre: r.adjuntoNombre ?? "" } : null,
     })),
     ...deBusquedas.map((r) => ({
       clave: `p:${r.id}`,
+      pagoId: r.id,
       fecha: r.dia,
       institucionId: r.institucionId,
       institucion: r.institucion,
@@ -93,10 +102,11 @@ export async function pagosDelReporte(filtros: FiltrosDePagos): Promise<PagoDelR
       medio: medioDelPago(r.medio),
       monto: r.monto,
       comprobante: null,
+      adjunto: r.adjuntoId ? { id: r.adjuntoId, nombre: r.adjuntoNombre ?? "" } : null,
     })),
   ];
 
   // El medio y el nombre se filtran acá (y no en la consulta) para que «Sin dato» y las tildes se comporten igual que en el resto de la app.
   const delMedio = filtros.medio ? todos.filter((p) => p.medio === filtros.medio) : todos;
-  return ordenarPagos(filtrarPagosPorInstitucion(delMedio, filtros.q));
+  return ordenarPagos(filtrarPagosPorAdjunto(filtrarPagosPorInstitucion(delMedio, filtros.q), filtros.adjunto));
 }

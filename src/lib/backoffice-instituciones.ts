@@ -144,6 +144,10 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Registró el pago de una búsqueda puntual${typeof d.monto === "number" ? ` · ${pesos(d.monto)}` : ""}${texto("medio") ? ` · ${texto("medio")}` : ""}${texto("nota") ? ` · ${texto("nota")}` : ""}`;
     case "busqueda_puntual.anular_pago":
       return `Anuló el pago de una búsqueda puntual${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
+    case "pago.comprobante_adjuntar":
+      return `${d.reemplazo === true ? "Reemplazó" : "Adjuntó"} el comprobante de un pago${d.tipo === "puntual" ? " de búsqueda puntual" : ""}`;
+    case "pago.comprobante_quitar":
+      return `Quitó el comprobante de un pago${d.tipo === "puntual" ? " de búsqueda puntual" : ""}`;
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":

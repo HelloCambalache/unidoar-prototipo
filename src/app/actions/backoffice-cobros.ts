@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
-import { auditoria, facturas, instituciones, solicitudesPlan } from "@/db/schema";
+import { auditoria, comprobantesPago, facturas, instituciones, solicitudesPlan } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
@@ -35,6 +35,9 @@ import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, corr
 import { avisoDeCobroEnMesBonificado } from "@/lib/bonificacion";
 import { suscripcionVigente } from "@/lib/debito-automatico";
 import { pesos } from "@/lib/planes";
+import { leerArchivoDeComprobante } from "@/lib/comprobantes-pago";
+import { borrarArchivos } from "@/lib/queries/archivos";
+import { quitarComprobanteDelPago } from "@/lib/queries/comprobantes";
 import { liberarMeses, mesesBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
@@ -80,11 +83,14 @@ function revalidarCobros(institucionId?: string) {
  * Registra el pago de una factura (pasa a "pagada") y le avisa a la institución. `fecha` es cuándo llegó el pago
  * ("2026-10-03"); sin ella, o si es hoy, se toma el momento del registro.
  */
-export async function registrarPago(facturaId: string, medio: string, fecha?: string): Promise<Resultado> {
+export async function registrarPago(facturaId: string, medio: string, fecha?: string, comprobante?: { path: string; nombre: string } | null): Promise<Resultado> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(facturaId)) return fallo(FACTURA_NO_ENCONTRADA);
   const datos = parsear(pagoSchema, { medio, fecha });
   if (!datos.ok) return fallo(datos.campos?.medio ?? datos.campos?.fecha ?? datos.error, datos.campos);
+  // El comprobante es opcional; si viene, tiene que ser un archivo que subió esta cuenta a la carpeta de comprobantes.
+  const archivo = comprobante?.path ? leerArchivoDeComprobante(comprobante, admin.id) : null;
+  if (archivo && !archivo.ok) return fallo(archivo.error);
 
   const hoy = hoyAR();
   const errorFecha = datos.data.fecha ? errorDeFechaDePago(datos.data.fecha, hoy) : null;
@@ -104,6 +110,9 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
       .update(facturas)
       .set({ estado: "pagada", pagadaEn, medio: datos.data.medio })
       .where(eq(facturas.id, factura.id));
+    if (archivo?.ok) {
+      await tx.insert(comprobantesPago).values({ facturaId: factura.id, path: archivo.archivo.path, nombre: archivo.archivo.nombre, subidoPor: admin.id });
+    }
     await registrarAuditoria(
       {
         usuarioId: admin.id,
@@ -119,6 +128,7 @@ export async function registrarPago(facturaId: string, medio: string, fecha?: st
           // Para poder dejar la factura como estaba si después se anula el pago.
           medioAnterior: factura.medio,
           estadoAnterior: factura.estado,
+          ...(archivo?.ok ? { conComprobante: true } : {}),
         },
       },
       tx,
@@ -398,11 +408,14 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
   if (!P) return fallo(SIN_PRECIOS);
 
   let institucionId: string | undefined;
+  let archivosDeComprobante: string[] = [];
   const resultado = await transaccion(async (tx) => {
     const [factura] = await tx.select().from(facturas).where(eq(facturas.id, facturaId)).limit(1).for("update");
     if (!factura) return fallo(FACTURA_NO_ENCONTRADA);
     institucionId = factura.institucionId;
     if (factura.estado !== "pagada") return fallo("Esa factura no figura como paga.");
+    // El comprobante de un pago que se anula no tiene por qué quedar: se quita la fila acá y el archivo se borra después de confirmar.
+    archivosDeComprobante = await quitarComprobanteDelPago(tx, { tipo: "factura", id: factura.id });
 
     // El medio que tenía antes del pago está en la auditoría; si no (factura cargada ya paga), el habitual de la institución.
     const [registro] = await tx
@@ -478,7 +491,11 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
     return ok({ eliminada });
   });
 
-  if (resultado.ok) revalidarCobros(institucionId);
+  if (resultado.ok) {
+    await borrarArchivos(archivosDeComprobante);
+    revalidarCobros(institucionId);
+    revalidatePath("/backoffice/cobros/pagos");
+  }
   return resultado;
 }
 

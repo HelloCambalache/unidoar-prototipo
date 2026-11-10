@@ -4,6 +4,7 @@ import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { Icono } from "@/components/icons";
 import { CobrosSecciones } from "@/components/backoffice/cobros-secciones";
+import { ComprobanteDePago } from "@/components/backoffice/comprobante-de-pago";
 import { hrefDePagos, PagosFiltros } from "@/components/backoffice/pagos-filtros";
 import { botonClases } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
@@ -52,7 +53,8 @@ export default async function PagosBackoffice({ searchParams }: { searchParams: 
   const { total, cantidad, porMedio } = totalesDePagos(pagos);
   const visibles = pagos.slice(0, FILAS_EN_PANTALLA);
   const dias = diasDelRango(filtros);
-  const hayFiltrosExtra = Boolean(filtros.medio || filtros.q);
+  const hayFiltrosExtra = Boolean(filtros.medio || filtros.q || filtros.adjunto);
+  const conAdjunto = pagos.filter((p) => p.adjunto).length;
   const hrefCsv = hrefDePagos(filtros, {}, "/backoffice/cobros/pagos/csv");
 
   return (
@@ -78,6 +80,12 @@ export default async function PagosBackoffice({ searchParams }: { searchParams: 
           nota={`${fechaDeColumna(filtros.desde)} al ${fechaDeColumna(filtros.hasta)} · ${dias} ${dias === 1 ? "día" : "días"}`}
         />
         <Metrica valor={cantidad} etiqueta={cantidad === 1 ? "Pago registrado" : "Pagos registrados"} color="#0E6577" nota={hayFiltrosExtra ? "Con los filtros elegidos" : "Sin filtros de método ni institución"} />
+        <Metrica
+          valor={cantidad > 0 ? `${conAdjunto} de ${cantidad}` : "—"}
+          etiqueta="Con comprobante de pago adjunto"
+          color="#8F3D28"
+          nota={cantidad > conAdjunto ? `Faltan ${cantidad - conAdjunto}: filtrá «Sin comprobante» para verlos` : cantidad > 0 ? "Todos tienen su comprobante" : undefined}
+        />
       </div>
 
       <section aria-labelledby="medios-titulo" className="mb-6">
@@ -149,7 +157,8 @@ export default async function PagosBackoffice({ searchParams }: { searchParams: 
                   <th>Concepto</th>
                   <th>Método</th>
                   <th className="text-right">Monto</th>
-                  <th>Comprobante</th>
+                  <th>N.º (UNIDOAR)</th>
+                  <th>Comprobante de pago</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,6 +177,9 @@ export default async function PagosBackoffice({ searchParams }: { searchParams: 
                     </td>
                     <td className="text-right whitespace-nowrap tabular-nums">{pesos(p.monto)}</td>
                     <td className="whitespace-nowrap text-[13px] text-apagado">{p.comprobante ?? <span className="text-sutil">—</span>}</td>
+                    <td>
+                      <ComprobanteDePago destino={{ tipo: p.tipo, id: p.pagoId }} comprobante={p.adjunto} descripcion={`${p.concepto} de ${p.institucion}`} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

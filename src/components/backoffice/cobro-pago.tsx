@@ -5,7 +5,9 @@ import { registrarPago } from "@/app/actions/backoffice-cobros";
 import { Boton, type BotonTamano, type BotonVariante } from "@/components/ui/button";
 import { Campo, Input, Select } from "@/components/ui/campos";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
+import { SubirArchivo } from "@/components/ui/subir-archivo";
 import { useToast } from "@/components/ui/toast";
+import { CARPETA_COMPROBANTE } from "@/lib/comprobantes-pago";
 import { DIAS_MAXIMOS_PAGO_ATRASADO, errorDeFechaDePago, hoyAR, MEDIOS_PAGO } from "@/lib/cobros";
 
 export type FacturaParaPago = {
@@ -47,8 +49,10 @@ export function CobroPago({
   const [error, setError] = useState<string | null>(null);
   const [fecha, setFecha] = useState(() => hoyAR());
   const [errorFecha, setErrorFecha] = useState<string | null>(null);
+  const [comprobante, setComprobante] = useState<{ path: string; nombre: string } | null>(null);
 
   const abrir = () => {
+    setComprobante(null);
     setMedio(inicial);
     setFecha(hoyAR());
     setError(null);
@@ -63,7 +67,7 @@ export function CobroPago({
     if (!medio || falloFecha) return;
     empezar(async () => {
       try {
-        const r = await registrarPago(factura.id, medio, fecha);
+        const r = await registrarPago(factura.id, medio, fecha, comprobante);
         if (!r.ok) {
           // Un error de fecha va junto al campo de fecha; el resto, junto al medio.
           if (r.campos?.fecha) setErrorFecha(r.campos.fecha);
@@ -119,6 +123,19 @@ export function CobroPago({
               aria-invalid={!!errorFecha || undefined}
             />
           </Campo>
+        </div>
+        <div className="mb-4">
+          <SubirArchivo
+            key={abierto ? "abierto" : "cerrado"}
+            bucket="privado"
+            carpeta={CARPETA_COMPROBANTE}
+            nombre="comprobante"
+            variante="zona"
+            etiqueta="Comprobante de pago (optativo)"
+            titulo="Adjuntá la captura o el PDF del comprobante"
+            ayuda="Optativo. Solo lo ve el equipo: la institución no. También se puede adjuntar después desde Pagos."
+            onCambio={(path, nombre) => setComprobante(path ? { path, nombre: nombre ?? "" } : null)}
+          />
         </div>
         <div className="flex gap-2.5">
           <Boton disabled={pendiente} onClick={confirmar}>

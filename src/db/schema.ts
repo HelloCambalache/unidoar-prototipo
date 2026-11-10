@@ -1157,6 +1157,30 @@ export const creditosBusqueda = pgTable(
 );
 export type CreditoBusqueda = typeof creditosBusqueda.$inferSelect;
 
+/**
+ * El comprobante del pago que adjunta el equipo cuando registra un pago manual (la captura o el PDF de la transferencia, el recibo…): un archivo
+ * por pago, de una factura o de una búsqueda puntual pagada (exactamente una de las dos columnas). Es un dato financiero de la institución: vive
+ * en el bucket **privado**, se abre solo con `/api/comprobantes/<id>` (admin) y la institución no lo ve. Si el pago se anula (o la factura o el
+ * pago de la búsqueda se borran) se va con él. Tabla aparte de `facturas` a propósito (agregarle una columna rompe las consultas hasta correr el
+ * script). Creada con `pnpm db:comprobantes` (correrlo ANTES de desplegar), con RLS.
+ */
+export const comprobantesPago = pgTable(
+  "comprobantes_pago",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    facturaId: uuid("factura_id").references(() => facturas.id, { onDelete: "cascade" }),
+    creditoId: uuid("credito_id").references(() => creditosBusqueda.id, { onDelete: "cascade" }),
+    /** Path del bucket privado (`<admin>/comprobantes/<uuid>.<ext>`). Nunca va a una página. */
+    path: text("path").notNull(),
+    /** Nombre del archivo como lo subió el equipo (es lo único que se muestra). */
+    nombre: text("nombre").notNull(),
+    subidoPor: uuid("subido_por").references(() => usuarios.id, { onDelete: "set null" }),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("comprobantes_pago_factura_uq").on(t.facturaId), uniqueIndex("comprobantes_pago_credito_uq").on(t.creditoId)],
+);
+export type ComprobantePago = typeof comprobantesPago.$inferSelect;
+
 /** Condiciones de los planes (una sola fila, `id = 1`): desde cuántas sedes es Multisede, el pack por adelantado y qué tipos pagan el arancel de colegios. */
 export const planesCondiciones = pgTable("planes_condiciones", {
   id: integer("id").primaryKey().default(1),

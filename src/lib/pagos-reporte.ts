@@ -24,6 +24,8 @@ export const medioDelPago = (medio: string | null | undefined): string => medio?
 export type PagoDelReporte = {
   /** Para distinguir las filas (una factura y una búsqueda puntual pueden tener el mismo número). */
   clave: string;
+  /** El id de la factura o de la búsqueda puntual pagada (según `tipo`): a qué pago se le adjunta el comprobante. */
+  pagoId: string;
   /** El día en que se pagó, en hora de Argentina (`YYYY-MM-DD`). */
   fecha: string;
   institucionId: string;
@@ -39,6 +41,8 @@ export type PagoDelReporte = {
   monto: number;
   /** El número del comprobante de la factura (el que lleva el mail y la hoja de la app); null en la búsqueda puntual, que no es una factura. */
   comprobante: string | null;
+  /** El comprobante de pago que adjuntó el equipo (la captura o el PDF de la transferencia, el recibo…), o null si todavía no hay. */
+  adjunto: { id: string; nombre: string } | null;
 };
 
 export type FiltrosDePagos = {
@@ -52,6 +56,8 @@ export type FiltrosDePagos = {
   q: string;
   /** Incluye los pagos de las instituciones de ejemplo (por defecto no: son pruebas). */
   conEjemplo: boolean;
+  /** Solo los pagos que tienen el comprobante adjunto («con»), solo los que no («sin») o todos (`""`). */
+  adjunto: "" | "con" | "sin";
 };
 
 const unico = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -82,12 +88,14 @@ export function leerFiltrosDePagos(sp: Record<string, string | string[] | undefi
   if (!esFechaIso(hasta)) hasta = hoy;
   if (desde > hasta) [desde, hasta] = [hasta, desde];
   const medio = unico(sp.medio);
+  const adjunto = unico(sp.adjunto);
   return {
     desde,
     hasta,
     medio: MEDIOS_DEL_REPORTE.includes(medio) ? medio : "",
     q: unico(sp.q).trim().slice(0, 80),
     conEjemplo: unico(sp.ejemplo) === "1",
+    adjunto: adjunto === "con" || adjunto === "sin" ? adjunto : "",
   };
 }
 
@@ -112,6 +120,13 @@ export function filtrarPagosPorInstitucion(pagos: PagoDelReporte[], q: string): 
     pagos.map((p) => ({ nombre: p.institucion, p })),
     q,
   ).map((x) => x.p);
+}
+
+/** Los pagos que tienen (o no tienen) el comprobante adjunto; con `""` no se filtra nada. */
+export function filtrarPagosPorAdjunto(pagos: PagoDelReporte[], adjunto: FiltrosDePagos["adjunto"]): PagoDelReporte[] {
+  if (adjunto === "con") return pagos.filter((p) => p.adjunto !== null);
+  if (adjunto === "sin") return pagos.filter((p) => p.adjunto === null);
+  return pagos;
 }
 
 /** De más nuevo a más viejo; a igual día, por institución y concepto (para que el orden no cambie de una carga a otra). */
@@ -149,7 +164,7 @@ export function celdaCsv(valor: string): string {
   return `"${seguro.replaceAll('"', '""')}"`;
 }
 
-const COLUMNAS_CSV = ["Fecha de pago", "Institución", "CUIT", "Concepto", "Plan", "Medio de pago", "Monto", "N.º de comprobante"];
+const COLUMNAS_CSV = ["Fecha de pago", "Institución", "CUIT", "Concepto", "Plan", "Medio de pago", "Monto", "N.º de comprobante (UNIDOAR)", "Comprobante de pago adjunto"];
 
 /** `2026-11-10` → `10/11/2026`. */
 export const fechaParaCsv = (fecha: string) => fecha.split("-").reverse().join("/");
@@ -160,10 +175,10 @@ export const fechaParaCsv = (fecha: string) => fecha.split("-").reverse().join("
  */
 export function csvDePagos(pagos: readonly PagoDelReporte[], nombrePlan: (clave: string) => string): string {
   const filas = pagos.map((p) =>
-    [fechaParaCsv(p.fecha), p.institucion, p.cuit ?? "", p.concepto, nombrePlan(p.plan), p.medio, String(p.monto), p.comprobante ?? ""].map(celdaCsv).join(";"),
+    [fechaParaCsv(p.fecha), p.institucion, p.cuit ?? "", p.concepto, nombrePlan(p.plan), p.medio, String(p.monto), p.comprobante ?? "", p.adjunto ? "Sí" : "No"].map(celdaCsv).join(";"),
   );
   const { total } = totalesDePagos(pagos);
-  const pie = ["Total", "", "", "", "", "", String(total), ""].map(celdaCsv).join(";");
+  const pie = ["Total", "", "", "", "", "", String(total), "", ""].map(celdaCsv).join(";");
   return `﻿${[COLUMNAS_CSV.map(celdaCsv).join(";"), ...filas, pie].join("\r\n")}\r\n`;
 }
 
