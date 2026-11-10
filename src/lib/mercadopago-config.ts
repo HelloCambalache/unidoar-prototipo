@@ -34,6 +34,27 @@ export const mercadoPagoActivo = (env: Entorno = process.env) => Boolean(tokenDe
 /** En qué modo están los cobros: con un token de prueba no entra plata real. "desconocido" si no se pudo averiguar de quién es el token. */
 export type ModoDeCobro = "produccion" | "prueba" | "desconocido";
 
+/**
+ * Con un token de PRUEBA, ¿Mercado Pago se ofrece solo a las instituciones de ejemplo? **Apagado por defecto** (decisión de Flor, 2026-11-10, «estamos
+ * probando»): con un token de prueba también lo ven y lo usan las instituciones reales, para poder probar el flujo con ellas. La protección anterior
+ * (una real no se suscribe a un cobro de mentira) se vuelve a prender con `MP_PRUEBA_SOLO_EJEMPLO=1` en Vercel. Con el token de producción no
+ * importa: se ofrece a todas.
+ *
+ * Ojo mientras esté apagada: un pago de PRUEBA en una institución real marca su factura como paga (con el comprobante por mail, su plan activo y
+ * el MRR); antes de pasar a producción hay que deshacerlos con «Anular pago» y cancelar esas suscripciones (`db:mercadopago-limpiar` no toca reales).
+ */
+export const pruebaSoloParaEjemplo = (env: Entorno = process.env) => valor(env, "MP_PRUEBA_SOLO_EJEMPLO") === "1";
+
+/**
+ * ¿Se le ofrece Mercado Pago a una institución, según el modo? Sin token (`modo` null), no. Con token de producción (o sin poder saber el modo:
+ * no hay señal de prueba), sí. Con uno de prueba, a las de ejemplo y, salvo que se pida la protección (`pruebaSoloParaEjemplo`), también a las reales.
+ */
+export function mercadoPagoDisponibleEnModo(modo: ModoDeCobro | null, esDemo: boolean, soloEjemploEnPrueba: boolean): boolean {
+  if (modo === null) return false;
+  if (modo !== "prueba") return true;
+  return esDemo || !soloEjemploEnPrueba;
+}
+
 /** Un Access Token de prueba de la aplicación empieza con "TEST-" (el de producción, con "APP_USR-"). */
 export const esTokenDePrueba = (token: string | null | undefined) => typeof token === "string" && token.trim().toUpperCase().startsWith("TEST-");
 

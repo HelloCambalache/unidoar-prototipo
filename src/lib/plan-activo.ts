@@ -1,6 +1,7 @@
 import { DIAS_DE_GRACIA, MENSAJE_DE_MORA, QUE_SE_LIMITA, type Mora } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
 import { textoDeSemestre, type resumenDeSemestre } from "@/lib/forma-de-pago";
+import { fraseDelCartelSinPago, pasosParaActivar, pasosParaLevantarLaMora, type FormaDeCobro } from "@/lib/pago-manual";
 
 /*
  * «Plan activo»: cuándo una institución puede publicar búsquedas, invitar a postularse y publicar cursos, y qué se le muestra cuando no puede
@@ -56,6 +57,8 @@ export type DatosDelPopup = {
   mensual: number | null;
   /** El semestre por adelantado, si puede pagarlo así (`puedePagarSemestre`). */
   semestre: ReturnType<typeof resumenDeSemestre> | null;
+  /** Cómo paga: con Mercado Pago, con Mercado Pago o por transferencia o efectivo (si el equipo la habilitó) o como siempre (`src/lib/pago-manual.ts`). */
+  forma: FormaDeCobro;
   /** Enlace de WhatsApp del equipo, o null si no hay. */
   whatsapp: string | null;
 };
@@ -69,9 +72,10 @@ export type ContenidoDelPopup = {
   pasos: string[];
 };
 
+// Sin saber cómo paga (el servidor frenó algo antes de que la pantalla lo supiera): neutro, vale para cualquiera.
 const PASOS_GENERICOS = [
-  "Escribinos por WhatsApp o desde Contacto y coordinamos el pago por transferencia o en efectivo.",
-  "Apenas registremos el pago, se habilita todo: no tenés que hacer nada más.",
+  "Mirá cómo pagar en Plan y facturación o escribinos por WhatsApp o desde Contacto.",
+  "Apenas se acredite el pago, se habilita todo: no tenés que hacer nada más.",
 ];
 
 /**
@@ -80,7 +84,7 @@ const PASOS_GENERICOS = [
  */
 export function contenidoDelPopup(
   motivo: MotivoDePlanInactivo | null,
-  datos: Pick<DatosDelPopup, "planNombre" | "mensual" | "semestre"> | null,
+  datos: Pick<DatosDelPopup, "planNombre" | "mensual" | "semestre" | "forma"> | null,
   mensajeDelServidor?: string,
 ): ContenidoDelPopup {
   if (motivo === null) {
@@ -103,27 +107,18 @@ export function contenidoDelPopup(
       titulo: "Tu cuenta está limitada por una factura vencida",
       bajada: `Pasaron más de ${DIAS_DE_GRACIA} días del vencimiento: hasta que se acredite el pago no podés ${QUE_SE_LIMITA}. Lo demás de tu cuenta sigue funcionando.`,
       plan,
-      pasos: [
-        "Pagá la factura vencida por transferencia o en efectivo: el detalle está en Plan y facturación. Si necesitás coordinarlo, escribinos.",
-        "Apenas registremos el pago, la limitación se levanta sola: no tenés que hacer nada más.",
-      ],
+      pasos: pasosParaLevantarLaMora(datos?.forma ?? "manual"),
     };
   }
   return {
     titulo: "Activá tu plan para publicar",
     bajada: `Tu plan todavía no está activo: hasta que registremos tu primer pago no podés ${QUE_SE_LIMITA}. Mientras tanto podés completar tu perfil y recorrer la plataforma.`,
     plan,
-    pasos: [
-      "Escribinos por WhatsApp o desde Contacto y coordinamos el pago por transferencia o en efectivo.",
-      "Apenas registremos el pago, tu plan queda activo y se habilita todo: no tenés que hacer nada más.",
-    ],
+    pasos: pasosParaActivar(datos?.forma ?? "manual"),
   };
 }
 
 /** El cartel que ve la institución con el plan sin pago (la mora tiene el suyo: `cartelDeMora`). */
-export function cartelDePlanSinPago(): { titulo: string; texto: string } {
-  return {
-    titulo: "Tu plan todavía no está activo",
-    texto: `Hasta que registremos tu primer pago no podés ${QUE_SE_LIMITA}. Escribinos y coordinamos el pago por transferencia o en efectivo: apenas lo registremos se habilita todo.`,
-  };
+export function cartelDePlanSinPago(forma: FormaDeCobro = "manual"): { titulo: string; texto: string } {
+  return { titulo: "Tu plan todavía no está activo", texto: fraseDelCartelSinPago(forma, QUE_SE_LIMITA) };
 }

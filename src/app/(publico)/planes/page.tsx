@@ -8,6 +8,7 @@ import { BotonLink } from "@/components/ui/button";
 import { catalogoParaNavegador, crearPlanes, pesos, plazoDeFundadoras } from "@/lib/planes";
 import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { cuposDeFundadoras } from "@/lib/queries/fundadoras";
+import { mercadoPagoEnProduccion } from "@/lib/queries/mercadopago-modo";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 import { cn } from "@/lib/utils";
 import { metadatosDePagina, PAGINAS } from "@/lib/seo";
@@ -37,7 +38,8 @@ const BENEFICIOS_INSTITUCION = [
 const PROMESAS = ["Gratis para profesionales", "Sin comisión por contratación", "Búsquedas ilimitadas con el abono"];
 
 export default async function Planes() {
-  const [catalogo, cupos] = await Promise.all([catalogoDePlanes(), cuposDeFundadoras()]);
+  // Los textos del semestre dicen cómo se paga: con Mercado Pago solo si ya cobra de verdad (si no, como siempre: lo coordina el equipo).
+  const [catalogo, cupos, conMercadoPago] = await Promise.all([catalogoDePlanes(), cuposDeFundadoras(), mercadoPagoEnProduccion()]);
   const P = crearPlanes(catalogo);
 
   const colegios = P.planDe("colegio");
@@ -77,7 +79,7 @@ export default async function Planes() {
     },
     {
       pregunta: "¿Cómo funciona el pago semestral?",
-      respuesta: `Arriba de los planes elegí «Semestral» para verlo. Contratás ${mesesDelPack} meses de una vez, por transferencia o en efectivo, y pagás ${mesesQueSePagan}:${pesos(P.packDe("colegio").anticipado)} en lugar de ${pesos(P.packDe("colegio").lista)} en el plan de colegios, o ${pesos(P.packDe("deportiva").anticipado)} en lugar de ${pesos(P.packDe("deportiva").lista)} en el de clubes y academias.`,
+      respuesta: `Arriba de los planes elegí «Semestral» para verlo. Contratás ${mesesDelPack} meses de una vez, ${conMercadoPago ? "con Mercado Pago (o por transferencia o en efectivo, si tu institución está habilitada para eso)" : "por transferencia o en efectivo"}, y pagás ${mesesQueSePagan}:${pesos(P.packDe("colegio").anticipado)} en lugar de ${pesos(P.packDe("colegio").lista)} en el plan de colegios, o ${pesos(P.packDe("deportiva").anticipado)} en lugar de ${pesos(P.packDe("deportiva").lista)} en el de clubes y academias.`,
     },
   ];
 
@@ -177,7 +179,7 @@ export default async function Planes() {
                 className="order-first col-span-full max-[800px]:order-none max-[800px]:col-span-1 max-[800px]:mt-1 max-[800px]:-mb-3"
               />
 
-              <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoDelNavegador} />
+              <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoDelNavegador} conMercadoPago={conMercadoPago} />
 
               {cupos.hay && <TarjetaFundadoras cupos={cupos} />}
             </div>

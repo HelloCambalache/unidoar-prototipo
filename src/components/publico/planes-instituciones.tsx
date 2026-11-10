@@ -48,7 +48,16 @@ function detalleDe(P: Planes, clave: PlanClave) {
  * Tarjeta de precio de las instituciones. El arancel depende del tipo, así que en vez de una tarjeta
  * por precio hay una sola con un desplegable: la institución se elige a sí misma y ve lo que paga.
  */
-export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: readonly string[]; catalogo: CatalogoDePlanes }) {
+export function PlanesInstituciones({
+  beneficios,
+  catalogo,
+  conMercadoPago = false,
+}: {
+  beneficios: readonly string[];
+  catalogo: CatalogoDePlanes;
+  /** Mercado Pago ya cobra de verdad: el semestre se paga con Mercado Pago en lugar de «por transferencia o en efectivo» (que queda para las habilitadas). */
+  conMercadoPago?: boolean;
+}) {
   const P = crearPlanes(catalogo);
   // El tipo de institución y cómo se paga el abono (mes a mes o el semestre de una vez: pagás 5 y usás 6) los comparte con el interruptor de
   // arriba de las tarjetas (`InterruptorDePago`), que está fuera de esta tarjeta. El semestre solo aplica a los aranceles con abono.
@@ -176,7 +185,7 @@ export function PlanesInstituciones({ beneficios, catalogo }: { beneficios: read
           <p className="m-0 mt-1 text-[13px] leading-[1.5] text-white/70">
             {verSemestral ? (
               <>
-                Pagás el semestre de una vez, por transferencia o en efectivo, y usás {mesesDelPack} meses:{" "}
+                Pagás el semestre de una vez {conMercadoPago ? "con Mercado Pago" : "por transferencia o en efectivo"}, y usás {mesesDelPack} meses:{" "}
                 <b className="font-semibold text-white">{pesos(pack.anticipado)}</b> en lugar de {pesos(pack.lista)}. Para pagar mes a mes, elegí «Mensual».
               </>
             ) : (

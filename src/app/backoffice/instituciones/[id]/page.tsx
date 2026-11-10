@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { InstAcciones } from "@/components/backoffice/inst-acciones";
 import { InstDebito } from "@/components/backoffice/inst-debito";
+import { InstFormaDePago } from "@/components/backoffice/inst-forma-de-pago";
 import { InstProcesarBaja } from "@/components/backoffice/inst-procesar-baja";
 import { InsigniaCuenta, InsigniaFactura, InsigniaVerificada } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
@@ -31,6 +32,7 @@ import { fechaHoraCorta } from "@/lib/calendario";
 import { pesos } from "@/lib/planes";
 import { resumenParaBajaDeInstitucion } from "@/lib/queries/baja-institucion";
 import { fichaInstitucion } from "@/lib/queries/backoffice-instituciones";
+import { formaDePagoParaElEquipo } from "@/lib/queries/pago-manual";
 import { planes } from "@/lib/queries/planes";
 
 export const metadata: Metadata = { title: "Institución · Backoffice" };
@@ -70,6 +72,8 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
   const resumenDeBaja = !deBaja && !i.esDemo ? await resumenParaBajaDeInstitucion(i.id) : null;
   // El débito automático: se muestra en la ficha y, si está vivo (pendiente, activo o en pausa), el diálogo de suspender ofrece cancelarlo.
   const debito = await debitoParaBackoffice(i.id);
+  // Cómo paga: con Mercado Pago o, si el equipo la habilitó, también por transferencia o efectivo (ver src/lib/pago-manual.ts).
+  const pagoManual = !deBaja ? await formaDePagoParaElEquipo({ id: i.id, esDemo: i.esDemo, plan: i.plan }) : null;
   const debitoVigente = !deBaja && suscripcionVigente(debito.suscripcion?.estado);
   const ahora = new Date();
   const plan = esClavePlan(i.plan) ? i.plan : "colegio";
@@ -155,6 +159,8 @@ export default async function FichaInstitucion({ params }: { params: Promise<{ i
               <InstPlan institucionId={i.id} nombre={i.nombre} catalogo={P.catalogo} plan={plan} proximoCobro={proximoTexto} />
             </Tarjeta>
           )}
+
+          {pagoManual && <InstFormaDePago institucionId={i.id} nombre={i.nombre} habilitada={pagoManual.habilitada} resumen={pagoManual.resumen} />}
 
           {!deBaja && <RegistrarPagos institucionId={i.id} plan={plan} P={P} debitoVigente={debitoVigente} />}
 

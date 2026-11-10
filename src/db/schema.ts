@@ -1112,6 +1112,20 @@ export const formasDePago = pgTable("formas_de_pago", {
 });
 
 /**
+ * Instituciones que el equipo habilitó a pagar por transferencia o efectivo (una fila por institución habilitada; sin fila, paga con Mercado Pago
+ * cuando Mercado Pago está disponible para ella). Cambia lo que VE la institución, no lo que puede registrar el equipo: ver `src/lib/pago-manual.ts`.
+ * Tabla aparte de `instituciones` a propósito. Creada con `pnpm db:pago-manual` (correrlo ANTES de desplegar), con RLS.
+ */
+export const habilitacionesPagoManual = pgTable("habilitaciones_pago_manual", {
+  institucionId: uuid("institucion_id")
+    .primaryKey()
+    .references(() => instituciones.id, { onDelete: "cascade" }),
+  /** Quién la habilitó (el admin); null si esa cuenta ya no existe. */
+  habilitadaPor: uuid("habilitada_por").references(() => usuarios.id, { onDelete: "set null" }),
+  habilitadaEn: timestamp("habilitada_en", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Búsquedas puntuales pagadas (el plan sin abono: se paga cada búsqueda). Cada fila es UNA búsqueda que la institución pagó: la carga el equipo
  * al registrar el pago y queda **disponible** (`usado_en` null) hasta que la institución publica una búsqueda, que la **consume** (guarda su id,
  * cuándo se usó y cuándo vence). Disponible o usada se decide por `usado_en`, nunca por el enlace: si se borrara la búsqueda, el crédito no

@@ -9,6 +9,7 @@ import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-p
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
 import { CobroPuntualAnular, CobroPuntualPago } from "@/components/backoffice/cobro-puntual";
 import { CobroAcuerdo } from "@/components/backoffice/cobro-acuerdo";
+import { InstFormaDePago } from "@/components/backoffice/inst-forma-de-pago";
 import { CobroSemestre } from "@/components/backoffice/cobro-semestre";
 import { InsigniaCobro, InsigniaFactura } from "@/components/backoffice/inst-insignias";
 import { FranjaMetricas } from "@/components/backoffice/inst-metricas";
@@ -45,6 +46,7 @@ import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { mesesDe, periodosBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import { formaDePagoDe } from "@/lib/queries/forma-de-pago";
 import { intentosDeSemestreDe } from "@/lib/queries/pago-semestre";
+import { formaDePagoParaElEquipo } from "@/lib/queries/pago-manual";
 import { planes } from "@/lib/queries/planes";
 import { creditosDe, saldoDeBusquedas } from "@/lib/queries/puntuales";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
@@ -101,6 +103,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   // Los links de pago del semestre por Mercado Pago de esta institución (el equipo tiene que ver sobre todo los que quedaron para revisar).
   const intentosDeSemestre = await intentosDeSemestreDe(id);
   const intentosParaRevisar = intentosDeSemestre.filter((x) => x.estado === "revisar");
+  // Cómo paga: con Mercado Pago o, si el equipo la habilitó, también por transferencia o efectivo (ver src/lib/pago-manual.ts).
+  const pagoManual = await formaDePagoParaElEquipo({ id: d.institucion.id, esDemo: d.institucion.esDemo, plan: d.institucion.plan });
 
   const { institucion: i, facturas, proximo } = d;
   const ahora = new Date();
@@ -353,6 +357,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               );
             })()}
           </Seccion>
+
+          <InstFormaDePago institucionId={d.institucion.id} nombre={d.institucion.nombre} habilitada={pagoManual.habilitada} resumen={pagoManual.resumen} />
 
           {intentosDeSemestre.length > 0 && (
             <Seccion titulo="Pagos del semestre por Mercado Pago">

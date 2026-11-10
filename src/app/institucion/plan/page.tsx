@@ -3,6 +3,7 @@ import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { AvisoDeMora } from "@/components/institucion/aviso-de-mora";
 import { AvisoDePlanSinPago } from "@/components/institucion/plan-activo";
 import { MesesBonificados } from "@/components/institucion/meses-bonificados";
+import { AvisoDeFormaDePago } from "@/components/institucion/aviso-forma-de-pago";
 import { PagoDelSemestre } from "@/components/institucion/pago-del-semestre";
 import { PlanDebito } from "@/components/institucion/plan-debito";
 import { PlanHistorial } from "@/components/institucion/plan-historial";
@@ -14,6 +15,7 @@ import { mercadoPagoActivo } from "@/lib/mercadopago-config";
 import { vueltaDelPago } from "@/lib/pago-semestre";
 import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
 import { pagoPorMercadoPagoDisponiblePara } from "@/lib/queries/mercadopago-modo";
+import { formaDePagoDeCobro } from "@/lib/queries/pago-manual";
 import { datosDePagoDeSemestre } from "@/lib/queries/pago-semestre";
 import { datosDePlan } from "@/lib/queries/plan";
 import { mesesDe } from "@/lib/queries/bonificaciones";
@@ -30,7 +32,7 @@ const ID_DE_MERCADO_PAGO = /^[0-9A-Za-z_-]{1,64}$/;
 
 export default async function PlanYFacturacion({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { usuario, institucion } = await requerirInstitucion();
-  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin, pago_semestre: pagoSemestreVuelta }, saldo, creditos, mesesGanados, formaDePago, mora] = await Promise.all([
+  const [datos, catalogo, debito, { preapproval_id: preapprovalId, sin, pago_semestre: pagoSemestreVuelta }, saldo, creditos, mesesGanados, formaDePago, mora, formaDeCobro] = await Promise.all([
     datosDePlan(institucion, usuario.id),
     catalogoDePlanes(),
     datosDeDebito(institucion, usuario.id),
@@ -40,6 +42,8 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
     mesesDe(institucion.id),
     formaDePagoDe(institucion.id),
     moraDeInstitucion(institucion),
+    // Cómo paga: con Mercado Pago, con las dos formas (si el equipo la habilitó) o como siempre (src/lib/pago-manual.ts).
+    formaDePagoDeCobro(institucion),
   ]);
   const P = crearPlanes(catalogo);
   const esPuntual = P.esPuntual(datos.plan);
@@ -63,6 +67,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
       />
       <AvisoDeMora mora={mora} enPlan />
       <AvisoDePlanSinPago enPlan />
+      <AvisoDeFormaDePago forma={formaDeCobro} />
       <PlanPanel
         // El valor de fundadora solo lo ve quien tiene ese plan: a las demás instituciones no les viaja en el código de la página.
         // El precio base por sede de Multisede es de uso interno (no se cobra sin un convenio): no viaja en el código de la página.
@@ -78,6 +83,7 @@ export default async function PlanYFacturacion({ searchParams }: { searchParams:
         solicitud={datos.solicitud}
         puedeCambiar={datos.puedeCambiar}
         formaDePago={formaDePago}
+        formaDeCobro={formaDeCobro}
         conMercadoPago={pagoSemestre.cotizacion !== null}
       />
       <PagoDelSemestre

@@ -6,6 +6,8 @@ import {
   diferirPrimerCobroActivo,
   esCuentaDePrueba,
   esTokenDePrueba,
+  mercadoPagoDisponibleEnModo,
+  pruebaSoloParaEjemplo,
   mercadoPagoActivo,
   secretoDelWebhook,
   tokenDeMercadoPago,
@@ -69,5 +71,33 @@ describe("configuración de Mercado Pago", () => {
     assert.deepEqual([...AVISOS_QUE_USAMOS], ["subscription_preapproval", "subscription_authorized_payment", "payment"]);
     for (const t of AVISOS_QUE_USAMOS) assert.equal(esAvisoQueUsamos(t), true, t);
     for (const t of ["subscription_preapproval_plan", "merchant_order", "point_integration_wh", "", null, undefined, 3]) assert.equal(esAvisoQueUsamos(t), false, String(t));
+  });
+});
+
+describe("a quién se le ofrece Mercado Pago según el modo", () => {
+  it("sin token no se ofrece a nadie", () => {
+    for (const demo of [true, false]) for (const solo of [true, false]) assert.equal(mercadoPagoDisponibleEnModo(null, demo, solo), false);
+  });
+
+  it("con el token de producción (o sin poder saber el modo) se ofrece a todas, protegidas o no", () => {
+    for (const modo of ["produccion", "desconocido"] as const) {
+      for (const demo of [true, false]) for (const solo of [true, false]) assert.equal(mercadoPagoDisponibleEnModo(modo, demo, solo), true, modo);
+    }
+  });
+
+  it("con un token de prueba se ofrece también a las reales (decisión de Flor, «estamos probando»)", () => {
+    assert.equal(mercadoPagoDisponibleEnModo("prueba", true, false), true);
+    assert.equal(mercadoPagoDisponibleEnModo("prueba", false, false), true);
+  });
+
+  it("con la protección prendida, con un token de prueba solo las de ejemplo", () => {
+    assert.equal(mercadoPagoDisponibleEnModo("prueba", true, true), true);
+    assert.equal(mercadoPagoDisponibleEnModo("prueba", false, true), false);
+  });
+
+  it("la protección está apagada por defecto y solo se prende con MP_PRUEBA_SOLO_EJEMPLO=1", () => {
+    assert.equal(pruebaSoloParaEjemplo({}), false);
+    assert.equal(pruebaSoloParaEjemplo({ MP_PRUEBA_SOLO_EJEMPLO: "1" }), true);
+    for (const otro of ["0", "true", "si", "", " "]) assert.equal(pruebaSoloParaEjemplo({ MP_PRUEBA_SOLO_EJEMPLO: otro }), false, otro);
   });
 });

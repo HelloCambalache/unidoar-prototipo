@@ -9,6 +9,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { puedePagarSemestre, resumenDeSemestre, textoDeSemestre, type FormaDePago } from "@/lib/forma-de-pago";
+import type { FormaDeCobro } from "@/lib/pago-manual";
 import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export function PlanPanel({
   solicitud,
   puedeCambiar,
   formaDePago,
+  formaDeCobro,
   conMercadoPago,
 }: {
   /** Los planes vigentes (los lee el servidor de la base). */
@@ -50,6 +52,8 @@ export function PlanPanel({
   puedeCambiar: boolean;
   /** Cómo prefiere pagar el abono (el semestre por adelantado o mes a mes): se elige en «Cambiar de plan». */
   formaDePago: FormaDePago;
+  /** Cómo paga la institución (src/lib/pago-manual.ts): quien paga solo con Mercado Pago no elige acá un semestre que el equipo coordine. */
+  formaDeCobro: FormaDeCobro;
   /** Se puede pagar el semestre por Mercado Pago desde esta misma pantalla (la tarjeta «Pagar el semestre por adelantado»). */
   conMercadoPago: boolean;
 }) {
@@ -70,7 +74,8 @@ export function PlanPanel({
 
   // El pago por semestre (pagás 5 meses y usás 6) se elige acá mismo, junto con los planes: es una preferencia que el equipo coordina y registra.
   // Solo con un abono mensual y mientras no haya un semestre ya pago.
-  const ofreceSemestre = puedePagarSemestre(P, plan) && !semestrePagoHasta;
+  // Quien paga solo con Mercado Pago no ve esta tarjeta: el semestre lo paga con la de «Pagar el semestre por adelantado», sin que el equipo coordine nada.
+  const ofreceSemestre = puedePagarSemestre(P, plan) && !semestrePagoHasta && formaDeCobro !== "solo-mercadopago";
   const resumenSemestre = ofreceSemestre ? resumenDeSemestre(P, plan, sedes, acuerdo) : null;
   const semestral = formaDePago === "semestral";
 

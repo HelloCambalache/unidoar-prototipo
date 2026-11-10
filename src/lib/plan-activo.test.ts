@@ -73,7 +73,7 @@ describe("plan activo: lo que se le dice a la persona", () => {
 
   it("el popup de una cuenta sin pago muestra el plan, lo que cuesta, el semestre y cómo pagar", () => {
     const semestre = resumenDeSemestre(P, "colegio", 1);
-    const c = contenidoDelPopup("sin-pago", { planNombre: P.planDe("colegio").label, mensual: semestre.mensual, semestre });
+    const c = contenidoDelPopup("sin-pago", { planNombre: P.planDe("colegio").label, mensual: semestre.mensual, semestre, forma: "manual" });
     assert.equal(c.titulo, "Activá tu plan para publicar");
     assert.ok(c.bajada.includes(QUE_SE_LIMITA));
     assert.equal(c.plan?.nombre, P.planDe("colegio").label);
@@ -84,7 +84,7 @@ describe("plan activo: lo que se le dice a la persona", () => {
   });
 
   it("el popup de una cuenta limitada por mora habla de la factura vencida y de que se levanta sola", () => {
-    const c = contenidoDelPopup("mora", { planNombre: "Plan Colegios", mensual: 50000, semestre: null });
+    const c = contenidoDelPopup("mora", { planNombre: "Plan Colegios", mensual: 50000, semestre: null, forma: "manual" });
     assert.ok(c.titulo.includes("factura vencida"));
     assert.equal(c.plan?.semestre, null, "sin semestre no se ofrece");
     assert.ok(c.pasos.some((p) => p.includes("se levanta sola")));
@@ -107,5 +107,30 @@ describe("plan activo: lo que se le dice a la persona", () => {
   it("el cartel de «sin pago» dice qué se frena", () => {
     const c = cartelDePlanSinPago();
     assert.ok(c.texto.includes(QUE_SE_LIMITA));
+  });
+
+  it("a quien paga solo con Mercado Pago el popup lo manda a Mercado Pago y no le habla de transferencia ni de efectivo", () => {
+    const sinPago = contenidoDelPopup("sin-pago", { planNombre: "Plan Colegios", mensual: 50000, semestre: null, forma: "solo-mercadopago" });
+    const mora = contenidoDelPopup("mora", { planNombre: "Plan Colegios", mensual: 50000, semestre: null, forma: "solo-mercadopago" });
+    for (const c of [sinPago, mora]) {
+      assert.ok(c.pasos[0]!.includes("Mercado Pago"));
+      assert.doesNotMatch(c.pasos.join(" "), /transferencia|efectivo/i);
+    }
+    assert.doesNotMatch(cartelDePlanSinPago("solo-mercadopago").texto, /transferencia|efectivo/i);
+    assert.ok(cartelDePlanSinPago("solo-mercadopago").texto.includes("Mercado Pago"));
+  });
+
+  it("a quien el equipo habilitó le ofrece las dos formas, y a quien paga como siempre, la de siempre", () => {
+    const dos = contenidoDelPopup("sin-pago", { planNombre: "Plan Colegios", mensual: 50000, semestre: null, forma: "las-dos" });
+    assert.match(dos.pasos[0]!, /Mercado Pago/);
+    assert.match(dos.pasos[0]!, /transferencia o efectivo/);
+    const manual = contenidoDelPopup("sin-pago", { planNombre: "Plan Colegios", mensual: 50000, semestre: null, forma: "manual" });
+    assert.match(manual.pasos[0]!, /transferencia o en efectivo/);
+    assert.doesNotMatch(manual.pasos[0]!, /Mercado Pago/);
+  });
+
+  it("sin saber cómo paga, el popup es neutro: no promete una forma que quizá no tiene", () => {
+    const c = contenidoDelPopup(null, null);
+    assert.doesNotMatch(c.pasos.join(" "), /transferencia|efectivo/i);
   });
 });

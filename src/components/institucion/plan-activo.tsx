@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { Boton, BotonLink } from "@/components/ui/button";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
+import { puedePagarEnMano, type FormaDeCobro } from "@/lib/pago-manual";
 import { CODIGO_PLAN_INACTIVO, cartelDePlanSinPago, contenidoDelPopup, type DatosDelPopup, type MotivoDePlanInactivo } from "@/lib/plan-activo";
 import { cn } from "@/lib/utils";
 
 /*
  * Popup de pago del área de la institución (reglas y textos en src/lib/plan-activo.ts). Aparece cuando la persona INTENTA publicar una búsqueda,
  * invitar a postularse, publicar un curso o reabrir una búsqueda y el plan no está activo: porque es una cuenta nueva sin su primer pago o porque
- * tiene una factura vencida hace más de 15 días. Muestra el plan, lo que cuesta y cómo pagar (el pago lo registra el equipo: no hay cobro en línea).
+ * tiene una factura vencida hace más de 15 días. Muestra el plan, lo que cuesta y cómo pagar: con Mercado Pago, o por transferencia o efectivo (lo registra el equipo) si la institución está habilitada o Mercado Pago no está disponible (`src/lib/pago-manual.ts`).
  *
  * El servidor es quien decide (cada acción lo vuelve a exigir): la pantalla solo se adelanta con lo que sabía al cargar (`frenarSiHaceFalta`) y,
  * si el servidor frena algo que ella creía permitido, abre el popup con `atender` y se recarga para traer el estado de verdad.
@@ -23,6 +24,8 @@ type Valor = {
   motivo: MotivoDePlanInactivo | null;
   /** Para preguntar ANTES de una acción: con el plan inactivo abre el popup y devuelve true (hay que frenar). */
   frenarSiHaceFalta: () => boolean;
+  /** Cómo paga la institución (con Mercado Pago, con las dos formas o como siempre): decide lo que dicen el popup y el cartel. */
+  forma: FormaDeCobro;
   /** Abre el popup (lo usa el cartel). */
   mostrar: () => void;
   /** Para el resultado de una acción: si es el aviso de plan inactivo del servidor, abre el popup y devuelve true. */
@@ -30,7 +33,7 @@ type Valor = {
 };
 
 // Fuera del área de la institución (o sin proveedor) todo sigue como antes: nada se frena ni se abre.
-const SIN_PROVEEDOR: Valor = { motivo: null, frenarSiHaceFalta: () => false, mostrar: () => {}, atender: () => false };
+const SIN_PROVEEDOR: Valor = { motivo: null, forma: "manual", frenarSiHaceFalta: () => false, mostrar: () => {}, atender: () => false };
 const Contexto = createContext<Valor>(SIN_PROVEEDOR);
 
 /** `const { frenarSiHaceFalta, atender } = usePlanActivo();` */
@@ -44,6 +47,7 @@ export function PlanActivoProvider({ datos, children }: { datos: DatosDelPopup |
   const [abierto, setAbierto] = useState(false);
   const [mensajeDelServidor, setMensajeDelServidor] = useState<string | undefined>(undefined);
   const motivo = datos?.motivo ?? null;
+  const forma = datos?.forma ?? "manual";
 
   const cerrar = useCallback(() => setAbierto(false), []);
   const mostrar = useCallback(() => {
@@ -67,9 +71,10 @@ export function PlanActivoProvider({ datos, children }: { datos: DatosDelPopup |
     [motivo, router],
   );
 
-  const valor = useMemo<Valor>(() => ({ motivo, frenarSiHaceFalta, mostrar, atender }), [motivo, frenarSiHaceFalta, mostrar, atender]);
+  const valor = useMemo<Valor>(() => ({ motivo, forma, frenarSiHaceFalta, mostrar, atender }), [motivo, forma, frenarSiHaceFalta, mostrar, atender]);
   const contenido = contenidoDelPopup(motivo, datos, mensajeDelServidor);
   const whatsapp = datos?.whatsapp ?? null;
+  const soloMercadoPago = forma === "solo-mercadopago";
 
   return (
     <Contexto.Provider value={valor}>
@@ -94,15 +99,16 @@ export function PlanActivoProvider({ datos, children }: { datos: DatosDelPopup |
           <Boton variante="fantasma" className="mr-auto" onClick={cerrar}>
             Ahora no
           </Boton>
-          <BotonLink href="/institucion/plan" variante="secundario" onClick={cerrar}>
-            Plan y facturación
+          {/* Quien paga solo con Mercado Pago tiene un camino principal: Plan y facturación. A las demás se les ofrece también escribirnos para coordinar. */}
+          <BotonLink href="/institucion/plan" variante={soloMercadoPago ? "primario" : "secundario"} onClick={cerrar}>
+            {soloMercadoPago ? "Pagar con Mercado Pago" : "Plan y facturación"}
           </BotonLink>
-          {whatsapp && (
+          {whatsapp && puedePagarEnMano(forma) && (
             <BotonLink href={whatsapp} target="_blank" rel="noopener noreferrer" variante="secundario" onClick={cerrar}>
               WhatsApp
             </BotonLink>
           )}
-          <BotonLink href="/contacto" variante="primario" onClick={cerrar}>
+          <BotonLink href="/contacto" variante={soloMercadoPago ? "secundario" : "primario"} onClick={cerrar}>
             Escribirnos
           </BotonLink>
         </div>
@@ -116,9 +122,9 @@ export function PlanActivoProvider({ datos, children }: { datos: DatosDelPopup |
  * qué se frena. Sin ese caso no dibuja nada. En Plan y facturación (`enPlan`) lleva a Contacto en lugar de abrir el popup, que repetiría la pantalla.
  */
 export function AvisoDePlanSinPago({ enPlan = false, className }: { enPlan?: boolean; className?: string }) {
-  const { motivo, mostrar } = usePlanActivo();
+  const { motivo, mostrar, forma } = usePlanActivo();
   if (motivo !== "sin-pago") return null;
-  const cartel = cartelDePlanSinPago();
+  const cartel = cartelDePlanSinPago(forma);
   return (
     <section
       role="status"
@@ -133,9 +139,12 @@ export function AvisoDePlanSinPago({ enPlan = false, className }: { enPlan?: boo
         <p className="m-0 text-[13px] leading-normal text-[#8A4B07]">{cartel.texto}</p>
       </div>
       {enPlan ? (
-        <BotonLink href="/contacto" variante="secundario" tamano="sm" className="flex-none">
-          Escribirnos
-        </BotonLink>
+        // En Plan y facturación quien paga solo con Mercado Pago ya tiene los botones para pagar a la vista: no hace falta mandarla a Contacto.
+        forma === "solo-mercadopago" ? null : (
+          <BotonLink href="/contacto" variante="secundario" tamano="sm" className="flex-none">
+            Escribirnos
+          </BotonLink>
+        )
       ) : (
         <Boton variante="secundario" tamano="sm" className="flex-none" onClick={mostrar}>
           Cómo activarlo

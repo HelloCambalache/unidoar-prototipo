@@ -267,7 +267,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               ],
             },
             {
-              p: "Cada mes se genera tu factura y te avisamos por mail. Los pagos por transferencia o en efectivo los registra el equipo cuando los recibe. Si ves habilitado el **débito automático con Mercado Pago** en tu cuenta, lo activás desde esta pantalla: nunca vemos ni guardamos los datos de tu tarjeta.",
+              p: "Cada mes se genera tu factura y te avisamos por mail. **Se paga con Mercado Pago**: activás el **débito automático mensual** (o pagás el semestre por adelantado) desde esta pantalla, y cada pago acreditado queda registrado solo en tus facturas. Nunca vemos ni guardamos los datos de tu tarjeta. Si tu institución necesita pagar por transferencia o en efectivo, el equipo puede habilitarla (escribinos por [Contacto](/contacto)); a las habilitadas, el equipo les registra el pago cuando lo recibe. Mientras Mercado Pago no esté disponible para tu cuenta, los pagos los coordina y registra el equipo.",
             },
             {
               p: "**Comprobante de pago por mail:** cada vez que se registra un pago —lo cargue el equipo o lo cobre el débito automático— el dueño y los administradores reciben un mail con el **comprobante** (número, plan, período, monto, medio de pago y fecha) y un botón para abrirlo en la app, donde lo podés imprimir o guardar como PDF. También lo encontrás cuando quieras en las facturas de [Plan](/institucion/plan).",
@@ -276,7 +276,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               p: "Para pedir otro plan usá **Cambiar de plan**: el pedido lo confirma el equipo. Solo se ofrecen los planes que corresponden a tu institución.",
             },
             {
-              p: "**Tu plan se activa con el primer pago:** una cuenta nueva con abono (mensual o semestral) puede completar su perfil y recorrer la plataforma, pero **no puede publicar búsquedas, invitar profesionales ni publicar cursos** hasta que el equipo registre su primer pago. Escribinos por [Contacto](/contacto) o por WhatsApp y coordinamos el pago por transferencia o en efectivo: al registrarlo, el plan queda activo y se habilita todo sin que tengas que hacer nada.",
+              p: "**Tu plan se activa con el primer pago:** una cuenta nueva con abono (mensual o semestral) puede completar su perfil y recorrer la plataforma, pero **no puede publicar búsquedas, invitar profesionales ni publicar cursos** hasta que se acredite su primer pago. Pagá con Mercado Pago desde [Plan y facturación](/institucion/plan) (o, si tu institución está habilitada para transferencia o efectivo, escribinos por [Contacto](/contacto) o por WhatsApp y lo coordinamos): al acreditarse, el plan queda activo y se habilita todo sin que tengas que hacer nada.",
             },
             {
               p: "**Si una factura vence:** tenés 15 días de gracia antes de que se limite la cuenta. Te avisamos por mail y en un cartel dentro de la app. Pasados los 15 días **no se pueden publicar ni reabrir búsquedas, publicar cursos ni invitar profesionales** hasta pagar. Todo lo demás sigue funcionando —tu tablero, tus postulantes, el buscador y contratar— y al registrarse el pago se levanta solo.",
@@ -404,7 +404,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
     {
       pregunta: "¿Cómo pago?",
       respuesta: [
-        { p: "Cada mes se genera tu factura. Los pagos por transferencia o en efectivo los registra el equipo cuando los recibe, y si tu cuenta tiene habilitado el débito automático con Mercado Pago, lo activás en [Plan](/institucion/plan). Si necesitás ayuda con un pago, escribinos por [Contacto](/contacto)." },
+        { p: "Cada mes se genera tu factura y se paga con Mercado Pago: activás el débito automático mensual (o pagás el semestre por adelantado) en [Plan](/institucion/plan) y cada pago acreditado queda registrado solo. Si tu institución necesita pagar por transferencia o en efectivo, el equipo puede habilitarla y entonces coordinás el pago por [Contacto](/contacto) y lo registra el equipo. Mientras Mercado Pago no esté disponible para tu cuenta, los pagos los coordina y registra el equipo." },
       ],
     },
     {

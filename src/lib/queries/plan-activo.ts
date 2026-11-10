@@ -10,6 +10,7 @@ import { esClavePlan } from "@/lib/planes";
 import { CONTACTO_SITIO } from "@/lib/publico";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { facturasParaMora } from "@/lib/queries/mora";
+import { formaDePagoDeCobro } from "@/lib/queries/pago-manual";
 import { planes } from "@/lib/queries/planes";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 
@@ -54,7 +55,7 @@ export async function datosDelPopupDe(institucion: DeLaInstitucion): Promise<Dat
   const motivo = await motivoDelPlan(institucion);
   if (!motivo) return null;
   const db = getDb();
-  const [P, sedes, acuerdo] = await Promise.all([planes(), cantidadDeSedes(db, [institucion.id]), acuerdoDe(db, institucion.id)]);
+  const [P, sedes, acuerdo, forma] = await Promise.all([planes(), cantidadDeSedes(db, [institucion.id]), acuerdoDe(db, institucion.id), formaDePagoDeCobro(institucion)]);
   const plan = esClavePlan(institucion.plan) ? institucion.plan : "colegio";
   const cantidad = sedes.get(institucion.id) ?? 1;
   return {
@@ -62,6 +63,7 @@ export async function datosDelPopupDe(institucion: DeLaInstitucion): Promise<Dat
     planNombre: P.planDe(plan).label,
     mensual: P.esPuntual(plan) ? null : P.montoDePlan(plan, cantidad, acuerdo),
     semestre: puedePagarSemestre(P, plan) ? resumenDeSemestre(P, plan, cantidad, acuerdo) : null,
+    forma,
     whatsapp: enlaceWhatsapp(CONTACTO_SITIO.whatsapp),
   };
 }
