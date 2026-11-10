@@ -1,5 +1,6 @@
 import { Icono } from "@/components/icons";
 import { BotonLink } from "@/components/ui/button";
+import { plazoDeFundadoras } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import type { CuposDeFundadoras } from "@/lib/queries/fundadoras";
 
@@ -12,8 +13,9 @@ export const BENEFICIOS_FUNDADORA = [
 ];
 
 /**
- * Tarjeta de «Fundadoras» de /planes: las primeras N instituciones. **No lleva precio** (decisión del cliente): dice cuántos lugares quedan y qué
- * beneficios tienen. Se dibuja solo mientras queden lugares.
+ * Tarjeta de «Fundadoras» de /planes: las primeras N instituciones. **No lleva precio** (decisión del cliente) **ni cuántos lugares quedan**
+ * (2026-11-10, Paula: «quedan 49 de 50» mostraba cuántas se habían sumado): dice los días que quedan para sumarse o, si el equipo no cargó una fecha
+ * de cierre, que los lugares son limitados. Se dibuja solo mientras se ofrezca.
  */
 export function TarjetaFundadoras({ cupos }: { cupos: CuposDeFundadoras }) {
   return (
@@ -25,7 +27,7 @@ export function TarjetaFundadoras({ cupos }: { cupos: CuposDeFundadoras }) {
       <div className="relative flex flex-wrap items-center justify-between gap-2">
         <h2 className="m-0 text-xs leading-none font-semibold tracking-[.08em] text-navy-700/70 uppercase">Fundadoras</h2>
         <span className="rounded-full bg-navy-700 px-2.5 py-[5px] text-xs leading-none font-semibold text-white">
-          Quedan {cupos.quedan} de {cupos.total}
+          {plazoDeFundadoras(cupos.dias).etiqueta}
         </span>
       </div>
       <div className="relative flex flex-1 flex-col min-[801px]:max-[1179px]:grid min-[801px]:max-[1179px]:grid-cols-2 min-[801px]:max-[1179px]:gap-x-10">

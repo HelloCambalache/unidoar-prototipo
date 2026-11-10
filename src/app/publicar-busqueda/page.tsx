@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { salir } from "@/app/actions/auth";
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
@@ -7,8 +6,9 @@ import { Boton, BotonLink } from "@/components/ui/button";
 import { RUTA_INICIO } from "@/lib/catalogo";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { destinoDePublicar, esPedidoUrgente, queHacerAlPublicar } from "@/lib/publicar-busqueda";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Publicá tu búsqueda" };
+export const metadata = metadatosDePagina(PAGINAS.publicarBusqueda);
 
 /**
  * A donde llevan los botones para instituciones de la parte pública ("Soy institución · Busco profesionales", "Publicar una

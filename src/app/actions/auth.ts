@@ -9,6 +9,7 @@ import {
   PRIMER_PASO_PROTEGIDO,
   destinoTrasConfirmar,
   emailYaRegistrado,
+  estadoDeEmailYaRegistrado,
   esTipoDeConfirmacion,
   registrarFallaDeMail,
   rutaInternaSegura,
@@ -16,6 +17,7 @@ import {
   type EstadoAuth,
 } from "@/lib/acceso";
 import { ROLES_ALTA, type RolAlta } from "@/lib/onboarding";
+import { permitirAvisarEmailYaRegistrado } from "@/lib/pedidos";
 import { codigoDeLaCookie, codigoDeRegistro, recordarCodigoDeReferido } from "@/lib/queries/referidos";
 import { origenSitio, urlDeCallback } from "@/lib/sitio";
 import { crearClienteServidor } from "@/lib/supabase/server";
@@ -126,10 +128,12 @@ export async function registrarse(rol: RolAlta, _previo: EstadoAuth, formData: F
     },
   });
   registrarFallaDeMail(error, "registro");
-  // Que el email ya tenga cuenta no se le dice a quien se registra: el formulario serviría para averiguar quién está en UNIDOAR (con
-  // confirmación de mail activa, Supabase devuelve un usuario sin identidades en vez de un error). Se muestra lo mismo que con un email
-  // nuevo, y "Revisá tu mail" aclara qué hacer si ya había una cuenta (`ConfirmarMail`).
-  if (emailYaRegistrado(error, data.user)) return { ok: true, confirmarEmail: r.data.email };
+  // Si el email ya tiene cuenta se le avisa a la persona (pedido del cliente, 2026-11-10; antes se le mostraba lo mismo que a un email nuevo para no
+  // revelar quién está en UNIDOAR). Con confirmación de mail activa Supabase devuelve un usuario sin identidades en vez de un error. El aviso tiene un
+  // tope por origen: pasado el tope responde como antes y "Revisá tu mail" aclara qué hacer si ya había una cuenta (`ConfirmarMail`).
+  if (emailYaRegistrado(error, data.user)) {
+    return estadoDeEmailYaRegistrado(r.data.email, valores, permitirAvisarEmailYaRegistrado(await origenDelPedido()));
+  }
   if (error) return { ok: false, error: traducirErrorAuth(error), codigo: error.code, valores };
   // Un código escrito queda en el navegador igual que con el enlace de la otra institución: al crear la institución se anota. Vacío no toca nada.
   if (traeCodigo) await recordarCodigoDeReferido(codigoDeReferido);

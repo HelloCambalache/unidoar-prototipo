@@ -11,11 +11,14 @@ import {
   CLAVES_PLAN,
   crearPlanes,
   describirCambioDePlanes,
+  diasEntreFechas,
   edicionDePlanesSchema,
   esClavePlan,
+  esFechaIso,
   edicionDesdeCatalogo,
   huellaDePlanes,
   planesPorDefecto as P,
+  plazoDeFundadoras,
   type AcuerdoDePrecio,
   type EdicionDePlanes,
   type FilaDeCondiciones,
@@ -896,10 +899,45 @@ describe("la búsqueda puntual", () => {
   });
 });
 
+describe("plazo del Plan Fundador en la parte pública", () => {
+  it("dice los días que quedan, sin decir cuántas instituciones ya se sumaron", () => {
+    assert.equal(plazoDeFundadoras(50).etiqueta, "Quedan 50 días");
+    assert.equal(plazoDeFundadoras(50).frase, "Quedan 50 días para sumarte");
+    assert.equal(plazoDeFundadoras(2).etiqueta, "Quedan 2 días");
+  });
+
+  it("en singular el día que falta y avisa el último día", () => {
+    assert.equal(plazoDeFundadoras(1).etiqueta, "Queda 1 día");
+    assert.equal(plazoDeFundadoras(1).frase, "Queda 1 día para sumarte");
+    assert.equal(plazoDeFundadoras(0).etiqueta, "Hoy es el último día");
+  });
+
+  it("sin fecha de cierre dice que los lugares son limitados, sin ninguna cifra", () => {
+    assert.equal(plazoDeFundadoras(null).etiqueta, "Lugares limitados");
+    assert.doesNotMatch(plazoDeFundadoras(null).frase, /\d/);
+    for (const d of [null, 0, 1, 50]) assert.doesNotMatch(plazoDeFundadoras(d).etiqueta, /lugares que quedan|quedan \d+ de|de \d+ lugares/i, String(d));
+  });
+
+  it("las fechas: una que existe en el calendario y la diferencia entre dos", () => {
+    assert.equal(esFechaIso("2026-12-30"), true);
+    assert.equal(esFechaIso("2026-02-30"), false);
+    assert.equal(esFechaIso("2026-13-01"), false);
+    assert.equal(esFechaIso("30/12/2026"), false);
+    assert.equal(esFechaIso(""), false);
+    assert.equal(esFechaIso(null), false);
+    assert.equal(diasEntreFechas("2026-11-10", "2026-12-30"), 50);
+    assert.equal(diasEntreFechas("2026-12-30", "2026-11-10"), -50);
+    assert.equal(diasEntreFechas("2026-12-30", "2027-01-02"), 3);
+    assert.equal(diasEntreFechas("2026-11-10", "2026-11-10"), 0);
+  });
+});
+
 describe("Plan Fundador (las primeras instituciones)", () => {
-  const conCupos = (cuposFundador: number, vigente = true) => {
+  const HOY = "2026-11-10";
+  const conCupos = (cuposFundador: number, vigente = true, fundadorHasta: string | null = null) => {
     const c = structuredClone(CATALOGO_POR_DEFECTO);
     c.condiciones.cuposFundador = cuposFundador;
+    c.condiciones.fundadorHasta = fundadorHasta;
     c.planes.fundador.vigente = vigente;
     return crearPlanes(c);
   };
@@ -923,15 +961,44 @@ describe("Plan Fundador (las primeras instituciones)", () => {
   });
 
   it("cuenta los lugares que quedan: cupo menos las que ya lo tienen, sin bajar de cero", () => {
-    assert.equal(conCupos(50).cuposDeFundador(0), 50);
-    assert.equal(conCupos(50).cuposDeFundador(12), 38);
-    assert.equal(conCupos(50).cuposDeFundador(50), 0);
-    assert.equal(conCupos(50).cuposDeFundador(60), 0, "si se pasaron (se bajó el cupo), no queda ninguno");
-    assert.equal(conCupos(50).cuposDeFundador(-3), 50, "un conteo raro no suma lugares");
+    assert.equal(conCupos(50).cuposDeFundador(0, HOY), 50);
+    assert.equal(conCupos(50).cuposDeFundador(12, HOY), 38);
+    assert.equal(conCupos(50).cuposDeFundador(50, HOY), 0);
+    assert.equal(conCupos(50).cuposDeFundador(60, HOY), 0, "si se pasaron (se bajó el cupo), no queda ninguno");
+    assert.equal(conCupos(50).cuposDeFundador(-3, HOY), 50, "un conteo raro no suma lugares");
   });
 
   it("con el plan apagado no queda ningún lugar aunque sobre cupo: nadie nuevo lo recibe", () => {
-    assert.equal(conCupos(50, false).cuposDeFundador(0), 0);
+    assert.equal(conCupos(50, false).cuposDeFundador(0, HOY), 0);
+  });
+
+  it("de lanzamiento no tiene fecha de cierre: solo cierra el cupo", () => {
+    assert.equal(CATALOGO_POR_DEFECTO.condiciones.fundadorHasta, null);
+    assert.equal(conCupos(50).fundadorasCerradasPorFecha("2099-01-01"), false);
+    assert.equal(conCupos(50).diasParaCerrarFundadoras(HOY), null, "sin fecha no hay días que contar");
+  });
+
+  it("con fecha de cierre cuenta los días que faltan; el último día es el de la fecha, inclusive", () => {
+    const P50 = conCupos(50, true, "2026-12-30");
+    assert.equal(P50.diasParaCerrarFundadoras(HOY), 50, "del 10/11 al 30/12 son 50 días");
+    assert.equal(P50.diasParaCerrarFundadoras("2026-12-29"), 1);
+    assert.equal(P50.diasParaCerrarFundadoras("2026-12-30"), 0, "hoy es el último día");
+    assert.equal(P50.fundadorasCerradasPorFecha("2026-12-30"), false, "el último día todavía se ofrece");
+    assert.equal(P50.cuposDeFundador(0, "2026-12-30"), 50);
+  });
+
+  it("pasada la fecha de cierre cierra de verdad: no queda ningún lugar aunque sobre cupo", () => {
+    const P50 = conCupos(50, true, "2026-12-30");
+    assert.equal(P50.fundadorasCerradasPorFecha("2026-12-31"), true);
+    assert.equal(P50.diasParaCerrarFundadoras("2026-12-31"), null, "cerrada: no hay días que contar");
+    assert.equal(P50.cuposDeFundador(0, "2026-12-31"), 0);
+    assert.equal(P50.cuposDeFundador(0, "2027-03-01"), 0);
+  });
+
+  it("la fecha corre aunque el cupo se complete antes: gana lo que cierre primero", () => {
+    const P50 = conCupos(50, true, "2026-12-30");
+    assert.equal(P50.cuposDeFundador(50, HOY), 0, "cupo completo antes de la fecha");
+    assert.equal(P50.cuposDeFundador(10, HOY), 40, "con cupo y dentro de la fecha se ofrece");
   });
 
   it("una cuenta nueva con lugar disponible arranca como fundadora; sin lugar, con el arancel de su tipo", () => {
@@ -1009,6 +1076,36 @@ describe("Plan Fundador (las primeras instituciones)", () => {
     const despues = edicion();
     despues.condiciones.cuposFundador = 60;
     assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["cupos de instituciones fundadoras"] }]);
+  });
+
+  it("la fecha de cierre se lee de la base, y una rota, imposible o ausente vuelve a «sin fecha»", () => {
+    const con = (fundadorHasta: string | null | undefined) =>
+      catalogoDesdeLaBase(filasDeLanzamiento(), { ...condicionesDeLanzamiento(), fundadorHasta }).condiciones.fundadorHasta;
+    assert.equal(con("2026-12-30"), "2026-12-30");
+    assert.equal(con(null), null);
+    for (const roto of [undefined, "", "mañana", "2026-02-30", "30/12/2026"]) assert.equal(con(roto), null, String(roto));
+  });
+
+  it("la edición acepta una fecha de cierre que existe (o ninguna) y rechaza lo demás", () => {
+    for (const valor of ["2026-12-30", "2027-01-01", null]) {
+      const e = edicion();
+      e.condiciones.fundadorHasta = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, true, String(valor));
+    }
+    for (const valor of ["", "2026-02-30", "2026-13-01", "30/12/2026", "hoy"]) {
+      const e = edicion();
+      e.condiciones.fundadorHasta = valor;
+      assert.equal(edicionDePlanesSchema.safeParse(e).success, false, valor);
+    }
+  });
+
+  it("cargar, cambiar o quitar la fecha de cierre queda anotado sin guardar la fecha en la auditoría", () => {
+    const antes = edicion();
+    const despues = edicion();
+    despues.condiciones.fundadorHasta = "2026-12-30";
+    assert.deepEqual(cambiosDePlanes(antes, despues), [{ tipo: "condiciones", campos: ["fecha de cierre de instituciones fundadoras"] }]);
+    assert.deepEqual(cambiosDePlanes(despues, antes), [{ tipo: "condiciones", campos: ["fecha de cierre de instituciones fundadoras"] }]);
+    assert.deepEqual(cambiosDePlanes(despues, structuredClone(despues)), [], "sin cambios, no se anota nada");
   });
 
   it("su precio se edita como el de cualquier plan y el cambio queda anotado", () => {

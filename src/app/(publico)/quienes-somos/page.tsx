@@ -1,16 +1,12 @@
-import type { Metadata } from "next";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono, type IconoClave } from "@/components/icons";
 import { BandaCTA } from "@/components/publico/banda-cta";
 import { Imagen } from "@/components/publico/imagen";
 import { BotonLink } from "@/components/ui/button";
 import { focoDeFoto } from "@/lib/fotos";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Quiénes somos",
-  description:
-    "Un equipo con más de 35 años en la educación y el deporte que une experiencia y tecnología para que instituciones y profesionales se conecten de forma simple, directa y transparente.",
-};
+export const metadata = metadatosDePagina(PAGINAS.quienesSomos);
 
 const FOTO_DEL_EQUIPO = "/assets/quienes-somos-equipo.webp";
 

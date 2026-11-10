@@ -11,21 +11,41 @@ import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
 import { plural } from "@/lib/busquedas";
 import { TIPOS_INSTITUCION } from "@/lib/catalogo";
+import { hoyAR } from "@/lib/cobros";
 import {
   cambiosDePlanes,
   camposDeErrorDePlanes,
   CLAVES_PLAN,
   describirCambioDePlanes,
+  diasEntreFechas,
   edicionDePlanesSchema,
   huellaDePlanes,
   MAX_MESES_DE_PACK,
   crearPlanes,
   pesos,
   PLANES_POR_DEFECTO,
+  plazoDeFundadoras,
   type CatalogoDePlanes,
   type EdicionDePlanes,
   type PlanClave,
 } from "@/lib/planes";
+
+/**
+ * Qué pasa con la fecha de cierre del Plan Fundador, para el equipo: con fecha, la página pública cuenta los días hasta ese día (inclusive) y
+ * pasada la fecha las cuentas nuevas ya no lo reciben; sin fecha, no hay contador y solo cierra el cupo.
+ */
+function textoDeCierre(fecha: string | null): string {
+  if (!fecha) {
+    return "Sin fecha: la página pública dice «Lugares limitados» y la oferta cierra solo cuando se completa el cupo. Con una fecha, muestra «Quedan N días».";
+  }
+  const [a, m, d] = fecha.split("-");
+  const dias = diasEntreFechas(hoyAR(), fecha);
+  const cuando = `${d}/${m}/${a}`;
+  if (dias < 0) {
+    return `La fecha (${cuando}) ya pasó: la oferta está cerrada, las cuentas nuevas no reciben el plan y la tarjeta no se muestra. Cargá una fecha futura para volver a ofrecerla.`;
+  }
+  return `La página pública dice «${plazoDeFundadoras(dias).etiqueta}» (último día: ${cuando}, inclusive). Pasada la fecha las cuentas nuevas ya no reciben el plan y la tarjeta desaparece, aunque sobren lugares.`;
+}
 
 /** Lo que dice cada plan sobre quién lo recibe: no se edita, es cómo funciona el sistema. */
 const QUIEN_LO_RECIBE: Record<PlanClave, string> = {
@@ -115,6 +135,12 @@ export function PlanesFormulario({
   const cambiarCondicion = (campo: "sedesMultisede" | "descuentoSedeExtra" | "referidoMesesMensual" | "cuposFundador", valor: number) => {
     setErrorDelServidor(null);
     setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, [campo]: valor } }));
+  };
+
+  /** La fecha de cierre del Plan Fundador (null: sin fecha, solo cierra el cupo). */
+  const cambiarFechaDeCierre = (valor: string | null) => {
+    setErrorDelServidor(null);
+    setDatos((d) => ({ ...d, condiciones: { ...d.condiciones, fundadorHasta: valor } }));
   };
 
   const cambiarPack = (campo: keyof EdicionDePlanes["condiciones"]["pack"], valor: number) => {
@@ -345,8 +371,9 @@ export function PlanesFormulario({
             {(() => {
               const ocupados = cantidades.fundador ?? 0;
               const quedan = Math.max(0, datos.condiciones.cuposFundador - ocupados);
-              return `Hoy ${plural(ocupados, "institución es fundadora", "instituciones son fundadoras")} y ${quedan === 0 ? "no queda ningún lugar" : `quedan ${plural(quedan, "lugar", "lugares")}`}. Las cuentas nuevas reciben el plan solas hasta completar el cupo; después, el arancel de su tipo.`;
+              return `Hoy ${plural(ocupados, "institución es fundadora", "instituciones son fundadoras")} y ${quedan === 0 ? "no queda ningún lugar" : `quedan ${plural(quedan, "lugar", "lugares")}`}. Las cuentas nuevas reciben el plan solas hasta completar el cupo o hasta la fecha de cierre (lo que pase primero); después, el arancel de su tipo. `;
             })()}
+            <b className="font-semibold">Esta cuenta es solo para el equipo:</b> la página pública no muestra cuántos lugares quedan, solo los días que faltan para el cierre.
           </p>
           <div className="grid grid-cols-2 gap-4 max-[760px]:grid-cols-1">
             <Campo
@@ -363,6 +390,26 @@ export function PlanesFormulario({
                 aria-invalid={!!verError("condiciones.cuposFundador")}
                 onChange={(e) => cambiarCondicion("cuposFundador", aNumero(e.target.value))}
               />
+            </Campo>
+            <Campo
+              etiqueta="Se ofrece hasta el (fecha de cierre)"
+              ayuda={textoDeCierre(datos.condiciones.fundadorHasta)}
+              error={verError("condiciones.fundadorHasta")}
+            >
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Input
+                  type="date"
+                  value={datos.condiciones.fundadorHasta ?? ""}
+                  aria-invalid={!!verError("condiciones.fundadorHasta")}
+                  onChange={(e) => cambiarFechaDeCierre(e.target.value || null)}
+                  className="max-w-[210px]"
+                />
+                {datos.condiciones.fundadorHasta && (
+                  <Boton type="button" variante="secundario" tamano="sm" onClick={() => cambiarFechaDeCierre(null)}>
+                    Quitar la fecha
+                  </Boton>
+                )}
+              </div>
             </Campo>
           </div>
         </Tarjeta>

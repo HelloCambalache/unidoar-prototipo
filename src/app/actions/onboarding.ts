@@ -258,7 +258,7 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
       // búsqueda: ver `planDelAlta` (y `planTrasCambiarElTipo` adentro). Si vuelve del pago por búsqueda al abono y queda un lugar de
       // fundadora, el abono es el Plan Fundador (el turno se pide antes de contar, así dos altas no se pasan del cupo).
       await bloquearCuposDeFundadoras(tx);
-      const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx)) > 0;
+      const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx), hoyAR()) > 0;
       await tx
         .update(instituciones)
         .set({ ...datos, plan: P.planDelAlta({ actual: existente.plan, tipoAnterior: existente.tipo, tipo, modalidad: d.modalidad, hayCupoFundador }) })
@@ -271,7 +271,7 @@ export async function crearInstitucion(_previo: EstadoFormulario, formData: Form
         // Las primeras instituciones (hasta el cupo de Planes) reciben el Plan Fundador; el resto, el arancel de su tipo. El turno se pide antes de
         // contar: dos altas a la vez no se pasan del cupo.
         await bloquearCuposDeFundadoras(tx);
-        const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx)) > 0;
+        const hayCupoFundador = P.cuposDeFundador(await fundadorasActuales(tx), hoyAR()) > 0;
         const [creada] = await tx
           .insert(instituciones)
           // El arancel sale del tipo de institución, no de lo que elija (planPorTipo, src/lib/planes.ts: el catálogo editable de /backoffice/planes), salvo

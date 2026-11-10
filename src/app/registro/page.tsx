@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BotonLink } from "@/components/ui/button";
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
 import { usuarioActual } from "@/lib/auth";
 import { RUTA_INICIO } from "@/lib/catalogo";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Creá tu cuenta" };
+export const metadata = metadatosDePagina(PAGINAS.registro);
 
 /** Selector "Soy institución / Soy docente" a pantalla completa; cada botón abre el paso 1 del alta de ese rol. */
 export default async function PaginaRegistro() {

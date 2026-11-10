@@ -17,6 +17,7 @@ import { focoDeFoto } from "@/lib/fotos";
 import { sedesConUbicacion } from "@/lib/sedes";
 import { num, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { institucionPublica } from "@/lib/queries/publico";
+import { metadatosDeContenido, textosDeInstitucion } from "@/lib/seo";
 import { origenSitio } from "@/lib/sitio";
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
@@ -28,9 +29,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const inst = await institucionPublica(slug);
   if (!inst) return { title: "Institución no encontrada" };
-  const descripcion = inst.descripcion ?? `${inst.tipo} en UNIDOAR.`;
-  // El `openGraph` es lo que se ve en la vista previa del enlace al compartirlo (WhatsApp, redes, mail).
-  return { title: inst.nombre, description: descripcion, openGraph: { title: inst.nombre, description: descripcion, type: "website" } };
+  // El `openGraph` es lo que se ve en la vista previa del enlace al compartirlo (WhatsApp, redes, mail). Le habla a docentes: «mirá sus
+  // búsquedas y postulate». La imagen es la de docentes.
+  const { titulo, descripcion } = textosDeInstitucion({ nombre: inst.nombre, tipo: inst.tipo, descripcion: inst.descripcion });
+  return metadatosDeContenido({ publico: "docentes", titulo, descripcion, ruta: rutaDeInstitucion(inst.slug) });
 }
 
 const VISTA_INSTITUCION = [

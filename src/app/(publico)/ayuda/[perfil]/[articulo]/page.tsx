@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BandaDeContacto } from "@/components/ayuda/banner-de-ayuda";
 import { VistaDeArticulo } from "@/components/ayuda/vista-de-articulo";
 import { articuloPorSlug, esPerfilPublico, MANUALES, rutaDeManual } from "@/lib/ayuda";
+import { metadatosDeAyuda, tituloDeGuia } from "@/lib/seo";
 
 type Params = Promise<{ perfil: string; articulo: string }>;
 
@@ -11,7 +12,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { perfil, articulo } = await params;
   if (!esPerfilPublico(perfil)) return {};
   const encontrado = articuloPorSlug(MANUALES[perfil], articulo);
-  return encontrado ? { title: encontrado.articulo.titulo, description: encontrado.articulo.resumen } : {};
+  if (!encontrado) return {};
+  return metadatosDeAyuda({
+    manual: perfil,
+    titulo: tituloDeGuia(perfil, encontrado.articulo.titulo),
+    descripcion: encontrado.articulo.resumen,
+    ruta: `${rutaDeManual(perfil)}/${encontrado.articulo.slug}`,
+  });
 }
 
 /** Una guía de un manual público. */

@@ -11,7 +11,7 @@ import { CampoCodigoDeReferido } from "@/components/onboarding/campo-codigo-refe
 import { ROLES_CONTACTO, TIPOS_CON_CUE, TIPOS_INSTITUCION } from "@/lib/catalogo";
 import { OTRO, opcionYTexto } from "@/lib/otro";
 import { resumenDeSemestre } from "@/lib/forma-de-pago";
-import { crearPlanes, pesos, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
+import { crearPlanes, pesos, plazoDeFundadoras, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { ID_FORMULARIO_ONBOARDING, valorDe, type DatosForm } from "@/lib/onboarding";
 
 /** Cómo quiere usar UNIDOAR en el alta: el abono de su tipo mes a mes, el mismo abono por semestre o una sola búsqueda (ver `planDelAlta`). */
@@ -81,10 +81,10 @@ export function FormularioInstitucion({
   /** Con qué opción arranca (la de una cuenta que vuelve a este paso: la que ya tenía). */
   modalidadInicial: Modalidad;
   /**
-   * Lugares de institución fundadora: con el abono (mensual o semestral) la cuenta queda con el Plan Fundador y su valor no se muestra acá (lo
+   * Institución fundadora (sin decir cuántos lugares quedan: `dias` son los que faltan para el cierre, o null si no hay fecha): con el abono (mensual o semestral) la cuenta queda con el Plan Fundador y su valor no se muestra acá (lo
    * define el equipo). null: no hay lugares (o el plan está apagado) y todo se ve como siempre. `yaLoEs`: la cuenta que vuelve a este paso ya es fundadora.
    */
-  fundadora: null | { quedan: number; total: number; yaLoEs: boolean };
+  fundadora: null | { dias: number | null; yaLoEs: boolean };
 }) {
   const [estado, accion, pendiente] = useActionState(crearInstitucion, null);
   // Si ya había guardado algo escrito a mano ("Academia de danza"), el desplegable queda en "Otro" y el texto en "¿Cuál?".
@@ -228,7 +228,7 @@ export function FormularioInstitucion({
           {fundadora && (
             <p role="note" className="mt-0 mb-3 rounded-caja bg-[#FEF1DF] px-3.5 py-3 text-[13px] leading-normal text-[#8A4B07]">
               <b className="font-semibold">Institución fundadora</b>
-              {fundadora.yaLoEs ? "" : ` · quedan ${fundadora.quedan} de ${fundadora.total} lugares`}
+              {fundadora.yaLoEs ? "" : ` · ${plazoDeFundadoras(fundadora.dias).etiqueta.toLowerCase()}`}
               {". "}
               {fundadora.yaLoEs ? "Tu institución es fundadora" : "Con el abono (mensual o semestral) tu institución queda como fundadora"}: valor preferencial, la insignia en tu
               perfil público y tu logo en la portada del sitio. El equipo te confirma el valor cuando verifique tu cuenta.

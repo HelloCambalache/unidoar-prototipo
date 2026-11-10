@@ -2,31 +2,34 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Sora } from "next/font/google";
 import { ConfirmacionProvider } from "@/components/ui/confirmacion";
 import { ToastProvider } from "@/components/ui/toast";
+import { imagenesParaCompartir, NOMBRE_DEL_SITIO, PAGINAS, tituloParaCompartir } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const sora = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap", weight: ["600", "700"] });
 
-const DESCRIPCION =
-  "Colegios, clubes y natatorios encuentran docentes, entrenadores y guardavidas verificados. Publicá una búsqueda y cubrí cargos y suplencias en días.";
+// Lo que dice el sitio cuando una página no define lo suyo: habla a los dos públicos (ver src/lib/seo.ts). Sin `url`: no es de ninguna página.
+const INICIO = PAGINAS.inicio;
 
 export const metadata: Metadata = {
-  // Base de las URLs absolutas de la vista previa al compartir (la imagen sale de app/opengraph-image.tsx).
+  // Base de las URLs absolutas de la vista previa al compartir (las imágenes salen de /og/<público>.png: ver src/lib/seo.ts).
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unidoar.com.ar"),
-  title: { default: "UNIDOAR — Educadores, entrenadores y guardavidas verificados", template: "%s · UNIDOAR" },
-  description: DESCRIPCION,
-  applicationName: "UNIDOAR",
+  title: { default: INICIO.titulo, template: `%s · ${NOMBRE_DEL_SITIO}` },
+  description: INICIO.descripcion,
+  applicationName: NOMBRE_DEL_SITIO,
   openGraph: {
     type: "website",
     locale: "es_AR",
-    siteName: "UNIDOAR",
-    title: "UNIDOAR — Educadores, entrenadores y guardavidas verificados",
-    description: DESCRIPCION,
+    siteName: NOMBRE_DEL_SITIO,
+    title: tituloParaCompartir(INICIO),
+    description: INICIO.descripcion,
+    images: imagenesParaCompartir("general"),
   },
   twitter: {
     card: "summary_large_image",
-    title: "UNIDOAR — Educadores, entrenadores y guardavidas verificados",
-    description: DESCRIPCION,
+    title: tituloParaCompartir(INICIO),
+    description: INICIO.descripcion,
+    images: imagenesParaCompartir("general"),
   },
   icons: {
     icon: [

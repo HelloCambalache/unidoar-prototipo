@@ -32,4 +32,12 @@ export const permitirConfirmarSemestre = crearTope(40, 10 * 60 * 1000);
  */
 export const permitirProbarCodigoDeReferido = crearTope(8, 60 * 60 * 1000);
 
+/**
+ * Avisos de «este email ya está registrado» en el formulario de registro, por origen y por hora. El aviso confirma que un email tiene cuenta, así
+ * que sin un tope serviría para recorrer una lista de emails (lo pidió el cliente igual: ver `estadoDeEmailYaRegistrado`, src/lib/acceso.ts).
+ * 10 por hora alcanza de sobra para quien se equivoca o prueba con varios emails propios; pasado el tope, el registro responde como con un email
+ * nuevo. En la memoria de cada instancia: frena a quien recorre, no es exacto con varias instancias (Supabase además limita los registros).
+ */
+export const permitirAvisarEmailYaRegistrado = crearTope(10, 60 * 60 * 1000);
+
 export const DEMASIADOS_PEDIDOS ="Hiciste muchos pedidos seguidos. Esperá un rato y probá de nuevo.";

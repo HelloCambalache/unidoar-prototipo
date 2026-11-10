@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { BandaDeContacto, BannerDeAyuda } from "@/components/ayuda/banner-de-ayuda";
 import { BuscadorDeAyuda, ResultadosDeAyuda } from "@/components/ayuda/buscador-de-ayuda";
@@ -6,11 +5,9 @@ import { PreguntasFrecuentes } from "@/components/ayuda/preguntas-frecuentes";
 import { Icono } from "@/components/icons";
 import { sesionPublica } from "@/components/publico/sesion";
 import { buscarEnAyuda, MANUALES, MANUALES_PUBLICOS, rutaDeManual, articulosDe, type ManualDeAyuda } from "@/lib/ayuda";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Centro de ayuda",
-  description: "Guías y preguntas frecuentes de UNIDOAR para profesionales (docentes, entrenadores y guardavidas) y para instituciones.",
-};
+export const metadata = metadatosDePagina(PAGINAS.ayuda);
 
 const uno = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 

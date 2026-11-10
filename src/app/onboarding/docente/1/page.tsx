@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FormularioRegistro } from "@/components/onboarding/formulario-registro";
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
@@ -6,8 +5,9 @@ import { PRIMER_PASO_PROTEGIDO } from "@/lib/acceso";
 import { sesionActual } from "@/lib/auth";
 import { PASOS_DOCENTE, PORTADA_ONBOARDING } from "@/lib/onboarding";
 import { googleHabilitado } from "@/lib/supabase/proveedores";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Creá tu cuenta · Profesional" };
+export const metadata = metadatosDePagina(PAGINAS.altaDocente);
 
 /**
  * Paso 1: registro (email + contraseña o Google). Pública: con sesión ya abierta salta a "¿Qué sos?".

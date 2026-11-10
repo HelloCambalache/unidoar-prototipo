@@ -1161,6 +1161,8 @@ export const planesCondiciones = pgTable("planes_condiciones", {
   referidoMesesMensual: integer("referido_meses_mensual").notNull().default(1),
   /** Cuántas instituciones pueden ser fundadoras (Plan Fundador). Agregada con `pnpm db:planes` (correrlo ANTES de desplegar). */
   cuposFundador: integer("cupos_fundador").notNull().default(50),
+  /** Último día en que se ofrece el Plan Fundador (null: sin fecha de cierre). Agregada con `pnpm db:planes` (correrlo ANTES de desplegar). */
+  fundadorHasta: date("fundador_hasta"),
   packMeses: integer("pack_meses").notNull(),
   packMesesPagos: integer("pack_meses_pagos").notNull(),
   packMesesReferido: integer("pack_meses_referido").notNull(),

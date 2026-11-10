@@ -17,6 +17,10 @@ import {
   resumenPublico,
   testimoniosDe,
 } from "@/lib/queries/publico";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
+
+// Lo que se ve al compartir la portada: habla a los dos públicos (docentes e instituciones).
+export const metadata = metadatosDePagina(PAGINAS.inicio);
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";

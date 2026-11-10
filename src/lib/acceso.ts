@@ -32,6 +32,8 @@ export type EstadoAuth =
       codigo?: string;
       campos?: Record<string, string>;
       valores?: Record<string, string>;
+      /** El email ya tiene una cuenta y se le avisa a la persona: la UI muestra el aviso destacado con «Ingresar» y «Recuperar mi contraseña». */
+      emailRegistrado?: true;
     }
   | {
       ok: true;
@@ -84,8 +86,8 @@ const MENSAJES_POR_CODIGO: Record<string, string> = {
 
 /**
  * ¿La respuesta de `signUp` indica que ese email ya tenía cuenta? Con la confirmación de mail activa Supabase no devuelve un error:
- * devuelve un usuario sin identidades. Sin ella devuelve el error `user_already_exists`. En los dos casos el formulario de registro
- * responde igual que con un email nuevo, para no revelar qué emails están registrados.
+ * devuelve un usuario sin identidades. Sin ella devuelve el error `user_already_exists`. Una cuenta que existe pero todavía no confirmó su mail
+ * NO entra acá (Supabase le reenvía la confirmación y devuelve su identidad): para esa, «Revisá tu mail» es la respuesta correcta.
  */
 export function emailYaRegistrado(
   error: { code?: string } | null | undefined,
@@ -93,6 +95,21 @@ export function emailYaRegistrado(
 ): boolean {
   if (error) return error.code === "user_already_exists" || error.code === "email_exists";
   return Array.isArray(usuario?.identities) && usuario.identities.length === 0;
+}
+
+/** Lo que dice el aviso cuando alguien intenta registrarse con un email que ya tiene cuenta. */
+export const MENSAJE_EMAIL_YA_REGISTRADO = "Este email ya está registrado";
+
+/**
+ * Qué responde el formulario de registro cuando el email ya tenía cuenta. **Pedido del cliente (2026-11-10, confirmado por Flor): se le avisa a
+ * la persona** («Este email ya está registrado», con «Ingresar» y «Recuperar mi contraseña»), en lugar de mostrarle lo mismo que a un email nuevo.
+ * Eso deja de ocultar qué emails tienen cuenta (la decisión anterior, de la auditoría del 2026-10-14), así que el aviso tiene un tope por origen
+ * (`permitirAvisarEmailYaRegistrado`, src/lib/pedidos.ts): pasado el tope (`avisar` en false) vuelve a responder igual que con un email nuevo,
+ * y quien recorra emails de a muchos no obtiene la lista. Una persona común nunca llega al tope.
+ */
+export function estadoDeEmailYaRegistrado(email: string, valores: Record<string, string>, avisar: boolean): Exclude<EstadoAuth, null> {
+  if (!avisar) return { ok: true, confirmarEmail: email };
+  return { ok: false, error: MENSAJE_EMAIL_YA_REGISTRADO, campos: { email: MENSAJE_EMAIL_YA_REGISTRADO }, valores, emailRegistrado: true };
 }
 
 /** Supabase no pudo entregar el mail al SMTP (clave, remitente o dominio mal configurados, o el proveedor caído). Llega como un 500 "unexpected_failure". */

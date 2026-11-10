@@ -35,17 +35,19 @@ export function usePlanElegido() {
 const meses = (n: number) => `${n} ${n === 1 ? "mes" : "meses"}`;
 
 /**
- * «Mensual / Semestral», centrado arriba de las tarjetas. Solo cambia lo que se ve en la tarjeta de instituciones y solo con los aranceles con abono:
+ * «Mensual / Semestral», centrado. Solo cambia lo que se ve en la tarjeta de instituciones y solo con los aranceles con abono:
  * con una sola búsqueda o con una red de sedes (un convenio) no hay semestre, y el interruptor queda apagado con el motivo.
+ * La página lo pone dentro de la grilla de tarjetas (`className` decide dónde): arriba de todas en escritorio y, en el celular, pegado
+ * arriba de la tarjeta de instituciones (que es la que cambia), no arriba de la de profesionales.
  */
-export function InterruptorDePago({ catalogo }: { catalogo: CatalogoDePlanes }) {
+export function InterruptorDePago({ catalogo, className }: { catalogo: CatalogoDePlanes; className?: string }) {
   const P = crearPlanes(catalogo);
   const { clave, semestral, elegirSemestral } = usePlanElegido();
   const aplica = !P.esPuntual(clave) && !P.planDe(clave).porSede;
   const { meses: mesesDelPack, mesesQueSePagan } = P.condiciones.pack;
 
   return (
-    <div className="flex flex-col items-center gap-2.5 text-center">
+    <div className={cn("flex flex-col items-center gap-2.5 text-center", className)}>
       <span id="forma-de-pago" className="text-[13px] leading-none font-semibold text-apagado">
         ¿Cómo querés pagar el abono?
       </span>

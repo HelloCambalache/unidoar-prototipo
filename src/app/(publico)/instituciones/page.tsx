@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
@@ -12,12 +11,9 @@ import { sesionPublica } from "@/components/publico/sesion";
 import { BotonLink } from "@/components/ui/button";
 import { leerFiltrosInstituciones } from "@/lib/filtros-instituciones";
 import { catalogoInstituciones, zonasDisponibles } from "@/lib/queries/instituciones";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Instituciones",
-  description:
-    "Colegios, clubes, jardines y gimnasios que ya contratan por UNIDOAR. Entrá a cualquiera para ver qué están buscando.",
-};
+export const metadata = metadatosDePagina(PAGINAS.instituciones);
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";

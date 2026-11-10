@@ -92,6 +92,12 @@ export type CondicionesDePlanes = {
    * ese plan, lo que queda es `cuposDeFundador(ocupados)`. Lo edita el equipo en Planes.
    */
   cuposFundador: number;
+  /**
+   * Último día en que se ofrece el Plan Fundador (`YYYY-MM-DD`, hora de Argentina), o null si no tiene fecha de cierre. Es lo que cuenta el
+   * «Quedan N días» de la parte pública, en lugar de cuántos lugares quedan (no se muestran métricas de cuántas ya se sumaron). **Cierra de
+   * verdad**: pasada la fecha las cuentas nuevas ya no reciben el plan y la tarjeta desaparece, aunque sobren cupos. Lo edita el equipo en Planes.
+   */
+  fundadorHasta: string | null;
   /** La búsqueda puntual: vigencia, tope de búsquedas abiertas y qué incluye. */
   puntual: CondicionesDePuntual;
   /** Tipos de institución que pagan el arancel de colegios; el resto paga el deportivo. */
@@ -175,6 +181,7 @@ export const CONDICIONES_POR_DEFECTO: CondicionesDePlanes = {
   pack: { meses: 6, mesesQueSePagan: 5, mesesConReferido: 4 },
   referidoMesesMensual: 1,
   cuposFundador: 50,
+  fundadorHasta: null,
   puntual: { vigenciaDias: 30, busquedasAbiertas: 1, incluyeCursos: false, incluyeBuscador: false },
   tiposColegio: ["Colegio privado", "Colegio público", "Jardín de infantes", "Instituto terciario", "Universidad"],
 };
@@ -231,11 +238,21 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
 
   /** Es el Plan Fundador (el de las primeras instituciones que se suman). */
   const esFundador = (clave: string) => clave === "fundador";
+  /** ¿Ya pasó el último día en que se ofrecía el Plan Fundador? (`hoy`: `YYYY-MM-DD`, hora de Argentina). Sin fecha de cierre, nunca. */
+  const fundadorasCerradasPorFecha = (hoy: string) => condiciones.fundadorHasta !== null && hoy > condiciones.fundadorHasta;
   /**
-   * Cuántos lugares de fundadora quedan, dado cuántas instituciones ya tienen el plan (`ocupados`). Con el plan apagado (el equipo dejó de
-   * ofrecerlo) no queda ninguno: nadie nuevo lo recibe aunque sobren cupos.
+   * Cuántos días faltan para que cierre el Plan Fundador (0 = hoy es el último día), o null si no tiene fecha de cierre o ya cerró. Es lo que
+   * muestra la parte pública en lugar de los lugares que quedan.
    */
-  const cuposDeFundador = (ocupados: number) => (planes.fundador.vigente ? Math.max(0, condiciones.cuposFundador - Math.max(0, ocupados)) : 0);
+  const diasParaCerrarFundadoras = (hoy: string): number | null =>
+    condiciones.fundadorHasta === null || fundadorasCerradasPorFecha(hoy) ? null : diasEntreFechas(hoy, condiciones.fundadorHasta);
+  /**
+   * Cuántos lugares de fundadora quedan, dado cuántas instituciones ya tienen el plan (`ocupados`) y qué día es (`hoy`, `YYYY-MM-DD` en hora de
+   * Argentina). Con el plan apagado (el equipo dejó de ofrecerlo) o pasada su fecha de cierre no queda ninguno: nadie nuevo lo recibe aunque sobren
+   * cupos. **El día es obligatorio** a propósito: quien cuente lugares sin pasarlo reabriría la oferta ya cerrada.
+   */
+  const cuposDeFundador = (ocupados: number, hoy: string) =>
+    planes.fundador.vigente && !fundadorasCerradasPorFecha(hoy) ? Math.max(0, condiciones.cuposFundador - Math.max(0, ocupados)) : 0;
   /**
    * Los planes que se ofrecen en la parte pública (el selector de precios de /planes): todos los vigentes menos el Fundador, cuyo precio no se
    * muestra (la página lo presenta aparte, sin valor).
@@ -476,6 +493,8 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     precioDefinido,
     esFundador,
     cuposDeFundador,
+    fundadorasCerradasPorFecha,
+    diasParaCerrarFundadoras,
     vigentesPublicos,
   };
 }
@@ -508,11 +527,41 @@ export type FilaDeCondiciones = {
   referidoMesesMensual?: number;
   /** Cuántas instituciones fundadoras entran: puede faltar en una base sin la columna (vale el de lanzamiento). */
   cuposFundador?: number;
+  /** Fecha de cierre del Plan Fundador: puede faltar en una base sin la columna (vale el de lanzamiento: sin fecha). */
+  fundadorHasta?: string | null;
   packMeses: number;
   packMesesPagos: number;
   packMesesReferido: number;
   tiposColegio: string[];
 };
+
+/** Una fecha `YYYY-MM-DD` que existe en el calendario (no «2026-02-30»). */
+export function esFechaIso(v: unknown): v is string {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const [a, m, d] = v.split("-").map(Number) as [number, number, number];
+  const fecha = new Date(Date.UTC(a, m - 1, d));
+  return fecha.getUTCFullYear() === a && fecha.getUTCMonth() === m - 1 && fecha.getUTCDate() === d;
+}
+
+/** Días que hay de una fecha `YYYY-MM-DD` a otra (negativo si la segunda es anterior). */
+export function diasEntreFechas(desde: string, hasta: string): number {
+  const ms = (f: string) => {
+    const [a, m, d] = f.split("-").map(Number) as [number, number, number];
+    return Date.UTC(a, m - 1, d);
+  };
+  return Math.round((ms(hasta) - ms(desde)) / 86_400_000);
+}
+
+/**
+ * Lo que dice la parte pública del plazo del Plan Fundador, sin decir cuántas instituciones ya se sumaron: los días que quedan o, si el equipo no
+ * cargó una fecha de cierre (`dias` null), que los lugares son limitados. `etiqueta` va sola (en una pastilla) y `frase` dentro de una oración.
+ */
+export function plazoDeFundadoras(dias: number | null): { etiqueta: string; frase: string } {
+  if (dias === null) return { etiqueta: "Lugares limitados", frase: "Los lugares son limitados" };
+  if (dias <= 0) return { etiqueta: "Hoy es el último día", frase: "Hoy es el último día para sumarte" };
+  if (dias === 1) return { etiqueta: "Queda 1 día", frase: "Queda 1 día para sumarte" };
+  return { etiqueta: `Quedan ${dias} días`, frase: `Quedan ${dias} días para sumarte` };
+}
 
 const entero = (v: unknown, minimo: number, maximo: number): v is number =>
   typeof v === "number" && Number.isInteger(v) && v >= minimo && v <= maximo;
@@ -553,6 +602,7 @@ export function catalogoDesdeLaBase(filasDePlanes: readonly FilaDePlan[], condic
     pack: packValido ? { meses: c.packMeses, mesesQueSePagan: c.packMesesPagos, mesesConReferido: c.packMesesReferido } : defecto.pack,
     referidoMesesMensual: c && entero(c.referidoMesesMensual, 0, 12) ? c.referidoMesesMensual : defecto.referidoMesesMensual,
     cuposFundador: c && entero(c.cuposFundador, 1, 1000) ? c.cuposFundador : defecto.cuposFundador,
+    fundadorHasta: c && esFechaIso(c.fundadorHasta) ? c.fundadorHasta : defecto.fundadorHasta,
     tiposColegio: c && Array.isArray(c.tiposColegio) && c.tiposColegio.length > 0 ? [...c.tiposColegio] : [...defecto.tiposColegio],
   };
   return { planes, condiciones };
@@ -596,6 +646,10 @@ export const edicionDePlanesSchema = z
       descuentoSedeExtra: numeroDePack(0, 100),
       referidoMesesMensual: numeroDePack(0, 12),
       cuposFundador: numeroDePack(1, 1000),
+      fundadorHasta: z
+        .string({ error: "Elegí una fecha." })
+        .refine(esFechaIso, "Elegí una fecha que exista.")
+        .nullable(),
       puntual: z.object({
         vigenciaDias: numeroDePack(1, 365),
         busquedasAbiertas: numeroDePack(1, 20),
@@ -654,6 +708,7 @@ export function edicionDesdeCatalogo(c: CatalogoDePlanes): EdicionDePlanes {
       descuentoSedeExtra: c.condiciones.descuentoSedeExtra,
       referidoMesesMensual: c.condiciones.referidoMesesMensual,
       cuposFundador: c.condiciones.cuposFundador,
+      fundadorHasta: c.condiciones.fundadorHasta,
       puntual: { ...c.condiciones.puntual },
       pack: { ...c.condiciones.pack },
       tiposColegio: TIPOS_INSTITUCION.filter((t) => c.condiciones.tiposColegio.includes(t)),
@@ -692,6 +747,7 @@ export function cambiosDePlanes(antes: EdicionDePlanes, despues: EdicionDePlanes
   if (antes.condiciones.descuentoSedeExtra !== despues.condiciones.descuentoSedeExtra) campos.push("descuento por sede adicional");
   if (antes.condiciones.referidoMesesMensual !== despues.condiciones.referidoMesesMensual) campos.push("meses bonificados por recomendación");
   if (antes.condiciones.cuposFundador !== despues.condiciones.cuposFundador) campos.push("cupos de instituciones fundadoras");
+  if (antes.condiciones.fundadorHasta !== despues.condiciones.fundadorHasta) campos.push("fecha de cierre de instituciones fundadoras");
   const ua = antes.condiciones.puntual;
   const ud = despues.condiciones.puntual;
   if (ua.vigenciaDias !== ud.vigenciaDias || ua.busquedasAbiertas !== ud.busquedasAbiertas || ua.incluyeCursos !== ud.incluyeCursos || ua.incluyeBuscador !== ud.incluyeBuscador) {

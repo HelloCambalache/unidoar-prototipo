@@ -43,7 +43,7 @@ export function ConfirmarMail({ email, rol, onOtroEmail }: { email: string; rol:
         }
         className="mb-0"
       />
-      {/* Neutral a propósito: es lo mismo para un email nuevo que para uno que ya tiene cuenta (no revela quién está registrado). */}
+      {/* Sirve también cuando el email ya tenía una cuenta pero el aviso de «ya registrado» no se mostró (pasó el tope por origen) o la cuenta no había confirmado su mail. */}
       <div role="note" className="flex flex-col gap-3 rounded-caja border border-borde bg-superficie px-4 py-3.5">
         <p className="m-0 text-[13.5px] leading-normal text-tinta-2">
           <b className="font-semibold text-tinta">¿Ya te habías registrado con este email?</b> Entonces no te mandamos otro mail:

@@ -78,7 +78,7 @@ export default async function PasoInstitucion2() {
         partidos={partidos}
         provincias={provincias}
         catalogo={catalogoParaNavegador(catalogo, { sinPrecioDeFundador: true })}
-        fundadora={yaEsFundadora || cupos.hay ? { quedan: cupos.quedan, total: cupos.total, yaLoEs: yaEsFundadora } : null}
+        fundadora={yaEsFundadora || cupos.hay ? { dias: cupos.dias, yaLoEs: yaEsFundadora } : null}
         modalidadInicial={institucion?.plan === "puntual" ? "puntual" : forma === "semestral" ? "semestral" : "abono"}
       />
     </MarcoOnboarding>

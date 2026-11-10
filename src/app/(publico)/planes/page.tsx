@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono } from "@/components/icons";
 import { BandaCTA } from "@/components/publico/banda-cta";
@@ -6,17 +5,14 @@ import { InterruptorDePago, ProveedorDePlanes } from "@/components/publico/elegi
 import { PlanesInstituciones } from "@/components/publico/planes-instituciones";
 import { TarjetaFundadoras } from "@/components/publico/tarjeta-fundadoras";
 import { BotonLink } from "@/components/ui/button";
-import { catalogoParaNavegador, crearPlanes, pesos } from "@/lib/planes";
+import { catalogoParaNavegador, crearPlanes, pesos, plazoDeFundadoras } from "@/lib/planes";
 import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { cuposDeFundadoras } from "@/lib/queries/fundadoras";
 import { catalogoDePlanes } from "@/lib/queries/planes";
 import { cn } from "@/lib/utils";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Planes y aranceles",
-  description:
-    "Para los profesionales UNIDOAR es gratis, siempre. Las instituciones pagan una suscripción mensual según su tipo o una tarifa por búsqueda, sin comisión por contratación.",
-};
+export const metadata = metadatosDePagina(PAGINAS.planes);
 
 // Los precios salen de la base: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";
@@ -89,7 +85,7 @@ export default async function Planes() {
   if (cupos.hay) {
     PREGUNTAS.push({
       pregunta: "¿Qué es una institución fundadora?",
-      respuesta: `Las primeras ${cupos.total} instituciones que se suman quedan como fundadoras: tienen un valor preferencial mientras sigan en UNIDOAR, la insignia de fundadora en su perfil público y su logo en la portada del sitio. Hoy quedan ${cupos.quedan} lugares. Si te interesa, creá la cuenta de tu institución y quedás como fundadora; si preferís hablarlo antes, escribinos desde Contacto.`,
+      respuesta: `Las primeras ${cupos.total} instituciones que se suman quedan como fundadoras: tienen un valor preferencial mientras sigan en UNIDOAR, la insignia de fundadora en su perfil público y su logo en la portada del sitio. ${plazoDeFundadoras(cupos.dias).frase}. Si te interesa, creá la cuenta de tu institución y quedás como fundadora; si preferís hablarlo antes, escribinos desde Contacto.`,
     });
   }
 
@@ -126,8 +122,6 @@ export default async function Planes() {
 
         <ProveedorDePlanes>
           <section aria-label="Planes" className="flex flex-col gap-6">
-            {/* «Mensual / Semestral» va afuera de las tarjetas, arriba de las dos. */}
-            <InterruptorDePago catalogo={catalogoDelNavegador} />
             <div className={cn("grid items-stretch gap-6", cupos.hay ? "grid-cols-3 max-[1179px]:grid-cols-2 max-[800px]:grid-cols-1" : "grid-cols-2 max-[800px]:grid-cols-1")}>
               <article className="relative flex min-w-0 flex-col overflow-hidden rounded-tarjeta border border-rosa/15 bg-[linear-gradient(165deg,#FDF2F8_0%,#FBE0EF_55%,#F7D3E6_100%)] px-8 py-9 max-[560px]:px-6">
                 <span
@@ -172,6 +166,16 @@ export default async function Planes() {
                   Soy profesional
                 </BotonLink>
               </article>
+
+              {/*
+                «Mensual / Semestral»: afuera de las tarjetas. Con varias columnas sube arriba de todas (`order-first`, ocupa todo el ancho); en
+                el celular (una columna) se queda donde está, entre la tarjeta de profesionales y la de instituciones, y se pega a esta última
+                (`-mb-3` achica el espacio de abajo): el interruptor cambia lo que dice la tarjeta de instituciones, no la de profesionales.
+              */}
+              <InterruptorDePago
+                catalogo={catalogoDelNavegador}
+                className="order-first col-span-full max-[800px]:order-none max-[800px]:col-span-1 max-[800px]:mt-1 max-[800px]:-mb-3"
+              />
 
               <PlanesInstituciones beneficios={BENEFICIOS_INSTITUCION} catalogo={catalogoDelNavegador} />
 

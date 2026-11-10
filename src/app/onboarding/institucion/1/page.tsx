@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { FormularioRegistro } from "@/components/onboarding/formulario-registro";
 import { MarcoAcceso } from "@/components/onboarding/marco-acceso";
@@ -7,8 +6,9 @@ import { sesionActual } from "@/lib/auth";
 import { PASOS_INSTITUCION, PORTADA_ONBOARDING } from "@/lib/onboarding";
 import { hayCodigoRecordado } from "@/lib/queries/referidos";
 import { googleHabilitado } from "@/lib/supabase/proveedores";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Creá tu acceso · Institución" };
+export const metadata = metadatosDePagina(PAGINAS.altaInstitucion);
 
 /**
  * Paso 1: registro (email + contraseña o Google). Pública: con sesión ya abierta salta al paso 2.

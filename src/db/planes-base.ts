@@ -87,6 +87,8 @@ async function main() {
     await tx`alter table public.planes_condiciones alter column referido_meses_mensual set default 1`;
     // Plan Fundador: cuántas instituciones pueden ser fundadoras (50 de lanzamiento). La fila del plan `fundador` se inserta abajo con el resto.
     await tx`alter table public.planes_condiciones add column if not exists cupos_fundador integer not null default 50`;
+    // Fecha de cierre del Plan Fundador (último día en que se ofrece; null = sin fecha, solo cierra el cupo). La carga el equipo en Planes.
+    await tx`alter table public.planes_condiciones add column if not exists fundador_hasta date`;
     // Búsquedas puntuales pagadas: una fila por búsqueda que la institución pagó. Disponible mientras usado_en es null; al publicar se consume.
     await tx`
       create table if not exists public.creditos_busqueda (

@@ -1,20 +1,22 @@
 import { BotonLink } from "@/components/ui/button";
 import type { CategoriaDocente } from "@/db/schema";
+import { plazoDeFundadoras } from "@/lib/planes";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { cuposDeFundadoras, type CuposDeFundadoras } from "@/lib/queries/fundadoras";
 import { BandaCTA } from "./banda-cta";
 import { BandaInstituciones } from "./banda-instituciones";
 import { estiloBotonAcento } from "./categorias";
 
-/** El cierre de la home y de las landings: lee los lugares de fundadora que quedan y dibuja la banda que corresponde. */
+/** El cierre de la home y de las landings: lee si se ofrece ser fundadora (y cuántos días quedan) y dibuja la banda que corresponde. */
 export async function BandaDeCierre({ categoria }: { categoria?: CategoriaDocente }) {
   return <BandaFundador cupos={await cuposDeFundadoras()} categoria={categoria} />;
 }
 
 /**
- * Cierre de la home y de las landings. Mientras queden lugares de institución fundadora (el Plan Fundador es para las primeras N que se suman)
- * invita a serlo, sin decir cuánto cuesta; con el cupo completo (o con el plan apagado) vuelve a la invitación de siempre. Es una banda de
- * servidor: los cupos salen de la base (`cuposDeFundadoras`).
+ * Cierre de la home y de las landings. Mientras se ofrezca ser institución fundadora (el Plan Fundador es para las primeras N que se suman)
+ * invita a serlo, sin decir cuánto cuesta ni cuántos lugares quedan (dice los días que faltan para el cierre, o que los lugares son limitados si
+ * no hay fecha); con el cupo completo, la fecha vencida o el plan apagado vuelve a la invitación de siempre. Es una banda de servidor: sale de la
+ * base (`cuposDeFundadoras`).
  */
 export function BandaFundador({ cupos, categoria }: { cupos: CuposDeFundadoras; categoria?: CategoriaDocente }) {
   if (!cupos.hay) return <BandaInstituciones categoria={categoria} />;
@@ -22,7 +24,7 @@ export function BandaFundador({ cupos, categoria }: { cupos: CuposDeFundadoras; 
     <BandaCTA
       etiqueta={
         <span className="inline-flex items-center rounded-full bg-ambar/20 px-2.5 py-[5px] text-xs leading-none font-semibold text-[#FDD9AE]">
-          Institución fundadora · quedan {cupos.quedan} de {cupos.total} lugares
+          Institución fundadora · {plazoDeFundadoras(cupos.dias).etiqueta.toLowerCase()}
         </span>
       }
       titulo={`Sé una de las primeras ${cupos.total} instituciones de UNIDOAR`}

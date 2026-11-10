@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
 import { DocumentoLegal } from "@/components/publico/documento-legal";
 import { SECCIONES_PRIVACIDAD, TITULO_PRIVACIDAD } from "@/lib/privacidad-texto";
 import { PRIVACIDAD_ACTUALIZADA, PRIVACIDAD_NUMERO_DE_VERSION } from "@/lib/terminos";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Política de privacidad",
-  description:
-    "Política de privacidad y protección de datos personales de UNIDOAR: quién es el responsable, qué datos se recopilan, para qué se usan, quién puede verlos y cómo ejercer tus derechos.",
-};
+export const metadata = metadatosDePagina(PAGINAS.privacidad);
 
 /*
  * El texto es el documento legal de la titular, cargado tal cual (src/lib/privacidad-texto.ts). Ya no lo escribimos nosotros a partir de lo que hace

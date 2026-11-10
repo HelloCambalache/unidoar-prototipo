@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
 import { TarjetasCategoria } from "@/components/publico/tarjetas-categoria";
 import { resumenPublico } from "@/lib/queries/publico";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Buscá profesionales por categoría",
-  description: "Docentes, entrenadores y guardavidas verificados: elegí tu categoría para ver perfiles pensados para eso.",
-};
+export const metadata = metadatosDePagina(PAGINAS.categorias);
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";

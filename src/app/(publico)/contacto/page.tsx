@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { NodosMarca } from "@/components/app/nodos-marca";
 import { Icono } from "@/components/icons";
 import { FormularioContacto } from "@/components/publico/formulario-contacto";
 import { enlaceWhatsapp } from "@/lib/pipeline";
 import { CONTACTO_SITIO } from "@/lib/publico";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contacto",
-  description: "¿Tenés dudas sobre tu institución, tu perfil profesional o algo puntual? Escribinos y te respondemos en el día.",
-};
+export const metadata = metadatosDePagina(PAGINAS.contacto);
 
 /** Un dato de contacto en su tarjeta: ícono decorativo a la izquierda, título y valor a la derecha. */
 function DatoDeContacto({ icono, titulo, children }: { icono: React.ReactNode; titulo: string; children: React.ReactNode }) {

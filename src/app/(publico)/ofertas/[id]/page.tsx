@@ -14,6 +14,7 @@ import { CATEGORIA_INFO } from "@/lib/catalogo";
 import { mensajeDeBusqueda, resumenDeBusqueda, rutaDeInstitucion, rutaDeOferta, urlCompleta } from "@/lib/compartir";
 import { RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { ofertaPublica } from "@/lib/queries/publico";
+import { metadatosDeContenido, textosDeOferta } from "@/lib/seo";
 import { origenSitio } from "@/lib/sitio";
 
 // Consulta la base en cada request y depende de la sesión (el botón de postularse): no se prerenderiza.
@@ -31,12 +32,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const oferta = esUuid(id) ? await ofertaPublica(id) : null;
   if (!oferta) return { title: "Búsqueda no encontrada" };
-  const titulo = `${oferta.puesto} · ${oferta.institucion.nombre}`;
-  // Es lo que se ve en la vista previa del enlace (WhatsApp, redes, mail): la primera frase de la descripción o, si ya no está abierta, que cerró.
-  const descripcion = oferta.abierta
-    ? resumenDeBusqueda({ descripcion: oferta.descripcion, tipo: oferta.tipo, zona: oferta.zona, institucion: oferta.institucion.nombre })
-    : "Esta búsqueda ya no está abierta.";
-  return { title: titulo, description: descripcion, openGraph: { title: titulo, description: descripcion, type: "article" } };
+  // Es lo que se ve en la vista previa del enlace (WhatsApp, redes, mail): «Oferta de trabajo: …» (le habla a docentes), el resumen de la
+  // búsqueda y, si ya no está abierta, que cerró. La imagen es la de docentes.
+  const { titulo, descripcion } = textosDeOferta({
+    puesto: oferta.puesto,
+    institucion: oferta.institucion.nombre,
+    abierta: oferta.abierta,
+    resumen: resumenDeBusqueda({ descripcion: oferta.descripcion, tipo: oferta.tipo, zona: oferta.zona, institucion: oferta.institucion.nombre }),
+  });
+  return metadatosDeContenido({ publico: "docentes", titulo, descripcion, ruta: rutaDeOferta(oferta.id) }, "article");
 }
 
 export default async function OfertaCompartida({ params }: Props) {

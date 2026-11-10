@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { permitirAvisarEmailYaRegistrado } from "@/lib/pedidos";
 import {
   ERRORES_DE_INGRESO,
   destinoTrasConfirmar,
   emailYaRegistrado,
   esFallaDeEnvioDeMail,
   esTipoDeConfirmacion,
+  estadoDeEmailYaRegistrado,
   googleActivadoEn,
+  MENSAJE_EMAIL_YA_REGISTRADO,
   registrarFallaDeMail,
   rutaInternaSegura,
   traducirErrorAuth,
@@ -97,6 +100,38 @@ describe("registro con un email que ya tiene cuenta", () => {
   it("otros errores (contraseña débil, mail que no sale) no se confunden con un email repetido", () => {
     assert.equal(emailYaRegistrado({ code: "weak_password" }, null), false);
     assert.equal(emailYaRegistrado({ code: "unexpected_failure" }, { identities: [] }), false);
+  });
+});
+
+describe("aviso de «este email ya está registrado»", () => {
+  const valores = { email: "ana@colegio.edu.ar", nombre: "Ana" };
+
+  it("se le avisa a la persona, en el campo del email y con la marca para el aviso destacado", () => {
+    const e = estadoDeEmailYaRegistrado("ana@colegio.edu.ar", valores, true);
+    assert.equal(e.ok, false);
+    if (e.ok) return;
+    assert.equal(e.error, MENSAJE_EMAIL_YA_REGISTRADO);
+    assert.equal(e.emailRegistrado, true);
+    assert.deepEqual(e.campos, { email: MENSAJE_EMAIL_YA_REGISTRADO });
+    assert.deepEqual(e.valores, valores, "lo que escribió queda en el formulario");
+  });
+
+  it("el mensaje dice que el email ya está registrado", () => {
+    assert.match(MENSAJE_EMAIL_YA_REGISTRADO, /ya está registrado/);
+  });
+
+  it("pasado el tope responde como con un email nuevo: «Revisá tu mail», sin confirmar que tiene cuenta", () => {
+    const e = estadoDeEmailYaRegistrado("ana@colegio.edu.ar", valores, false);
+    assert.deepEqual(e, { ok: true, confirmarEmail: "ana@colegio.edu.ar" });
+  });
+
+  it("el tope deja pasar 10 avisos por hora por origen, sin mezclar orígenes", () => {
+    const origen = `prueba-${Math.random()}`;
+    const ahora = Date.now();
+    for (let i = 0; i < 10; i++) assert.equal(permitirAvisarEmailYaRegistrado(origen, ahora + i), true, String(i));
+    assert.equal(permitirAvisarEmailYaRegistrado(origen, ahora + 20), false, "el 11.º ya no");
+    assert.equal(permitirAvisarEmailYaRegistrado(`otro-${Math.random()}`, ahora + 20), true, "otro origen sigue pasando");
+    assert.equal(permitirAvisarEmailYaRegistrado(origen, ahora + 60 * 60 * 1000 + 100), true, "pasada la hora vuelve a avisar");
   });
 });
 

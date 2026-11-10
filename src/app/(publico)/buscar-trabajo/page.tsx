@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { SelectorDeVista } from "@/components/app/selector-vista";
@@ -14,12 +13,9 @@ import { hrefOportunidades, RADIO_MAX, urgentesPrimero } from "@/lib/oportunidad
 import { plural, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import type { OfertaListada } from "@/lib/queries/oportunidades";
 import { filtrosConFrase, listarOportunidadesConFrase } from "@/lib/queries/oportunidades-frase";
+import { metadatosDePagina, PAGINAS } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Búsquedas abiertas",
-  description:
-    "Todo lo que las instituciones están buscando ahora mismo: docentes, entrenadores y guardavidas. Mirá sin cuenta; para postularte necesitás una.",
-};
+export const metadata = metadatosDePagina(PAGINAS.buscarTrabajo);
 
 // Consulta la base en cada request: no se prerenderiza (en el build puede no haber DATABASE_URL).
 export const dynamic = "force-dynamic";

@@ -4,7 +4,8 @@ import { BandaDeContacto, BannerDeAyuda } from "@/components/ayuda/banner-de-ayu
 import { BuscadorDeAyuda } from "@/components/ayuda/buscador-de-ayuda";
 import { IndiceDelManual } from "@/components/ayuda/indice-del-manual";
 import { PreguntasFrecuentes } from "@/components/ayuda/preguntas-frecuentes";
-import { esPerfilPublico, MANUALES } from "@/lib/ayuda";
+import { esPerfilPublico, MANUALES, rutaDeManual } from "@/lib/ayuda";
+import { metadatosDeAyuda } from "@/lib/seo";
 
 type Params = Promise<{ perfil: string }>;
 
@@ -12,7 +13,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { perfil } = await params;
   if (!esPerfilPublico(perfil)) return {};
   const manual = MANUALES[perfil];
-  return { title: manual.titulo, description: manual.bajada };
+  // Le habla al público del manual: el de profesionales a docentes y el de instituciones a instituciones (vista previa al compartir).
+  return metadatosDeAyuda({ manual: perfil, titulo: manual.titulo, descripcion: manual.bajada, ruta: rutaDeManual(perfil) });
 }
 
 /** El manual de un perfil (profesionales o instituciones): índice de guías y preguntas frecuentes. El del equipo vive dentro del backoffice. */

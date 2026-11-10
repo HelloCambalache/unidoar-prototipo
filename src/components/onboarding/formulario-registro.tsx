@@ -8,6 +8,7 @@ import { Campo, Casilla, Input } from "@/components/ui/campos";
 import { InputContrasena } from "@/components/ui/input-contrasena";
 import { BotonGoogle } from "@/components/onboarding/boton-google";
 import { AYUDA_DEL_CODIGO_AL_REGISTRARSE, CampoCodigoDeReferido } from "@/components/onboarding/campo-codigo-referido";
+import { AlertaEmailYaRegistrado } from "@/components/onboarding/alerta-email-registrado";
 import { ConfirmarMail } from "@/components/onboarding/confirmar-mail";
 import { AlertaError, SeparadorConTexto, TituloPaso } from "@/components/onboarding/elementos";
 import { PRIMER_PASO_PROTEGIDO, type EstadoAuth } from "@/lib/acceso";
@@ -76,6 +77,7 @@ export function FormularioRegistro({
           )
         }
       />
+      {fallo?.emailRegistrado && <AlertaEmailYaRegistrado email={valores.email ?? ""} conGoogle={conGoogle} senal={estado} />}
       <div className="mb-[22px] flex flex-col gap-3.5">
         {esDocente && (
           // Por separado: el apellido no se adivina, y el nombre queda fijo cuando se verifica el DNI. Como figuran en el DNI.
