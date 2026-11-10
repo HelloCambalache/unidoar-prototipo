@@ -166,6 +166,9 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
               p: "[Cobros](/backoffice/cobros) lista las cuentas con su plan, su estado de pago y el próximo cobro. **La lupa** de arriba busca una institución por su nombre (sin importar tildes, mayúsculas ni el orden de las palabras) y las pestañas cuentan lo que se encontró. Cada cuenta tiene su ficha con las secciones **Medio de pago**, **Búsquedas puntuales**, **Meses bonificados**, **Precio** y **Facturación**.",
             },
             {
+              p: "**Reporte de pagos:** la pestaña **Pagos (reporte)** de [Cobros](/backoffice/cobros/pagos) muestra todo lo que se cobró, de cualquier institución, **con el método de pago de cada uno** (transferencia, efectivo, débito automático, Mercado Pago o tarjeta). Por defecto muestra el mes en curso; podés elegir otro rango, filtrar por método o por institución, ver cuánto entró en total y por cada método, y **descargar el CSV** (con los mismos filtros) para abrirlo en Excel. No cuenta los pagos de las instituciones de ejemplo salvo que lo tildes. Un semestre cuenta una sola vez, con el día en que se pagó, y la búsqueda puntual aparece como un pago más (sin número de comprobante: no es una factura). Un pago anotado sin método figura como «Sin dato».",
+            },
+            {
               lista: [
                 "**Las facturas de cada mes se crean solas** todos los días a las 9:00 (hora de Argentina), para las cuentas que no están suspendidas ni son de ejemplo y que **ya tienen una factura cargada**. La primera factura de cada cuenta la cargás vos con **Cargar factura**.",
                 "**Registrar pago:** en una factura impaga, para anotar que se pagó.",

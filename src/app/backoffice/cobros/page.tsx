@@ -5,6 +5,7 @@ import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { BuscadorLista } from "@/components/backoffice/buscador-lista";
 import { CobroMarcarVencidas } from "@/components/backoffice/cobro-marcar-vencidas";
+import { CobrosSecciones } from "@/components/backoffice/cobros-secciones";
 import { CobroPedidos } from "@/components/backoffice/cobro-pedidos";
 import { InsigniaCobro } from "@/components/backoffice/inst-insignias";
 import { FilaClicable } from "@/components/docente/fila-clicable";
@@ -79,6 +80,7 @@ export default async function CobrosBackoffice({
         bajada="Los pagos se registran a mano: todavía no hay una pasarela conectada. Las facturas de cada mes se crean solas para las cuentas que ya tienen una cargada."
         acciones={<CobroMarcarVencidas cantidad={resumen.sinMarcar} />}
       />
+      <CobrosSecciones activa="instituciones" />
 
       <div className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
         <Metrica valor={pesos(resumen.mrr)} etiqueta="MRR" color="#16214F" nota="Suma mensual de los planes activos" />

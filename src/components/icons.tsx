@@ -18,6 +18,7 @@ import {
   Copy,
   Cpu,
   CreditCard,
+  Download,
   Dumbbell,
   Ellipsis,
   ExternalLink,
@@ -140,6 +141,7 @@ const ICONOS = {
   mapa: MapIcon,
   kanban: SquareKanban,
   tabla: Table,
+  descargar: Download,
   // Categorías de profesionales
   docente: Presentation,
   entrenador: Whistle,
