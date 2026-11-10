@@ -5,17 +5,21 @@ import { CuentaEquipo } from "@/components/institucion/cuenta-equipo";
 import { CuentaAvisos } from "@/components/cuenta/cuenta-avisos";
 import { CuentaContrasena } from "@/components/cuenta/cuenta-contrasena";
 import { CuentaEmail } from "@/components/cuenta/cuenta-email";
+import { CuentaWhatsapp } from "@/components/cuenta/cuenta-whatsapp";
 import { CuentaDatos } from "@/components/institucion/cuenta-datos";
 import { requerirInstitucion } from "@/lib/auth";
 import { infoDeRol } from "@/lib/equipo";
 import { fechaCorta } from "@/lib/fechas";
 import { datosDeCuenta } from "@/lib/queries/cuenta";
+import { avisosPorWhatsappDe } from "@/lib/queries/whatsapp";
+import { whatsappActivo } from "@/lib/whatsapp/config";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
 export default async function MiCuenta() {
   const { usuario, institucion } = await requerirInstitucion();
   const cuenta = await datosDeCuenta(institucion, usuario);
+  const whatsapp = whatsappActivo() ? await avisosPorWhatsappDe(usuario.id) : { activos: false, numeroEnmascarado: null };
 
   return (
     <>
@@ -32,6 +36,9 @@ export default async function MiCuenta() {
         <CuentaEmail email={cuenta.email} />
         <CuentaContrasena tieneContrasena={cuenta.tieneContrasena} />
         <CuentaAvisos rol="institucion" inicial={usuario.avisosPorCorreo} />
+        {whatsappActivo() && (
+          <CuentaWhatsapp rol="institucion" activos={whatsapp.activos} numeroEnmascarado={whatsapp.numeroEnmascarado} telefonoSugerido={cuenta.telefono ?? ""} />
+        )}
         {!cuenta.esDueno && <CuentaEquipo nombreInstitucion={institucion.nombre} />}
         <CuentaBaja
           nombreInstitucion={institucion.nombre}

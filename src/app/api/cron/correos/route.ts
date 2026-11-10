@@ -5,6 +5,8 @@ import { modoCorreo } from "@/lib/correo/config";
 import { cronAutorizado } from "@/lib/cron";
 import { barrerFotosDeDniSueltas, limpiarSubidasDePaso } from "@/lib/queries/archivos";
 import { encolarRecordatoriosDeFactura } from "@/lib/queries/recordatorios-factura";
+import { purgarColaWhatsapp, vaciarColaWhatsapp } from "@/lib/whatsapp/cola";
+import { modoWhatsapp } from "@/lib/whatsapp/config";
 import { resumenDeError } from "@/lib/errores";
 
 // Se evalúa en cada pedido: manda mails, no es algo cacheable.
@@ -29,15 +31,26 @@ export async function GET(request: Request) {
   // Red de seguridad de la promesa de borrar las fotos del DNI dentro de las 24 horas de verificada la identidad.
   const fotosDeDniBarridas = await barrerFotosDeDniSueltas();
 
+  // Los avisos por WhatsApp tienen su propia cola y su propio interruptor: se reintentan y se purgan aunque los mails estén apagados (y al revés). Nunca frenan lo demás.
+  const whatsapp = await (async () => {
+    if (modoWhatsapp() === "apagado") return { modo: "apagado" as const };
+    try {
+      return { modo: modoWhatsapp(), ...(await vaciarColaWhatsapp({ limite: 40 })), purgados: await purgarColaWhatsapp() };
+    } catch (e) {
+      console.error("Falló la cola de WhatsApp", resumenDeError(e));
+      return { modo: modoWhatsapp(), error: true as const };
+    }
+  })();
+
   const modo = modoCorreo();
-  if (modo === "apagado") return NextResponse.json({ modo, subidasBarridas, fotosDeDniBarridas }, { headers: SIN_CACHE });
+  if (modo === "apagado") return NextResponse.json({ modo, whatsapp, subidasBarridas, fotosDeDniBarridas }, { headers: SIN_CACHE });
 
   try {
     const recordatorios = await transaccion((tx) => encolarRecordatoriosDeFactura(tx));
     const cola = await vaciarCola({ limite: 60 });
     const purgados = await purgarCola();
-    console.info("Tarea de mails", { modo, recordatorios, ...cola, purgados, subidasBarridas, fotosDeDniBarridas });
-    return NextResponse.json({ modo, recordatorios, ...cola, purgados, subidasBarridas, fotosDeDniBarridas }, { headers: SIN_CACHE });
+    console.info("Tarea de mails", { modo, recordatorios, ...cola, purgados, whatsapp, subidasBarridas, fotosDeDniBarridas });
+    return NextResponse.json({ modo, recordatorios, ...cola, purgados, whatsapp, subidasBarridas, fotosDeDniBarridas }, { headers: SIN_CACHE });
   } catch (e) {
     console.error("Falló la tarea de mails", resumenDeError(e));
     return NextResponse.json({ error: "Falló la tarea de mails" }, { status: 500, headers: SIN_CACHE });

@@ -21,6 +21,7 @@ import { habilitacionParaBusqueda } from "@/lib/queries/habilitacion";
 import { detalleOferta, horarioDeBusqueda, type DetalleOferta } from "@/lib/queries/oportunidades";
 import { origenSitio } from "@/lib/sitio";
 import { cn } from "@/lib/utils";
+import { whatsappActivo } from "@/lib/whatsapp/config";
 
 export const metadata: Metadata = { title: "Oferta de trabajo" };
 
@@ -272,7 +273,10 @@ export default async function OfertaPage({ params }: { params: Promise<{ id: str
                   {postulacion.etapa === "nuevos" && invitada
                     ? "La institución te invitó y figurás en su lista de postulantes."
                     : postulacion.etapa === "nuevos" && estado.activa
-                      ? "Te avisamos por WhatsApp si te seleccionan."
+                      ? // Era «Te avisamos por WhatsApp…» sin que hubiera ningún envío; ahora se dice lo que es cierto y WhatsApp solo aparece cuando está en marcha (y es una opción de la persona).
+                        whatsappActivo()
+                        ? "Te avisamos en UNIDOAR y por mail si te seleccionan, y por WhatsApp si activaste esos avisos en Mi cuenta."
+                        : "Te avisamos en UNIDOAR y por mail si te seleccionan."
                       : "Mirá el detalle y tus notas en Mis postulaciones."}
                 </p>
                 <BotonLink variante="secundario" bloque className="rounded-full" href={`/docente/postulaciones?abrir=${postulacion.id}`}>

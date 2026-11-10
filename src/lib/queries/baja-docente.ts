@@ -18,6 +18,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { confirmaElEmail, enLotes, impedimentoDeBaja, nombreParaBuscar, patronQueContiene } from "@/lib/baja-cuenta";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { borrarDatosDeWhatsappDe } from "@/lib/queries/whatsapp";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { BUCKETS } from "@/lib/subidas";
 
@@ -123,6 +124,8 @@ export async function borrarDatosDelProfesional(
       ),
     )
     .returning({ id: colaCorreos.id });
+  // Su consentimiento y sus avisos por WhatsApp (el teléfono es un dato personal).
+  await borrarDatosDeWhatsappDe(tx, [cuenta.id]);
 
   const mensajes = await tx
     .delete(mensajesContacto)

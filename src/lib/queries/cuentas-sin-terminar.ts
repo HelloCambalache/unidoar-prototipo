@@ -8,6 +8,7 @@ import { confirmaElEmail } from "@/lib/baja-cuenta";
 import { HORAS_MINIMAS_SIN_TERMINAR, impedimentoDeBorrarCuentaSinTerminar } from "@/lib/cuentas-sin-terminar";
 import type { EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { borrarDatosDelProfesional } from "@/lib/queries/baja-docente";
+import { borrarDatosDeWhatsappDe } from "@/lib/queries/whatsapp";
 
 /*
  * Cuentas que nunca terminaron el alta: las que eligieron un rol y no siguieron (o empezaron el perfil y lo dejaron) y las que
@@ -163,6 +164,7 @@ export async function borrarDatosDeCuentaSinTerminar(
     .delete(colaCorreos)
     .where(or(eq(colaCorreos.usuarioId, cuentaId), sql`lower(${colaCorreos.para}) = ${minusculas}`, sql`lower(${colaCorreos.datos}->>'email') = ${minusculas}`));
   await tx.delete(mensajesContacto).where(sql`lower(${mensajesContacto.email}) = ${minusculas}`);
+  await borrarDatosDeWhatsappDe(tx, [cuentaId]);
   // Lo anotado sobre la cuenta (el cambio de email guarda los dos emails) pierde el detalle; queda qué, cuándo y quién.
   await tx
     .update(auditoria)

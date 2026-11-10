@@ -26,6 +26,7 @@ import { borrarArchivos } from "@/lib/queries/archivos";
 import { habilitacionParaBusqueda } from "@/lib/queries/habilitacion";
 import { usuariosConAcceso } from "@/lib/queries/postulaciones";
 import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
+import { whatsappDePostulantes, whatsappDeRespuestaDeEntrevista } from "@/lib/whatsapp/eventos";
 
 /** Pantallas del docente que listan o cuentan postulaciones / ofertas. */
 function revalidarPostulaciones(busquedaId?: string) {
@@ -137,6 +138,7 @@ export async function postular(
         })),
       );
       await correoDePostulantes(tx, { usuarioIds: destinatarios, busquedaId: busqueda.id, puesto: busqueda.puesto, rapida: busqueda.rapida });
+      await whatsappDePostulantes(tx, { usuarioIds: destinatarios, busquedaId: busqueda.id, puesto: busqueda.puesto, rapida: busqueda.rapida });
     }
     return nueva;
   });
@@ -395,6 +397,15 @@ export async function responderEntrevista(
         cuando: vigente.entrevistaEn!,
         cuandoTexto: diaHoraLegible(vigente.entrevistaEn!),
         mensaje: datos.data.mensaje ?? null,
+      });
+      await whatsappDeRespuestaDeEntrevista(tx, {
+        usuarioIds: destinatarios,
+        postulacionId,
+        busquedaId: busqueda.id,
+        puesto: busqueda.puesto,
+        profesional: nombreCompleto(docente),
+        respuesta: datos.data.respuesta,
+        cuando: vigente.entrevistaEn!,
       });
     }
     return ok();

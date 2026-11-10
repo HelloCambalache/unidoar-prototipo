@@ -631,6 +631,68 @@ export const colaCorreos = pgTable(
 );
 export type CorreoEnCola = typeof colaCorreos.$inferSelect;
 
+/**
+ * Consentimiento de una cuenta para recibir avisos por WhatsApp (src/lib/whatsapp/consentimiento.ts). Una fila por cuenta, atada a UN número: `telefono` en
+ * formato internacional sin el «+» («5491154735876») y `clave` con los últimos 10 dígitos, que es lo que se compara con el número que escribe por WhatsApp.
+ * `baja_en` marca que lo retiró (desde Mi cuenta o respondiendo BAJA): sin consentimiento activo no sale ningún aviso. La baja de la cuenta borra la fila.
+ */
+export const consentimientosWhatsapp = pgTable(
+  "consentimientos_whatsapp",
+  {
+    usuarioId: uuid("usuario_id")
+      .primaryKey()
+      .references(() => usuarios.id, { onDelete: "cascade" }),
+    telefono: text("telefono").notNull(),
+    clave: text("clave").notNull(),
+    otorgadoEn: timestamp("otorgado_en", { withTimezone: true }).notNull().defaultNow(),
+    bajaEn: timestamp("baja_en", { withTimezone: true }),
+    /** cuenta | alta */
+    origen: text("origen").notNull().default("cuenta"),
+    /** Versión del texto de la casilla que aceptó (`VERSION_DEL_CONSENTIMIENTO`). */
+    version: text("version").notNull(),
+  },
+  (t) => [index("consentimientos_whatsapp_clave_idx").on(t.clave)],
+);
+export type ConsentimientoWhatsapp = typeof consentimientosWhatsapp.$inferSelect;
+
+/**
+ * Cola de avisos por WhatsApp (patrón "outbox", igual que `cola_correos`). Cada aviso se anota DENTRO de la transacción que guarda el cambio que lo origina
+ * y se manda después de confirmada (src/lib/whatsapp/cola.ts). `para` es el número en formato internacional sin el «+»: es un dato personal, así que la baja de
+ * la cuenta borra estas filas. `tipo` es «plantilla» (con `datos` = {variables, ruta}) o «texto» (con `datos` = {texto}: la respuesta automática a quien escribe).
+ */
+export const colaWhatsapp = pgTable(
+  "cola_whatsapp",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    creadoEn: timestamp("creado_en", { withTimezone: true }).notNull().defaultNow(),
+    para: text("para").notNull(),
+    usuarioId: uuid("usuario_id").references(() => usuarios.id, { onDelete: "set null" }),
+    /** plantilla | texto */
+    tipo: text("tipo").notNull().default("plantilla"),
+    /** Nombre de la plantilla en Meta (src/lib/whatsapp/plantillas.ts); «texto» para una respuesta libre. */
+    plantilla: text("plantilla").notNull(),
+    datos: jsonb("datos").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    /** Evita repetir el mismo aviso: no se anotan dos filas con la misma clave para el mismo número. */
+    clave: text("clave"),
+    /** pendiente | procesando | enviado | entregado | leido | omitido | fallido */
+    estado: text("estado").notNull().default("pendiente"),
+    intentos: integer("intentos").notNull().default(0),
+    reclamadoEn: timestamp("reclamado_en", { withTimezone: true }),
+    enviadoEn: timestamp("enviado_en", { withTimezone: true }),
+    /** Por qué se omitió o falló (con el código de Meta si lo dio). */
+    motivo: text("motivo"),
+    /** Id del mensaje en Meta (wamid…), o «consola» cuando se probó sin enviar. */
+    wamid: text("wamid"),
+  },
+  (t) => [
+    index("cola_whatsapp_estado_idx").on(t.estado, t.creadoEn),
+    uniqueIndex("cola_whatsapp_clave_uq").on(t.clave, t.para),
+    index("cola_whatsapp_wamid_idx").on(t.wamid),
+    index("cola_whatsapp_para_idx").on(t.para, t.enviadoEn),
+  ],
+);
+export type AvisoDeWhatsappEnCola = typeof colaWhatsapp.$inferSelect;
+
 /* ───────────────────────────── Paquete A1 · Sitio público ───────────────────────────── */
 
 /** Mensajes del formulario de /contacto (los lee el equipo desde el backoffice o la base). */

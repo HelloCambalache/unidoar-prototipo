@@ -33,6 +33,7 @@ import { almacenamientoConfigurado } from "@/lib/almacenamiento";
 import { confirmaElTexto, cuentasDelEquipoParaBorrar, enLotes, impedimentoDeBajaDeInstitucion, patronQueContiene, slugDeBaja } from "@/lib/baja-cuenta";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { borrarDatosDeWhatsappDe } from "@/lib/queries/whatsapp";
 
 /*
  * Dar de baja a una institución. A diferencia de la baja de un profesional (src/lib/queries/baja-docente.ts, que borra todo), acá
@@ -220,6 +221,8 @@ export async function borrarDatosDeLaInstitucion(
       ),
     )
     .returning({ id: colaCorreos.id });
+  // El consentimiento y los avisos por WhatsApp de las cuentas del equipo que se borran (el teléfono es un dato personal).
+  await borrarDatosDeWhatsappDe(tx, cuentasABorrar);
 
   const mensajes = emails.length
     ? await tx.delete(mensajesContacto).where(inArray(sql`lower(${mensajesContacto.email})`, emails)).returning({ id: mensajesContacto.id })

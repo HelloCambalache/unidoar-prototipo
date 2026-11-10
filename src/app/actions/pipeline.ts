@@ -18,6 +18,7 @@ import { requerirInstitucion } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
 import { diaHoraLegible } from "@/lib/calendario";
 import { correoDeContratacion, correoDeEntrevista, correoDeEntrevistaCancelada, correoDeEtapa } from "@/lib/correo/eventos";
+import { whatsappDeEntrevista, whatsappDeEtapa } from "@/lib/whatsapp/eventos";
 import { fechaDeInput, parsearFechaHoraAR } from "@/lib/fechas";
 import { ETAPAS_MOVIBLES, faltaExamenPreocupacional } from "@/lib/postulaciones";
 import {
@@ -86,6 +87,12 @@ export async function moverPostulacion(postulacionId: string, etapa: EtapaPostul
       });
     }
     await correoDeEtapa(tx, destino.data, {
+      usuarioId: fila.docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: fila.busqueda.puesto,
+      postulacionId: fila.postulacion.id,
+    });
+    await whatsappDeEtapa(tx, destino.data, {
       usuarioId: fila.docente.usuarioId,
       institucion: institucion.nombre,
       puesto: fila.busqueda.puesto,
@@ -383,6 +390,14 @@ export async function agendarEntrevista(
       cuando: instante,
       cuandoTexto: diaHoraLegible(instante),
       titulo: datos.data.titulo ?? null,
+    });
+    await whatsappDeEntrevista(tx, {
+      usuarioId: docente.usuarioId,
+      institucion: institucion.nombre,
+      puesto: busqueda.puesto,
+      postulacionId: postulacion.id,
+      cuando: instante,
+      cuandoTexto: diaHoraLegible(instante),
     });
     return ok();
   });
