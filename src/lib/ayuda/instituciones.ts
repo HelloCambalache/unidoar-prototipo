@@ -273,7 +273,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               p: "**Comprobante de pago por mail:** cada vez que se registra un pago —lo cargue el equipo o lo cobre el débito automático— el dueño y los administradores reciben un mail con el **comprobante** (número, plan, período, monto, medio de pago y fecha) y un botón para abrirlo en la app, donde lo podés imprimir o guardar como PDF. También lo encontrás cuando quieras en las facturas de [Plan](/institucion/plan).",
             },
             {
-              p: "Para pedir otro plan usá **Cambiar de plan**: el pedido lo confirma el equipo. Solo se ofrecen los planes que corresponden a tu institución.",
+              p: "Para pedir otro plan usá **Cambiar de plan**: el pedido lo confirma el equipo. Solo se ofrecen los planes que corresponden a tu institución. Cambiar de plan toca lo que se factura, así que cada pedido lo revisa el equipo antes de aplicarse: te avisamos por mail cuando lo aprobemos o lo rechacemos y, si lo aprobamos, el cambio rige desde ese momento. Mientras no lo hayamos atendido, podés cancelar el pedido desde la misma pantalla.",
             },
             {
               p: "**Tu plan se activa con el primer pago:** una cuenta nueva con abono (mensual o semestral) puede completar su perfil y recorrer la plataforma, pero **no puede publicar búsquedas, invitar profesionales ni publicar cursos** hasta que se acredite su primer pago. Pagá con Mercado Pago desde [Plan y facturación](/institucion/plan) (o, si tu institución está habilitada para transferencia o efectivo, escribinos por [Contacto](/contacto) o por WhatsApp y lo coordinamos): al acreditarse, el plan queda activo y se habilita todo sin que tengas que hacer nada.",
