@@ -161,7 +161,8 @@ export type DecisionDeActivacion =
  *    con cobro inmediato: son las que prueban, y el "Posible doble cobro" que sale ahí no importa.
  * Si el mes todavía no está pago, se activa ya (`ahora`): el primer cobro sale enseguida y paga la factura de este mes.
  * Con un semestre pagado al contado (`pagoHasta`, el último mes cubierto, más allá del mes en curso) no se difiere el primer cobro (seguiría
- * cobrando meses ya pagos): una institución real espera hasta el mes siguiente al último cubierto.
+ * cobrando meses ya pagos): una institución real espera hasta el mes siguiente al último cubierto. Lo mismo si el semestre EMPIEZA el mes que
+ * viene (el mes en curso sin pagar, pero `pagoHasta` más adelante): activar ahora cobraría este mes y después todos los que ya están pagos.
  */
 export function decidirActivacion(e: {
   hoy: string;
@@ -171,10 +172,11 @@ export function decidirActivacion(e: {
   esDemo: boolean;
   pagoHasta?: string | null;
 }): DecisionDeActivacion {
-  if (!e.mesActualPago) return { accion: "ahora" };
   const mesEnCurso = e.hoy.slice(0, 7);
+  // `pagoHasta` puede pasar de este mes aunque el mes en curso todavía no esté pago: un semestre que empieza el mes que viene.
   const cubiertoMasAlla = !!e.pagoHasta && e.pagoHasta > mesEnCurso;
-  if (e.diferirActivo && !cubiertoMasAlla) {
+  if (!e.mesActualPago && !cubiertoMasAlla) return { accion: "ahora" };
+  if (e.diferirActivo && e.mesActualPago && !cubiertoMasAlla) {
     const diferido = primerCobroDiferido({ hoy: e.hoy, diaDeCobro: e.diaDeCobro, mesActualPago: true });
     if (diferido) return { accion: "con-prueba", ...diferido };
   }

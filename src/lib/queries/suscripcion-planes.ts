@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, gt, gte, lte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { facturas, planesMp, type PlanMp } from "@/db/schema";
-import { pagoHastaDeMes, periodoActual, sumarMeses } from "@/lib/cobros";
+import { pagoHastaConAdelantos, pagoHastaDeMes, periodoActual, sumarMeses } from "@/lib/cobros";
 import { cuerpoDePlan, puedeReutilizarPlan } from "@/lib/debito-automatico";
 import { crearPlanMp, ErrorDeMercadoPago, obtenerPlanMp, type PlanDeMercadoPago } from "@/lib/mercadopago-cliente";
 import { mesBonificado } from "@/lib/queries/bonificaciones";
@@ -43,14 +43,21 @@ export async function planesDe(institucionId: string, limite = 5): Promise<PlanM
  */
 export async function estadoDePago(institucionId: string, ejecutor: Lector = getDb()): Promise<{ mesActualPago: boolean; pagoHasta: string | null }> {
   const actual = periodoActual();
+  // Hasta dos meses adelante: un semestre se puede registrar antes de que empiece (`elegirInicioDeSemestre`) y ese también hay que verlo.
   const filas = await ejecutor
     .select({ periodo: facturas.periodo, estado: facturas.estado, mesesCubiertos: facturas.mesesCubiertos })
     .from(facturas)
-    .where(and(eq(facturas.institucionId, institucionId), gte(facturas.periodo, sumarMeses(actual, -11)), lte(facturas.periodo, actual)));
-  const pagoHasta = pagoHastaDeMes(actual, filas);
+    .where(and(eq(facturas.institucionId, institucionId), gte(facturas.periodo, sumarMeses(actual, -11)), lte(facturas.periodo, sumarMeses(actual, 2))));
+  const pagoHastaDelMes = pagoHastaDeMes(actual, filas); // ignora lo que empieza después de este mes
+  // Lo pagado por adelantado (un semestre que empieza el mes que viene) también cuenta como cubierto: activar el débito cobraría esos meses.
+  const conAdelantos = pagoHastaConAdelantos(actual, filas);
+  const pagoHasta = conAdelantos && (!pagoHastaDelMes || conAdelantos > pagoHastaDelMes) ? conAdelantos : pagoHastaDelMes;
   // Un mes bonificado por recomendar cuenta como ya pago: activar el débito ahora lo cobraría para tener que devolverlo.
-  if (pagoHasta === null && (await mesBonificado(ejecutor, institucionId, actual))) return { mesActualPago: true, pagoHasta: actual };
-  return { mesActualPago: pagoHasta !== null, pagoHasta };
+  if (pagoHastaDelMes === null && (await mesBonificado(ejecutor, institucionId, actual))) {
+    return { mesActualPago: true, pagoHasta: pagoHasta && pagoHasta > actual ? pagoHasta : actual };
+  }
+  // `mesActualPago` habla solo del mes en curso; `pagoHasta` llega hasta donde haya algo pago, también por adelantado.
+  return { mesActualPago: pagoHastaDelMes !== null, pagoHasta };
 }
 
 export type DatosParaSuscribirse = {

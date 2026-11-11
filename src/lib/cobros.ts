@@ -128,6 +128,36 @@ export function pagoHastaDeMes(periodo: string, facturas: readonly FacturaConCob
   return hasta;
 }
 
+/**
+ * Hasta qué mes llega lo que YA está pago desde `periodo`, contando también lo pagado por adelantado: un semestre que EMPIEZA después de
+ * `periodo` (se puede registrar hasta dos meses antes de que empiece). `pagoHastaDeMes` no lo ve a propósito (mira solo lo que cubre ese mes),
+ * así que antes de activar un débito hay que mirar esto: Mercado Pago cobra todos los meses y no distingue los que ya están pagos.
+ * Null si no hay nada pago de `periodo` en adelante.
+ */
+export function pagoHastaConAdelantos(periodo: string, facturas: readonly FacturaConCobertura[]): string | null {
+  let hasta: string | null = null;
+  for (const f of facturas) {
+    if (f.estado !== "pagada") continue;
+    const fin = ultimoMesCubierto(f);
+    if (fin >= periodo && (!hasta || fin > hasta)) hasta = fin;
+  }
+  return hasta;
+}
+
+/**
+ * El semestre (u otra factura paga de varios meses) que cubre `periodo` SIN ser la factura de ese mes: un cobro del débito en ese mes sería
+ * un cobro doble. Una factura mensual del propio mes no cuenta: de esa se ocupa quien mira la factura del período. Null si ninguno lo cubre.
+ */
+export function semestreQueCubreElMes<T extends FacturaConCobertura>(periodo: string, facturas: readonly T[]): T | null {
+  let elegida: T | null = null;
+  for (const f of facturas) {
+    if (f.estado !== "pagada" || (f.mesesCubiertos ?? 1) <= 1 || f.periodo === periodo || f.periodo > periodo) continue;
+    if (ultimoMesCubierto(f) < periodo) continue;
+    if (!elegida || ultimoMesCubierto(f) > ultimoMesCubierto(elegida)) elegida = f;
+  }
+  return elegida;
+}
+
 /** "Septiembre 2026" para una factura mensual; "6 meses (octubre 2026 a marzo 2027)" para un semestre. */
 export function etiquetaDeCobertura(periodo: string, meses?: number | null) {
   const n = Math.max(1, meses ?? 1);

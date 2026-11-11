@@ -74,6 +74,15 @@ describe("qué hacer al activar el débito", () => {
     assert.deepEqual(decidirActivacion({ ...semestre, esDemo: true }), { accion: "ahora" });
   });
 
+  it("con un semestre que EMPIEZA el mes que viene (este mes sin pagar) tampoco se activa: cobraría todos los meses ya pagos", () => {
+    const porAdelantado = { ...base, mesActualPago: false, pagoHasta: "2027-03" };
+    assert.deepEqual(decidirActivacion(porAdelantado), { accion: "esperar", desde: "2027-04-01", hasta: "2027-03" });
+    // Ni el interruptor del período de prueba lo salva.
+    assert.deepEqual(decidirActivacion({ ...porAdelantado, diferirActivo: true }), { accion: "esperar", desde: "2027-04-01", hasta: "2027-03" });
+    // Las de ejemplo activan igual (son las que prueban).
+    assert.deepEqual(decidirActivacion({ ...porAdelantado, esDemo: true }), { accion: "ahora" });
+  });
+
   it("si lo único pago es el mes en curso (pagoHasta no pasa de este mes), vale la regla de siempre", () => {
     assert.deepEqual(decidirActivacion({ ...base, pagoHasta: "2026-10" }), { accion: "esperar", desde: "2026-11-01" });
     assert.deepEqual(decidirActivacion({ ...base, pagoHasta: "2026-10", diferirActivo: true }), { accion: "con-prueba", dias: 31, fecha: "2026-11-20" });

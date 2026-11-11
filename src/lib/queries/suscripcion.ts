@@ -1,9 +1,9 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, gte, lte } from "drizzle-orm";
 import { getDb, transaccion, type Tx } from "@/db";
 import { cobrosMp, facturas, instituciones, suscripcionesMp, type SuscripcionMp } from "@/db/schema";
 import { registrarAuditoria } from "@/lib/auditoria";
-import { etiquetaPeriodo, fechaCobroDelPeriodo, hoyAR, periodoActual } from "@/lib/cobros";
+import { etiquetaPeriodo, fechaCobroDelPeriodo, hoyAR, periodoActual, semestreQueCubreElMes, sumarMeses } from "@/lib/cobros";
 import { correoDeCobroRechazado, correoDePagoRegistrado } from "@/lib/correo/eventos";
 import {
   accionSobreLaFactura,
@@ -265,7 +265,24 @@ async function aplicarCobroEnLaBase(cobro: CobroLeido): Promise<ResultadoDeCobro
     // Aprobado: la factura del mes. Si el cron la creó a la vez, el índice único (institución, período) nos manda a la rama de "marcar".
     const buscarFactura = async () =>
       (await tx.select().from(facturas).where(and(eq(facturas.institucionId, inst.id), eq(facturas.periodo, periodo))).limit(1).for("update"))[0];
-    let factura = await buscarFactura();
+    let factura: Awaited<ReturnType<typeof buscarFactura>> | undefined = await buscarFactura();
+    if (!factura) {
+      // Un mes que cubre un semestre pagado por adelantado no tiene factura propia: el débito de ese mes es un cobro doble, no un mes nuevo.
+      const semestres = await tx
+        .select()
+        .from(facturas)
+        .where(
+          and(
+            eq(facturas.institucionId, inst.id),
+            eq(facturas.estado, "pagada"),
+            gt(facturas.mesesCubiertos, 1),
+            lte(facturas.periodo, periodo),
+            gte(facturas.periodo, sumarMeses(periodo, -11)),
+          ),
+        )
+        .for("update");
+      factura = semestreQueCubreElMes(periodo, semestres) ?? undefined;
+    }
     let accion = accionSobreLaFactura(factura);
     const pagadaEn = cobro.debitoEn && cobro.debitoEn !== hoyAR() ? new Date(`${cobro.debitoEn}T12:00:00Z`) : new Date();
 

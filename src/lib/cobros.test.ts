@@ -10,10 +10,12 @@ import {
   etiquetaPeriodo,
   fechaCobroDelPeriodo,
   pagoEfectivoSchema,
+  pagoHastaConAdelantos,
   pagoHastaDeMes,
   pagoPuntualSchema,
   pagoSchema,
   planificarFacturas,
+  semestreQueCubreElMes,
   semestreSchema,
   situacionDelMes,
   sumarMeses,
@@ -159,6 +161,27 @@ describe("semestre al contado (una factura paga que cubre varios meses)", () => 
     assert.equal(pagoHastaDeMes("2026-09", [semestre]), null, "ni uno anterior");
     assert.equal(pagoHastaDeMes("2026-12", [{ ...semestre, estado: "pendiente" }]), null, "una impaga no cubre nada");
     assert.equal(pagoHastaDeMes("2026-10", [{ periodo: "2026-10", estado: "pagada" }]), "2026-10", "una mensual paga cubre su mes");
+  });
+
+  it("lo pagado por adelantado se ve desde antes de que empiece, pero `pagoHastaDeMes` sigue mirando solo el mes", () => {
+    const futuro = { periodo: "2026-12", estado: "pagada", mesesCubiertos: 6 }; // diciembre a mayo
+    assert.equal(pagoHastaDeMes("2026-11", [futuro]), null, "el mes en curso no está pago");
+    assert.equal(pagoHastaConAdelantos("2026-11", [futuro]), "2027-05", "pero hay seis meses pagos por delante");
+    assert.equal(pagoHastaConAdelantos("2026-11", [{ ...futuro, estado: "pendiente" }]), null, "una impaga no cubre nada");
+    assert.equal(pagoHastaConAdelantos("2026-11", []), null);
+    assert.equal(pagoHastaConAdelantos("2026-11", [{ periodo: "2026-11", estado: "pagada" }, futuro]), "2027-05", "gana el que llega más lejos");
+    assert.equal(pagoHastaConAdelantos("2027-06", [futuro]), null, "uno que ya terminó no cuenta");
+  });
+
+  it("un mes dentro de un semestre pago no tiene factura propia: se reconoce el semestre que lo cubre", () => {
+    const semestreViejo = { periodo: "2026-10", estado: "pagada", mesesCubiertos: 6 }; // octubre a marzo
+    assert.equal(semestreQueCubreElMes("2026-12", [semestreViejo]), semestreViejo);
+    assert.equal(semestreQueCubreElMes("2027-03", [semestreViejo]), semestreViejo, "el último mes cubierto también");
+    assert.equal(semestreQueCubreElMes("2027-04", [semestreViejo]), null, "el siguiente ya no");
+    assert.equal(semestreQueCubreElMes("2026-10", [semestreViejo]), null, "el mes en que empieza tiene la factura del semestre: lo resuelve quien mira esa factura");
+    assert.equal(semestreQueCubreElMes("2026-12", [{ ...semestreViejo, estado: "pendiente" }]), null, "una impaga no cubre");
+    assert.equal(semestreQueCubreElMes("2026-12", [{ periodo: "2026-11", estado: "pagada" }]), null, "una mensual de otro mes no cubre este");
+    assert.equal(semestreQueCubreElMes("2026-12", [semestreViejo, { periodo: "2026-11", estado: "pagada", mesesCubiertos: 6 }])?.periodo, "2026-11", "con dos, el que llega más lejos");
   });
 
   it("con varias facturas que cubren el mes, vale la que llega más lejos", () => {
