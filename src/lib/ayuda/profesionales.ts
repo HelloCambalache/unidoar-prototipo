@@ -24,11 +24,11 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             {
               pasos: [
                 "**Tu cuenta**: en [Crear cuenta](/registro) elegí **Soy profesional**, escribí tu nombre, apellido, email y una contraseña, y aceptá los [términos y condiciones](/terminos). Con Google solo elegís tu cuenta de Google. Con el email, te mandamos un mail para confirmar la cuenta: abrilo y tocá el botón (si no llega, revisá la carpeta de spam).",
-                "**Qué sos**: elegí si sos docente, entrenador/a o guardavidas, las asignaturas o disciplinas que das y si ya te recibiste o todavía estás estudiando.",
+                "**Qué sos**: elegí si sos docente, entrenador/a o guardavidas (podés elegir más de una), las asignaturas o disciplinas que das y si ya te recibiste o todavía estás estudiando.",
                 "**Tu perfil**: fecha de nacimiento, DNI, teléfono o WhatsApp, domicilio y las zonas donde podés trabajar.",
                 "**Tu CV**: subilo una sola vez; queda guardado para que te postules en dos toques.",
                 "**Niveles y horarios**: con qué niveles trabajás y en qué días y franjas podés.",
-                "**Documentación**: las fotos de tu DNI (frente y dorso) y tu título o, si todavía estudiás, la constancia de alumno regular. El certificado de buena conducta es optativo y lo cargás después, desde [Mi perfil](/docente/perfil).",
+                "**Documentación**: las fotos de tu DNI (frente y dorso) y tu título (si sos de más de una categoría, uno por cada una, cada uno en su archivo) o, si todavía estudiás, la constancia de alumno regular. El certificado de buena conducta es optativo y lo cargás después, desde [Mi perfil](/docente/perfil).",
               ],
             },
             { nota: "Podés usar **Guardar y salir** en cualquier paso y seguir después: al ingresar te llevamos al paso donde quedaste." },
@@ -53,13 +53,13 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
               ],
             },
             {
-              p: "**Qué te pedimos:** el frente y el dorso del DNI; el título (o, si todavía estudiás, la constancia de alumno regular y el porcentaje de materias aprobadas); y, si querés, el certificado de buena conducta (es optativo y se carga desde Mi perfil).",
+              p: "**Qué te pedimos:** el frente y el dorso del DNI; el título (podés subir hasta cinco, cada uno por separado: por ejemplo, el de docente y la libreta de guardavidas) o, si todavía estudiás, la constancia de alumno regular y el porcentaje de materias aprobadas; y, si querés, el certificado de buena conducta (es optativo y se carga desde Mi perfil).",
             },
             {
               nota: "**Tus fotos del DNI no quedan guardadas:** las eliminamos dentro de las 24 horas de que verificamos tu perfil. El plazo empieza a correr con la verificación, no cuando las subís: hasta entonces las conservamos para poder revisarlas. Solo conservamos el número de DNI como constancia. El título, el certificado de buena conducta y la constancia de alumno regular sí quedan guardados, y solo los ve el equipo.",
             },
             {
-              p: "Una vez verificado, tu nombre y apellido quedan fijos (para cambiarlos escribinos por [Contacto](/contacto)). Si te recibís después de verificarte, subí tu título desde Mi perfil y el equipo lo valida.",
+              p: "Una vez verificado, tu nombre y apellido quedan fijos (para cambiarlos escribinos por [Contacto](/contacto)). Si te recibís después de verificarte, o querés sumar otro título (por ejemplo, de otra categoría), subilo desde Mi perfil: el equipo lo valida y vuelve a revisar tus títulos.",
             },
           ],
         },
@@ -73,8 +73,8 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             },
             {
               lista: [
-                "**Asignaturas o disciplinas:** sumá todas las que dés. Cuantas más cargues, en más búsquedas aparecés.",
-                "**Zonas y radio:** las zonas donde trabajás definen qué búsquedas ves y a cuántos kilómetros están. Podés elegir hasta qué distancia querés ver ofertas, o ver toda la zona.",
+                "**Asignaturas o disciplinas:** sumá todas las que dés. Cuantas más cargues, en más búsquedas aparecés. Si la tuya no está en la lista, elegí **Otra** y escribila.",
+                "**Zonas y radio:** las zonas donde trabajás definen qué búsquedas ves y a cuántos kilómetros están. Podés escribir cualquier localidad o partido del país (por ejemplo, La Plata) y elegir hasta qué distancia querés ver ofertas, o ver toda la zona.",
                 "**Niveles y horarios:** se usan para ordenarte entre los profesionales que una institución ve.",
                 "**CV:** lo ve una institución solo si te postulaste a una de sus búsquedas o se lo enviaste vos.",
               ],
@@ -100,7 +100,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
             {
               lista: [
                 "**Buscador único:** escribí un nombre de institución o una materia, o contá qué buscás con tus palabras (por ejemplo «suplencia de inglés en primaria, de mañana»). Entendemos materias, niveles, turnos y tipo de búsqueda, y te mostramos qué entendimos. Lo que no es un filtro (por ejemplo el nombre de una institución, como en «inglés San Andrés») se busca igual en el puesto, la materia y la institución. Si con todo junto no hay resultados, te mostramos lo que dan los filtros solos y te avisamos.",
-                "**Tu categoría:** si no elegís otra, te mostramos las búsquedas de tu categoría (por ejemplo, Docentes), con las de tu materia primero y marcadas como **Tu materia**. Para ver las de las demás, elegí **Todas** en el filtro de categoría o tocá «Ver las de todas las categorías». Si querés ver solo las que coinciden con las asignaturas de tu perfil, prendé **Solo mi materia**.",
+                "**Tu categoría:** si no elegís otra, te mostramos las búsquedas de tu categoría (por ejemplo, Docentes; si sos de más de una, las de todas), con las de tu materia primero y marcadas como **Tu materia**. Para ver las de las demás, elegí **Todas** en el filtro de categoría o tocá «Ver las de todas las categorías». Si querés ver solo las que coinciden con las asignaturas de tu perfil, prendé **Solo mi materia**.",
                 "**Filtros:** categoría, nivel, turno, tipo (titular, suplencia, temporada, freelance), instituciones verificadas y favoritas, y a cuántos kilómetros de tu zona.",
                 "**Lista o mapa:** cambiás la vista con el selector. En el mapa cada pin es una búsqueda y se ve el radio que elegiste.",
                 "**Favoritas:** tocá la estrella de una búsqueda para guardarla y verla después con el filtro **Favoritos**.",
@@ -148,7 +148,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
               p: "Si cambiaste de idea, abrí la postulación en [Postulaciones](/docente/postulaciones) y tocá **Retirar postulación**: avisamos a la institución y se borran tus notas de esa búsqueda. Una postulación en la que ya te contrataron no se puede retirar.",
             },
             {
-              p: "**Solo podés postularte a las búsquedas de tu categoría y de tus materias o áreas.** Si una búsqueda es de otra materia, en lugar de **Postularme** ves el motivo y un botón para revisar tu perfil: por ejemplo, quien da Literatura puede postularse a Historia (la misma área) pero no a Educación Física. Si también dictás esa materia, sumala en [Mi perfil](/docente/perfil). Si una institución te **invita**, siempre podés aceptar la invitación.",
+              p: "**Solo podés postularte a las búsquedas de tu categoría (o de cualquiera de tus categorías) y de tus materias o áreas.** Si una búsqueda es de otra materia, en lugar de **Postularme** ves el motivo y un botón para revisar tu perfil: por ejemplo, quien da Literatura puede postularse a Historia (la misma área) pero no a Educación Física. Si también dictás esa materia, sumala en [Mi perfil](/docente/perfil). Si una institución te **invita**, siempre podés aceptar la invitación.",
             },
             { nota: "No podés postularte con la verificación rechazada, ni a una búsqueda que ya se cerró." },
           ],

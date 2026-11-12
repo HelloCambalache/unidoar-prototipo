@@ -4,6 +4,7 @@ import { MarcoOnboarding } from "@/components/onboarding/marco-onboarding";
 import { PasoCategoria } from "@/components/onboarding/paso-categoria";
 import { docenteDeUsuario, usuarioParaAlta } from "@/lib/alta";
 import { RUTA_INICIO } from "@/lib/catalogo";
+import { categoriasDe } from "@/lib/categorias-docente";
 import { ID_FORMULARIO_ONBOARDING, PASOS_DOCENTE } from "@/lib/onboarding";
 import { catalogoAsignaturas, detalleDeDocente } from "@/lib/queries/onboarding";
 
@@ -26,7 +27,7 @@ export default async function PasoDocenteCategoria() {
         catalogo={catalogo}
         pedirTerminos={!usuario.terminosAceptadosEn}
         inicial={{
-          categoria: docente?.categoria ?? "educador",
+          categorias: docente ? categoriasDe(docente) : ["educador"],
           asignaturas: docente?.asignaturas ?? [],
           estudio: detalle?.situacionEstudio === "estudiante" ? "estudiante" : "recibido",
           porcentaje: detalle?.porcentajeMaterias != null ? String(detalle.porcentajeMaterias) : "",

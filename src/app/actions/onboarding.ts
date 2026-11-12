@@ -25,7 +25,6 @@ import { registrarAceptacionDeTerminos } from "@/lib/queries/terminos";
 import { RUTA_INICIO, TIPOS_CON_CUE, institucionDatosSchema, institucionPerfilSchema } from "@/lib/catalogo";
 import { valorElegido } from "@/lib/otro";
 import {
-  CATEGORIA_ALTA,
   OBLIGATORIOS_DATOS_DOCENTE,
   categoriaDocenteSchema,
   datosDocenteSchema,
@@ -41,7 +40,11 @@ import {
 import { leerPorcentaje } from "@/lib/estudiantes";
 import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
-import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion } from "@/lib/queries/onboarding";
+import { validarAsignaturas } from "@/lib/asignaturas";
+import { decidirCategorias, etiquetaDeCategorias } from "@/lib/categorias-docente";
+import { CLAVES_DE_TITULO, compactarTitulos } from "@/lib/titulos";
+import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion, zonasConocidas } from "@/lib/queries/onboarding";
+import { ubicarPrimeraZona } from "@/lib/queries/ubicacion-zonas";
 import { guardarSedePrincipal } from "@/lib/queries/sedes";
 import { ubicarPorDireccion } from "@/lib/queries/ubicacion";
 import { ubicacionDeInstitucion } from "@/lib/ubicacion";
@@ -387,19 +390,29 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
   const avisoDeTerminos: Record<string, string> = faltanTerminos ? { aceptaTerminos: "Tenés que aceptar los términos y condiciones" } : {};
 
   const r = parsear(categoriaDocenteSchema, {
-    categoria: formData.get("categoria") ?? "",
+    categorias: formData.getAll("categoria").map(String),
     asignaturas: textos(formData, "asignaturas"),
     estudio: formData.get("estudio") ?? "",
   });
   if (!r.ok) return conError(formData, r.error, { ...r.campos, ...avisoDeTerminos });
   if (faltanTerminos) return conError(formData, "Revisá los campos marcados.", avisoDeTerminos);
-  const { categoria, estudio } = r.data;
-  const asignaturas = sinRepetidos(r.data.asignaturas);
+  const { estudio } = r.data;
 
-  const validas = await nombresDeAsignaturas(categoria);
-  if (asignaturas.some((a) => !validas.has(a))) {
-    return conError(formData, "Revisá los campos marcados.", { asignaturas: "Elegí asignaturas de la lista de esa categoría." });
-  }
+  const db = getDb();
+  let docente = await docenteDeUsuario(usuario.id);
+
+  // Una o más categorías: la principal es la que ya tenía (si la sigue teniendo) o la primera del catálogo.
+  const categorias = decidirCategorias(r.data.categorias, docente?.categoria);
+  if (!categorias.ok) return conError(formData, "Revisá los campos marcados.", { categorias: categorias.error });
+  const { categoria, categoriasExtra } = categorias.datos;
+
+  // Las del catálogo de CUALQUIERA de sus categorías (con su escritura canónica) y, además, hasta tres que la persona escribió con «Otra»:
+  // mismas reglas que en el navegador (`src/lib/asignaturas.ts`).
+  const validas = new Set<string>();
+  for (const c of [categoria, ...categoriasExtra]) for (const nombre of await nombresDeAsignaturas(c)) validas.add(nombre);
+  const decididas = validarAsignaturas(r.data.asignaturas, [...validas]);
+  if (!decididas.ok) return conError(formData, "Revisá los campos marcados.", { asignaturas: decididas.error });
+  const asignaturas = decididas.asignaturas;
 
   // Quien todavía estudia declara qué porcentaje de las materias aprobó (lo respalda la constancia de alumno regular).
   let porcentajeMaterias: number | null = null;
@@ -409,14 +422,12 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
     porcentajeMaterias = lectura.valor;
   }
 
-  const db = getDb();
-  let docente = await docenteDeUsuario(usuario.id);
   if (docente?.onboardingCompleto) redirect(RUTA_INICIO.docente);
 
   if (!usuario.terminosAceptadosEn) await registrarAceptacionDeTerminos(usuario.id);
 
   if (docente) {
-    await db.update(docentes).set({ categoria, asignaturas }).where(eq(docentes.id, docente.id));
+    await db.update(docentes).set({ categoria, categoriasExtra, asignaturas }).where(eq(docentes.id, docente.id));
   } else {
     const sesion = await datosDeSesion();
     const respaldo = usuario.email.split("@")[0] ?? "Profesional";
@@ -427,7 +438,7 @@ export async function guardarCategoriaDocente(_previo: EstadoFormulario, formDat
       : partirNombre(sesion?.nombre ?? "", respaldo);
     const [creado] = await db
       .insert(docentes)
-      .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, categoria, asignaturas })
+      .values({ usuarioId: usuario.id, nombre, apellido, email: usuario.email, categoria, categoriasExtra, asignaturas })
       .onConflictDoNothing()
       .returning({ id: docentes.id });
     docente = await docenteDeUsuario(usuario.id);
@@ -490,7 +501,11 @@ export async function guardarDatosDocente(_previo: EstadoFormulario, formData: F
   }
 
   const zonas = sinRepetidos(d.zonas);
-  const ubicacion = await ubicarDocente({ zonas, partido: d.partido });
+  let ubicacion: { lat: number | null; lng: number | null } = await ubicarDocente({ zonas, partido: d.partido });
+  // Ninguna zona (ni el partido) está en el catálogo: se intenta ubicar la que escribió a mano con Georef (La Plata, Mar del Plata…).
+  if (ubicacion.lat == null && zonas.length > 0) {
+    ubicacion = (await ubicarPrimeraZona(zonas, await zonasConocidas())) ?? ubicacion;
+  }
   const db = getDb();
   await db
     .update(docentes)
@@ -589,7 +604,7 @@ export async function guardarNivelesYHorarios(_previo: EstadoFormulario, formDat
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/docente/4");
 }
 
-const DOCUMENTOS_DEL_ALTA = ["dniFrente", "dniDorso", "credencial", "constancia"] as const;
+const DOCUMENTOS_DEL_ALTA = ["dniFrente", "dniDorso", ...CLAVES_DE_TITULO, "constancia"] as const;
 
 /**
  * "Subí tu documentación" (último paso): guarda los paths de lo que subió al bucket privado y cierra el alta
@@ -624,12 +639,14 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
   }
   if (Object.keys(campos).length > 0) return conError(formData, "Revisá los archivos marcados.", campos);
 
+  // Los títulos ocupan las primeras casillas sin huecos (si se quitó el primero, el segundo pasa a ser el primero).
+  const finales = compactarTitulos(documentos);
   await db
     .insert(docenteDetalle)
-    .values({ docenteId: docente.id, documentos })
-    .onConflictDoUpdate({ target: docenteDetalle.docenteId, set: { documentos, actualizadoEn: new Date() } });
+    .values({ docenteId: docente.id, documentos: finales })
+    .onConflictDoUpdate({ target: docenteDetalle.docenteId, set: { documentos: finales, actualizadoEn: new Date() } });
   // Un DNI o un título que se vuelve a subir no tiene por qué seguir guardado.
-  await borrarArchivos(quitados(Object.values(previos), Object.values(documentos)));
+  await borrarArchivos(quitados(Object.values(previos), Object.values(finales)));
 
   if (destino === "salir") {
     revalidatePath("/docente", "layout");
@@ -648,11 +665,11 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
     .update(docentes)
     .set({
       onboardingCompleto: true,
-      subtitulo: docente.subtitulo ?? (asignaturas ? `${CATEGORIA_ALTA[docente.categoria].label} · ${asignaturas}` : CATEGORIA_ALTA[docente.categoria].label),
+      subtitulo: docente.subtitulo ?? (asignaturas ? `${etiquetaDeCategorias(docente)} · ${asignaturas}` : etiquetaDeCategorias(docente)),
     })
     .where(eq(docentes.id, docente.id));
 
-  if (Object.keys(documentos).length > 0) {
+  if (Object.keys(finales).length > 0) {
     await notificar(usuario.id, {
       tipo: "verificacion",
       titulo: "Recibimos tu documentación.",

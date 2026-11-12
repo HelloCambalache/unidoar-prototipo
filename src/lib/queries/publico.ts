@@ -4,6 +4,7 @@ import { and, asc, count, countDistinct, desc, eq, gt, isNotNull, isNull, or, sq
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
+import { esDeCategoria } from "@/lib/queries/categorias-sql";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
 import { aSedePublica, type SedePublica } from "@/lib/sedes";
@@ -37,12 +38,17 @@ export type ResumenPublico = {
 /** Contadores del hero, de las landings y de las tarjetas de categoría. Una vez por request. */
 export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
   const db = getDb();
-  const [filasDocentes, filasBusquedas, [filaInst], [filaDisc]] = await Promise.all([
-    db
-      .select({ categoria: docentes.categoria, n: count() })
-      .from(docentes)
-      .where(and(eq(docentes.verificacion, "verificado"), eq(docentes.onboardingCompleto, true), docenteVisible))
-      .groupBy(docentes.categoria),
+  const verificadosVisibles = and(eq(docentes.verificacion, "verificado"), eq(docentes.onboardingCompleto, true), docenteVisible);
+  const [[filaTotal], filasDocentes, filasBusquedas, [filaInst], [filaDisc]] = await Promise.all([
+    // El total aparte: un profesional con dos categorías cuenta en las dos de abajo pero es una sola persona.
+    db.select({ n: count() }).from(docentes).where(verificadosVisibles),
+    // Un profesional con varias categorías suma en cada una de las suyas.
+    Promise.all(
+      CATEGORIAS.map(async (categoria) => {
+        const [fila] = await db.select({ n: count() }).from(docentes).where(and(verificadosVisibles, esDeCategoria(categoria)));
+        return { categoria, n: fila?.n ?? 0 };
+      }),
+    ),
     db
       .select({
         categoria: busquedas.categoria,
@@ -77,7 +83,7 @@ export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
   const suma = (k: keyof ConteoCategoria) => CATEGORIAS.reduce((t, c) => t + categorias[c][k], 0);
 
   return {
-    docentesVerificados: suma("verificados"),
+    docentesVerificados: filaTotal?.n ?? 0,
     institucionesVerificadas: filaInst?.verificadas ?? 0,
     busquedasActivas: suma("busquedasActivas"),
     urgentes: suma("urgentes"),

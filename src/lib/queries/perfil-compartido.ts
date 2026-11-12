@@ -18,6 +18,7 @@ export async function perfilCompartido(token: string) {
       nombre: docentes.nombre,
       apellido: docentes.apellido,
       categoria: docentes.categoria,
+      categoriasExtra: docentes.categoriasExtra,
       subtitulo: docentes.subtitulo,
       resumen: docentes.resumen,
       fotoUrl: docentes.fotoUrl,

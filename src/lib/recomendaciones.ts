@@ -1,5 +1,6 @@
 import type { CategoriaDocente } from "@/db/schema";
 import { TURNO_A_DISPONIBILIDAD } from "@/lib/busquedas";
+import { tieneCategoria, type ConCategorias } from "@/lib/categorias-docente";
 import { kmLegible } from "@/lib/geo";
 
 /*
@@ -9,8 +10,7 @@ import { kmLegible } from "@/lib/geo";
  * aparece esa persona. Funciones puras: sin base ni modelo.
  */
 
-export type CandidatoRecomendable = {
-  categoria: CategoriaDocente;
+export type CandidatoRecomendable = ConCategorias & {
   asignaturas: string[];
   niveles: string[];
   disponibilidad: string[];
@@ -47,7 +47,7 @@ export const puntosPorExperiencia = (anios: number | null) => Math.min(10, Math.
 
 /** Lo que una búsqueda suma a un candidato: la disciplina pesa más que el nivel y el turno. */
 function afinidadConBusqueda(c: CandidatoRecomendable, b: BusquedaAbierta) {
-  if (c.categoria !== b.categoria) return { puntos: 0, motivos: [] as string[] };
+  if (!tieneCategoria(c, b.categoria)) return { puntos: 0, motivos: [] as string[] };
   const motivos: string[] = [];
   let puntos = 0;
   if (b.disciplina && c.asignaturas.some((a) => igual(a, b.disciplina))) {

@@ -44,6 +44,13 @@ export const perfilDocenteSchema = z.object({
   dniFrente: rutaArchivo.optional(),
   dniDorso: rutaArchivo.optional(),
   credencial: rutaArchivo.optional(),
+  /** Los otros títulos (hasta cinco en total, ver `src/lib/titulos.ts`): cada uno es un archivo aparte. */
+  credencial2: rutaArchivo.optional(),
+  credencial3: rutaArchivo.optional(),
+  credencial4: rutaArchivo.optional(),
+  credencial5: rutaArchivo.optional(),
+  /** Categorías del perfil (una o más): ausente = no se tocan. `decidirCategorias` las valida y elige la principal. */
+  categorias: z.array(z.string().trim().max(30)).min(1, "Elegí al menos una categoría").max(3, "Elegiste demasiadas categorías").optional(),
   /** Constancia de alumno regular de quien todavía estudia: path del bucket privado, en `docente_detalle.documentos`. */
   constancia: rutaArchivo.optional(),
   /** Estudios: ausente = no se tocan. El porcentaje viaja como lo escribió la persona; el servidor lo lee con `leerPorcentaje`. */

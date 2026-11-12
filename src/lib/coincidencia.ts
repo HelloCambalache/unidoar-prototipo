@@ -1,13 +1,13 @@
 import { kmLegible } from "@/lib/geo";
 import type { CategoriaDocente } from "@/db/schema";
+import { tieneCategoria, type ConCategorias } from "@/lib/categorias-docente";
 
 /*
  * Qué tan bien le calza una búsqueda a un docente. No pretende ser un algoritmo:
  * es una señal legible, hecha con lo que el docente cargó en su perfil.
  */
 
-export type PerfilParaCoincidir = {
-  categoria: CategoriaDocente;
+export type PerfilParaCoincidir = ConCategorias & {
   asignaturas: string[];
   zonas: string[];
   niveles: string[];
@@ -70,7 +70,7 @@ export function coincideTurno(turno: string | null | undefined, disponibilidad: 
 export function coincidencia(d: PerfilParaCoincidir, b: BusquedaParaCoincidir, km: number | null) {
   const motivos: string[] = [];
   let puntos = 40;
-  if (b.categoria === d.categoria) puntos += 8;
+  if (tieneCategoria(d, b.categoria)) puntos += 8;
   if (coincideAsignatura(b.disciplina, d.asignaturas)) {
     puntos += 26;
     motivos.push("Tu asignatura");

@@ -13,6 +13,7 @@ import {
   type Docente,
   type DocumentosDocente,
 } from "@/db/schema";
+import { tieneCategoria } from "@/lib/categorias-docente";
 import { coincidencia, coincideZona } from "@/lib/coincidencia";
 import { grillaDesdeLista } from "@/lib/disponibilidad";
 import { etiquetaFechas, fechaCorta } from "@/lib/fechas-curso";
@@ -212,7 +213,7 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
   const sinUbicacion = docente.zonas.length === 0 && docente.lat == null;
   const paraVos = candidatas.filter(
     ({ b, km }) =>
-      b.categoria === docente.categoria &&
+      tieneCategoria(docente, b.categoria) &&
       (sinUbicacion || coincideZona(b.zona, docente.zonas) || (km != null && km <= docente.radioKm)),
   );
 
@@ -231,9 +232,9 @@ export async function tableroDocente(docente: Docente, usuarioId: string): Promi
     suplenciaVence = `${suplencias.length > 1 ? "una vence" : "vence"} en ${cuando}`;
   }
 
-  // Solo de su categoría: una búsqueda de guardavidas no es una recomendación para quien enseña Lengua, por pocas que haya.
+  // Solo de sus categorías: una búsqueda de guardavidas no es una recomendación para quien enseña Lengua, por pocas que haya.
   const recomendadas = candidatas
-    .filter(({ b }) => b.categoria === docente.categoria)
+    .filter(({ b }) => tieneCategoria(docente, b.categoria))
     .sort((x, y) => y.porcentaje - x.porcentaje || (x.km ?? Infinity) - (y.km ?? Infinity))
     .slice(0, CUATRO_POR_FILA)
     .map(
@@ -350,9 +351,9 @@ export async function datosParaPerfil(docente: Docente) {
       .limit(1),
   ]);
 
-  // Primero las asignaturas de su categoría; el resto también se puede elegir.
-  const propias = asignaturasCat.filter((a) => a.categoria === docente.categoria).map((a) => a.nombre);
-  const otras = asignaturasCat.filter((a) => a.categoria !== docente.categoria).map((a) => a.nombre);
+  // Primero las asignaturas de sus categorías; el resto también se puede elegir.
+  const propias = asignaturasCat.filter((a) => tieneCategoria(docente, a.categoria)).map((a) => a.nombre);
+  const otras = asignaturasCat.filter((a) => !tieneCategoria(docente, a.categoria)).map((a) => a.nombre);
   const guardada = detalle[0]?.grilla ? grillaDesdeJson(detalle[0].grilla) : null;
 
   return {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PerfilCvAcciones } from "@/components/docente/perfil-cv-acciones";
+import { etiquetaDeCategorias } from "@/lib/categorias-docente";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
 import { docenteActual, requerirDocente } from "@/lib/auth";
 import { etiquetaFechas } from "@/lib/fechas-curso";
@@ -81,7 +82,7 @@ export default async function CvImprimiblePage({ searchParams }: Props) {
             <h1 className="font-display m-0 text-[28px] leading-[1.15] font-bold tracking-[-0.02em]">{nombre}</h1>
             {docente.subtitulo && <p className="m-0 mt-1 text-[15px] leading-[1.4] text-apagado">{docente.subtitulo}</p>}
             <p className="m-0 mt-1 text-[13px] leading-[1.4] font-semibold" style={{ color: CATEGORIA_INFO[docente.categoria].ink }}>
-              {CATEGORIA_INFO[docente.categoria].label}
+              {etiquetaDeCategorias(docente)}
               {docente.aniosExperiencia != null && ` · ${docente.aniosExperiencia} ${docente.aniosExperiencia === 1 ? "año" : "años"} de experiencia`}
               {docente.verificacion === "verificado" && " · Perfil verificado en UNIDOAR"}
             </p>

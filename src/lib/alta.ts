@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { docentes, instituciones, type Docente, type Institucion, type Usuario } from "@/db/schema";
 import { asegurarUsuario, sesionActual } from "@/lib/auth";
+import { destinoSiNoPuedeHacerElAlta, puedeHacerElAlta } from "@/lib/alta-rol";
 import { RUTA_INICIO } from "@/lib/catalogo";
 import type { RolAlta } from "@/lib/onboarding";
 
@@ -20,7 +21,7 @@ import type { RolAlta } from "@/lib/onboarding";
 export async function usuarioParaAlta(rol: RolAlta): Promise<Usuario> {
   if (!(await sesionActual())) redirect(`/onboarding/${rol}/1`);
   const usuario = await asegurarUsuario(rol);
-  if (usuario.rol !== rol && usuario.rol !== "admin") redirect(RUTA_INICIO[usuario.rol]);
+  if (!puedeHacerElAlta(rol, usuario.rol)) redirect(destinoSiNoPuedeHacerElAlta(usuario.rol, RUTA_INICIO));
   return usuario;
 }
 

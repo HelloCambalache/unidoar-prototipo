@@ -16,10 +16,11 @@ import { urlFirmada } from "@/lib/almacenamiento";
 import { requerirDocente } from "@/lib/auth";
 import { FOTOS_DNI_SE_ELIMINAN } from "@/lib/documentos";
 import { CONSTANCIA, esEstudiante, situacionDeEstudio } from "@/lib/estudiantes";
-import { CATEGORIA_ALTA } from "@/lib/onboarding";
+import { categoriasDe, credencialesQueSePiden } from "@/lib/categorias-docente";
 import { pendientesDePerfil } from "@/lib/perfil";
 import { identidadFija, type DatosPerfil } from "@/lib/perfil-docente";
 import { historialCursos } from "@/lib/queries/cursos";
+import { cantidadDeTitulos } from "@/lib/titulos";
 import { origenSitio } from "@/lib/sitio";
 import { datosParaPerfil } from "@/lib/queries/docente";
 
@@ -50,7 +51,8 @@ export default async function PerfilDocentePage() {
   const conductaEstado = estado(docente.antecedentesVerificados, !!docs.conducta);
   // A quien todavía cursa no se le pide el título (salvo que ya lo haya subido) sino la constancia de alumno regular.
   const estudiante = esEstudiante(datos.situacionEstudio);
-  const credencialPide = !estudiante || !!docs.credencial;
+  const hayTitulo = cantidadDeTitulos(docs) > 0;
+  const credencialPide = !estudiante || hayTitulo;
   const constanciaEstado = estado(docente.verificacion === "verificado" && !!docs.constancia, !!docs.constancia);
   const requisitos: RequisitoVerificacion[] = [
     {
@@ -63,8 +65,8 @@ export default async function PerfilDocentePage() {
       ? [
           {
             clave: "credencial" as const,
-            nombre: CATEGORIA_ALTA[docente.categoria].credencial.nombre,
-            estado: estado(docente.tituloVerificado, !!docs.credencial),
+            nombre: credencialesQueSePiden(docente).nombre,
+            estado: estado(docente.tituloVerificado, hayTitulo),
           },
         ]
       : []),
@@ -74,8 +76,9 @@ export default async function PerfilDocentePage() {
   // Cargar o corregir la documentación: se puede mientras no esté verificada ni rechazada la verificación.
   const abierta = docente.verificacion !== "rechazado";
   const dniEstado = estado(docente.verificacion === "verificado", !!docs.dniFrente && !!docs.dniDorso);
-  const credencialEstado = estado(docente.tituloVerificado, !!docs.credencial);
-  const credencial = CATEGORIA_ALTA[docente.categoria].credencial;
+  const credencialEstado = estado(docente.tituloVerificado, hayTitulo);
+  // Con varias categorías se pide un título por cada una (cada archivo por separado).
+  const credencial = credencialesQueSePiden(docente);
   // Con la verificación rechazada no se puede cargar nada desde acá: el texto explica por qué en vez de pedir que se suba.
   const RECHAZADA = "Rechazamos tu verificación: si querés corregir algo, escribinos desde Contacto.";
   const documentacion: DocumentacionPerfil = {
@@ -102,9 +105,11 @@ export default async function PerfilDocentePage() {
       nombre: credencial.nombre,
       estado: credencialEstado,
       editable: abierta && !docente.tituloVerificado,
+      // Sumar otro título se puede aunque ya haya uno verificado (el equipo lo revisa): solo con la verificación rechazada no.
+      puedeSumar: abierta,
       detalle:
         credencialEstado === "verificado"
-          ? "Ya lo verificamos."
+          ? "Ya lo verificamos. Si sumás otro título, el equipo vuelve a revisarlos."
           : !abierta
             ? RECHAZADA
             : credencialEstado === "revision"
@@ -149,6 +154,11 @@ export default async function PerfilDocentePage() {
     dniFrente: docs.dniFrente ?? "",
     dniDorso: docs.dniDorso ?? "",
     credencial: docs.credencial ?? "",
+    credencial2: docs.credencial2 ?? "",
+    credencial3: docs.credencial3 ?? "",
+    credencial4: docs.credencial4 ?? "",
+    credencial5: docs.credencial5 ?? "",
+    categorias: categoriasDe(docente),
     constancia: docs.constancia ?? "",
     situacionEstudio: situacionDeEstudio(datos.situacionEstudio),
     porcentajeMaterias: datos.porcentajeMaterias != null ? String(datos.porcentajeMaterias) : "",

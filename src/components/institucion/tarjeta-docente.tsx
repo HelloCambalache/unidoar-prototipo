@@ -84,7 +84,7 @@ export function TarjetaDocente({
               <Insignia className="px-2 py-1 text-[10px]">Sin verificar</Insignia>
             )}
           </div>
-          <div className="mt-0.5 text-xs leading-snug text-apagado">{d.subtitulo ?? info.label}</div>
+          <div className="mt-0.5 text-xs leading-snug text-apagado">{d.subtitulo ?? d.categorias.map((c) => CATEGORIA_INFO[c].label).join(" · ")}</div>
         </div>
         <BotonFavoritoDocente docenteId={d.id} nombre={nombreCompleto} favorito={d.favorito} />
       </div>

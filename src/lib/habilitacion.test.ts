@@ -76,4 +76,29 @@ describe("a qué búsquedas puede postularse un profesional", () => {
     assert.equal(r.habilitado, false);
     if (!r.habilitado) assert.match(r.mensaje, /Lengua y Literatura|Lengua, Literatura/);
   });
+
+  describe("un perfil con más de una categoría", () => {
+    const doble = (asignaturas: string[]) => ({ categoria: "educador" as const, categoriasExtra: ["guardavidas" as const], asignaturas });
+
+    it("puede postularse a las búsquedas de cualquiera de sus categorías", () => {
+      assert.equal(habilitacionParaBusqueda(doble([]), busqueda("Educación Física", "educador"), RUBROS).habilitado, true);
+      assert.equal(habilitacionParaBusqueda(doble([]), busqueda("Natación", "guardavidas"), RUBROS).habilitado, true);
+    });
+
+    it("no a las de una categoría que no tiene, y el mensaje las nombra todas", () => {
+      const r = habilitacionParaBusqueda(doble([]), busqueda("Vóley", "entrenador"), RUBROS);
+      assert.equal(r.habilitado, false);
+      if (!r.habilitado) {
+        assert.equal(r.motivo, "categoria");
+        assert.match(r.mensaje, /entrenadores/);
+        assert.match(r.mensaje, /docentes y guardavidas/);
+        assert.match(r.mensaje, /categorías/);
+      }
+    });
+
+    it("la materia sigue contando: con Natación cargada puede con una búsqueda de guardavidas de Natación, no con otra materia sin relación", () => {
+      assert.equal(habilitacionParaBusqueda(doble(["Natación"]), busqueda("Natación", "guardavidas"), RUBROS).habilitado, true);
+      assert.equal(habilitacionParaBusqueda(doble(["Lengua"]), busqueda("Natación", "guardavidas"), RUBROS).habilitado, false);
+    });
+  });
 });

@@ -27,7 +27,8 @@ import {
   type FiltrosBoDocentes,
 } from "@/lib/backoffice-docentes";
 import { MS } from "@/lib/fechas";
-import { CATEGORIA_ALTA } from "@/lib/onboarding";
+import { credencialesQueSePiden } from "@/lib/categorias-docente";
+import { etiquetaDeCasilla, titulosParaMostrar } from "@/lib/titulos";
 import { pendientesDePerfil } from "@/lib/perfil";
 import { desgloseScoring, porcentajePerfilParaScoring } from "@/lib/scoring";
 import { contiene, palabrasDeBusqueda, textoPlano } from "@/lib/sql-texto";
@@ -202,6 +203,8 @@ const rutaEsImagen = (ruta: string) => !/^https?:\/\//.test(ruta) && /\.(jpe?g|p
 
 type EntradaDocumentos = {
   categoria: CategoriaDocente;
+  /** Las otras categorías del perfil (con varias se pide un título por cada una). */
+  categoriasExtra?: CategoriaDocente[];
   cvUrl: string | null;
   documentos: DocumentosDocente;
   estudia: boolean;
@@ -218,13 +221,15 @@ async function documentosDeDocente(e: EntradaDocumentos): Promise<DocumentoBo[]>
     ...(e.estudia || e.documentos.constancia
       ? [{ clave: "constancia" as const, etiqueta: CONSTANCIA.nombre, opcional: !e.estudia, noAplica: false, ruta: e.documentos.constancia ?? null }]
       : []),
-    {
-      clave: "credencial",
-      etiqueta: CATEGORIA_ALTA[e.categoria].credencial.nombre,
-      opcional: e.estudia,
-      noAplica: e.estudia && !e.documentos.credencial,
-      ruta: e.documentos.credencial ?? null,
-    },
+    // Un título (o varios, cada uno en su casilla): sin ninguno se muestra la casilla del primero para que se vea que falta.
+    ...titulosParaMostrar(e.documentos).map((t, i, todos) => ({
+      clave: t.clave,
+      etiqueta: etiquetaDeCasilla(i, todos.length, credencialesQueSePiden({ categoria: e.categoria, categoriasExtra: e.categoriasExtra }).nombre),
+      // Solo el primero puede faltar: los otros existen porque la persona los subió.
+      opcional: e.estudia || i > 0,
+      noAplica: i === 0 && e.estudia && !e.documentos.credencial,
+      ruta: e.documentos[t.clave] ?? null,
+    })),
     {
       clave: "conducta",
       etiqueta: "Certificado de buena conducta",
@@ -352,6 +357,7 @@ export async function fichaDocenteBo(docenteId: string): Promise<FichaDocenteBo 
 
   const documentos = await documentosDeDocente({
     categoria: docente.categoria,
+    categoriasExtra: docente.categoriasExtra,
     cvUrl: docente.cvUrl,
     documentos: detalle?.documentos ?? {},
     estudia: detalle?.situacionEstudio === "estudiante",
@@ -437,7 +443,7 @@ export type ColaVerificacion = {
 const CON_DOCUMENTACION = sql`(exists (
   select 1 from docente_detalle dd, jsonb_each_text(coalesce(dd.documentos, '{}'::jsonb)) as doc(clave, ruta)
   where dd.docente_id = ${docentes.id}
-    and doc.clave in ('dniFrente', 'dniDorso', 'credencial', 'constancia', 'conducta')
+    and doc.clave in ('dniFrente', 'dniDorso', 'credencial', 'credencial2', 'credencial3', 'credencial4', 'credencial5', 'constancia', 'conducta')
     and btrim(doc.ruta) <> ''
 ))`;
 /** Ya se le observó algo antes (la nota se conserva cuando vuelve a la cola): ver `modificadoTrasObservacion`. */
@@ -501,6 +507,7 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
     filas.map(async ({ docente: d, emailCuenta, detalle }): Promise<ItemCola> => {
       const documentos = await documentosDeDocente({
         categoria: d.categoria,
+        categoriasExtra: d.categoriasExtra,
         cvUrl: d.cvUrl,
         documentos: detalle?.documentos ?? {},
         estudia: detalle?.situacionEstudio === "estudiante",

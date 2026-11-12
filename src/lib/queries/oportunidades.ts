@@ -12,13 +12,14 @@ import {
   type Docente,
   type EtapaPostulacion,
 } from "@/db/schema";
+import { categoriasDe } from "@/lib/categorias-docente";
 import { coincideAsignatura } from "@/lib/coincidencia";
 import { distanciaKm } from "@/lib/geo";
 import { contarSedes } from "@/lib/queries/sedes";
 import { lugarDeBusqueda } from "@/lib/sedes";
 import {
   busquedaAbierta,
-  categoriaDeBusqueda,
+  categoriasDeBusqueda,
   compararOfertas,
   RADIO_MAX,
   tiempoRestante,
@@ -90,8 +91,8 @@ export async function listarOportunidades(
   const db = getDb();
   const ahora = new Date();
   const radio = filtros.radio ?? docente?.radioKm ?? RADIO_MAX;
-  // Sin elegir una categoría, el profesional ve las de la suya (ver `categoriaDeBusqueda`).
-  const categoria = categoriaDeBusqueda(filtros.categoria, docente?.categoria);
+  // Sin elegir una categoría, el profesional ve las de las suyas (ver `categoriasDeBusqueda`).
+  const categorias = categoriasDeBusqueda(filtros.categoria, docente ? categoriasDe(docente) : []);
   const origen = docente?.lat != null && docente.lng != null ? { lat: docente.lat, lng: docente.lng } : null;
   const conUbicacion = origen !== null;
 
@@ -119,7 +120,7 @@ export async function listarOportunidades(
     eq(busquedas.estado, "activa"),
     busquedaDeInstitucionActiva,
     or(eq(busquedas.rapida, false), isNull(busquedas.venceEn), gt(busquedas.venceEn, ahora)),
-    categoria ? eq(busquedas.categoria, categoria) : undefined,
+    categorias ? inArray(busquedas.categoria, categorias) : undefined,
     filtros.nivel ? eq(busquedas.nivel, filtros.nivel) : undefined,
     filtros.turno ? eq(busquedas.turno, filtros.turno) : undefined,
     // "Suplencia" trae también las suplencias rápidas: quien busca suplencias las quiere todas.

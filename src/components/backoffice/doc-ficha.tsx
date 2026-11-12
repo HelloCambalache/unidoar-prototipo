@@ -6,8 +6,10 @@ import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { cuilLegible, dniLegible, type DocumentoBo } from "@/lib/backoffice-docentes";
 import { CATEGORIA_INFO, ETAPA_LABEL } from "@/lib/catalogo";
 import { DocVerificarTitulo } from "@/components/backoffice/doc-verificar-titulo";
+import { etiquetaDeCategorias } from "@/lib/categorias-docente";
 import { esEstudiante, etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
+import { CLAVES_DE_TITULO, esClaveDeTitulo } from "@/lib/titulos";
 import type { FichaDocenteBo } from "@/lib/queries/backoffice-docentes";
 import { cn, iniciales } from "@/lib/utils";
 
@@ -30,7 +32,7 @@ export function DocCabecera({ ficha }: { ficha: FichaDocenteBo }) {
   const d = ficha.docente;
   const info = CATEGORIA_INFO[d.categoria];
   const nombre = nombreCompleto(ficha);
-  const resumen = [d.asignaturas.slice(0, 2).join(", ") || d.subtitulo || info.label, d.zonas.slice(0, 2).join(", ")]
+  const resumen = [d.asignaturas.slice(0, 2).join(", ") || d.subtitulo || etiquetaDeCategorias(d), d.zonas.slice(0, 2).join(", ")]
     .filter(Boolean)
     .join(" · ");
   const conNota = (d.verificacion === "correccion" || d.verificacion === "rechazado") && d.verificacionNota;
@@ -47,7 +49,7 @@ export function DocCabecera({ ficha }: { ficha: FichaDocenteBo }) {
             {ficha.bajaSolicitadaEn && <Insignia tono="ambar">Baja solicitada</Insignia>}
           </div>
           <div className="text-sm leading-snug text-apagado">{resumen}</div>
-          <div className="mt-1 text-xs leading-snug text-sutil">{info.label}</div>
+          <div className="mt-1 text-xs leading-snug text-sutil">{etiquetaDeCategorias(d)}</div>
         </div>
       </div>
       {ficha.bajaSolicitadaEn && (
@@ -173,6 +175,8 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
   const frente = doc("dniFrente");
   const dorso = doc("dniDorso");
   const credencial = doc("credencial");
+  // Los otros títulos que subió (de otra categoría, otra certificación…).
+  const otrosTitulos = ficha.documentos.filter((x) => esClaveDeTitulo(x.clave) && x.clave !== "credencial" && x.subido);
   const conducta = doc("conducta");
   const cv = doc("cv");
 
@@ -195,6 +199,8 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
         ? ESTADO.validado
         : ESTADO.revision
       : ESTADO.sin;
+  // Un título que se suma cuando el anterior ya estaba verificado deja al perfil sin el título verificado hasta que se vuelvan a revisar.
+  const estadoOtroTitulo: EstadoDoc = d.tituloVerificado ? ESTADO.validado : ESTADO.revision;
   const buenaConducta: EstadoDoc = conducta?.subido ? (d.antecedentesVerificados ? ESTADO.validado : ESTADO.revision) : ESTADO.sin;
   const curriculum: EstadoDoc = cv?.subido ? ESTADO.cargado : ESTADO.sin;
   // Quien todavía estudia: la constancia de alumno regular y el porcentaje que declaró (respaldan su identidad y su condición).
@@ -235,6 +241,12 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
         </>
       ),
     },
+    ...otrosTitulos.map((t) => ({
+      clave: t.clave,
+      etiqueta: t.etiqueta,
+      estado: estadoOtroTitulo,
+      enlaces: <Enlaces docs={[{ etiqueta: "Ver", d: t }]} />,
+    })),
     {
       clave: "conducta",
       etiqueta: "Certificado de buena conducta",
@@ -245,7 +257,7 @@ export function DocDocumentacion({ ficha }: { ficha: FichaDocenteBo }) {
   ];
 
   // La cola de verificación solo lista a quien subió documentación (o tiene una corrección pedida): ver `colaVerificacion`.
-  const subioDocumentacion = (["dniFrente", "dniDorso", "credencial", "constancia", "conducta"] as const).some((c) => doc(c)?.subido);
+  const subioDocumentacion = (["dniFrente", "dniDorso", ...CLAVES_DE_TITULO, "constancia", "conducta"] as const).some((c) => doc(c)?.subido);
   const sinDocumentacionParaCola = d.onboardingCompleto && d.verificacion === "pendiente" && !subioDocumentacion;
   const enCola = d.onboardingCompleto && !sinDocumentacionParaCola && (d.verificacion === "pendiente" || d.verificacion === "correccion");
 

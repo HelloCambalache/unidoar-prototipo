@@ -183,7 +183,13 @@ export const docentes = pgTable(
       .references(() => usuarios.id, { onDelete: "set null" }),
     nombre: text("nombre").notNull(),
     apellido: text("apellido").notNull().default(""),
+    /** La categoría PRINCIPAL del perfil (la que se eligió primero): ver `src/lib/categorias-docente.ts`. */
     categoria: categoriaDocente("categoria").notNull().default("educador"),
+    /**
+     * Las demás categorías del perfil (docente + guardavidas, etc.), además de la principal. Vacía = una sola categoría.
+     * Agregada a mano con `pnpm db:categorias-multiples` (correrlo ANTES de desplegar el código que la lee).
+     */
+    categoriasExtra: categoriaDocente("categorias_extra").array().notNull().default(sql`'{}'::categoria_docente[]`),
     subtitulo: text("subtitulo"),
     resumen: text("resumen"),
     fotoUrl: text("foto_url"),
@@ -938,7 +944,10 @@ export type EstadoCeldaDisponibilidad = "disponible" | "convenir" | "ocupada";
 /** Grilla semanal del alta: 3 franjas × 6 días (lunes a sábado). `docentes.disponibilidad` se deriva de ella. */
 export type GrillaDisponibilidad = Record<"manana" | "tarde" | "contraturno", EstadoCeldaDisponibilidad[]>;
 /** Paths del bucket privado de Storage (nunca URLs): las firmadas se generan al leer. */
-export type DocumentosDocente = Partial<Record<"dniFrente" | "dniDorso" | "credencial" | "constancia" | "conducta", string>>;
+/** `credencial` es el primer título; `credencial2` a `credencial5`, los otros (ver `src/lib/titulos.ts`). */
+export type DocumentosDocente = Partial<
+  Record<"dniFrente" | "dniDorso" | "credencial" | "credencial2" | "credencial3" | "credencial4" | "credencial5" | "constancia" | "conducta", string>
+>;
 
 /**
  * Datos del docente que no se listan ni se filtran y que no deben salir en consultas públicas

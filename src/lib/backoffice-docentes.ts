@@ -1,4 +1,5 @@
 import type { Docente } from "@/db/schema";
+import type { ClaveDeTitulo } from "@/lib/titulos";
 
 /*
  * Vocabulario y lectura de filtros de las pantallas de docentes del backoffice (listado, ficha, verificación).
@@ -116,7 +117,8 @@ export const hayFiltrosBoDocentes = (f: FiltrosBoDocentes) => !!(f.q || f.discip
 
 /** Un documento del docente tal como lo ve el equipo: con el enlace firmado listo para abrir (vence a los 15 minutos). */
 export type DocumentoBo = {
-  clave: "dniFrente" | "dniDorso" | "credencial" | "constancia" | "conducta" | "cv";
+  /** `credencial` es el primer título; `credencial2` a `credencial5`, los otros (ver `src/lib/titulos.ts`). */
+  clave: "dniFrente" | "dniDorso" | ClaveDeTitulo | "constancia" | "conducta" | "cv";
   etiqueta: string;
   /** No bloquea la verificación si falta. */
   opcional: boolean;

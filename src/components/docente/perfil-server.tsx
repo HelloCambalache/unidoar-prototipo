@@ -19,7 +19,8 @@ export type EstadoDocumento = "verificado" | "revision" | "sin";
 export type DocumentacionPerfil = {
   dni: { estado: EstadoDocumento; detalle: string; editable: boolean };
   /** Título o certificación: lo ve quien se recibió (o quien ya lo había subido). */
-  credencial: { nombre: string; estado: EstadoDocumento; detalle: string; editable: boolean };
+  /** `puedeSumar`: se puede agregar otro título (también con uno ya verificado: el equipo lo revisa). */
+  credencial: { nombre: string; estado: EstadoDocumento; detalle: string; editable: boolean; puedeSumar: boolean };
   /** Constancia de alumno regular: la ve quien todavía estudia, en lugar del título. */
   constancia: { estado: EstadoDocumento; detalle: string; editable: boolean };
   /** Se puede cambiar "Estoy estudiando" / "Ya me recibí" y el porcentaje (no con la verificación rechazada, ni si ya está verificado como recibido). */

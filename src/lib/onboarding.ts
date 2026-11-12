@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { CategoriaDocente, EstadoCeldaDisponibilidad, GrillaDisponibilidad } from "@/db/schema";
-import { CATEGORIAS, DISPONIBILIDAD, NIVELES } from "@/lib/catalogo";
+import { DISPONIBILIDAD, NIVELES } from "@/lib/catalogo";
 import { esCuitValido, soloDigitos } from "@/lib/documentos";
 
 /*
@@ -240,7 +240,8 @@ const opcional = <T extends z.ZodType>(esquema: T) =>
   z.union([z.literal("").transform(() => undefined), esquema]).optional() as z.ZodType<z.output<T> | undefined>;
 
 export const categoriaDocenteSchema = z.object({
-  categoria: z.enum(CATEGORIAS, { error: "Elegí qué sos" }),
+  /** Una o más categorías (docente, entrenador/a, guardavidas): `decidirCategorias` (src/lib/categorias-docente.ts) las valida y elige la principal. */
+  categorias: z.array(z.string().trim().max(30)).min(1, "Elegí qué sos").max(3, "Elegiste demasiadas categorías"),
   asignaturas: z
     .array(z.string().trim().min(1).max(100))
     .min(1, "Elegí al menos una asignatura")

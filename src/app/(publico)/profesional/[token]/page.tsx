@@ -7,6 +7,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Avatar, Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { etiquetaDeCategorias } from "@/lib/categorias-docente";
 import { RUTA_REGISTRO_INSTITUCION } from "@/lib/publico";
 import { perfilCompartido } from "@/lib/queries/perfil-compartido";
 import { cn, iniciales } from "@/lib/utils";
@@ -29,9 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await cargar(token);
   if (!d) return { title: "Perfil no disponible", robots: NO_INDEXAR };
   const nombre = `${d.nombre} ${d.apellido}`.trim();
-  const info = CATEGORIA_INFO[d.categoria];
-  const titulo = `${nombre} · ${d.subtitulo ?? info.label}`;
-  const descripcion = d.resumen?.trim() ? recortar(d.resumen.trim().replace(/\s+/g, " "), 160) : `${info.label} en UNIDOAR.`;
+  const titulo = `${nombre} · ${d.subtitulo ?? etiquetaDeCategorias(d)}`;
+  const descripcion = d.resumen?.trim() ? recortar(d.resumen.trim().replace(/\s+/g, " "), 160) : `${etiquetaDeCategorias(d)} en UNIDOAR.`;
   return {
     title: titulo,
     description: descripcion,
@@ -68,7 +68,7 @@ export default async function PerfilCompartidoPage({ params }: Props) {
   const nombre = `${d.nombre} ${d.apellido}`.trim();
   const verificado = d.verificacion === "verificado";
   const subtitulo =
-    d.subtitulo ?? [info.label, d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ");
+    d.subtitulo ?? [etiquetaDeCategorias(d), d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ");
 
   return (
     <div className="flex-1 bg-app px-12 py-9 max-[860px]:px-4 max-[860px]:py-5">

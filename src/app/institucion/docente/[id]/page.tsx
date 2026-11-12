@@ -17,6 +17,7 @@ import { CATEGORIA_INFO, ETAPA_LABEL } from "@/lib/catalogo";
 import { etiquetaDeEstudiante } from "@/lib/estudiantes";
 import { haceTiempo } from "@/lib/fechas";
 import { opcionesDeInvitacion } from "@/lib/invitaciones";
+import { etiquetaDeCategorias } from "@/lib/categorias-docente";
 import { busquedaDeContexto, perfilDeDocente } from "@/lib/queries/profesionales";
 import { cn, iniciales } from "@/lib/utils";
 import { registrarVistaDePerfil } from "@/lib/vistas-perfil";
@@ -143,7 +144,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
             {volver.etiqueta}
           </Link>
           <span className="px-[7px] text-borde-fuerte">/</span>
-          {d.asignaturas[0] ?? info.label}
+          {d.asignaturas[0] ?? etiquetaDeCategorias(d)}
           <span className="px-[7px] text-borde-fuerte">/</span>
           <span className="font-medium text-tinta">{nombre}</span>
         </span>
@@ -183,7 +184,7 @@ export default async function PerfilDocentePage({ params, searchParams }: Props)
                   )}
                 </div>
                 <div className="text-[15px] leading-snug text-tinta-2">
-                  {d.subtitulo ?? [info.label, d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ")}
+                  {d.subtitulo ?? [etiquetaDeCategorias(d), d.aniosExperiencia != null ? `${d.aniosExperiencia} años de experiencia` : ""].filter(Boolean).join(" · ")}
                 </div>
                 {(perfil.estudiante || d.zonas.length > 0) && (
                   <div className="mt-3 flex flex-wrap gap-1.5">

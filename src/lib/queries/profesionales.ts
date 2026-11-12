@@ -18,6 +18,7 @@ import {
   type GrillaDisponibilidad,
 } from "@/db/schema";
 import { ETAPA_LABEL } from "@/lib/catalogo";
+import { categoriasDe } from "@/lib/categorias-docente";
 import { normalizarTexto } from "@/lib/busqueda-ia";
 import { nombreDeCvParaMostrar } from "@/lib/contacto-cv";
 import { grillaDesdeLista } from "@/lib/disponibilidad";
@@ -47,6 +48,7 @@ const D = {
   apellido: col("apellido"),
   subtitulo: col("subtitulo"),
   categoria: col("categoria"),
+  categoriasExtra: col("categorias_extra"),
   asignaturas: col("asignaturas"),
   zonas: col("zonas"),
   niveles: col("niveles"),
@@ -57,6 +59,10 @@ const D = {
   verificacion: col("verificacion"),
   anios: col("anios_experiencia"),
 };
+
+/** El perfil es de esta categoría: la principal o una de las otras (un profesional puede tener varias; ver `src/lib/categorias-docente.ts`). */
+const esDeCategoriaD = (categoria: CategoriaDocente) =>
+  sql`(${D.categoria} = ${categoria} or ${categoria}::categoria_docente = any(${D.categoriasExtra}))`;
 
 const textos = (xs: string[]) =>
   sql`ARRAY[${sql.join(
@@ -123,7 +129,7 @@ export async function disciplinasParaFiltro(categoria: CategoriaDocente | null, 
       select a as nombre, count(*)::int as cantidad
       from docentes, unnest(asignaturas) as a
       where onboarding_completo and verificacion <> 'rechazado'
-      ${categoria ? sql`and categoria = ${categoria}` : sql``}
+      ${categoria ? sql`and (categoria = ${categoria} or ${categoria}::categoria_docente = any(categorias_extra))` : sql``}
       group by a`),
   ]);
   const porNombre = new Map(Array.from(conteos).map((c) => [c.nombre, Number(c.cantidad)]));
@@ -218,6 +224,8 @@ export type DocenteTarjeta = {
   nombre: string;
   apellido: string;
   categoria: CategoriaDocente;
+  /** Todas sus categorías, la principal primero (un profesional puede tener varias). */
+  categorias: CategoriaDocente[];
   subtitulo: string | null;
   fotoUrl: string | null;
   verificado: boolean;
@@ -290,7 +298,7 @@ function armarCriterios(
 ): Criterio[] {
   const out: Criterio[] = [];
   const categoria = f.categoria ?? ctx?.categoria ?? null;
-  if (categoria) out.push({ clave: "categoria", etiqueta: "Categoría", expr: sql`${D.categoria} = ${categoria}` });
+  if (categoria) out.push({ clave: "categoria", etiqueta: "Categoría", expr: esDeCategoriaD(categoria) });
 
   const disciplinas = f.disciplinas.length ? f.disciplinas : ctx ? [ctx.disciplina] : [];
   if (disciplinas.length)
@@ -324,7 +332,7 @@ function armarCondiciones(
   catalogo: { nombre: string; partido: string | null }[],
 ): SQL[] {
   const c: SQL[] = [];
-  if (f.categoria) c.push(sql`${D.categoria} = ${f.categoria}`);
+  if (f.categoria) c.push(esDeCategoriaD(f.categoria));
   if (f.disciplinas.length) c.push(sql`${D.asignaturas} && ${textos(f.disciplinas)}`);
   if (f.zonas.length) c.push(condicionZonas(f.zonas, catalogo));
   if (f.disponibilidad.length) c.push(cubreFranja(f.disponibilidad));
@@ -347,10 +355,9 @@ function armarCondiciones(
   for (const palabra of normalizarTexto(f.texto).split(" ").filter(Boolean).slice(0, 6)) {
     const pajar = plano(sql`coalesce(${D.nombre}, '') || ' ' || coalesce(${D.apellido}, '') || ' ' || coalesce(${D.subtitulo}, '')
       || ' ' || array_to_string(${D.asignaturas}, ' ') || ' ' || array_to_string(${D.zonas}, ' ')
-      || ' ' || case ${D.categoria}
-        when 'educador' then 'docente educador educadora profesional profesor profesora maestro maestra'
-        when 'entrenador' then 'entrenador entrenadora instructor instructora profesional profesor profesora'
-        else 'guardavidas salvavidas profesional' end`);
+      || ' ' || case when ${esDeCategoriaD("educador")} then 'docente educador educadora profesional profesor profesora maestro maestra ' else '' end
+      || case when ${esDeCategoriaD("entrenador")} then 'entrenador entrenadora instructor instructora profesional profesor profesora ' else '' end
+      || case when ${esDeCategoriaD("guardavidas")} then 'guardavidas salvavidas profesional' else '' end`);
     c.push(sql`${pajar} like ${`%${escaparLike(palabra)}%`}`);
   }
   return c;
@@ -362,6 +369,7 @@ type FilaBuscador = Pick<
   | "nombre"
   | "apellido"
   | "categoria"
+  | "categoriasExtra"
   | "subtitulo"
   | "fotoUrl"
   | "verificacion"
@@ -415,6 +423,7 @@ export async function buscarDocentes(args: {
     nombre: docentes.nombre,
     apellido: docentes.apellido,
     categoria: docentes.categoria,
+    categoriasExtra: docentes.categoriasExtra,
     subtitulo: docentes.subtitulo,
     fotoUrl: docentes.fotoUrl,
     verificacion: docentes.verificacion,
@@ -463,6 +472,7 @@ export async function buscarDocentes(args: {
       nombre: f.nombre,
       apellido: f.apellido,
       categoria: f.categoria,
+      categorias: categoriasDe(f),
       subtitulo: f.subtitulo,
       fotoUrl: f.fotoUrl,
       verificado: f.verificacion === "verificado",

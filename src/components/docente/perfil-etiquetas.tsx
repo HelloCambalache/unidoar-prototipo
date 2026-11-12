@@ -47,7 +47,8 @@ export function PerfilEtiquetas({
       setAviso("Elegí una opción de la lista.");
       return;
     }
-    const nueva = sugerida ?? v;
+    // Con lo escrito a mano se sacan los espacios de más y se acota el largo (el servidor lo vuelve a limpiar).
+    const nueva = sugerida ?? v.replace(/\s+/g, " ").slice(0, 80);
     if (items.length >= max) {
       setAviso(`Podés cargar hasta ${max}.`);
       return;
@@ -76,7 +77,7 @@ export function PerfilEtiquetas({
             list={idLista}
             value={valor}
             aria-label={etiquetaCampo}
-            placeholder="Escribí y elegí una opción"
+            placeholder={soloSugerencias ? "Escribí y elegí una opción" : "Escribí y apretá Enter"}
             onChange={(e) => {
               setValor(e.target.value);
               setAviso(null);

@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
 import type { EjecutorBo } from "@/lib/queries/backoffice-instituciones";
+import { esDeCategoria } from "@/lib/queries/categorias-sql";
 
 /*
  * Catálogo de asignaturas (categoría → rubro → asignatura) para el ABM del backoffice. Las asignaturas se
@@ -52,7 +53,7 @@ export async function catalogoDeCategoria(categoria: CategoriaDocente): Promise<
       busquedas_activas: number;
     }>(sql`
       select a.id, a.rubro, a.nombre, a.orden,
-        (select count(*)::int from docentes d where d.categoria = a.categoria and a.nombre = any(d.asignaturas)) as docentes,
+        (select count(*)::int from docentes d where (d.categoria = a.categoria or a.categoria = any(d.categorias_extra)) and a.nombre = any(d.asignaturas)) as docentes,
         (select count(*)::int from busquedas b where b.categoria = a.categoria and b.disciplina = a.nombre) as busquedas_total,
         (select count(*)::int from busquedas b where b.categoria = a.categoria and b.disciplina = a.nombre and b.estado = 'activa') as busquedas_activas
       from asignaturas a
@@ -62,7 +63,7 @@ export async function catalogoDeCategoria(categoria: CategoriaDocente): Promise<
       db
         .select({ n: count() })
         .from(docentes)
-        .where(and(eq(docentes.categoria, categoria), eq(docentes.onboardingCompleto, true))),
+        .where(and(esDeCategoria(categoria), eq(docentes.onboardingCompleto, true))),
       db
         .select({ n: count() })
         .from(busquedas)
@@ -105,7 +106,7 @@ export async function usoDeAsignatura(
     ejecutor
       .select({ n: count() })
       .from(docentes)
-      .where(and(eq(docentes.categoria, categoria), sql`${nombre} = any(${docentes.asignaturas})`)),
+      .where(and(esDeCategoria(categoria), sql`${nombre} = any(${docentes.asignaturas})`)),
     ejecutor
       .select({
         total: count(),
@@ -147,7 +148,7 @@ export async function propagarRenombre(
           group by x
         ) s)`,
     })
-    .where(and(eq(docentes.categoria, categoria), sql`${de} = any(${docentes.asignaturas})`))
+    .where(and(esDeCategoria(categoria), sql`${de} = any(${docentes.asignaturas})`))
     .returning({ id: docentes.id });
 
   const ofertas = await tx

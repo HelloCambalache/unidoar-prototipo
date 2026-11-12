@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { BotonDeFiltros, PieDeFiltros, cerrarYVerResultados } from "@/components/app/filtros-celular";
 import { Icono } from "@/components/icons";
 import { Boton } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS, NIVELES, TIPOS_BUSQUEDA, TURNOS } from "@/lib/catalogo";
 import { ID_DE_RESULTADOS } from "@/lib/filtros-celular";
 import {
-  categoriaDeBusqueda,
+  categoriasDeBusqueda,
   CATEGORIA_TODAS,
   ETIQUETA_FILTRO_CATEGORIA,
   hrefOportunidades,
@@ -36,7 +36,7 @@ export function ControlesBuscador({
   filtros,
   radio,
   radioPorDefecto,
-  categoriaPropia,
+  categoriasPropias,
   conMaterias = false,
   conUbicacion,
   modo,
@@ -54,8 +54,8 @@ export function ControlesBuscador({
   radio: number;
   /** Radio guardado en el perfil: es el que vuelve al limpiar los filtros. */
   radioPorDefecto: number;
-  /** Categoría del profesional: la que se muestra mientras no elija otra o "Todas" (ver `categoriaDeBusqueda`). Sin ella (público) no hay una por defecto. */
-  categoriaPropia?: CategoriaDocente;
+  /** Categorías del profesional: las que se muestran mientras no elija otra o "Todas" (ver `categoriasDeBusqueda`). Sin ellas (público) no hay una por defecto. */
+  categoriasPropias?: CategoriaDocente[];
   /** El profesional tiene asignaturas cargadas en su perfil: solo entonces se ofrece «Solo mi materia». */
   conMaterias?: boolean;
   conUbicacion: boolean;
@@ -90,7 +90,7 @@ export function ControlesBuscador({
         modo={modo}
         radio={radio}
         radioPorDefecto={radioPorDefecto}
-        categoriaPropia={categoriaPropia}
+        categoriasPropias={categoriasPropias}
         conMaterias={conMaterias}
         conUbicacion={conUbicacion}
         publico={publico}
@@ -284,7 +284,17 @@ function RangoDeBusqueda({
     setReiniciosVistos(reinicios);
     setKm(porDefecto);
   }
+  // En el celular el navegador a veces se queda con el gesto (cree que querés desplazar la página) y nunca avisa que soltaste el
+  // dedo: el slider quedaba mostrando 30 km y no se aplicaba. Por eso, además de al soltar, se aplica cuando el valor dejó de
+  // cambiar un instante.
+  const espera = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelarEspera = () => {
+    if (espera.current) clearTimeout(espera.current);
+    espera.current = null;
+  };
+  useEffect(() => cancelarEspera, []);
   const confirmar = (valor: number) => {
+    cancelarEspera();
     if (valor !== vigente) onCambio(valor);
   };
 
@@ -314,9 +324,16 @@ function RangoDeBusqueda({
         step={1}
         value={km}
         disabled={!habilitado}
-        onChange={(e) => setKm(Number(e.target.value))}
-        // Se aplica al soltar (mouse, dedo o teclado), no en cada paso del slider.
+        onChange={(e) => {
+          const nuevo = Number(e.target.value);
+          setKm(nuevo);
+          cancelarEspera();
+          espera.current = setTimeout(() => confirmar(nuevo), 500);
+        }}
+        // Se aplica al soltar (mouse, dedo o teclado) o, si el navegador no avisa, cuando el valor deja de cambiar: no en cada paso.
         onPointerUp={(e) => confirmar(Number(e.currentTarget.value))}
+        onPointerCancel={(e) => confirmar(Number(e.currentTarget.value))}
+        onTouchEnd={(e) => confirmar(Number(e.currentTarget.value))}
         onKeyUp={(e) => confirmar(Number(e.currentTarget.value))}
         className={cn("mb-1.5 w-full accent-rosa disabled:opacity-50", app && "h-6 cursor-pointer")}
       />
@@ -455,7 +472,7 @@ function PanelFiltrosApp({
   modo,
   radio,
   radioPorDefecto,
-  categoriaPropia,
+  categoriasPropias,
   conMaterias,
   conUbicacion,
   publico,
@@ -467,7 +484,7 @@ function PanelFiltrosApp({
   modo: "todas" | "rapidas";
   radio: number;
   radioPorDefecto: number;
-  categoriaPropia?: CategoriaDocente;
+  categoriasPropias?: CategoriaDocente[];
   conMaterias: boolean;
   conUbicacion: boolean;
   publico: boolean;
@@ -477,11 +494,12 @@ function PanelFiltrosApp({
 }) {
   const [abierto, setAbierto] = useState(false);
   const botonDeFiltros = useRef<HTMLButtonElement>(null);
-  // La categoría que se está viendo: la elegida o, sin elegir, la del profesional. Solo cuenta como filtro puesto si no es esa.
-  const categoriaVista = categoriaDeBusqueda(filtros.categoria, categoriaPropia);
+  // Las categorías que se están viendo: la elegida o, sin elegir, las del profesional (todas las suyas). Elegir una sola o «Todas» cuenta como filtro puesto.
+  const propias = categoriasPropias ?? [];
+  const categoriasVistas = categoriasDeBusqueda(filtros.categoria, propias);
   const activos =
     Object.entries(filtros).filter(([clave, valor]) => clave !== "vista" && clave !== "categoria" && valor !== undefined).length +
-    (categoriaVista !== categoriaPropia ? 1 : 0);
+    (filtros.categoria !== undefined ? 1 : 0);
 
   const opcion = (activa: boolean, color: string, punto: React.ReactNode, texto: string, onClick: () => void) => (
     <button
@@ -550,21 +568,22 @@ function PanelFiltrosApp({
         <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
           <legend className="mb-2 p-0 text-[12px] font-semibold tracking-[.08em] text-apagado uppercase">Categoría</legend>
           {opcion(
-            categoriaVista === undefined,
+            categoriasVistas === undefined,
             "bg-navy-50 ring-navy-700/30",
             <span aria-hidden className="size-2.5 flex-none rounded-full bg-[linear-gradient(135deg,#c2187a,#5b3fd0_45%,#22b8d9_75%,#f59332)]" />,
             "Todas",
-            // Con una categoría propia, "Todas" tiene que pedirse explícitamente: sin elegir nada se ve la propia.
-            () => aplicar({ categoria: categoriaPropia ? CATEGORIA_TODAS : null }),
+            // Con categorías propias, "Todas" tiene que pedirse explícitamente: sin elegir nada se ven las propias.
+            () => aplicar({ categoria: propias.length > 0 ? CATEGORIA_TODAS : null }),
           )}
           {CATEGORIAS.map((c) => (
             <div key={c}>
               {opcion(
-                categoriaVista === c,
+                categoriasVistas?.includes(c) ?? false,
                 COLOR_CATEGORIA[c].activa,
                 <span aria-hidden className={cn("size-2.5 flex-none rounded-full", COLOR_CATEGORIA[c].punto)} />,
                 ETIQUETA_FILTRO_CATEGORIA[c],
-                () => aplicar({ categoria: c === categoriaPropia ? null : c }),
+                // Con una sola categoría propia, tocarla vuelve a lo de siempre; con varias, elige solo esa («Limpiar» vuelve a todas las suyas).
+                () => aplicar({ categoria: propias.length === 1 && propias[0] === c ? null : c }),
               )}
             </div>
           ))}

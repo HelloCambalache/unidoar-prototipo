@@ -1,6 +1,34 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { categoriaDeBusqueda, compararOfertas, hrefOportunidades, leerFiltrosOportunidades, urgentesPrimero } from "@/lib/oportunidades";
+import {
+  categoriaDeBusqueda,
+  categoriasDeBusqueda,
+  compararOfertas,
+  hrefOportunidades,
+  leerFiltrosOportunidades,
+  urgentesPrimero,
+} from "@/lib/oportunidades";
+
+describe("categoriasDeBusqueda (un profesional con varias categorías)", () => {
+  it("sin elegir, ve las de todas las suyas", () => {
+    assert.deepEqual(categoriasDeBusqueda(undefined, ["educador", "guardavidas"]), ["educador", "guardavidas"]);
+    assert.deepEqual(categoriasDeBusqueda(undefined, ["entrenador"]), ["entrenador"]);
+  });
+
+  it("una categoría puntual manda sobre las propias", () => {
+    assert.deepEqual(categoriasDeBusqueda("guardavidas", ["educador", "guardavidas"]), ["guardavidas"]);
+    assert.deepEqual(categoriasDeBusqueda("entrenador", ["educador"]), ["entrenador"]);
+  });
+
+  it("«Todas» saca el filtro", () => {
+    assert.equal(categoriasDeBusqueda("todas", ["educador", "guardavidas"]), undefined);
+  });
+
+  it("sin categorías propias (el sitio público) y sin elegir no se filtra nada", () => {
+    assert.equal(categoriasDeBusqueda(undefined, []), undefined);
+    assert.equal(categoriasDeBusqueda(undefined), undefined);
+  });
+});
 
 const o = (id: string, rapida: boolean, postulacion: unknown = null) => ({ id, rapida, postulacion });
 

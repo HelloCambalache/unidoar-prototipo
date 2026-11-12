@@ -42,6 +42,19 @@ export function categoriaDeBusqueda(elegida: FiltrosOportunidades["categoria"], 
 }
 
 /**
+ * Lo mismo para un profesional con más de una categoría (docente y guardavidas…): sin elegir, ve las de TODAS las suyas; una categoría
+ * puntual manda sobre eso y «Todas» saca el filtro. Sin categorías propias (el sitio público), sin elegir no se filtra nada.
+ */
+export function categoriasDeBusqueda(
+  elegida: FiltrosOportunidades["categoria"],
+  propias: readonly CategoriaDocente[] = [],
+): CategoriaDocente[] | undefined {
+  if (elegida === CATEGORIA_TODAS) return undefined;
+  if (elegida) return [elegida];
+  return propias.length > 0 ? [...propias] : undefined;
+}
+
+/**
  * Orden de las búsquedas de la lista: las rápidas primero; dentro de cada grupo, las de la materia del profesional y,
  * entre iguales, las más cercanas (las que no tienen distancia calculable, al final).
  */

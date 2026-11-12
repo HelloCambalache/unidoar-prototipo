@@ -9,7 +9,8 @@ import { Boton } from "@/components/ui/button";
 import { AlertaError, SeccionPaso } from "@/components/onboarding/elementos";
 import { Campo, Casilla, Input } from "@/components/ui/campos";
 import { SelectorAsignaturas } from "@/components/onboarding/selector-asignaturas";
-import { CATEGORIAS } from "@/lib/catalogo";
+import { conservarAlCambiarDeCategoria } from "@/lib/asignaturas";
+import { CATEGORIA_INFO, CATEGORIAS } from "@/lib/catalogo";
 import {
   CATEGORIA_ALTA,
   ID_FORMULARIO_ONBOARDING,
@@ -31,23 +32,32 @@ export function PasoCategoria({
   catalogo: CatalogoAsignaturas;
   /** La cuenta todavía no aceptó los términos (entró con Google desde "Ingresar"): se piden acá, antes de crear el perfil. */
   pedirTerminos: boolean;
-  inicial: { categoria: CategoriaDocente; asignaturas: string[]; estudio: SituacionEstudio; porcentaje: string };
+  inicial: { categorias: CategoriaDocente[]; asignaturas: string[]; estudio: SituacionEstudio; porcentaje: string };
 }) {
   const [estado, accion, pendiente] = useActionState(guardarCategoriaDocente, null);
-  const [categoria, setCategoria] = useState(inicial.categoria);
+  const [categorias, setCategorias] = useState<CategoriaDocente[]>(inicial.categorias);
   const [elegidas, setElegidas] = useState(inicial.asignaturas);
   const [estudio, setEstudio] = useState(inicial.estudio);
   const [porcentaje, setPorcentaje] = useState(inicial.porcentaje);
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
 
-  const elegirCategoria = (c: CategoriaDocente) => {
-    setCategoria(c);
-    // Las asignaturas de otra categoría dejan de tener sentido: se descartan.
-    const validas = new Set(catalogo[c].flatMap((g) => g.items));
-    setElegidas((previas) => previas.filter((a) => validas.has(a)));
+  // Se puede ser de más de una categoría (docente y guardavidas, por ejemplo): tocar una la suma o la quita, y queda siempre al menos una.
+  const alternarCategoria = (c: CategoriaDocente) => {
+    const siguientes = categorias.includes(c) ? categorias.filter((x) => x !== c) : CATEGORIAS.filter((x) => x === c || categorias.includes(x));
+    if (siguientes.length === 0) return;
+    setCategorias(siguientes);
+    // Las asignaturas de una categoría que ya no está dejan de tener sentido: se descartan (las que la persona escribió a mano se conservan).
+    const delasNuevas = siguientes.flatMap((k) => catalogo[k].flatMap((g) => g.items));
+    const deTodas = CATEGORIAS.flatMap((k) => catalogo[k].flatMap((g) => g.items));
+    setElegidas((previas) => conservarAlCambiarDeCategoria(previas, delasNuevas, deTodas));
   };
 
-  const credencial = CATEGORIA_ALTA[categoria].credencial.nombre;
+  // Con una sola categoría los rubros son los de su catálogo; con varias, cada rubro lleva el nombre de su categoría (dos categorías pueden tener el mismo rubro).
+  const grupos =
+    categorias.length === 1
+      ? catalogo[categorias[0]!]
+      : categorias.flatMap((k) => catalogo[k].map((g) => ({ rubro: `${CATEGORIA_INFO[k].plural} · ${g.rubro}`, items: g.items })));
+  const pedidas = categorias.map((c) => CATEGORIA_ALTA[c].credencial.nombre);
   const tarjeta = "cursor-pointer rounded-xl border-2 bg-white transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-navy-700/30";
 
   return (
@@ -57,9 +67,10 @@ export function PasoCategoria({
       <h1 className="sr-only">Elegí tu categoría</h1>
       {/* Las columnas dependen del ancho del formulario (no de la pantalla): en una columna angosta "Entrenador/a / Instructor/a" se partía en tres renglones. */}
       <div className="@container mb-6">
-        <div role="radiogroup" aria-label="Categoría" className="grid grid-cols-1 gap-2.5 @min-[520px]:grid-cols-3">
+        <p className="mt-0 mb-3 text-[13.5px] leading-normal text-apagado">Podés elegir más de una: por ejemplo, docente y guardavidas.</p>
+        <div role="group" aria-label="Categorías" className="grid grid-cols-1 gap-2.5 @min-[520px]:grid-cols-3">
           {CATEGORIAS.map((c) => {
-            const seleccionada = categoria === c;
+            const seleccionada = categorias.includes(c);
             return (
               <label
                 key={c}
@@ -69,7 +80,7 @@ export function PasoCategoria({
                   seleccionada ? "border-navy-700" : "border-borde",
                 )}
               >
-                <input type="radio" name="categoria" value={c} checked={seleccionada} onChange={() => elegirCategoria(c)} className="sr-only" />
+                <input type="checkbox" name="categoria" value={c} checked={seleccionada} onChange={() => alternarCategoria(c)} className="sr-only" />
                 <span
                   aria-hidden
                   className={cn(
@@ -88,18 +99,18 @@ export function PasoCategoria({
           })}
         </div>
       </div>
-      {campos.categoria && (
+      {(campos.categorias ?? campos.categoria) && (
         <p role="alert" className="-mt-3.5 mb-4 text-xs text-[#b91c1c]">
-          {campos.categoria}
+          {campos.categorias ?? campos.categoria}
         </p>
       )}
 
       <SeccionPaso
         titulo="¿Qué enseñás?"
-        bajada="Elegí el rubro y después la asignatura. Sumá todas las que dés: cuantas más, en más búsquedas aparecés."
+        bajada="Elegí el rubro y después la asignatura. Si la tuya no está, elegí «Otra» y escribila. Sumá todas las que dés: cuantas más, en más búsquedas aparecés."
         className="mb-0"
       >
-        <SelectorAsignaturas key={categoria} grupos={catalogo[categoria]} elegidas={elegidas} onCambio={setElegidas} error={campos.asignaturas} />
+        <SelectorAsignaturas key={categorias.join()} grupos={grupos} elegidas={elegidas} onCambio={setElegidas} error={campos.asignaturas} />
       </SeccionPaso>
 
       <SeccionPaso
@@ -155,7 +166,9 @@ export function PasoCategoria({
           </>
         ) : (
           <>
-            Te vamos a pedir <b className="font-semibold text-tinta">{credencial}</b>.
+            Te vamos a pedir{" "}
+            <b className="font-semibold text-tinta">{pedidas.join(", ").replace(/, ([^,]*)$/, " y $1")}</b>
+            {pedidas.length > 1 ? " (un archivo por cada uno)" : ""}.
           </>
         )}
       </div>

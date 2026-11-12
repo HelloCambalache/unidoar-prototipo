@@ -1,7 +1,8 @@
 import "server-only";
-import { and, arrayOverlaps, count, desc, eq, inArray, isNotNull, ne, sql, type SQL } from "drizzle-orm";
+import { and, arrayOverlaps, count, desc, eq, isNotNull, ne, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/db";
 import { docentes, zonas, type CategoriaDocente, type Institucion } from "@/db/schema";
+import { esDeAlgunaCategoria, esDeCategoria } from "@/lib/queries/categorias-sql";
 import { distanciaKm, kmLegible } from "@/lib/geo";
 import {
   TOPE_AVISOS,
@@ -67,7 +68,7 @@ export async function resolverZonas(texto?: string | null): Promise<ZonasDeBusqu
 
 function condiciones(f: FiltrosCoincidencia, z: ZonasDeBusqueda | null): SQL[] {
   const c: SQL[] = [
-    eq(docentes.categoria, f.categoria),
+    esDeCategoria(f.categoria),
     eq(docentes.onboardingCompleto, true),
     docenteVisible,
     f.incluirSinVerificar ? ne(docentes.verificacion, "rechazado") : eq(docentes.verificacion, "verificado"),
@@ -203,7 +204,8 @@ export async function docentesRecomendados(
       where p.docente_id = ${docentes.id} and b.institucion_id = ${institucion.id} and b.estado <> 'cerrada'
     )`,
   ];
-  if (categorias.length) c.push(inArray(docentes.categoria, categorias));
+  const deAlguna = esDeAlgunaCategoria(categorias);
+  if (deAlguna) c.push(deAlguna);
   if (z) c.push(arrayOverlaps(docentes.zonas, z.ampliada));
 
   const candidatos = await getDb()
@@ -224,6 +226,7 @@ export async function docentesRecomendados(
       const { puntaje, motivos, busquedaId } = puntuarCandidato(
         {
           categoria: d.categoria,
+          categoriasExtra: d.categoriasExtra,
           asignaturas: d.asignaturas,
           niveles: d.niveles,
           disponibilidad: d.disponibilidad,

@@ -7,9 +7,11 @@ import { Boton } from "@/components/ui/button";
 import { AvisoSinAlmacenamiento, SubirArchivo } from "@/components/ui/subir-archivo";
 import { BotonEnvio } from "@/components/onboarding/boton-envio";
 import { AlertaError, EnlaceVolver, TituloPaso } from "@/components/onboarding/elementos";
+import { credencialesQueSePiden } from "@/lib/categorias-docente";
 import { FOTOS_DNI_SE_ELIMINAN } from "@/lib/documentos";
 import { CONSTANCIA } from "@/lib/estudiantes";
-import { CATEGORIA_ALTA, ID_FORMULARIO_ONBOARDING, type SituacionEstudio } from "@/lib/onboarding";
+import { ID_FORMULARIO_ONBOARDING, type SituacionEstudio } from "@/lib/onboarding";
+import { CLAVES_DE_TITULO, casillasAbiertas, etiquetaDeCasilla, MAX_TITULOS, type ClaveDeTitulo } from "@/lib/titulos";
 import { cn } from "@/lib/utils";
 import { Icono } from "@/components/icons";
 
@@ -57,12 +59,13 @@ function Fila({
  * hasta que el equipo revise lo que haya. Acá se cierra el alta.
  */
 export function PasoDocumentacion({
-  categoria,
+  categorias,
   estudio,
   documentos,
   almacenamientoDisponible,
 }: {
-  categoria: CategoriaDocente;
+  /** Las categorías del perfil (la principal primero): con varias se pide un título por cada una. */
+  categorias: CategoriaDocente[];
   estudio: SituacionEstudio;
   documentos: DocumentosDocente;
   almacenamientoDisponible: boolean;
@@ -71,13 +74,17 @@ export function PasoDocumentacion({
   const [cargados, setCargados] = useState({
     dniFrente: Boolean(documentos.dniFrente),
     dniDorso: Boolean(documentos.dniDorso),
-    credencial: Boolean(documentos.credencial),
     constancia: Boolean(documentos.constancia),
   });
+  // Varios títulos, cada uno en su casilla: se muestran los cargados y se abre otra con «Agregar otro título».
+  const [titulos, setTitulos] = useState<Record<ClaveDeTitulo, boolean>>(
+    () => Object.fromEntries(CLAVES_DE_TITULO.map((k) => [k, Boolean(documentos[k])])) as Record<ClaveDeTitulo, boolean>,
+  );
+  const [casillas, setCasillas] = useState(() => casillasAbiertas(documentos));
   const campos = estado && !estado.ok ? (estado.campos ?? {}) : {};
   const marcar = (clave: keyof typeof cargados) => (valor: string) => setCargados((c) => ({ ...c, [clave]: valor !== "" }));
 
-  const credencial = CATEGORIA_ALTA[categoria].credencial;
+  const credencial = credencialesQueSePiden({ categoria: categorias[0]!, categoriasExtra: categorias.slice(1) });
   const dniCompleto = cargados.dniFrente && cargados.dniDorso;
   const detalleDni = dniCompleto
     ? "Frente y dorso cargados"
@@ -147,24 +154,38 @@ export function PasoDocumentacion({
             />
           </Fila>
         ) : (
-          <Fila
-            icono="credencial"
-            cargado={cargados.credencial}
-            nombre={credencial.nombre}
-            detalle={cargados.credencial ? credencial.corto : credencial.vacio}
-          >
-            <SubirArchivo
-              bucket="privado"
-              carpeta="documentos"
-              nombre="credencial"
-              etiqueta={credencial.nombre}
-              variante="boton"
-              textoBoton="Subir archivo"
-              valorInicial={documentos.credencial}
-              disponible={almacenamientoDisponible}
-              onCambio={marcar("credencial")}
-            />
-          </Fila>
+          <>
+            {CLAVES_DE_TITULO.slice(0, casillas).map((clave, i) => {
+              const nombre = etiquetaDeCasilla(i, casillas, credencial.nombre);
+              return (
+                <Fila
+                  key={clave}
+                  icono="credencial"
+                  cargado={titulos[clave]}
+                  nombre={nombre}
+                  detalle={titulos[clave] ? credencial.corto : i === 0 ? credencial.vacio : "Otro título o certificación (PDF o foto)"}
+                >
+                  <SubirArchivo
+                    bucket="privado"
+                    carpeta="documentos"
+                    nombre={clave}
+                    etiqueta={nombre}
+                    variante="boton"
+                    textoBoton="Subir archivo"
+                    valorInicial={documentos[clave]}
+                    disponible={almacenamientoDisponible}
+                    onCambio={(v) => setTitulos((t) => ({ ...t, [clave]: v !== "" }))}
+                  />
+                </Fila>
+              );
+            })}
+            {/* Otro título (de otra categoría, otra certificación…): cada uno va en su propio archivo. */}
+            {casillas < MAX_TITULOS && titulos[CLAVES_DE_TITULO[casillas - 1]!] && (
+              <Boton variante="secundario" tamano="sm" className="self-start" onClick={() => setCasillas((n) => Math.min(MAX_TITULOS, n + 1))}>
+                + Agregar otro título
+              </Boton>
+            )}
+          </>
         )}
       </div>
       <p className="m-0 mt-3 flex items-start gap-2 rounded-caja bg-[#F7F6F2] px-3.5 py-3 text-[13px] leading-[1.45] text-apagado">

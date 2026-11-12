@@ -1,5 +1,6 @@
 import type { CategoriaDocente } from "@/db/schema";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { categoriasDe, tieneCategoria, type ConCategorias } from "@/lib/categorias-docente";
 import { coincideAsignatura, normalizar } from "@/lib/coincidencia";
 
 /*
@@ -20,7 +21,7 @@ export type RubrosDelCatalogo = ReadonlyMap<string, string>;
 
 export const claveDeRubro = (categoria: CategoriaDocente, asignatura: string) => `${categoria}|${normalizar(asignatura)}`;
 
-export type PerfilParaHabilitar = { categoria: CategoriaDocente; asignaturas: string[] };
+export type PerfilParaHabilitar = ConCategorias & { asignaturas: string[] };
 export type BusquedaParaHabilitar = { categoria: CategoriaDocente; disciplina: string };
 
 export type Habilitacion =
@@ -38,11 +39,13 @@ export function habilitacionParaBusqueda(
   busqueda: BusquedaParaHabilitar,
   rubros: RubrosDelCatalogo,
 ): Habilitacion {
-  if (busqueda.categoria !== perfil.categoria) {
+  // Un perfil puede tener varias categorías (docente y guardavidas…): alcanza con que la búsqueda sea de alguna de ellas.
+  if (!tieneCategoria(perfil, busqueda.categoria)) {
+    const propias = categoriasDe(perfil).map((c) => CATEGORIA_INFO[c].plural.toLowerCase());
     return {
       habilitado: false,
       motivo: "categoria",
-      mensaje: `Esta búsqueda es para ${CATEGORIA_INFO[busqueda.categoria].plural.toLowerCase()} y tu perfil es de ${CATEGORIA_INFO[perfil.categoria].plural.toLowerCase()}. Solo podés postularte a las búsquedas de tu categoría.`,
+      mensaje: `Esta búsqueda es para ${CATEGORIA_INFO[busqueda.categoria].plural.toLowerCase()} y tu perfil es de ${lista(propias)}. Solo podés postularte a las búsquedas de tu ${propias.length > 1 ? "categorías" : "categoría"}.`,
     };
   }
 
@@ -50,8 +53,9 @@ export function habilitacionParaBusqueda(
   if (propias.length === 0) return { habilitado: true };
   if (coincideAsignatura(busqueda.disciplina, propias)) return { habilitado: true };
 
+  // El área (rubro) se compara dentro de la categoría de la búsqueda: las asignaturas del perfil que son de otra categoría no cuentan.
   const rubroDeLaBusqueda = rubros.get(claveDeRubro(busqueda.categoria, busqueda.disciplina));
-  if (rubroDeLaBusqueda && propias.some((a) => rubros.get(claveDeRubro(perfil.categoria, a)) === rubroDeLaBusqueda)) {
+  if (rubroDeLaBusqueda && propias.some((a) => rubros.get(claveDeRubro(busqueda.categoria, a)) === rubroDeLaBusqueda)) {
     return { habilitado: true };
   }
 

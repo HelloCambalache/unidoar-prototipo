@@ -10,6 +10,7 @@ import { pinesDeOfertas } from "@/components/oportunidades/pines";
 import { BotonLink } from "@/components/ui/button";
 import { requerirDocente } from "@/lib/auth";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { categoriasDe } from "@/lib/categorias-docente";
 import {
   CATEGORIA_TODAS,
   hrefOportunidades,
@@ -51,7 +52,9 @@ export async function BuscadorOportunidades({
   // Sin elegir categoría se muestran las de la suya: se avisa y se ofrece ver las de todas (`?categoria=todas`).
   const soloMiCategoria = filtros.categoria === undefined;
   const hrefTodasLasCategorias = hrefOportunidades(base, filtros, { categoria: CATEGORIA_TODAS });
-  const miCategoria = CATEGORIA_INFO[docente.categoria].plural;
+  // Con más de una categoría se ven las de todas (docentes y guardavidas…): «Docentes y Guardavidas».
+  const categoriasPropias = categoriasDe(docente);
+  const miCategoria = categoriasPropias.map((c) => CATEGORIA_INFO[c].plural).join(" y ");
 
   const rapidas = modo === "rapidas";
   const n = ofertas.length;
@@ -79,7 +82,7 @@ export async function BuscadorOportunidades({
         filtros={filtros}
         radio={radio}
         radioPorDefecto={docente.radioKm}
-        categoriaPropia={docente.categoria}
+        categoriasPropias={categoriasPropias}
         conMaterias={docente.asignaturas.length > 0}
         conUbicacion={conUbicacion}
         modo={modo}
@@ -95,7 +98,8 @@ export async function BuscadorOportunidades({
       >
         {soloMiCategoria && n > 0 && (
           <p className="mt-0 mb-4 text-[13.5px] leading-normal text-apagado">
-            Te mostramos las búsquedas de <strong className="font-semibold text-tinta-2">{miCategoria}</strong>, tu categoría.{" "}
+            Te mostramos las búsquedas de <strong className="font-semibold text-tinta-2">{miCategoria}</strong>,{" "}
+            {categoriasPropias.length > 1 ? "tus categorías" : "tu categoría"}.{" "}
             <Link href={hrefTodasLasCategorias} replace scroll={false} className="font-semibold text-rosa underline">
               Ver las de todas las categorías
             </Link>

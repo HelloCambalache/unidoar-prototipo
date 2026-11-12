@@ -18,10 +18,13 @@ import {
   inscripcionesCurso,
   instituciones,
   zonas,
+  type CategoriaDocente,
+  type DocumentosDocente,
 } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { institucionVisible } from "@/lib/visibilidad";
 import { requerirDocente } from "@/lib/auth";
+import { decidirCategorias } from "@/lib/categorias-docente";
 import { normalizar } from "@/lib/coincidencia";
 import { decidirEstudios, esEstudiante } from "@/lib/estudiantes";
 import { hoyArgentina } from "@/lib/fechas-curso";
@@ -30,7 +33,9 @@ import { cambiaElNombre, identidadFija, perfilDocenteSchema } from "@/lib/perfil
 import { notificar } from "@/lib/queries/notificaciones";
 import { planes } from "@/lib/queries/planes";
 import { usuariosDeInstitucion } from "@/lib/queries/instituciones";
+import { ubicarPrimeraZona } from "@/lib/queries/ubicacion-zonas";
 import { esPathPrivadoPropio, esUrlPublicaPropia } from "@/lib/subidas";
+import { CLAVES_DE_TITULO, compactarTitulos, esClaveDeTitulo, mismosDocumentos, sumaUnTitulo } from "@/lib/titulos";
 import { PERFIL_RECHAZADO, puedePostularse } from "@/lib/perfil-docente";
 
 const idSchema = z.guid();
@@ -240,8 +245,16 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     .from(docenteDetalle)
     .where(eq(docenteDetalle.docenteId, docente.id))
     .limit(1);
-  const documentos = { ...(detalle?.documentos ?? {}) };
-  const documentosAnteriores = { ...documentos };
+  let documentos: DocumentosDocente = { ...(detalle?.documentos ?? {}) };
+  const documentosAnteriores: DocumentosDocente = { ...documentos };
+
+  // Categorías (una o más): ausentes en el formulario = no se tocan. La principal es la que ya tenía, si la sigue teniendo.
+  let categoriasNuevas: { categoria: CategoriaDocente; categoriasExtra: CategoriaDocente[] } | undefined;
+  if (datos.categorias !== undefined) {
+    const decididas = decidirCategorias(datos.categorias, docente.categoria);
+    if (!decididas.ok) return fallo(decididas.error, { categorias: decididas.error });
+    categoriasNuevas = decididas.datos;
+  }
 
   // Estudios: "estoy estudiando" (porcentaje + constancia) o "ya me recibí" (título). Ausente en el formulario = no se tocan.
   const estudiosEnFormulario = datos.situacionEstudio !== undefined;
@@ -261,6 +274,8 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
   let documentacionNueva = false;
   // Subió un título que todavía no se revisó: si el perfil ya está verificado, el equipo lo valida desde la ficha.
   let tituloNuevo = false;
+  // Sumó un título cuando ya había uno verificado: se puede (es lo que hace quien agrega otra categoría), pero el equipo tiene que volver a validar.
+  let reverificarTitulo = false;
   const QUE_ES = {
     conducta: "el certificado",
     dniFrente: "el frente del DNI",
@@ -270,7 +285,7 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
   } as const;
   // Quien se recibió ya no necesita la constancia: se quita (y se borra de Storage al terminar).
   if (!estudiante && estudiosEnFormulario) delete documentos.constancia;
-  for (const clave of ["conducta", "dniFrente", "dniDorso", "credencial", "constancia"] as const) {
+  for (const clave of ["conducta", "dniFrente", "dniDorso", ...CLAVES_DE_TITULO, "constancia"] as const) {
     const nuevo = datos[clave];
     if (nuevo === undefined || nuevo === (documentos[clave] ?? "")) continue;
     // La constancia solo corresponde a quien estudia: si se recibió se ignora lo que haya mandado.
@@ -280,23 +295,31 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
       if (docente.verificacion === "rechazado") {
         return fallo("Rechazamos tu verificación: escribinos desde Contacto y lo revisamos.", { [clave]: "No se puede cambiar" });
       }
-      const verificado = clave === "credencial" ? docente.tituloVerificado : docente.verificacion === "verificado";
-      if (verificado) {
+      const esTitulo = esClaveDeTitulo(clave);
+      const verificado = esTitulo ? docente.tituloVerificado : docente.verificacion === "verificado";
+      // Un título ya verificado no se cambia ni se quita desde acá; sumar otro en una casilla vacía sí.
+      const suma = sumaUnTitulo(clave, Boolean(documentos[clave]), nuevo);
+      if (verificado && !suma) {
         return fallo("Ya lo verificamos: si necesitás cambiarlo, escribinos desde Contacto.", { [clave]: "Ya está verificado" });
       }
+      if (verificado && suma) reverificarTitulo = true;
     }
     if (nuevo && !esPathPrivadoPropio(nuevo, usuario.id, "documentos")) {
-      return fallo(`No pudimos validar ${QUE_ES[clave]}. Subilo de nuevo.`, { [clave]: "Archivo inválido" });
+      return fallo(`No pudimos validar ${esClaveDeTitulo(clave) ? "el título" : QUE_ES[clave as keyof typeof QUE_ES]}. Subilo de nuevo.`, {
+        [clave]: "Archivo inválido",
+      });
     }
     if (nuevo) documentos[clave] = nuevo;
     else delete documentos[clave];
     if (clave === "conducta") conductaCambio = true;
     else if (nuevo) {
       documentacionNueva = true;
-      if (clave === "credencial") tituloNuevo = true;
+      if (esClaveDeTitulo(clave)) tituloNuevo = true;
     }
   }
-  const documentosCambio = conductaCambio || documentacionNueva || Object.keys(documentosAnteriores).some((k) => !(k in documentos));
+  // Los títulos ocupan las primeras casillas sin huecos (si se quitó el primero, el segundo pasa a ser el primero).
+  documentos = compactarTitulos(documentos);
+  const documentosCambio = conductaCambio || documentacionNueva || !mismosDocumentos(documentosAnteriores, documentos);
 
   const sinRepetir = (items: string[]) => {
     const vistos = new Set<string>();
@@ -309,17 +332,12 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
   };
   const zonasNuevas = sinRepetir(datos.zonas);
 
-  // Si cambió la primera zona (o todavía no tenía ubicación), la posición sale de la tabla de zonas.
+  // Si cambió la primera zona (o todavía no tenía ubicación), la posición sale de la primera zona que se pueda ubicar: la tabla de
+  // zonas y, para las que escribió a mano (La Plata, Mar del Plata…), Georef. Sin coordenadas la zona se guarda igual.
   let ubicacion: { lat: number; lng: number } | undefined;
   if (zonasNuevas.length && (zonasNuevas[0] !== docente.zonas[0] || docente.lat == null || docente.lng == null)) {
     const catalogo = await db.select({ nombre: zonas.nombre, lat: zonas.lat, lng: zonas.lng }).from(zonas);
-    for (const z of zonasNuevas) {
-      const hit = catalogo.find((c) => normalizar(c.nombre) === normalizar(z));
-      if (hit?.lat != null && hit.lng != null) {
-        ubicacion = { lat: hit.lat, lng: hit.lng };
-        break;
-      }
-    }
+    ubicacion = (await ubicarPrimeraZona(zonasNuevas, catalogo)) ?? undefined;
   }
 
   const guardado = await transaccion(async (tx) => {
@@ -355,6 +373,7 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         aniosExperiencia: datos.aniosExperiencia,
         radioKm: datos.radioKm,
         zonas: zonasNuevas,
+        ...(categoriasNuevas ?? {}),
         asignaturas: sinRepetir(datos.asignaturas),
         niveles: [...new Set(datos.niveles)],
         experiencia: datos.experiencia.filter((e) => e.titulo),
@@ -365,6 +384,8 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
         ...(datos.cvUrl !== undefined ? { cvUrl: datos.cvUrl || null } : {}),
         // Un certificado nuevo hay que volver a revisarlo.
         ...(conductaCambio ? { antecedentesVerificados: false } : {}),
+        // Sumó un título cuando ya había uno verificado: hay que volver a revisarlos (igual que un certificado nuevo).
+        ...(reverificarTitulo ? { tituloVerificado: false } : {}),
         // Quien tenía una corrección pedida y sube documentación nueva vuelve a la cola de revisión.
         ...(documentacionNueva && docente.verificacion === "correccion" ? { verificacion: "pendiente" as const } : {}),
       })
@@ -372,7 +393,7 @@ export async function actualizarPerfilDocente(_previo: Resultado | null, formDat
     // El equipo se entera de que hay documentación para revisar: si todavía no está verificado ni rechazado (cola de verificación),
     // o si ya está verificado y subió el título (se valida desde su ficha).
     const enCola = docente.verificacion === "pendiente" || docente.verificacion === "correccion";
-    const tituloParaRevisar = tituloNuevo && docente.verificacion === "verificado" && !docente.tituloVerificado;
+    const tituloParaRevisar = tituloNuevo && docente.verificacion === "verificado";
     if (documentacionNueva && (enCola || tituloParaRevisar)) {
       const detalleAviso = tituloParaRevisar && !enCola ? "subió su título para que lo revisen." : "subió documentación para que la revisen.";
       await avisarAAdmins(tx, {

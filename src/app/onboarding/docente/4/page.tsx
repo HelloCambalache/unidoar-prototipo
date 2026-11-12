@@ -3,6 +3,7 @@ import { MarcoOnboarding } from "@/components/onboarding/marco-onboarding";
 import { PasoDocumentacion } from "@/components/onboarding/paso-documentacion";
 import { docenteEnAlta } from "@/lib/alta";
 import { almacenamientoConfigurado } from "@/lib/almacenamiento";
+import { categoriasDe } from "@/lib/categorias-docente";
 import { ID_FORMULARIO_ONBOARDING, PASOS_DOCENTE } from "@/lib/onboarding";
 import { detalleDeDocente } from "@/lib/queries/onboarding";
 
@@ -16,7 +17,7 @@ export default async function PasoDocente4() {
   return (
     <MarcoOnboarding rol="docente" paso={PASOS_DOCENTE["4"]} formId={ID_FORMULARIO_ONBOARDING}>
       <PasoDocumentacion
-        categoria={docente.categoria}
+        categorias={categoriasDe(docente)}
         estudio={detalle?.situacionEstudio === "estudiante" ? "estudiante" : "recibido"}
         documentos={detalle?.documentos ?? {}}
         almacenamientoDisponible={almacenamientoConfigurado()}

@@ -14,9 +14,11 @@ import { PerfilDisponibilidad } from "@/components/docente/perfil-disponibilidad
 import { PerfilEtiquetas } from "@/components/docente/perfil-etiquetas";
 import type { DocumentacionPerfil, EstadoDocumento } from "@/components/docente/perfil-server";
 import type { Resultado } from "@/lib/acciones";
-import { NIVELES } from "@/lib/catalogo";
+import { CATEGORIA_INFO, CATEGORIAS, NIVELES } from "@/lib/catalogo";
+import { decidirCategorias } from "@/lib/categorias-docente";
 import { CONSTANCIA } from "@/lib/estudiantes";
 import type { DatosPerfil } from "@/lib/perfil-docente";
+import { CLAVES_DE_TITULO, casillasAbiertas, etiquetaDeCasilla, MAX_TITULOS } from "@/lib/titulos";
 import { cn } from "@/lib/utils";
 
 type TonoInsignia = "neutro" | "azul" | "verde" | "rosa" | "naranja" | "ambar";
@@ -169,6 +171,15 @@ export function PerfilFormulario({
 
   const set = <K extends keyof DatosPerfil>(clave: K, valor: DatosPerfil[K]) => setD((p) => ({ ...p, [clave]: valor }));
   const estudiando = d.situacionEstudio === "estudiante";
+  // Varios títulos, cada uno en su casilla: se muestran los cargados y se abre otra con «Agregar otro título».
+  const [casillas, setCasillas] = useState(() => casillasAbiertas(Object.fromEntries(CLAVES_DE_TITULO.map((k) => [k, inicial[k]]))));
+  const categoriasMarcadas = d.categorias ?? [];
+  // Tocar una categoría la suma o la quita; queda siempre al menos una.
+  const alternarCategoria = (c: (typeof CATEGORIAS)[number]) => {
+    const siguientes = categoriasMarcadas.includes(c) ? categoriasMarcadas.filter((x) => x !== c) : [...categoriasMarcadas, c];
+    const decididas = decidirCategorias(siguientes);
+    if (decididas.ok) set("categorias", [decididas.datos.categoria, ...decididas.datos.categoriasExtra]);
+  };
   const error = (clave: string) => (estado && !estado.ok ? estado.campos?.[clave] : undefined);
 
   const radios = RADIOS.includes(d.radioKm) ? RADIOS : [...RADIOS, d.radioKm].sort((a, b) => a - b);
@@ -268,11 +279,13 @@ export function PerfilFormulario({
                     items={d.zonas}
                     onCambiar={(z) => set("zonas", z)}
                     sugerencias={sugerencias.zonas}
-                    soloSugerencias={sugerencias.zonas.length > 0}
                     textoAgregar="agregar zona"
                     etiquetaCampo="Agregar una zona"
                     max={12}
                   />
+                  <p className="m-0 mt-1.5 text-xs text-sutil">
+                    Escribí cualquier localidad o partido del país (por ejemplo, La Plata): si no está en las sugerencias, igual la sumamos.
+                  </p>
                   {error("zonas") && (
                     <p role="alert" className="m-0 mt-1 text-xs text-[#b91c1c]">
                       {error("zonas")}
@@ -380,25 +393,49 @@ export function PerfilFormulario({
             )}
 
             {(!estudiando || !!inicial.credencial) && (
-              <FilaDocumento
-                estado={documentacion.credencial.estado}
-                titulo={documentacion.credencial.nombre}
-                detalle={documentacion.credencial.detalle}
-                error={error("credencial")}
-              >
-                {documentacion.credencial.editable && (
-                  <SubirArchivo
-                    bucket="privado"
-                    carpeta="documentos"
-                    nombre="credencial"
-                    etiqueta={documentacion.credencial.nombre}
-                    variante="boton"
-                    textoBoton={d.credencial ? "Archivo cargado" : "Subir archivo"}
-                    valorInicial={inicial.credencial}
-                    onCambio={(v) => set("credencial", v)}
-                  />
+              <>
+                {CLAVES_DE_TITULO.slice(0, casillas).map((clave, i) => {
+                  const guardado = Boolean(inicial[clave]);
+                  const nombre = etiquetaDeCasilla(i, casillas, documentacion.credencial.nombre);
+                  // Un título ya guardado se puede cambiar mientras no esté verificado; una casilla vacía se puede llenar siempre.
+                  const editable = guardado ? documentacion.credencial.editable : documentacion.credencial.puedeSumar;
+                  const estado: EstadoDocumento = !d[clave]
+                    ? "sin"
+                    : guardado && documentacion.credencial.estado === "verificado"
+                      ? "verificado"
+                      : "revision";
+                  const detalle =
+                    i === 0
+                      ? documentacion.credencial.detalle
+                      : !d[clave]
+                        ? "Otro título o certificación (PDF o foto)."
+                        : estado === "verificado"
+                          ? "Ya lo verificamos."
+                          : "Lo recibimos y lo estamos revisando.";
+                  return (
+                    <FilaDocumento key={clave} estado={estado} titulo={nombre} detalle={detalle} error={error(clave)}>
+                      {editable && (
+                        <SubirArchivo
+                          bucket="privado"
+                          carpeta="documentos"
+                          nombre={clave}
+                          etiqueta={nombre}
+                          variante="boton"
+                          textoBoton={d[clave] ? "Archivo cargado" : "Subir archivo"}
+                          valorInicial={inicial[clave]}
+                          onCambio={(v) => set(clave, v)}
+                        />
+                      )}
+                    </FilaDocumento>
+                  );
+                })}
+                {/* Otro título (de otra categoría, otra certificación…): cada uno va en su propio archivo. */}
+                {documentacion.credencial.puedeSumar && casillas < MAX_TITULOS && !!d[CLAVES_DE_TITULO[casillas - 1]!] && (
+                  <button type="button" onClick={() => setCasillas((n) => Math.min(MAX_TITULOS, n + 1))} className={cn(ACCION_AGREGAR, "self-start")}>
+                    + Agregar otro título
+                  </button>
                 )}
-              </FilaDocumento>
+              </>
             )}
 
             <FilaDocumento
@@ -586,6 +623,35 @@ export function PerfilFormulario({
 
             <Tarjeta como="section" id="asignaturas" className={cn(SECCION, "flex-1")}>
               <h2 className={cn(TITULO_SECCION, "mb-4")}>Asignaturas y niveles</h2>
+              <div className="mb-2 text-[13px] font-semibold text-tinta">Categorías</div>
+              <div className="mb-1.5 flex flex-wrap gap-2">
+                {CATEGORIAS.map((c) => {
+                  const marcada = categoriasMarcadas.includes(c);
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-pressed={marcada}
+                      onClick={() => alternarCategoria(c)}
+                      className={cn(
+                        "inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-[13px] leading-none font-semibold transition-colors focus-visible:ring-[3px] focus-visible:ring-navy-700/30 focus-visible:outline-none",
+                        marcada ? "bg-navy-900 text-white" : "border border-linea bg-white text-tinta-2 hover:bg-lienzo",
+                      )}
+                    >
+                      {marcada && <Icono nombre="tilde" tamano={12} trazo={2.6} />}
+                      {CATEGORIA_INFO[c].label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="m-0 mb-5 text-xs text-sutil">
+                Podés ser de más de una: te mostramos las búsquedas de todas y, para cada categoría, subí su título más abajo.
+              </p>
+              {error("categorias") && (
+                <p role="alert" className="m-0 mb-3 text-xs text-[#b91c1c]">
+                  {error("categorias")}
+                </p>
+              )}
               <div className="mb-2 text-[13px] font-semibold text-tinta">Asignaturas</div>
               <div className="mb-5">
                 <PerfilEtiquetas
@@ -707,16 +773,24 @@ export function PerfilFormulario({
             "flex items-center justify-end gap-3.5 rounded-interno bg-white px-5 py-3 shadow-[0_-1px_0_rgba(4,11,53,.04),0_10px_30px_rgba(4,11,53,.14)] max-[560px]:flex-col max-[560px]:items-stretch",
           )}
         >
-          <span
-            role="status"
-            className={cn(
-              "flex items-center gap-2 text-[13.5px] leading-snug max-[560px]:justify-center",
-              sinGuardar ? "font-semibold text-tinta" : "text-apagado",
-            )}
-          >
-            {sinGuardar && <span aria-hidden className="size-2 flex-none rounded-full bg-naranja" />}
-            {sinGuardar ? "Tenés cambios sin guardar" : "Los cambios se ven en las instituciones que te buscan."}
-          </span>
+          {/* Si el guardado falló, el motivo queda a la vista junto al botón (el aviso de arriba desaparece solo y en el celular se pierde). */}
+          {estado && !estado.ok && !pendiente ? (
+            <span role="alert" className="flex items-center gap-2 text-[13.5px] leading-snug font-semibold text-[#b91c1c] max-[560px]:justify-center">
+              <span aria-hidden className="size-2 flex-none rounded-full bg-[#dc2626]" />
+              No se guardó: {estado.error}
+            </span>
+          ) : (
+            <span
+              role="status"
+              className={cn(
+                "flex items-center gap-2 text-[13.5px] leading-snug max-[560px]:justify-center",
+                sinGuardar ? "font-semibold text-tinta" : "text-apagado",
+              )}
+            >
+              {sinGuardar && <span aria-hidden className="size-2 flex-none rounded-full bg-naranja" />}
+              {sinGuardar ? "Tenés cambios sin guardar" : "Los cambios se ven en las instituciones que te buscan."}
+            </span>
+          )}
           <Boton
             type="submit"
             tamano="lg"
