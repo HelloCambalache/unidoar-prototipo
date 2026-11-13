@@ -7,7 +7,7 @@ import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirInstitucion } from "@/lib/auth";
 import { origenDeLosMails } from "@/lib/correo/config";
 import { etiquetaPeriodo, hoyAR } from "@/lib/cobros";
-import { decidirActivacion, esPlanDebitable, montoCobrable } from "@/lib/debito-automatico";
+import { decidirActivacion, esPlanDebitable, montoBajoParaDebito, montoCobrable, textoDeMontoBajoParaLaInstitucion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { resumenDeError } from "@/lib/errores";
 import { diferirPrimerCobroActivo, mercadoPagoActivo } from "@/lib/mercadopago-config";
@@ -69,6 +69,8 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   }
   const monto = P.montoDePlan(institucion.plan, sedes, acuerdo);
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
+  // Mercado Pago no crea una suscripción por menos de su mínimo (rechaza el plan con un 400): se le dice a la persona en vez de mandarla a un error genérico.
+  if (montoBajoParaDebito(monto)) return fallo(textoDeMontoBajoParaLaInstitucion(monto));
 
   // Mercado Pago cobra el primer mes al suscribirse: si el mes en curso ya está pago, activarlo ahora lo cobraría dos veces. Según el interruptor,
   // el plan lleva una prueba hasta el próximo día de cobro o la institución espera al mes que viene (ver `decidirActivacion`). Si el mes no está
@@ -118,7 +120,8 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
   } catch (e) {
     console.error("No se pudo preparar el plan de Mercado Pago", resumenDeError(e));
     if (e instanceof ErrorDeMercadoPago && e.tipo === "rechazado") {
-      return fallo("Mercado Pago no aceptó el pedido. Probá de nuevo en un rato o escribinos por Contacto.");
+      // «Probá de nuevo en un rato» hace creer que Mercado Pago está caído: un rechazo es del pedido y reintentar igual no sirve.
+      return fallo("Mercado Pago no aceptó el pedido de débito automático para tu plan. Escribinos por Contacto y lo resolvemos.");
     }
     return fallo(FALLO_DE_MERCADO_PAGO);
   }

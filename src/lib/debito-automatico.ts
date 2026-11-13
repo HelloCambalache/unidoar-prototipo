@@ -4,6 +4,7 @@
  * CLAUDE.md ("Mercado Pago") y la guía de puesta en marcha en docs/mercadopago.md.
  */
 import { fechaCobroDelPeriodo, hoyAR, sumarMeses } from "@/lib/cobros";
+import { pesos } from "@/lib/planes";
 
 export const MONEDA = "ARS";
 
@@ -60,6 +61,25 @@ export function diaDeCobroDelDebito(entrada: { creada: string | null | undefined
 /** Una suscripción cobra solo con un monto entero y positivo. */
 export const montoCobrable = (monto: unknown): monto is number => typeof monto === "number" && Number.isInteger(monto) && monto > 0;
 
+/**
+ * Lo mínimo por mes que Mercado Pago deja cobrar con una suscripción: con menos rechaza el plan con un 400 «Cannot pay an amount lower than
+ * $ 15.00» (visto en producción el 2026-11-12, cuando se probó con un precio acordado de $10). Vale solo para el débito automático: el pago único
+ * del semestre o de una búsqueda no pasa por acá.
+ */
+export const MONTO_MINIMO_DE_DEBITO = 15;
+
+/** Un monto válido pero por debajo del mínimo de una suscripción: el débito automático no se puede crear. Los inválidos (0, negativos, decimales) no cuentan. */
+export const montoBajoParaDebito = (monto: unknown): monto is number => montoCobrable(monto) && monto < MONTO_MINIMO_DE_DEBITO;
+
+/** Lo que lee la institución cuando intenta activar el débito (o ve la tarjeta) con un monto por debajo del mínimo de Mercado Pago. */
+export const textoDeMontoBajoParaLaInstitucion = (monto: number) =>
+  `Con el valor de tu plan (${pesos(monto)} por mes) no se puede activar el débito automático: Mercado Pago pide al menos ${pesos(MONTO_MINIMO_DE_DEBITO)} por mes para una suscripción. Escribinos por Contacto y lo resolvemos.`;
+
+/** Lo que lee el equipo en la ficha de cobros cuando el precio de una institución deja el débito automático fuera de alcance. */
+export const textoDeMontoBajoParaElEquipo = (monto: number, debitoVigente: boolean) =>
+  `Con este monto (${pesos(monto)} por mes) la institución no puede activar el débito automático: Mercado Pago pide al menos ${pesos(MONTO_MINIMO_DE_DEBITO)} por mes para una suscripción.` +
+  (debitoVigente ? ` Su débito ya activo sigue cobrando el monto anterior: Mercado Pago no permite bajarlo a menos de ${pesos(MONTO_MINIMO_DE_DEBITO)}.` : "");
+
 export type DecisionDeSincronizacion = { accion: "nada" } | { accion: "cambiar-monto"; monto: number } | { accion: "cancelar" };
 
 /**
@@ -70,6 +90,8 @@ export type DecisionDeSincronizacion = { accion: "nada" } | { accion: "cambiar-m
 export function decidirSincronizacion(s: { plan: string; monto: number; esperado: number | null }): DecisionDeSincronizacion {
   if (!esPlanDebitable(s.plan)) return { accion: "cancelar" };
   if (!montoCobrable(s.esperado)) return { accion: "nada" };
+  // Mercado Pago no deja bajar una suscripción por debajo de su mínimo: intentarlo fallaría todos los días. Sigue cobrando lo de antes y la ficha de cobros avisa.
+  if (montoBajoParaDebito(s.esperado)) return { accion: "nada" };
   if (s.esperado === s.monto) return { accion: "nada" };
   return { accion: "cambiar-monto", monto: s.esperado };
 }

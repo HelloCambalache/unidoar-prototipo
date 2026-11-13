@@ -8,6 +8,7 @@ import { useConfirmacion } from "@/components/ui/confirmacion";
 import { DialogoModal } from "@/components/ui/dialogo-modal";
 import { useToast } from "@/components/ui/toast";
 import { ETIQUETA_DE_MODALIDAD, MODALIDADES_DE_ACUERDO, type ModalidadDeAcuerdo } from "@/lib/acuerdos";
+import { esPlanDebitable, MONTO_MINIMO_DE_DEBITO, montoBajoParaDebito, textoDeMontoBajoParaElEquipo } from "@/lib/debito-automatico";
 import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 
 /** Solo los dígitos de lo que se escribió: el monto es un número entero de pesos. */
@@ -25,6 +26,7 @@ export function CobroAcuerdo({
   sedes,
   acuerdo,
   nota,
+  debitoVigente,
 }: {
   institucionId: string;
   /** Los planes vigentes (los lee el servidor de la base). */
@@ -36,6 +38,8 @@ export function CobroAcuerdo({
   acuerdo: AcuerdoDePrecio | null;
   /** La nota interna del acuerdo que tiene hoy. */
   nota: string | null;
+  /** Tiene un débito automático vivo (pendiente, activo o en pausa): Mercado Pago no le deja bajar el monto por debajo de su mínimo. */
+  debitoVigente: boolean;
 }) {
   const P = crearPlanes(catalogo);
   const toast = useToast();
@@ -59,6 +63,10 @@ export function CobroAcuerdo({
   const montoNumero = monto ? Number(monto) : null;
   const propuesto: AcuerdoDePrecio | null = montoNumero ? { modalidad, monto: montoNumero } : null;
   const errorPrevio = propuesto ? P.errorDeAcuerdo(plan, propuesto) : null;
+  // Lo que pagaría por mes con este acuerdo. Por debajo del mínimo de una suscripción de Mercado Pago no se puede activar el débito automático:
+  // se avisa antes de guardar y no se impide (un precio chico sirve, por ejemplo, para probar un pago con poca plata).
+  const montoConElAcuerdo = propuesto && !errorPrevio ? P.montoDePlan(plan, sedes, propuesto) : null;
+  const sinDebitoPorMonto = esPlanDebitable(plan) && montoBajoParaDebito(montoConElAcuerdo);
 
   const guardar = () => {
     if (!propuesto) {
@@ -74,7 +82,11 @@ export function CobroAcuerdo({
           toast(r.error, "error");
           return;
         }
-        toast(r.data.cambio ? "Precio acordado guardado: rige desde la próxima factura" : "No había nada para cambiar");
+        toast(
+          r.data.cambio
+            ? `Precio acordado guardado: rige desde la próxima factura${sinDebitoPorMonto ? `. Ojo: con ese monto no se puede activar el débito automático (Mercado Pago pide al menos ${pesos(MONTO_MINIMO_DE_DEBITO)} por mes).` : ""}`
+            : "No había nada para cambiar",
+        );
         setAbierto(false);
       } catch {
         toast("No pudimos guardar el precio. Probá de nuevo.", "error");
@@ -150,6 +162,11 @@ export function CobroAcuerdo({
           <p className="m-0 mb-4 rounded-caja bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
             Con {sedes} {sedes === 1 ? "sede" : "sedes"} pagaría <b className="font-semibold text-tinta">{pesos(P.montoDePlan(plan, sedes, propuesto))}</b> por mes
             {propuesto.modalidad === "abono" && sedes === 1 ? ` (el de lista es ${pesos(P.montoDePlan(plan, 1))})` : ""}.
+          </p>
+        )}
+        {sinDebitoPorMonto && montoConElAcuerdo !== null && (
+          <p role="status" className="m-0 mb-4 rounded-caja bg-naranja-tint px-3.5 py-2.5 text-[13px] leading-normal text-naranja-ink">
+            {textoDeMontoBajoParaElEquipo(montoConElAcuerdo, debitoVigente)}
           </p>
         )}
         {errores._ && (

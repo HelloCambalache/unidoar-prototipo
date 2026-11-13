@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { cobrosMp, type Institucion } from "@/db/schema";
 import { etiquetaPeriodo, hoyAR } from "@/lib/cobros";
-import { decidirActivacion, esPlanDebitable, estadoGuardado, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
+import { decidirActivacion, esPlanDebitable, estadoGuardado, montoBajoParaDebito, suscripcionVigente, type EstadoSuscripcion } from "@/lib/debito-automatico";
 import { fechaLarga } from "@/lib/fechas-curso";
 import { diferirPrimerCobroActivo } from "@/lib/mercadopago-config";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
@@ -26,6 +26,8 @@ export type DebitoVista = {
   planDebitable: boolean;
   /** Es una red de sedes (Multisede) sin convenio a medida: todavía no tiene un monto, así que no se ofrece el débito (ver `precioDefinido`). */
   sinConvenio: boolean;
+  /** Lo que cobraría por mes es menos que el mínimo de una suscripción de Mercado Pago (`MONTO_MINIMO_DE_DEBITO`): no se puede activar el débito. */
+  montoBajo: boolean;
   puedeGestionar: boolean;
   /** Lo que cobraría Mercado Pago hoy por mes (plan × sedes), o null si no se pudo calcular. */
   montoActual: number | null;
@@ -94,6 +96,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     disponible: await debitoDisponiblePara(institucion),
     planDebitable: esPlanDebitable(institucion.plan),
     sinConvenio,
+    montoBajo: !sinConvenio && montoBajoParaDebito(monto),
     puedeGestionar: puedeGestionarPlan(rol),
     montoActual: !sinConvenio && Number.isInteger(monto) && monto > 0 ? monto : null,
     planReciente,
@@ -135,5 +138,7 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
   if (decision.accion === "esperar") return null;
   const sedes = await cantidadDeSedes(getDb(), [institucion.id]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
+  // Con un monto por debajo del mínimo de Mercado Pago no se puede activar: no se le propone.
+  if (montoBajoParaDebito(monto)) return null;
   return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };
 }

@@ -14,11 +14,15 @@ import {
   estadoDeSuscripcion,
   estadoGuardado,
   leerCobro,
+  MONTO_MINIMO_DE_DEBITO,
+  montoBajoParaDebito,
   montoCobrable,
   motivoDeSuscripcion,
   primerCobroDiferido,
   puedeReutilizarPlan,
   suscripcionVigente,
+  textoDeMontoBajoParaElEquipo,
+  textoDeMontoBajoParaLaInstitucion,
 } from "@/lib/debito-automatico";
 
 describe("primer cobro de un débito cuando el mes ya está pago", () => {
@@ -372,6 +376,46 @@ describe("poner al día el monto de una suscripción", () => {
     for (const esperado of [null, 0, -5, 10.5, NaN]) {
       assert.deepEqual(decidirSincronizacion({ plan: "colegio", monto: 59000, esperado }), { accion: "nada" }, String(esperado));
     }
+  });
+
+  it("no se intenta bajar una suscripción por debajo del mínimo de Mercado Pago (lo rechazaría todos los días)", () => {
+    assert.deepEqual(decidirSincronizacion({ plan: "colegio", monto: 59000, esperado: 2 }), { accion: "nada" });
+    assert.deepEqual(decidirSincronizacion({ plan: "colegio", monto: 59000, esperado: 14 }), { accion: "nada" });
+    // Justo en el mínimo sí se actualiza.
+    assert.deepEqual(decidirSincronizacion({ plan: "colegio", monto: 59000, esperado: 15 }), { accion: "cambiar-monto", monto: 15 });
+  });
+});
+
+describe("el mínimo por mes de una suscripción de Mercado Pago", () => {
+  it("el mínimo es de $15 (lo que rechazó Mercado Pago en producción)", () => {
+    assert.equal(MONTO_MINIMO_DE_DEBITO, 15);
+  });
+
+  it("un monto válido por debajo del mínimo es bajo; del mínimo para arriba no", () => {
+    assert.equal(montoBajoParaDebito(2), true);
+    assert.equal(montoBajoParaDebito(10), true);
+    assert.equal(montoBajoParaDebito(14), true);
+    assert.equal(montoBajoParaDebito(15), false);
+    assert.equal(montoBajoParaDebito(55000), false);
+  });
+
+  it("un monto inválido no es «bajo»: no se confunde con el caso de un precio chico", () => {
+    for (const m of [0, -3, 2.5, NaN, null, undefined, "2"]) assert.equal(montoBajoParaDebito(m), false, String(m));
+  });
+
+  it("los textos dicen el monto y el mínimo", () => {
+    const paraLaInstitucion = textoDeMontoBajoParaLaInstitucion(2);
+    assert.match(paraLaInstitucion, /\$ 2 por mes/);
+    assert.match(paraLaInstitucion, /\$ 15 por mes/);
+    assert.match(paraLaInstitucion, /Contacto/);
+    const paraElEquipo = textoDeMontoBajoParaElEquipo(2, false);
+    assert.match(paraElEquipo, /\$ 2 por mes/);
+    assert.match(paraElEquipo, /\$ 15/);
+    assert.doesNotMatch(paraElEquipo, /ya activo/);
+  });
+
+  it("si ya tiene un débito activo, el equipo lo lee también", () => {
+    assert.match(textoDeMontoBajoParaElEquipo(2, true), /débito ya activo sigue cobrando el monto anterior/);
   });
 });
 

@@ -38,7 +38,7 @@ import {
   textoRecordatorio,
   type EstadoCobro,
 } from "@/lib/cobros";
-import { suscripcionVigente } from "@/lib/debito-automatico";
+import { esPlanDebitable, montoBajoParaDebito, suscripcionVigente, textoDeMontoBajoParaElEquipo } from "@/lib/debito-automatico";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { moraDe, SIN_MORA } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
@@ -124,6 +124,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
     acuerdo && !acuerdoRige
       ? `Hay un precio acordado para el ${P.planDe(acuerdo.plan ?? plan).label}, que no rige con el plan actual (${P.planDe(plan).label}): paga el de lista.`
       : "";
+  // Con menos de lo que Mercado Pago deja cobrar con una suscripción, la institución no puede activar el débito automático (se vio con un precio acordado de prueba).
+  const montoMensual = esPlanDebitable(plan) && P.precioDefinido(plan, acuerdo) ? P.montoDePlan(plan, sedes, acuerdoRige ? acuerdo : null) : null;
+  const avisoDeDebitoBajo = montoBajoParaDebito(montoMensual) ? textoDeMontoBajoParaElEquipo(montoMensual, debitoVigente) : "";
   // Un semestre pagado al contado cubre varios meses con una sola factura: hasta cuándo, si cubre el mes en curso.
   const semestrePagoHasta = pagoHastaDeMes(periodoActual(ahora), facturas.filter((f) => f.mesesCubiertos > 1));
   // La mora (ver src/lib/mora.ts): con la factura impaga más vieja pasada de 15 días la cuenta queda limitada; las de ejemplo nunca.
@@ -162,6 +165,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               )}
               {acuerdo && !acuerdoRige && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-naranja-ink">{avisoDeAcuerdoDeOtroPlan}</div>
+              )}
+              {avisoDeDebitoBajo && (
+                <div role="status" className="mt-1.5 max-w-[60ch] text-[13px] leading-[1.45] font-medium text-naranja-ink">
+                  {avisoDeDebitoBajo}
+                </div>
               )}
               {!P.precioDefinido(plan, acuerdo) && (
                 <div role="status" className="mt-1.5 max-w-[60ch] text-[13px] leading-[1.45] font-medium text-naranja-ink">
@@ -379,7 +387,15 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                   {acordado?.nota && <Dato k="Nota">{acordado.nota}</Dato>}
                   {sedes > 1 && <Dato k="Sedes">{sedes}</Dato>}
                   <div className="mt-1.5">
-                    <CobroAcuerdo institucionId={i.id} catalogo={P.catalogo} plan={plan} sedes={sedes} acuerdo={acuerdoRige ? acuerdo : null} nota={acordado?.nota ?? null} />
+                    <CobroAcuerdo
+                      institucionId={i.id}
+                      catalogo={P.catalogo}
+                      plan={plan}
+                      sedes={sedes}
+                      acuerdo={acuerdoRige ? acuerdo : null}
+                      nota={acordado?.nota ?? null}
+                      debitoVigente={debitoVigente}
+                    />
                   </div>
                 </div>
               );

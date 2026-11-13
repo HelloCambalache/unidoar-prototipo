@@ -8,7 +8,7 @@ import { Boton } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { Tarjeta } from "@/components/ui/tarjeta";
 import { useToast } from "@/components/ui/toast";
-import { ETIQUETA_SUSCRIPCION } from "@/lib/debito-automatico";
+import { ETIQUETA_SUSCRIPCION, textoDeMontoBajoParaLaInstitucion } from "@/lib/debito-automatico";
 import { pesos } from "@/lib/planes";
 import { etiquetaPeriodo } from "@/lib/cobros";
 import type { DebitoVista } from "@/lib/queries/suscripcion-vista";
@@ -118,7 +118,13 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
         </p>
       )}
 
-      {datos.planDebitable && !datos.sinConvenio && (!suscripcion || estado === "cancelada") && (
+      {datos.planDebitable && !datos.sinConvenio && datos.montoBajo && (!suscripcion || estado === "cancelada") && (
+        <p role="status" className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">
+          {textoDeMontoBajoParaLaInstitucion(datos.montoActual ?? 0)}
+        </p>
+      )}
+
+      {datos.planDebitable && !datos.sinConvenio && !datos.montoBajo && (!suscripcion || estado === "cancelada") && (
         <>
           {confirmando ? (
             <p role="status" aria-live="polite" className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">

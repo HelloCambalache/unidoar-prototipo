@@ -43,6 +43,10 @@ export class ErrorDeMercadoPago extends Error {
   }
 }
 
+/** Cobros que se piden por página a Mercado Pago y cuántas páginas como máximo (20 × 5 = hasta 100 cobros por suscripción). */
+const COBROS_POR_PAGINA = 20;
+const MAX_PAGINAS_DE_COBROS = 5;
+
 function configuracion(opciones: { timeout: number; maxRetries: number } = { timeout: 10_000, maxRetries: 2 }) {
   const token = tokenDeMercadoPago();
   if (!token) throw new ErrorDeMercadoPago("sin-configurar", "Falta MP_ACCESS_TOKEN.");
@@ -194,11 +198,22 @@ export async function cancelarSuscripcionMp(id: string): Promise<void> {
  * Todos los cobros que Mercado Pago le hizo (o intentó hacerle) a una suscripción. Es lo que permite recuperar un cobro cuyo aviso nunca
  * llegó o llegó cuando todavía estaba "en proceso" (Mercado Pago no siempre vuelve a avisar cuando acredita). Biomea perdió un cobro real
  * así y por eso corre esta búsqueda todos los días. Hasta 100 cobros por suscripción, de sobra para un plan mensual.
+ *
+ * Se pide de a 20 (el tamaño de página que documenta Mercado Pago) y se pasa de página con `offset`: con `limit: 100` Mercado Pago contesta
+ * 400 «Invalid value for limit» (se vio en producción el 2026-11-11, en la revisión diaria) y la revisión no podía recuperar ningún cobro.
  */
 export async function buscarCobrosMp(suscripcionId: string): Promise<CobroDeMercadoPago[]> {
   try {
-    const r = await new Invoice(configuracion()).search({ options: { preapproval_id: suscripcionId, limit: 100 } });
-    return (r.results ?? []) as CobroDeMercadoPago[];
+    const cobros: CobroDeMercadoPago[] = [];
+    for (let pagina = 0; pagina < MAX_PAGINAS_DE_COBROS; pagina++) {
+      const r = await new Invoice(configuracion()).search({
+        options: { preapproval_id: suscripcionId, limit: COBROS_POR_PAGINA, offset: pagina * COBROS_POR_PAGINA },
+      });
+      const deLaPagina = (r.results ?? []) as CobroDeMercadoPago[];
+      cobros.push(...deLaPagina);
+      if (deLaPagina.length < COBROS_POR_PAGINA) break;
+    }
+    return cobros;
   } catch (e) {
     throw traducir(e);
   }
