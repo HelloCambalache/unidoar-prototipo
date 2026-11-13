@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseClavePublica, supabaseUrl } from "@/lib/supabase/env";
 import { opcionesDeCookieDeSesion } from "@/lib/supabase/cookies";
 import { cabecerasDeCsp, modoDeCsp, nuevoNonce, politicaDeContenido } from "@/lib/csp";
+import { CABECERA_NO_INDEXAR, debeNoIndexarse } from "@/lib/indexacion";
 
 /**
  * Pantallas con cuenta. El rol (docente / institución / admin) se valida en cada
@@ -45,10 +46,16 @@ export async function proxy(request: NextRequest) {
     return r;
   };
   let response = seguir();
+  // Lo que no tiene que figurar en un buscador (áreas con cuenta, ingreso, invitaciones…) sale con `noindex`: ver src/lib/indexacion.ts.
+  const sinIndexar = debeNoIndexarse(pathname);
+  const marcar = (r: NextResponse) => {
+    if (sinIndexar) r.headers.set("X-Robots-Tag", CABECERA_NO_INDEXAR);
+    return r;
+  };
 
   // Sin Supabase configurado no hay forma de saber quién es: las áreas privadas no se abren.
   if (!url || !clave) {
-    return esPrivada ? redirigirAIngreso(request, pathname + search) : response;
+    return esPrivada ? redirigirAIngreso(request, pathname + search) : marcar(response);
   }
 
   const supabase = createServerClient(url, clave, {
@@ -67,7 +74,7 @@ export async function proxy(request: NextRequest) {
   const haySesion = Boolean(data?.claims?.sub);
 
   if (esPrivada && !haySesion) return redirigirAIngreso(request, pathname + search);
-  return response;
+  return marcar(response);
 }
 
 function redirigirAIngreso(request: NextRequest, destino: string) {

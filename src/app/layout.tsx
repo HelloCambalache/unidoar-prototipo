@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     ],
     apple: "/assets/favicon-180.png",
   },
-  // Mientras sea un entorno de prueba, no indexar (igual que el prototipo).
-  robots: { index: false, follow: false },
+  // Sin `robots`: el sitio se indexa (se abrió al público el 2026-11-13). Lo que no debe figurar en un buscador sale con `noindex` desde el
+  // proxy (`src/lib/indexacion.ts`) o desde su propia página (el perfil compartido, la baja de avisos).
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };

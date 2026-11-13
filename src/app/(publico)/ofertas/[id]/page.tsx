@@ -40,7 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     abierta: oferta.abierta,
     resumen: resumenDeBusqueda({ descripcion: oferta.descripcion, tipo: oferta.tipo, zona: oferta.zona, institucion: oferta.institucion.nombre }),
   });
-  return metadatosDeContenido({ publico: "docentes", titulo, descripcion, ruta: rutaDeOferta(oferta.id) }, "article");
+  const metadatos = metadatosDeContenido({ publico: "docentes", titulo, descripcion, ruta: rutaDeOferta(oferta.id) }, "article");
+  // Una búsqueda que ya no está abierta (cerrada, pausada o vencida) no tiene nada que ofrecer en un buscador: la página dice que cerró.
+  return oferta.abierta ? metadatos : { ...metadatos, robots: { index: false, follow: true } };
 }
 
 export default async function OfertaCompartida({ params }: Props) {
