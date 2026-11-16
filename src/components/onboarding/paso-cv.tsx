@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { guardarCvDocente } from "@/app/actions/onboarding";
 import { Boton } from "@/components/ui/button";
 import { SubirArchivo } from "@/components/ui/subir-archivo";
@@ -20,14 +19,20 @@ export function PasoCv({
   almacenamientoDisponible: boolean;
 }) {
   const [estado, accion, pendiente] = useActionState(guardarCvDocente, null);
+  const [tieneCv, setTieneCv] = useState(Boolean(cvInicial));
 
   return (
     <form id={ID_FORMULARIO_ONBOARDING} action={accion}>
       <input type="hidden" name="destino" defaultValue="continuar" />
       <TituloPaso
         grande
-        titulo="Subí tu CV"
-        bajada="Lo guardamos de forma privada en tu perfil. Es opcional: podés subirlo ahora o más adelante."
+        titulo="Tu CV"
+        bajada={
+          <>
+            <strong className="font-semibold text-tinta">Es opcional</strong>: podés seguir sin subirlo y agregarlo cuando quieras desde Mi perfil. Si lo
+            subís, lo guardamos de forma privada.
+          </>
+        }
       />
       <div className="mb-[22px]">
         <SubirArchivo
@@ -38,6 +43,7 @@ export function PasoCv({
           titulo="Arrastrá tu CV aquí o hacé clic para subirlo"
           valorInicial={cvInicial}
           disponible={almacenamientoDisponible}
+          onCambio={(valor) => setTieneCv(valor !== "")}
         />
       </div>
       <p className="m-0 mb-[22px] rounded-caja bg-[#F0EFEA] px-4 py-3.5 text-[13.5px] leading-normal text-tinta-2">
@@ -46,14 +52,10 @@ export function PasoCv({
       </p>
       <AlertaError className="mb-3.5">{estado && !estado.ok ? estado.error : undefined}</AlertaError>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-5">
-          <EnlaceVolver href="/onboarding/docente/3" />
-          <Link href="/onboarding/docente/asignaturas" className="text-[13px] leading-none font-medium whitespace-nowrap text-navy-700">
-            Lo subo después
-          </Link>
-        </div>
+        <EnlaceVolver href="/onboarding/docente/3" />
+        {/* Antes había un link chico «Lo subo después» al lado de «Volver»: no se veía que se podía seguir sin CV. Un solo botón, que dice lo que hace. */}
         <Boton type="submit" disabled={pendiente}>
-          {pendiente ? "Guardando…" : "Continuar"}
+          {pendiente ? "Guardando…" : tieneCv ? "Continuar" : "Continuar sin CV"}
         </Boton>
       </div>
     </form>

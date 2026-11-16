@@ -5,7 +5,6 @@ import { guardarDocumentacionDocente } from "@/app/actions/onboarding";
 import type { CategoriaDocente, DocumentosDocente } from "@/db/schema";
 import { Boton } from "@/components/ui/button";
 import { AvisoSinAlmacenamiento, SubirArchivo } from "@/components/ui/subir-archivo";
-import { BotonEnvio } from "@/components/onboarding/boton-envio";
 import { AlertaError, EnlaceVolver, TituloPaso } from "@/components/onboarding/elementos";
 import { credencialesQueSePiden } from "@/lib/categorias-docente";
 import { FOTOS_DNI_SE_ELIMINAN } from "@/lib/documentos";
@@ -39,7 +38,11 @@ function Fila({
         <Icono nombre={icono === "dni" ? "dni" : "birrete"} tamano={15} trazo={1.7} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm leading-snug font-medium">{nombre}</div>
+        <div className="text-sm leading-snug font-medium">
+          {nombre}
+          {/* Todo lo de este paso es optativo: la etiqueta lo dice en cada fila (se trababan creyendo que había que subirlo para seguir). */}
+          {!cargado && <span className="ml-2 inline-block rounded-full bg-[#F3F2EE] px-2 py-[3px] align-middle text-[11px] leading-none font-medium text-apagado">Opcional</span>}
+        </div>
         <div className="text-xs leading-snug text-apagado">{detalle}</div>
       </div>
       {cargado && (
@@ -86,6 +89,8 @@ export function PasoDocumentacion({
 
   const credencial = credencialesQueSePiden({ categoria: categorias[0]!, categoriasExtra: categorias.slice(1) });
   const dniCompleto = cargados.dniFrente && cargados.dniDorso;
+  // Si no subió nada, el botón dice que se puede terminar igual; si subió algo, que termina el alta.
+  const algoCargado = cargados.dniFrente || cargados.dniDorso || (estudio === "estudiante" ? cargados.constancia : Object.values(titulos).some(Boolean));
   const detalleDni = dniCompleto
     ? "Frente y dorso cargados"
     : cargados.dniFrente
@@ -99,14 +104,21 @@ export function PasoDocumentacion({
       <input type="hidden" name="destino" defaultValue="continuar" />
       <TituloPaso
         grande
-        titulo="Subí tu documentación"
+        titulo="Documentación para verificar tu perfil"
         bajada={
           <>
-            Podés empezar a postularte ahora. Tu perfil va a mostrarse como <strong className="font-semibold text-tinta">Sin verificar</strong>{" "}
-            hasta que revisemos la documentación — normalmente en menos de 48 horas. Si no la tenés a mano, la podés subir después desde Mi perfil.
+            Es el último paso y <strong className="font-semibold text-tinta">es opcional</strong>: podés terminar ahora y subirla cuando quieras.
           </>
         }
       />
+      <p className="m-0 mb-4 flex items-start gap-2 rounded-caja bg-verde-tint px-3.5 py-3 text-[13.5px] leading-[1.45] text-tinta-2">
+        <Icono nombre="tilde" tamano={16} trazo={2} className="mt-px flex-none text-verde" />
+        <span>
+          <b className="font-semibold text-tinta">No hace falta subir nada para terminar.</b> Ya podés postularte: tu perfil figura como{" "}
+          <b className="font-semibold text-tinta">Sin verificar</b> hasta que revisemos la documentación (normalmente en menos de 48 horas). Si no la tenés a
+          mano, la subís después desde Mi perfil.
+        </span>
+      </p>
 
       <div className="flex flex-col gap-2.5">
         <Fila icono="dni" cargado={dniCompleto} nombre="DNI — frente y dorso" detalle={detalleDni}>
@@ -203,11 +215,9 @@ export function PasoDocumentacion({
       <div className="mt-[22px] flex flex-wrap items-center justify-between gap-3">
         <EnlaceVolver href="/onboarding/docente/asignaturas" />
         <div className="flex flex-[1_1_320px] flex-wrap justify-end gap-2.5">
-          <BotonEnvio campo="destino" valor="luego" variante="secundario" disabled={pendiente} className="flex-[1_1_auto]">
-            Lo subo después
-          </BotonEnvio>
+          {/* Un solo botón que dice qué pasa: antes había «Lo subo después» y «Terminar y buscar trabajo», que hacían lo mismo y no dejaban claro que se podía terminar sin subir nada. */}
           <Boton type="submit" disabled={pendiente} className="flex-[1_1_auto]">
-            {pendiente ? "Guardando…" : "Terminar y buscar trabajo"}
+            {pendiente ? "Guardando…" : algoCargado ? "Terminar y buscar trabajo" : "Terminar y subir después"}
           </Boton>
         </div>
       </div>
