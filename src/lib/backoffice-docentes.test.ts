@@ -1,6 +1,30 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { MENSAJE_REAPERTURA, PESTANAS_COLA, leerEstadoCola, modificadoTrasObservacion, puedeReabrirRevision } from "@/lib/backoffice-docentes";
+import {
+  MENSAJE_REAPERTURA,
+  PESTANAS_COLA,
+  leerEstadoCola,
+  leerFiltrosBoDocentes,
+  leerOrdenCola,
+  modificadoTrasObservacion,
+  puedeReabrirRevision,
+} from "@/lib/backoffice-docentes";
+
+describe("orden por fecha de inscripción (2026-11-18)", () => {
+  it("la cola va por los más antiguos primero y acepta darla vuelta; un valor raro vuelve al de siempre", () => {
+    assert.equal(leerOrdenCola(""), "antiguos");
+    assert.equal(leerOrdenCola("antiguos"), "antiguos");
+    assert.equal(leerOrdenCola("recientes"), "recientes");
+    assert.equal(leerOrdenCola("constructor"), "antiguos");
+  });
+
+  it("el listado de profesionales acepta ordenar por fecha y sigue con el scoring por defecto", () => {
+    assert.equal(leerFiltrosBoDocentes({ orden: "recientes" }).orden, "recientes");
+    assert.equal(leerFiltrosBoDocentes({ orden: "antiguos" }).orden, "antiguos");
+    assert.equal(leerFiltrosBoDocentes({}).orden, "scoring");
+    assert.equal(leerFiltrosBoDocentes({ orden: "__proto__" }).orden, "scoring");
+  });
+});
 
 describe("pestañas de la cola de verificación", () => {
   it("leen la de la URL y cualquier valor desconocido cae en «Toda la cola»", () => {

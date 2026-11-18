@@ -12,6 +12,7 @@ import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { hrefInstituciones, leerFiltrosInstituciones } from "@/lib/backoffice-instituciones";
 import { plural } from "@/lib/busquedas";
+import { fechaCorta } from "@/lib/fechas";
 import { crearPlanes } from "@/lib/planes";
 import { listarInstituciones, totalInstituciones } from "@/lib/queries/backoffice-instituciones";
 import { catalogoDePlanes } from "@/lib/queries/planes";
@@ -64,13 +65,14 @@ export default async function InstitucionesBackoffice({
           }
         />
       ) : (
-        <Tabla className="min-w-[860px]">
+        <Tabla className="min-w-[940px]">
           <thead>
             <tr>
               <th>Institución</th>
               <th>Plan</th>
               <th>Verificación</th>
               <th>Estado</th>
+              <th>Se registró</th>
               <th className="text-right">Búsquedas activas</th>
               <th className="text-right">Postulaciones</th>
               <th className="text-right">Contrataciones</th>
@@ -97,6 +99,7 @@ export default async function InstitucionesBackoffice({
                     {i.pagoVencido && <Insignia tono="ambar">Pago vencido</Insignia>}
                   </div>
                 </td>
+                <td className="whitespace-nowrap text-apagado">{fechaCorta(i.creadoEn)}</td>
                 <td className={cn("text-right font-display font-semibold tabular-nums", i.busquedasActivas === 0 && "text-sutil")}>
                   {i.busquedasActivas}
                   {i.busquedasTotal > i.busquedasActivas && (

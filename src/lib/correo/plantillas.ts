@@ -70,6 +70,11 @@ export type DatosDe = {
    * cuenta quedó limitada. Una vez por factura y etapa.
    */
   M68: { institucion: string; limitada: boolean; periodo: string; monto: string; vencio: string; ultimoDiaDeGracia: string };
+  /**
+   * Recordatorio de que el registro quedó a medias (lo manda el equipo desde «Altas sin terminar», a las cuentas que elige): `rol` es lo que eligió la persona
+   * (profesional o institución) o null si confirmó el mail y no eligió nada. A quien nunca confirmó el mail no se le manda esto: se le reenvía el mail de confirmación.
+   */
+  M69: { rol: "docente" | "institucion" | null };
 };
 
 export type PlantillaId = keyof DatosDe;
@@ -600,6 +605,71 @@ export const PLANTILLAS: { [P in PlantillaId]: Definicion<P> } = {
       parrafos: [[n(d.institucion), " pidió pasar al plan ", n(d.plan), "."]],
       boton: { texto: "Verlo en el backoffice", ruta: d.ruta },
     }),
+  },
+  M69: {
+    grupo: "cuenta",
+    remitente: "app",
+    // Lo manda una persona del equipo eligiendo cuentas: un tope general por si alguien se equivoca con la lista (la acción ya limita por clic, por persona y por día).
+    tope: { max: 60, horas: 24 },
+    contenido: (d) => {
+      const motivo = "Te escribimos porque empezaste a registrarte en UNIDOAR con este email y quedó sin terminar.";
+      const nota: Parte[] = ["Si ya no querés registrarte, ignorá este mail: te escribimos como mucho un par de veces."];
+      if (d.rol === "institucion") {
+        return {
+          asunto: "Terminá el registro de tu institución en UNIDOAR",
+          previa: "Te faltan pocos pasos para publicar tu primera búsqueda.",
+          titulo: "Te faltan pocos pasos",
+          parrafos: [
+            [
+              "Empezaste a registrar tu institución en UNIDOAR y todavía no la terminaste. Completá los ",
+              n("datos de la institución"),
+              " (nombre, tipo, CUIT y dirección) y ya podés publicar búsquedas y encontrar profesionales verificados.",
+            ],
+          ],
+          boton: { texto: "Terminar el registro", ruta: "/inicio" },
+          nota,
+          motivo,
+        };
+      }
+      if (d.rol === "docente") {
+        return {
+          asunto: "Terminá tu registro en UNIDOAR",
+          previa: "Te faltan pocos pasos para postularte.",
+          titulo: "Te faltan pocos pasos",
+          parrafos: [
+            [
+              "Empezaste a registrarte en UNIDOAR y todavía no lo terminaste. Completá los ",
+              n("datos mínimos"),
+              " (qué sos, tus datos, tus niveles y horarios) y ya podés postularte a las búsquedas de las instituciones.",
+            ],
+            [
+              "Después, para que verifiquemos tu perfil y aparezca el sello de verificado, subí tu ",
+              n("DNI"),
+              " y tu ",
+              n("título o certificación"),
+              ". Es opcional y lo podés hacer cuando quieras, desde Mi perfil.",
+            ],
+          ],
+          boton: { texto: "Terminar mi registro", ruta: "/inicio" },
+          nota,
+          motivo,
+        };
+      }
+      return {
+        asunto: "Terminá tu registro en UNIDOAR",
+        previa: "Falta un paso para empezar.",
+        titulo: "Falta un paso para empezar",
+        parrafos: [
+          [
+            "Te registraste en UNIDOAR y confirmaste tu email, pero todavía no elegiste cómo vas a usarla: si buscás trabajo como profesional o si sos una institución que busca profesionales.",
+          ],
+          ["Ingresá, elegí una opción y completá los pocos datos que te pedimos."],
+        ],
+        boton: { texto: "Seguir con mi registro", ruta: "/inicio" },
+        nota,
+        motivo,
+      };
+    },
   },
   M67: {
     grupo: "interno",

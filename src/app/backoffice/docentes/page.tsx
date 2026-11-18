@@ -50,7 +50,7 @@ export default async function DocentesBackofficePage({ searchParams }: { searchP
         />
       ) : (
         <>
-          <DocTabla filas={lista.filas} />
+          <DocTabla filas={lista.filas} conFecha />
           <p className="mt-3 mb-0 text-xs leading-normal text-sutil">
             El scoring es interno (perfil, verificación, actividad y contrataciones): nunca lo ven profesionales ni instituciones.
           </p>

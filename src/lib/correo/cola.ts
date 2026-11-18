@@ -22,6 +22,8 @@ import { resumenDeError } from "@/lib/errores";
  */
 
 const MAX_INTENTOS = 5;
+/** Cuántos mails manda cada despacho (el mismo `limite` de `vaciarCola`). */
+const TAMANO_DE_TANDA = 15;
 /** Un mail "procesando" hace más de esto es de una instancia que se cortó: se reclama de nuevo. */
 const MINUTOS_PARA_RECLAMAR = 10;
 /** Pasado este tiempo desde que se anotó, un mail pendiente ya no se manda. */
@@ -60,6 +62,16 @@ export async function encolarCorreo<P extends PlantillaId>(ejecutor: Ejecutor, c
   if (modoCorreo() === "apagado") return;
   await ejecutor.insert(colaCorreos).values(filaDe(correo)).onConflictDoNothing();
   despacharCola();
+}
+
+/**
+ * Varios mails sueltos (cada uno con su destinatario y sus datos) en una sola inserción. Pide el despacho una vez, con `tandas` tandas de 15 mails
+ * (Resend admite pocos pedidos por segundo: se mandan de a uno, con una pausa). Lo que no entre en esas tandas sigue pendiente para el cron.
+ */
+export async function encolarVariosCorreos(ejecutor: Ejecutor, correos: Encolable<PlantillaId>[], opciones: { tandas?: number } = {}) {
+  if (modoCorreo() === "apagado" || correos.length === 0) return;
+  await ejecutor.insert(colaCorreos).values(correos.map((c) => filaDe(c))).onConflictDoNothing();
+  despacharCola(opciones.tandas);
 }
 
 /** El mismo mail para varias cuentas. El email de cada una se lee de `usuarios`. `clave` y `topeClave` pueden depender de la cuenta. */
@@ -115,12 +127,16 @@ export async function encolarParaEquipo<P extends PlantillaId>(ejecutor: Ejecuto
 }
 
 /** Pide mandar lo pendiente cuando termine la respuesta actual (lo hacen solos los `encolar…`). Varios pedidos en una misma respuesta no se pisan. */
-export function despacharCola() {
+export function despacharCola(tandas = 1) {
   if (modoCorreo() === "apagado") return;
   try {
     after(async () => {
       try {
-        await vaciarCola({ limite: 15 });
+        for (let i = 0; i < Math.max(1, tandas); i++) {
+          const r = await vaciarCola({ limite: TAMANO_DE_TANDA });
+          // Una tanda que no se llenó es que ya no queda nada pendiente (o que Resend pidió ir más despacio): no se insiste.
+          if (r.enviados + r.omitidos + r.fallidos + r.reintentos < TAMANO_DE_TANDA || r.reintentos > 0) break;
+        }
       } catch (e) {
         console.error("No se pudo despachar la cola de mails", resumenDeError(e));
       }

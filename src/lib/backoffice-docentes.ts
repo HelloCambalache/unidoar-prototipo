@@ -40,6 +40,17 @@ export const MENSAJE_REAPERTURA = "Subí de nuevo la documentación que haga fal
 export const PESTANAS_COLA = ["todos", "pendiente", "correccion", "modificados"] as const;
 export type EstadoCola = (typeof PESTANAS_COLA)[number];
 
+/**
+ * Orden de la cola: por fecha de alta. Por defecto los más antiguos primero (el que lleva más tiempo esperando se revisa antes); el equipo
+ * puede darla vuelta para ver quiénes se anotaron últimos (2026-11-18, pedido del cliente).
+ */
+export const ORDENES_COLA = [
+  { clave: "antiguos", etiqueta: "Más antiguos primero" },
+  { clave: "recientes", etiqueta: "Más recientes primero" },
+] as const;
+export type OrdenCola = (typeof ORDENES_COLA)[number]["clave"];
+export const leerOrdenCola = (valor: string): OrdenCola => ORDENES_COLA.find((o) => o.clave === valor)?.clave ?? "antiguos";
+
 /** La pestaña de la URL; un valor que no existe es «Toda la cola». */
 export const leerEstadoCola = (valor: string): EstadoCola => PESTANAS_COLA.find((e) => e === valor) ?? "todos";
 
@@ -65,6 +76,9 @@ export const ORDENES_BO = [
   { clave: "scoring-asc", etiqueta: "Menor scoring" },
   { clave: "postulaciones", etiqueta: "Más postulaciones" },
   { clave: "nombre", etiqueta: "Nombre A–Z" },
+  // 2026-11-18, pedido del cliente: ver quiénes fueron los últimos en anotarse (o los primeros) por la fecha de alta.
+  { clave: "recientes", etiqueta: "Se inscribió hace menos" },
+  { clave: "antiguos", etiqueta: "Se inscribió hace más" },
 ] as const;
 export type OrdenBoDocentes = (typeof ORDENES_BO)[number]["clave"];
 

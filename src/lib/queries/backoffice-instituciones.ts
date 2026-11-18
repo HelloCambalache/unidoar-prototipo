@@ -53,6 +53,8 @@ export type FilaInstitucion = {
   busquedasActivas: number;
   postulaciones: number;
   contrataciones: number;
+  /** Cuándo se registró. */
+  creadoEn: Date;
 };
 
 export type ListadoInstituciones = { filas: FilaInstitucion[]; total: number; pagina: number; paginas: number };
@@ -98,7 +100,9 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
       ? [desc(busquedasActivas), asc(instituciones.nombre)]
       : f.orden === "recientes"
         ? [desc(instituciones.creadoEn), asc(instituciones.nombre)]
-        : [asc(instituciones.nombre)];
+        : f.orden === "antiguas"
+          ? [asc(instituciones.creadoEn), asc(instituciones.nombre)]
+          : [asc(instituciones.nombre)];
 
   const filas = await db
     .select({
@@ -110,6 +114,7 @@ export async function listarInstituciones(f: FiltrosInstituciones): Promise<List
       plan: instituciones.plan,
       verificada: instituciones.verificada,
       suspendida: instituciones.suspendida,
+      creadoEn: instituciones.creadoEn,
       deBaja: sql<boolean>`${instituciones.bajaEn} is not null`.mapWith(Boolean).as("de_baja"),
       pagoVencido: sql<boolean>`${conPagoVencido(hoy)}`.mapWith(Boolean).as("pago_vencido"),
       busquedasTotal: cuenta(sql`select count(*) from busquedas b where b.institucion_id = ${INST_ID}`).as(

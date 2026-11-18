@@ -5,7 +5,7 @@ eventos que **ya existen** en el código. Cada fila que dice "En la app" ya gene
 
 **Estado de la implementación** (cómo funciona y cómo se enciende: [correo.md](correo.md)):
 
-- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M35, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62, M63, M67 y M68. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
+- **Hechos, en el código:** M06, M11, M12, M13, M15, M16, M20, M21, M23, M24, M25, M26, M27, M30, M35, M50, M51, M52, M53, M54, M55, M56, M58, M60, M61, M62, M63, M67, M68 y M69. Salen cuando haya `RESEND_API_KEY`; sin ella no se manda ni se anota nada.
 - **Hechos, plantillas para pegar en Supabase:** M01–M05 (`supabase/plantillas-correo/`; falta pegarlas y encender el SMTP: [supabase-auth.md](supabase-auth.md)).
 - **Pendientes:** todo lo demás (columna "Prioridad" de cada tabla).
 
@@ -115,6 +115,7 @@ Llegan a un alias del equipo (por ejemplo `equipo@unidoar.com.ar`), no a una per
 | M62 | {Cuenta} pidió la baja | Docente o institución | En la app (a los admins) | Lanzamiento |
 | M63 | {Institución} pidió cambiar de plan | Lo pide en Plan | En la app (a los admins) | Lanzamiento |
 | M68 | Tu cuenta se limita después del {fecha} / Tu cuenta está limitada por una factura vencida | Último aviso (días 12 a 15 de atraso) y al quedar limitada (desde el día 16); también a quien tiene débito automático | Dueño y administradores | Cartel en el área de la institución | Lanzamiento |
+| M69 | Terminá tu registro en UNIDOAR (profesional) / Terminá el registro de tu institución en UNIDOAR | El equipo lo manda desde Altas sin terminar a quienes se registraron hace más de 24 horas, ya confirmaron el mail y no terminaron el alta (a quien no confirmó se le reenvía el mail de confirmación de Supabase). Como mucho 2 avisos por persona, con 7 días entre uno y otro | La persona que se registró | Lanzamiento |
 | M67 | {Institución} eligió pagar por semestre | Lo elige al crear la cuenta o en Plan y facturación | En la app y por mail (a los admins) | Lanzamiento |
 | M64 | Institución nueva con el alta completa | Termina el alta | No existe | Pronto |
 | M65 | Resumen diario del equipo | Todas las mañanas | No existe | Pronto |

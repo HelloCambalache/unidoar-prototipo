@@ -1,11 +1,11 @@
 import "server-only";
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, or, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { auditoria, colaCorreos, docentes, institucionMiembros, instituciones, mensajesContacto, usuarios } from "@/db/schema";
 import { fallo, ok, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { confirmaElEmail } from "@/lib/baja-cuenta";
-import { HORAS_MINIMAS_SIN_TERMINAR, impedimentoDeBorrarCuentaSinTerminar } from "@/lib/cuentas-sin-terminar";
+import { HORAS_MINIMAS_SIN_TERMINAR, SIN_AVISOS, impedimentoDeBorrarCuentaSinTerminar, type HistorialDeAvisos } from "@/lib/cuentas-sin-terminar";
 import type { EjecutorBo } from "@/lib/queries/backoffice-instituciones";
 import { borrarDatosDelProfesional } from "@/lib/queries/baja-docente";
 import { borrarDatosDeWhatsappDe } from "@/lib/queries/whatsapp";
@@ -32,6 +32,8 @@ export type CuentaSinTerminar = {
   perfilEmpezado: boolean;
   /** Tiene fila en `usuarios` (eligió un rol); si no, solo existe en el acceso. */
   enUsuarios: boolean;
+  /** Los avisos que el equipo ya le mandó desde esta pantalla (recordatorios y confirmaciones reenviadas). */
+  avisos: HistorialDeAvisos;
 };
 
 export type ListaDeCuentasSinTerminar = {
@@ -78,6 +80,11 @@ export async function listarCuentasSinTerminar(db: EjecutorBo = getDb()): Promis
         and a.created_at < now() - make_interval(hours => ${horas})`),
   ]);
 
+  const avisos = await historialDeAvisosDe(db, [
+    ...(conUsuario as unknown as { id: unknown }[]).map((f) => String(f.id)),
+    ...(soloAcceso as unknown as { id: unknown }[]).map((f) => String(f.id)),
+  ]);
+
   return {
     conUsuario: (conUsuario as unknown as Record<string, unknown>[]).map((f) => ({
       id: String(f.id),
@@ -87,6 +94,7 @@ export async function listarCuentasSinTerminar(db: EjecutorBo = getDb()): Promis
       confirmoElMail: null,
       perfilEmpezado: Boolean(f.perfil_empezado),
       enUsuarios: true,
+      avisos: avisos.get(String(f.id)) ?? SIN_AVISOS,
     })),
     totalConUsuario: Number((totalU as unknown as { n: number } | undefined)?.n ?? 0),
     soloAcceso: (soloAcceso as unknown as Record<string, unknown>[]).map((f) => ({
@@ -97,9 +105,83 @@ export async function listarCuentasSinTerminar(db: EjecutorBo = getDb()): Promis
       confirmoElMail: Boolean(f.confirmado),
       perfilEmpezado: false,
       enUsuarios: false,
+      avisos: avisos.get(String(f.id)) ?? SIN_AVISOS,
     })),
     totalSoloAcceso: Number((totalA as unknown as { n: number } | undefined)?.n ?? 0),
   };
+}
+
+/* ───────────────────────── Avisos para que terminen el registro (2026-11-18) ───────────────────────── */
+
+/** Cada aviso queda en la auditoría (sobre la cuenta, sin su email): de ahí salen cuántos recibió cada persona y cuántos salieron hoy. */
+export const ACCION_RECORDATORIO_DE_ALTA = "cuenta.recordatorio_alta";
+export const ACCION_CONFIRMACION_REENVIADA = "cuenta.confirmacion_reenviada";
+const ACCIONES_DE_AVISO = [ACCION_RECORDATORIO_DE_ALTA, ACCION_CONFIRMACION_REENVIADA];
+
+/** Cuántos avisos recibió cada cuenta y cuándo fue el último. Se lee de la auditoría (que no se purga como el historial de mails). */
+export async function historialDeAvisosDe(db: EjecutorBo, ids: string[]): Promise<Map<string, HistorialDeAvisos>> {
+  const mapa = new Map<string, HistorialDeAvisos>();
+  if (ids.length === 0) return mapa;
+  const filas = await db
+    .select({ id: auditoria.entidadId, cantidad: sql<number>`count(*)`.mapWith(Number), ultimo: sql<string | null>`max(${auditoria.creadoEn})` })
+    .from(auditoria)
+    .where(and(eq(auditoria.entidad, "usuario"), inArray(auditoria.accion, ACCIONES_DE_AVISO), inArray(auditoria.entidadId, ids)))
+    .groupBy(auditoria.entidadId);
+  for (const f of filas) mapa.set(f.id, { cantidad: f.cantidad, ultimo: f.ultimo ? new Date(f.ultimo) : null });
+  return mapa;
+}
+
+/** Cuántos avisos salieron (de cualquier cuenta) en las últimas 24 horas: es lo que cuenta para el tope diario. */
+export async function avisosDeLasUltimas24Horas(db: EjecutorBo): Promise<number> {
+  const [f] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(auditoria)
+    .where(and(inArray(auditoria.accion, ACCIONES_DE_AVISO), gt(auditoria.creadoEn, new Date(Date.now() - 24 * 3_600_000))));
+  return f?.n ?? 0;
+}
+
+export type CuentaParaAvisar = {
+  id: string;
+  email: string;
+  rol: "docente" | "institucion" | null;
+  creadaEn: Date;
+  /** Solo se sabe de quienes no tienen fila de usuario. */
+  confirmoElMail: boolean | null;
+  enUsuarios: boolean;
+};
+
+/**
+ * Relee las cuentas elegidas con las mismas condiciones de la lista (con fila de usuario sin alta completa, o solo en el acceso): las que ya
+ * no figuran (terminaron el alta, se borraron) no vuelven. Los ids tienen que venir ya validados como uuid.
+ */
+export async function cuentasParaAvisar(db: EjecutorBo, ids: string[]): Promise<CuentaParaAvisar[]> {
+  if (ids.length === 0) return [];
+  const lista = sql.join(ids.map((i) => sql`${i}::uuid`), sql`, `);
+  const [conUsuario, soloAcceso] = await Promise.all([
+    db.execute(sql`select u.id, u.email, u.rol, u.creado_en from usuarios u where ${SIN_ALTA} and u.id in (${lista})`),
+    db.execute(sql`
+      select a.id, a.email, a.created_at as creado_en, (a.email_confirmed_at is not null) as confirmado, a.raw_user_meta_data->>'rol' as rol
+      from auth.users a
+      where not exists (select 1 from usuarios u where u.id = a.id) and a.email is not null and a.id in (${lista})`),
+  ]);
+  return [
+    ...(conUsuario as unknown as Record<string, unknown>[]).map((f) => ({
+      id: String(f.id),
+      email: String(f.email),
+      rol: comoRol(f.rol),
+      creadaEn: new Date(String(f.creado_en)),
+      confirmoElMail: null,
+      enUsuarios: true,
+    })),
+    ...(soloAcceso as unknown as Record<string, unknown>[]).map((f) => ({
+      id: String(f.id),
+      email: String(f.email),
+      rol: comoRol(f.rol),
+      creadaEn: new Date(String(f.creado_en)),
+      confirmoElMail: Boolean(f.confirmado),
+      enUsuarios: false,
+    })),
+  ];
 }
 
 export type CuentaSinTerminarBorrada = { usuarioId: string; archivosDeExamen: string[] };

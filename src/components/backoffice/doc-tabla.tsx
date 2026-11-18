@@ -4,23 +4,25 @@ import { FilaClicable } from "@/components/docente/fila-clicable";
 import { Avatar } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { CATEGORIA_INFO } from "@/lib/catalogo";
+import { fechaCorta } from "@/lib/fechas";
 import type { FilaDocenteBo } from "@/lib/queries/backoffice-docentes";
 import { iniciales } from "@/lib/utils";
 
 /**
  * Tabla de docentes del backoffice (listado y "Docentes por calidad de perfil" de Operación):
- * Docente · Disciplina · Zona · Verificación · Postulaciones · Contrataciones · Scoring.
+ * Docente · Disciplina · Zona · Verificación · (Se inscribió) · Postulaciones · Contrataciones · Scoring.
  * La fila entera abre la ficha; el nombre es el link real para teclado y lectores de pantalla.
  */
-export function DocTabla({ filas }: { filas: FilaDocenteBo[] }) {
+export function DocTabla({ filas, conFecha = false }: { filas: FilaDocenteBo[]; conFecha?: boolean }) {
   return (
-    <Tabla className="min-w-[820px]">
+    <Tabla className={conFecha ? "min-w-[920px]" : "min-w-[820px]"}>
       <thead>
         <tr>
           <th>Profesional</th>
           <th>Disciplina</th>
           <th>Zona</th>
           <th>Verificación</th>
+          {conFecha && <th>Se inscribió</th>}
           <th className="text-right">Postulaciones</th>
           <th className="text-right">Contrataciones</th>
           <th className="text-right">Scoring</th>
@@ -51,6 +53,7 @@ export function DocTabla({ filas }: { filas: FilaDocenteBo[] }) {
                   {f.suspendido && <DocInsigniaSuspendida />}
                 </div>
               </td>
+              {conFecha && <td className="whitespace-nowrap text-apagado">{fechaCorta(f.creadoEn)}</td>}
               <td className="text-right tabular-nums">{f.postulaciones}</td>
               <td className="text-right tabular-nums">{f.contrataciones}</td>
               <td className="text-right font-bold tabular-nums">{f.scoring}</td>

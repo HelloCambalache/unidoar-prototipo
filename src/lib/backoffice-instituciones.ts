@@ -10,7 +10,7 @@ import { pesos, planesPorDefecto, type PlanClave, type Planes } from "@/lib/plan
 
 export const POR_PAGINA_INSTITUCIONES = 25;
 
-export type OrdenInstituciones = "nombre" | "busquedas" | "recientes";
+export type OrdenInstituciones = "nombre" | "busquedas" | "recientes" | "antiguas";
 export type EstadoInstitucion = "activa" | "suspendida" | "vencida" | "baja";
 export type VerificacionFiltro = "si" | "no";
 
@@ -34,7 +34,8 @@ export const ESTADOS_INSTITUCION: { clave: EstadoInstitucion; etiqueta: string }
 export const ORDENES_INSTITUCIONES: { clave: OrdenInstituciones; etiqueta: string }[] = [
   { clave: "nombre", etiqueta: "Nombre A–Z" },
   { clave: "busquedas", etiqueta: "Más búsquedas activas" },
-  { clave: "recientes", etiqueta: "Más recientes" },
+  { clave: "recientes", etiqueta: "Se registró hace menos" },
+  { clave: "antiguas", etiqueta: "Se registró hace más" },
 ];
 
 export const MOTIVOS_SUSPENSION = [

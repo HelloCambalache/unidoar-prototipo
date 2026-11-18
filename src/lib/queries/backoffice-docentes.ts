@@ -25,6 +25,7 @@ import {
   type EstadoCola,
   type EstadoVerificacionDocente,
   type FiltrosBoDocentes,
+  type OrdenCola,
 } from "@/lib/backoffice-docentes";
 import { MS } from "@/lib/fechas";
 import { credencialesQueSePiden } from "@/lib/categorias-docente";
@@ -81,6 +82,8 @@ export type FilaDocenteBo = {
   postulaciones: number;
   contrataciones: number;
   scoring: number;
+  /** Cuándo se inscribió (se creó su perfil). */
+  creadoEn: Date;
 };
 
 const unir = (xs: string[], max: number, vacio = "—") => xs.slice(0, max).join(", ") || vacio;
@@ -109,6 +112,7 @@ async function docentesConScoring(donde: SQL | undefined): Promise<FilaDocenteBo
       tituloVerificado: docentes.tituloVerificado,
       antecedentesVerificados: docentes.antecedentesVerificados,
       suspendido: docentes.suspendido,
+      creadoEn: docentes.creadoEn,
       postulaciones: nPostulaciones,
       contrataciones: nContrataciones,
       ultimaActividad: ultimaActividadSql,
@@ -127,6 +131,7 @@ async function docentesConScoring(donde: SQL | undefined): Promise<FilaDocenteBo
     suspendido: f.suspendido,
     postulaciones: f.postulaciones,
     contrataciones: f.contrataciones,
+    creadoEn: f.creadoEn,
     scoring: desgloseScoring({
       perfilPct: porcentajePerfilParaScoring(f),
       verificacion: f.verificacion,
@@ -166,6 +171,10 @@ export async function listarDocentesBo(f: FiltrosBoDocentes): Promise<ListadoDoc
         return b.postulaciones - a.postulaciones || b.scoring - a.scoring || porNombre(a, b);
       case "nombre":
         return porNombre(a, b);
+      case "recientes":
+        return b.creadoEn.getTime() - a.creadoEn.getTime() || porNombre(a, b);
+      case "antiguos":
+        return a.creadoEn.getTime() - b.creadoEn.getTime() || porNombre(a, b);
       default:
         return b.scoring - a.scoring || porNombre(a, b);
     }
@@ -450,12 +459,12 @@ const CON_DOCUMENTACION = sql`(exists (
 const CON_OBSERVACION_PREVIA = sql`(coalesce(btrim(${docentes.verificacionNota}), '') <> '')`;
 
 /**
- * Docentes con el alta completa que hay que revisar, los más antiguos primero. **Solo entra a la cola quien subió documentación**
+ * Docentes con el alta completa que hay que revisar, los más antiguos primero (o los más recientes, con `orden`). **Solo entra a la cola quien subió documentación**
  * (2026-11-04, pedido del cliente: «enviar perfiles a verificar solo si suben documentación»); quien tiene una corrección pedida siempre
  * figura, haya o no documentos, para que el equipo no lo pierda de vista. Con `q` filtra por nombre y apellido.
  * Cada uno viene con su DNI, CUIL y documentos (enlaces firmados): esta lectura es solo del backoffice.
  */
-export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: number; q?: string }): Promise<ColaVerificacion> {
+export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: number; q?: string; orden?: OrdenCola }): Promise<ColaVerificacion> {
   const db = getDb();
   const nombreCompleto = sql`coalesce(${docentes.nombre}, '') || ' ' || coalesce(${docentes.apellido}, '')`;
   const palabras = palabrasDeBusqueda(opciones.q ?? "").map((p) => contiene(nombreCompleto, p));
@@ -499,7 +508,7 @@ export async function colaVerificacion(opciones: { estado: EstadoCola; pagina: n
     .leftJoin(usuarios, eq(usuarios.id, docentes.usuarioId))
     .leftJoin(docenteDetalle, eq(docenteDetalle.docenteId, docentes.id))
     .where(and(enCola, deLaPestana[opciones.estado]))
-    .orderBy(asc(docentes.creadoEn), asc(docentes.id))
+    .orderBy(...(opciones.orden === "recientes" ? [desc(docentes.creadoEn), desc(docentes.id)] : [asc(docentes.creadoEn), asc(docentes.id)]))
     .limit(POR_PAGINA_COLA)
     .offset((pagina - 1) * POR_PAGINA_COLA);
 

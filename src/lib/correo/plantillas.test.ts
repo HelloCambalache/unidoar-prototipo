@@ -35,6 +35,7 @@ const EJEMPLOS: { [P in PlantillaId]: DatosDe[P] } = {
   M63: { institucion: "Club Atlético", plan: "Pro", ruta: "/backoffice/cobros" },
   M67: { institucion: "Club Atlético", total: "$ 250.000", meses: 6, alCrearLaCuenta: false, ruta: "/backoffice/cobros/abc" },
   M68: { institucion: "Club Atlético", limitada: false, periodo: "Octubre de 2026", monto: "$ 45.000", vencio: "10 oct 2026", ultimoDiaDeGracia: "25 oct 2026" },
+  M69: { rol: "docente" },
 };
 
 describe("plantillas de mails", () => {
@@ -68,7 +69,7 @@ describe("plantillas de mails", () => {
   it("los grupos opcionales son solo los de contratación", () => {
     const opcionales = (Object.keys(PLANTILLAS) as PlantillaId[]).filter((id) => esGrupoOpcional(PLANTILLAS[id].grupo));
     assert.deepEqual(opcionales, ["M20", "M21", "M23", "M24", "M25", "M26", "M27", "M30", "M35"]);
-    for (const id of ["M11", "M12", "M13", "M15", "M16", "M06"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
+    for (const id of ["M11", "M12", "M13", "M15", "M16", "M06", "M69"] as const) assert.equal(PLANTILLAS[id].grupo, "cuenta");
     for (const id of ["M50", "M51", "M52", "M53", "M54", "M55", "M56", "M68"] as const) {
       assert.equal(PLANTILLAS[id].grupo, "facturacion");
       assert.equal(PLANTILLAS[id].remitente, "facturacion");
@@ -169,6 +170,35 @@ describe("plantillas de mails", () => {
     assert.ok(limitada.html.includes("/institucion/plan"), "lleva a Plan y facturación");
     assert.equal(PLANTILLAS.M68.grupo, "facturacion");
     assert.equal(esGrupoOpcional(PLANTILLAS.M68.grupo), false);
+  });
+
+  it("M69 recuerda terminar el registro: distinto texto para profesional, institución y quien no eligió nada", () => {
+    const docente = armarMail("M69", { rol: "docente" }, { origen: ORIGEN });
+    assert.equal(docente.asunto, "Terminá tu registro en UNIDOAR");
+    assert.match(docente.texto, /datos mínimos/);
+    assert.match(docente.texto, /DNI/);
+    assert.match(docente.texto, /título o certificación/);
+    assert.match(docente.texto, /opcional/);
+    assert.ok(docente.html.includes("https://unidoar.com.ar/inicio"), "el botón lleva a /inicio, que manda al paso donde quedó");
+
+    const institucion = armarMail("M69", { rol: "institucion" }, { origen: ORIGEN });
+    assert.equal(institucion.asunto, "Terminá el registro de tu institución en UNIDOAR");
+    assert.match(institucion.texto, /CUIT/);
+    assert.ok(!institucion.texto.includes("DNI"), "a una institución no se le habla del DNI");
+
+    const sinElegir = armarMail("M69", { rol: null }, { origen: ORIGEN });
+    assert.match(sinElegir.texto, /todavía no elegiste/);
+
+    for (const m of [docente, institucion, sinElegir]) {
+      assert.match(m.texto, /ignorá este mail/);
+      assert.match(m.texto, /empezaste a registrarte en UNIDOAR/);
+    }
+    // Es parte de la cuenta: no se apaga y no lleva el pie de baja de los avisos opcionales.
+    assert.equal(PLANTILLAS.M69.grupo, "cuenta");
+    assert.equal(esGrupoOpcional(PLANTILLAS.M69.grupo), false);
+    assert.equal(docente.urlDeBaja, null);
+    // Con tope por día, por si alguien se equivoca con la lista.
+    assert.deepEqual(PLANTILLAS.M69.tope, { max: 60, horas: 24 });
   });
 
   it("el asunto queda en una sola línea y con un largo razonable", () => {

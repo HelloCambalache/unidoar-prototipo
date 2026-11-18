@@ -74,7 +74,7 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
           resumen: "La cola de verificación: qué revisar y cómo verificar, pedir una corrección o rechazar.",
           bloques: [
             {
-              p: "[Verificación](/backoffice/verificacion) lista a los profesionales que **subieron documentación** y esperan revisión, los más antiguos primero. Quien completó el alta pero todavía no subió nada no entra a la cola (arriba te avisa cuántos son y te lleva a Profesionales). Las pestañas separan **Toda la cola**, **En cola** (subieron documentación y nunca se les observó nada), **Observados** (se les pidió una corrección y todavía no la subieron) y **Modificados** (se les observó algo y volvieron a subir documentación: esperan la nueva revisión; la tarjeta muestra qué se les había pedido).",
+              p: "[Verificación](/backoffice/verificacion) lista a los profesionales que **subieron documentación** y esperan revisión, los que se inscribieron primero arriba (con **Ordenar por fecha de inscripción** la das vuelta para ver quiénes se anotaron últimos). Quien completó el alta pero todavía no subió nada no entra a la cola (arriba te avisa cuántos son y te lleva a Profesionales). Las pestañas separan **Toda la cola**, **En cola** (subieron documentación y nunca se les observó nada), **Observados** (se les pidió una corrección y todavía no la subieron) y **Modificados** (se les observó algo y volvieron a subir documentación: esperan la nueva revisión; la tarjeta muestra qué se les había pedido).",
             },
             {
               p: "**La lupa** busca por nombre y apellido (sin importar tildes ni mayúsculas) dentro de la pestaña elegida, para no depender del orden de llegada. Desde la ficha de un profesional, «Revisar en la cola de verificación» abre la cola ya buscada por su nombre.",
@@ -140,10 +140,21 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
         {
           slug: "altas-sin-terminar",
           titulo: "Altas sin terminar",
-          resumen: "Cómo ver y borrar cuentas que se registraron y nunca terminaron el alta.",
+          resumen: "Cómo ver, avisar y borrar cuentas que se registraron y nunca terminaron el alta.",
           bloques: [
             {
               p: "[Altas sin terminar](/backoffice/altas-sin-terminar) muestra a quienes se registraron hace más de 24 horas y no terminaron: las que **eligieron un rol y no siguieron** y las que **nunca entraron al alta** (solo existen como cuenta de acceso). Indica en qué punto se quedó cada una.",
+            },
+            {
+              p: "**Avisarles para que terminen:** marcá con las casillas las cuentas que quieras y apretá **Enviar recordatorio** (les llega un mail para que terminen su registro: primero los datos mínimos y después el DNI y el título, que son opcionales). A quienes **nunca confirmaron el mail** se les reenvía **el mail de confirmación** de siempre con el botón **Reenviar confirmación**. La columna **Avisos** muestra cuántos recibió cada persona y cuándo fue el último.",
+            },
+            {
+              lista: [
+                "**Como mucho 2 avisos por persona**, de cualquiera de los dos tipos, con **una semana** entre uno y otro. Después no le escribimos más.",
+                "**Hasta 40 recordatorios y 20 confirmaciones por vez**, y **60 avisos por día** en total: cuida la reputación del dominio y el límite de mails de Supabase. Si Supabase corta el reenvío a la mitad, te dice cuántos salieron.",
+                "Las cuentas que no se pueden avisar (ya recibieron los 2 avisos, les escribimos hace poco o se registraron hace menos de 24 horas) aparecen con la casilla deshabilitada y el motivo.",
+                "Cada aviso queda en la actividad del equipo, sin el email de la persona. El mail dice que, si ya no quiere registrarse, puede ignorarlo.",
+              ],
             },
             {
               p: "**Borrar** pide escribir el email de la cuenta y la elimina por completo, con sus archivos y su acceso. No se puede deshacer. Nunca borra cuentas admin, de ejemplo ni con el alta completa (esas se dan de baja desde su ficha), ni la propia.",
