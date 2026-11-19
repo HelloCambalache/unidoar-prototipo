@@ -20,7 +20,7 @@ import { BotonLink } from "@/components/ui/button";
 import { Insignia } from "@/components/ui/insignia";
 import { Tabla } from "@/components/ui/tabla";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
-import { describirAcuerdo } from "@/lib/acuerdos";
+import { describirAcuerdo, textoDeFin } from "@/lib/acuerdos";
 import { bonificacionParaSemestre, ETIQUETA_DE_MES, resumenDeMeses } from "@/lib/bonificacion";
 import { ETIQUETA_DE_CREDITO } from "@/lib/puntual";
 import { esUuid } from "@/lib/busquedas";
@@ -38,7 +38,7 @@ import {
   textoRecordatorio,
   type EstadoCobro,
 } from "@/lib/cobros";
-import { esPlanDebitable, montoBajoParaDebito, suscripcionVigente, textoDeMontoBajoParaElEquipo } from "@/lib/debito-automatico";
+import { esPlanDebitable, montoBajoParaDebito, suscripcionVigente, TEXTO_SIN_CARGO_CON_DEBITO, textoDeMontoBajoParaElEquipo } from "@/lib/debito-automatico";
 import { fechaCorta, haceTiempo } from "@/lib/fechas";
 import { moraDe, SIN_MORA } from "@/lib/mora";
 import { pesos } from "@/lib/planes";
@@ -96,7 +96,9 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const sedes = (await cantidadDeSedes(getDb(), [id])).get(id) ?? 1;
   // El precio acordado con la institución (abono o convenio), si lo tiene: con él se calculan los montos que se muestran y se facturan.
   const acordado = await acuerdoConNota(getDb(), id);
-  const acuerdo = acordado?.acuerdo ?? null;
+  // El que rige hoy: uno con fecha de fin que ya pasó deja de contar (paga el de lista) y se muestra aparte, como «venció».
+  const acuerdo = acordado && !acordado.vencido ? acordado.acuerdo : null;
+  const acuerdoVencido = acordado?.vencido ? acordado.acuerdo : null;
   // Una institución con búsqueda puntual no tiene abono ni facturas mensuales: paga cada búsqueda (ver src/lib/puntual.ts).
   const [creditos, saldo, mesesGanados, formaDePago] = await Promise.all([creditosDe(getDb(), id), saldoDeBusquedas(getDb(), id), mesesDe(id), formaDePagoDe(id)]);
   // Los meses ya bonificados por recomendar (sin cobro del débito): registrar un pago de uno de ellos pide confirmación.
@@ -120,6 +122,8 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
   const esPuntual = P.esPuntual(plan);
   // Un acuerdo hecho para otro plan no rige con el actual (ver `acuerdoQueRige`): se avisa para que el equipo lo vea y, si hace falta, acuerde otro.
   const acuerdoRige = acuerdo ? P.rigeElAcuerdo(plan, acuerdo) : false;
+  // Hoy no paga nada (precio acordado de $0): no se le factura y su plan cuenta como activo sin un primer pago.
+  const sinCargoHoy = !!acuerdo && acuerdoRige && P.sinCargo(plan, sedes, acuerdo);
   const avisoDeAcuerdoDeOtroPlan =
     acuerdo && !acuerdoRige
       ? `Hay un precio acordado para el ${P.planDe(acuerdo.plan ?? plan).label}, que no rige con el plan actual (${P.planDe(plan).label}): paga el de lista.`
@@ -159,8 +163,28 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
               </div>
               {acuerdo && acuerdoRige && (
                 <div className="mt-1 text-[13px] leading-[1.4] font-medium text-navy-700">
-                  {acuerdo.modalidad === "total" ? "Convenio a medida" : "Precio acordado"}: {pesos(P.montoDePlan(plan, sedes, acuerdo))} por mes
-                  {acuerdo.modalidad === "abono" && sedes > 1 ? ` (${sedes} sedes)` : ""}
+                  {sinCargoHoy ? (
+                    <>Sin cargo {textoDeFin(acuerdo.hasta)}: no se factura ni se cobra</>
+                  ) : (
+                    <>
+                      {acuerdo.modalidad === "total" ? "Convenio a medida" : "Precio acordado"}: {pesos(P.montoDePlan(plan, sedes, acuerdo))} por mes
+                      {acuerdo.modalidad === "abono" && sedes > 1 ? ` (${sedes} sedes)` : ""}
+                      {acuerdo.hasta ? ` ${textoDeFin(acuerdo.hasta)}` : ""}
+                    </>
+                  )}
+                </div>
+              )}
+              {acuerdo && acuerdoRige && sinCargoHoy && acuerdo.hasta && facturas.length === 0 && (
+                <div role="status" className="mt-1 max-w-[60ch] text-[13px] leading-[1.45] text-apagado">
+                  Cuando termine el período sin cargo, su facturación mensual empieza al cargar su primera factura («Cargar factura») o registrar su primer pago.
+                </div>
+              )}
+              {acuerdoVencido && (
+                <div className="mt-1 text-[13px] leading-[1.4] text-apagado">Su precio acordado ({describirAcuerdo(acuerdoVencido)}) ya terminó: paga el de lista.</div>
+              )}
+              {sinCargoHoy && debitoVigente && (
+                <div role="status" className="mt-1.5 max-w-[60ch] text-[13px] leading-[1.45] font-medium text-naranja-ink">
+                  {TEXTO_SIN_CARGO_CON_DEBITO}
                 </div>
               )}
               {acuerdo && !acuerdoRige && (
@@ -384,6 +408,11 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                       {avisoDeAcuerdoDeOtroPlan} Si querés volver a acordar un precio con este plan, usá «Acordar un precio».
                     </p>
                   )}
+                  {acuerdoVencido && (
+                    <p className="m-0 text-[13px] leading-[1.45] text-apagado">
+                      Había un precio acordado ({describirAcuerdo(acuerdoVencido)}) que ya terminó: paga el de lista. Para acordar otro, usá «Acordar un precio».
+                    </p>
+                  )}
                   {acordado?.nota && <Dato k="Nota">{acordado.nota}</Dato>}
                   {sedes > 1 && <Dato k="Sedes">{sedes}</Dato>}
                   <div className="mt-1.5">
@@ -393,8 +422,10 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                       plan={plan}
                       sedes={sedes}
                       acuerdo={acuerdoRige ? acuerdo : null}
+                      vencido={acuerdoVencido}
                       nota={acordado?.nota ?? null}
                       debitoVigente={debitoVigente}
+                      mesActual={periodoActual(ahora)}
                     />
                   </div>
                 </div>
@@ -461,7 +492,12 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 {`Registrar pago de ${etiquetaPeriodo(proximo.periodo)}`}
               </CobroPago>
             )}
-            {!esPuntual && (
+            {sinCargoHoy && (
+              <p role="status" className="m-0 rounded-caja bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
+                No tiene cargo por su precio acordado ($0): no hay pagos para registrar ni facturas para cargar. Si hay que cobrarle, cambiá su precio en «Precio».
+              </p>
+            )}
+            {!esPuntual && !sinCargoHoy && (
               <CobroPagoEfectivo
                 institucionId={i.id}
                 sedes={sedes}
@@ -478,7 +514,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 Esta institución eligió pagar por semestre: coordiná el pago y registralo con «Registrar semestre al contado».
               </p>
             )}
-            {P.planDe(plan).periodo === "mes" && (
+            {P.planDe(plan).periodo === "mes" && !sinCargoHoy && (
               <CobroSemestre
                 institucionId={i.id}
                 sedes={sedes}
@@ -492,7 +528,7 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                 bonificacion={bonificacionParaSemestre(mesesGanados)}
               />
             )}
-            {!esPuntual && (
+            {!esPuntual && !sinCargoHoy && (
               <CobroNuevaFactura
                 institucionId={i.id}
                 sedes={sedes}

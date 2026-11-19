@@ -68,6 +68,8 @@ export async function activarDebitoAutomatico(): Promise<Resultado<{ url: string
     return fallo("El valor de tu plan se acuerda según el volumen: el equipo te pasa el monto y, cuando lo tengas, podés activar el débito automático.");
   }
   const monto = P.montoDePlan(institucion.plan, sedes, acuerdo);
+  // Con un precio acordado de $0 (sin cargo) no hay nada que debitar.
+  if (monto === 0) return fallo("Tu plan no tiene cargo por ahora: no hace falta activar el débito automático.");
   if (!montoCobrable(monto)) return fallo("No pudimos calcular el monto de tu plan. Escribinos por Contacto.");
   // Mercado Pago no crea una suscripción por menos de su mínimo (rechaza el plan con un 400): se le dice a la persona en vez de mandarla a un error genérico.
   if (montoBajoParaDebito(monto)) return fallo(textoDeMontoBajoParaLaInstitucion(monto));

@@ -48,6 +48,29 @@ describe("plan activo: cuándo se frena una cuenta", () => {
     assert.equal(motivoDePlanInactivo({ ...base, precioDefinido: false }), null);
   });
 
+  it("una cuenta sin cargo (precio acordado de $0) está activa aunque no haya pagado nada: no tiene nada que pagar", () => {
+    assert.equal(motivoDePlanInactivo({ ...base, sinCargo: true }), null);
+    assert.equal(motivoDePlanInactivo({ ...base, sinCargo: false }), "sin-pago");
+  });
+
+  it("sin cargo no tapa una mora: una factura vencida de antes sigue limitando la cuenta", () => {
+    assert.equal(motivoDePlanInactivo({ ...base, sinCargo: true, mora: limitada }), "mora");
+  });
+
+  it("con las reglas reales, un acuerdo de $0 deja activa a una cuenta sin pago y, cuando el acuerdo termina, vuelve «sin pago»", () => {
+    const sinCargo = (plan: string, acuerdo: Parameters<typeof P.sinCargo>[2]) => ({
+      ...base,
+      esPuntual: P.esPuntual(plan),
+      precioDefinido: P.precioDefinido(plan, acuerdo),
+      sinCargo: P.sinCargo(plan, 1, acuerdo),
+    });
+    assert.equal(motivoDePlanInactivo(sinCargo("colegio", { modalidad: "total", monto: 0 })), null);
+    assert.equal(motivoDePlanInactivo(sinCargo("colegio", { modalidad: "abono", monto: 0 })), null);
+    // Un acuerdo con precio (no gratis), o ninguno (terminó y paga la lista), sigue pidiendo el primer pago.
+    assert.equal(motivoDePlanInactivo(sinCargo("colegio", { modalidad: "total", monto: 20_000 })), "sin-pago");
+    assert.equal(motivoDePlanInactivo(sinCargo("colegio", null)), "sin-pago");
+  });
+
   it("con las reglas reales: Colegios sin pago se frena; Multisede sin convenio y la búsqueda puntual, no", () => {
     const de = (plan: string): EntradaDePlan => ({ ...base, esPuntual: P.esPuntual(plan), precioDefinido: P.precioDefinido(plan, null) });
     assert.equal(motivoDePlanInactivo(de("colegio")), "sin-pago");

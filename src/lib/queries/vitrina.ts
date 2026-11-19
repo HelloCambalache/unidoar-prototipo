@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, gt, isNull, notInArray, or, sql } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
 import { busquedas, cursos, institucionFotos, institucionNovedades, instituciones, postulaciones } from "@/db/schema";
+import { encuadreParaGuardar } from "@/lib/encuadre";
 import {
   huellaDeVitrina,
   sinRepetidos,
@@ -127,6 +128,8 @@ export async function guardarVitrina(
         horarioAdministracion: vacioANull(d.horarioAdministracion),
         logoUrl: vacioANull(d.logoUrl),
         portadaUrl: vacioANull(d.portadaUrl),
+        // Sin portada no hay qué encuadrar; con portada se guarda el encuadre elegido (null = el punto de siempre).
+        portadaFoco: encuadreParaGuardar(d.portadaFoco, vacioANull(d.portadaUrl) !== null),
       })
       .where(eq(instituciones.id, institucionId));
 

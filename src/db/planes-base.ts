@@ -60,6 +60,8 @@ async function main() {
     // El plan para el que se acordó el precio: el acuerdo solo rige con ese plan. Los que ya existían se atan al plan que tiene hoy la institución
     // (así siguen valiendo igual); un acuerdo nuevo lo anota la acción que lo guarda. No pisa uno que ya tenga plan.
     await tx`alter table public.acuerdos_precio add column if not exists plan text`;
+    // El último mes en que rige el acuerdo ("2026-12"; null = sin fecha de fin): pasado ese mes vuelve el precio de lista. Con un monto de 0 es un período sin cargo.
+    await tx`alter table public.acuerdos_precio add column if not exists hasta text`;
     await tx`
       update public.acuerdos_precio a
       set plan = i.plan

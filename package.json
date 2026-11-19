@@ -22,6 +22,7 @@
     "db:cursos-instituciones": "dotenv -e .env.local -- tsx src/db/cursos-instituciones-base.ts",
     "db:contactos-cv": "dotenv -e .env.local -- tsx src/db/contactos-cv-base.ts",
     "db:categorias-multiples": "dotenv -e .env.local -- tsx src/db/categorias-multiples-base.ts",
+    "db:portada-foco": "dotenv -e .env.local -- tsx src/db/portada-foco-base.ts",
     "db:whatsapp": "dotenv -e .env.local -- tsx src/db/whatsapp-base.ts",
     "db:referidos": "dotenv -e .env.local -- tsx src/db/referidos-base.ts",
     "db:semestral": "dotenv -e .env.local -- tsx src/db/semestral-base.ts",

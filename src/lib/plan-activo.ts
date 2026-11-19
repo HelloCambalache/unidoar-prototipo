@@ -12,8 +12,9 @@ import { fraseDelCartelSinPago, pasosParaActivar, pasosParaLevantarLaMora, type 
  *  - **mora**: la cuenta tiene una factura vencida hace más de `DIAS_DE_GRACIA` días (ver src/lib/mora.ts);
  *  - **sin pago**: la cuenta es nueva, con un abono (mensual o semestral), y el equipo todavía no registró su primer pago. Frena hasta que pague.
  *
- * Quedan afuera de «sin pago»: las cuentas de ejemplo, la búsqueda puntual (se rige por el saldo de búsquedas pagadas) y los planes sin un precio
- * con el que facturar (Multisede sin convenio: el equipo lo acuerda a mano). Lo que se frena es lo mismo en los dos casos (`QUE_SE_LIMITA`);
+ * Quedan afuera de «sin pago»: las cuentas de ejemplo, la búsqueda puntual (se rige por el saldo de búsquedas pagadas), los planes sin un precio
+ * con el que facturar (Multisede sin convenio: el equipo lo acuerda a mano) y las cuentas sin cargo (precio acordado de $0: no tienen nada que
+ * pagar, mientras dure el acuerdo). Lo que se frena es lo mismo en los dos casos (`QUE_SE_LIMITA`);
  * todo lo demás sigue funcionando.
  */
 
@@ -29,6 +30,11 @@ export type EntradaDePlan = {
   esPuntual: boolean;
   /** Hay un precio con el que facturar (un plan por sede sin convenio a medida no lo tiene). */
   precioDefinido: boolean;
+  /**
+   * Hoy no paga nada por mes (su precio acordado es $0: una cortesía o un período sin cargo, ver `Planes.sinCargo`): no hay un primer pago que esperar,
+   * así que el plan está activo desde el principio. Si el acuerdo termina, vuelve el precio de lista y con él la regla de «sin pago».
+   */
+  sinCargo?: boolean;
   /** Cuántas facturas pagas tiene (un semestre al contado y un débito automático cuentan igual). */
   facturasPagas: number;
   mora: Mora;
@@ -38,7 +44,7 @@ export type EntradaDePlan = {
 export function motivoDePlanInactivo(e: EntradaDePlan): MotivoDePlanInactivo | null {
   if (e.esDemo) return null;
   if (e.mora.limitada) return "mora";
-  if (e.esPuntual || !e.precioDefinido) return null;
+  if (e.esPuntual || !e.precioDefinido || e.sinCargo) return null;
   return e.facturasPagas === 0 ? "sin-pago" : null;
 }
 
@@ -98,7 +104,8 @@ export function contenidoDelPopup(
   const plan = datos
     ? {
         nombre: datos.planNombre,
-        precio: datos.mensual !== null ? `${pesos(datos.mensual)} por mes` : null,
+        // Sin cargo ($0) no se muestra un precio: la mora de una cuenta sin cargo no tiene un monto mensual que pagar.
+        precio: datos.mensual !== null && datos.mensual > 0 ? `${pesos(datos.mensual)} por mes` : null,
         semestre: datos.semestre ? `Si preferís pagar por semestre: ${textoDeSemestre(datos.semestre)}` : null,
       }
     : null;

@@ -108,13 +108,22 @@ export type CatalogoDePlanes = { planes: Record<PlanClave, Plan>; condiciones: C
 
 /**
  * Un precio acordado con una institución (lo carga el equipo desde su ficha de cobros). Tiene dos modalidades:
- *  - "abono": un abono propio, de cualquier monto hasta el de lista (nunca más que la lista). Reemplaza al precio de lista como abono de la primera sede,
- *    y las sedes adicionales siguen con su descuento sobre ESE abono.
- *  - "total": un monto mensual fijo a medida (el convenio de una red): es lo que paga por mes sin importar cuántas sedes tenga.
+ *  - "abono": un abono propio, de cualquier monto desde cero hasta el de lista (nunca más que la lista). Reemplaza al precio de lista como abono de la
+ *    primera sede, y las sedes adicionales siguen con su descuento sobre ESE abono.
+ *  - "total": un monto mensual fijo a medida (el convenio de una red, o cualquier valor que se acuerde): es lo que paga por mes sin importar cuántas
+ *    sedes tenga.
+ * Con un monto de 0 la institución no paga nada («sin cargo»: una cortesía o un período de prueba). Un acuerdo puede tener un fin (`hasta`): pasado
+ * ese mes vuelve el precio de lista.
  */
 export type AcuerdoDePrecio = {
   modalidad: "abono" | "total";
+  /** Pesos por mes; 0 = sin cargo. */
   monto: number;
+  /**
+   * El último mes en que rige ("2026-12", inclusive); null o ausente = sin fecha de fin. Lo resuelven las lecturas (`acuerdosDePrecio`): un acuerdo que
+   * ya terminó no llega acá, así que `montoDePlan` no mira la fecha (es informativa: para avisar «sin cargo hasta diciembre»).
+   */
+  hasta?: string | null;
   /**
    * El plan de la institución cuando se acordó el precio. Un acuerdo solo rige con ese plan (`acuerdoQueRige`): un abono de $29.000 acordado
    * en Clubes no se puede cobrar en Colegios, ni un convenio mensual en una búsqueda puntual. Sin plan anotado (acuerdos anteriores a este
@@ -428,14 +437,21 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
   };
 
   /**
-   * Entre qué valores puede estar un abono acordado: de un peso hasta el precio de lista del plan. **No hay un precio mínimo** (el equipo puede bajar
-   * el abono de una institución todo lo que acuerde con ella), pero un abono acordado nunca cobra más que la lista (para otro monto, un convenio).
+   * Entre qué valores puede estar un abono acordado: de cero (sin cargo) hasta el precio de lista del plan. **No hay un precio mínimo** (el equipo puede
+   * bajar el abono de una institución todo lo que acuerde con ella, hasta no cobrarle nada), pero un abono acordado nunca cobra más que la lista (para
+   * otro monto, un convenio a medida, que acepta cualquier valor).
    */
-  const rangoDeAbono = (clave: string) => ({ minimo: 1, maximo: planDe(clave).precio });
+  const rangoDeAbono = (clave: string) => ({ minimo: 0, maximo: planDe(clave).precio });
 
-  /** Por qué un precio acordado no se puede guardar (null si está bien): un abono no puede pasar el precio de lista. */
+  /**
+   * Por qué un precio acordado no se puede guardar (null si está bien): un abono no puede pasar el precio de lista, y una búsqueda puntual no puede
+   * quedar sin cargo (cada búsqueda es un pago que se registra aparte: no hay un abono que dejar en cero).
+   */
   const errorDeAcuerdo = (clave: string, acuerdo: AcuerdoDePrecio): string | null => {
-    if (!Number.isInteger(acuerdo.monto) || acuerdo.monto < 1 || acuerdo.monto > 10_000_000) return "Escribí un monto en pesos, entero y mayor que cero.";
+    if (!Number.isInteger(acuerdo.monto) || acuerdo.monto < 0 || acuerdo.monto > 10_000_000) return "Escribí un monto en pesos, entero (0 si no paga nada).";
+    if (acuerdo.monto === 0 && esPuntual(clave)) {
+      return "Una búsqueda puntual se paga por búsqueda: no tiene un abono que dejar sin cargo. Para una cortesía, registrá el pago de la búsqueda con el monto que corresponda.";
+    }
     if (acuerdo.modalidad === "abono") {
       const { maximo } = rangoDeAbono(clave);
       if (acuerdo.monto > maximo) return `El abono acordado no puede pasar el precio de lista (${pesos(maximo)}). Para otro monto usá un convenio a medida.`;
@@ -453,6 +469,14 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
    */
   const precioDefinido = (clave: string, acuerdo: AcuerdoDePrecio | null = null) =>
     !planDe(clave).porSede || acuerdoQueRige(clave, acuerdo)?.modalidad === "total";
+
+  /**
+   * ¿Esta institución no paga nada por mes con este plan? Es el precio acordado en cero (una cortesía o un período sin cargo): no se le factura, no se
+   * le ofrece un débito automático ni un semestre por adelantado, y su plan cuenta como activo sin que haya un primer pago (no hay nada que pagar).
+   * Solo con un abono mensual con precio definido: la búsqueda puntual se paga por búsqueda y Multisede sin convenio todavía no tiene precio.
+   */
+  const sinCargo = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) =>
+    !esPuntual(clave) && precioDefinido(clave, acuerdo) && montoDePlan(clave, sedes, acuerdo) === 0;
 
   /** Lo que aporta una institución al MRR: lo que paga por mes (un plan por sede, el precio por la cantidad de sedes). */
   const equivalenteMensual = (clave: string, sedes = 1, acuerdo: AcuerdoDePrecio | null = null) => {
@@ -491,6 +515,7 @@ export function crearPlanes(catalogo: CatalogoDePlanes) {
     nombreDePlan,
     equivalenteMensual,
     precioDefinido,
+    sinCargo,
     esFundador,
     cuposDeFundador,
     fundadorasCerradasPorFecha,

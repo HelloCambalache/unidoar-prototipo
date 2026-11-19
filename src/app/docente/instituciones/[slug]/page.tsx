@@ -12,7 +12,7 @@ import { VitrinaInstalaciones, VitrinaMisionVision, VitrinaNovedadesLista } from
 import { Icono } from "@/components/icons";
 import { requerirDocente } from "@/lib/auth";
 import { mensajeDeInstitucion, rutaDeInstitucion, urlCompleta } from "@/lib/compartir";
-import { focoDeFoto } from "@/lib/fotos";
+import { posicionDePortada } from "@/lib/encuadre";
 import { perfilInstitucion } from "@/lib/queries/instituciones";
 import { sedesConUbicacion } from "@/lib/sedes";
 import { origenSitio } from "@/lib/sitio";
@@ -66,7 +66,7 @@ export default async function InstitucionPerfilDocentePage({ params }: Props) {
           <img
             src={i.portadaUrl}
             alt={`Foto de ${i.nombre}`}
-            style={{ objectPosition: focoDeFoto(i.portadaUrl) }}
+            style={{ objectPosition: posicionDePortada(i.portadaUrl, i.portadaFoco) }}
             className="block aspect-[16/7] max-h-[340px] w-full rounded-interno object-cover"
           />
         ) : (

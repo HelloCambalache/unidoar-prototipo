@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { actualizarVitrinaComoAdmin } from "@/app/actions/backoffice-instituciones";
 import { actualizarVitrina } from "@/app/actions/institucion";
 import { EncabezadoPagina } from "@/components/app/encabezado-pagina";
+import { PortadaConEncuadre } from "@/components/institucion/portada-con-encuadre";
 import { VitrinaGaleria, type FotoEditable } from "@/components/institucion/vitrina-galeria";
 import { VitrinaNovedades, type NovedadEditable } from "@/components/institucion/vitrina-novedades";
 import { VitrinaValores } from "@/components/institucion/vitrina-valores";
@@ -182,48 +183,51 @@ export function VitrinaFormulario({
 
       {/* Portada, logo e identidad */}
       <Tarjeta className="mb-4 overflow-hidden p-0">
-        {/* Misma proporción que en la vitrina pública: lo que se ve acá es lo que van a ver los profesionales. */}
-        <div className="relative aspect-[16/7] w-full bg-[linear-gradient(135deg,#16214F,#2A3A7A)]">
-          {d.portadaUrl && (
-            // eslint-disable-next-line @next/next/no-img-element -- portada subida por la institución, tamaño libre
-            <img
-              src={d.portadaUrl}
-              alt="Foto de portada"
-              style={{ objectPosition: focoDeFoto(d.portadaUrl) }}
-              className="block size-full object-cover"
-            />
-          )}
-          <div className="absolute top-3 right-3 flex items-start gap-2">
-            {d.portadaUrl && (
-              <Boton
-                tamano="sm"
-                variante="secundario"
-                onClick={() => {
-                  set("portadaUrl", "");
-                  setReinicios((r) => ({ ...r, portada: r.portada + 1 }));
+        {/* Misma proporción que en la vitrina pública: lo que se ve acá es lo que van a ver los profesionales. Con «Ajustar encuadre» se arrastra la foto dentro del marco. */}
+        <PortadaConEncuadre
+          url={d.portadaUrl}
+          encuadre={d.portadaFoco}
+          onEncuadre={(v) => set("portadaFoco", v)}
+          acciones={
+            <>
+              {d.portadaUrl && (
+                <Boton
+                  tamano="sm"
+                  variante="secundario"
+                  onClick={() => {
+                    set("portadaUrl", "");
+                    set("portadaFoco", "");
+                    setReinicios((r) => ({ ...r, portada: r.portada + 1 }));
+                  }}
+                >
+                  Quitar
+                </Boton>
+              )}
+              <SubirArchivo
+                key={`portada-${reinicios.portada}`}
+                bucket="publico"
+                carpeta="portadas"
+                nombre="portadaUrl"
+                etiqueta="foto de portada"
+                textoBoton={d.portadaUrl ? "Cambiar portada" : "Subir portada"}
+                variante="boton"
+                disponible={almacenamientoDisponible}
+                onCambio={(v) => {
+                  if (!v) return;
+                  set("portadaUrl", v);
+                  // Una portada nueva arranca con el encuadre de siempre: el de la anterior no le corresponde.
+                  set("portadaFoco", "");
                 }}
-              >
-                Quitar
-              </Boton>
-            )}
-            <SubirArchivo
-              key={`portada-${reinicios.portada}`}
-              bucket="publico"
-              carpeta="portadas"
-              nombre="portadaUrl"
-              etiqueta="foto de portada"
-              textoBoton={d.portadaUrl ? "Cambiar portada" : "Subir portada"}
-              variante="boton"
-              disponible={almacenamientoDisponible}
-              onCambio={(v) => v && set("portadaUrl", v)}
-            />
-          </div>
+              />
+            </>
+          }
+        >
           {errores.portadaUrl && (
             <p role="alert" className="absolute bottom-2 left-3 m-0 rounded bg-white px-2 py-1 text-xs text-[#b91c1c]">
               {errores.portadaUrl}
             </p>
           )}
-        </div>
+        </PortadaConEncuadre>
 
         <div className="px-6 pb-[22px] max-[560px]:px-4">
           {/* relative z-[2]: la portada es `relative` y se pintaría encima del logo, que sube sobre ella con el margen negativo. */}

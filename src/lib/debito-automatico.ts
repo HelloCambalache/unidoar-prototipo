@@ -80,6 +80,13 @@ export const textoDeMontoBajoParaElEquipo = (monto: number, debitoVigente: boole
   `Con este monto (${pesos(monto)} por mes) la institución no puede activar el débito automático: Mercado Pago pide al menos ${pesos(MONTO_MINIMO_DE_DEBITO)} por mes para una suscripción.` +
   (debitoVigente ? ` Su débito ya activo sigue cobrando el monto anterior: Mercado Pago no permite bajarlo a menos de ${pesos(MONTO_MINIMO_DE_DEBITO)}.` : "");
 
+/**
+ * Lo que lee el equipo cuando una institución pasa a no pagar nada (precio acordado de $0) y tiene un débito automático vivo: Mercado Pago no permite
+ * bajar una suscripción a menos de su mínimo, así que sigue cobrando el monto de antes hasta que alguien la cancele (la sincronización diaria no la toca).
+ */
+export const TEXTO_SIN_CARGO_CON_DEBITO =
+  "Tiene el débito automático activo y Mercado Pago no deja bajarlo a $0: sigue cobrando el monto de antes hasta que se cancele. Pedile que lo cancele desde Plan y facturación (o cancelalo desde la cuenta de Mercado Pago) para que no le cobre.";
+
 export type DecisionDeSincronizacion = { accion: "nada" } | { accion: "cambiar-monto"; monto: number } | { accion: "cancelar" };
 
 /**

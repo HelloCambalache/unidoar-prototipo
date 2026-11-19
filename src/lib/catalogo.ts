@@ -195,6 +195,8 @@ export const institucionPerfilSchema = z.object({
   descripcion: textoOpcional(1000),
   logoUrl: textoOpcional(500),
   portadaUrl: textoOpcional(500),
+  /** Qué parte de la portada se ve ("30% 62%"): lo valida `encuadreParaGuardar` al guardar. */
+  portadaFoco: textoOpcional(20),
 });
 
 export const busquedaSchema = z.object({

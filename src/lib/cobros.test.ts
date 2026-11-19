@@ -345,6 +345,30 @@ describe("facturas automáticas (planificarFacturas)", () => {
     assert.deepEqual(deOtroPlan.omitidas, [{ institucionId: "m", motivo: "sin_convenio" }]);
   });
 
+  it("una institución sin cargo (precio acordado de $0) no se factura ni gasta un mes bonificado, y al terminar el acuerdo vuelve la lista", () => {
+    const gratis = { modalidad: "total" as const, monto: 0, plan: "colegio", hasta: "2026-12" };
+    const historial = [f("a", "2026-09", "colegio", "pagada")];
+    // Con el acuerdo vigente: nada que facturar, y el mes bonificado que tenía guardado no se gasta en algo que no se cobra.
+    const r = planificarFacturas([{ ...inst("a", "colegio"), acuerdo: gratis, mesesBonificados: 1 }], historial, P, HOY);
+    assert.deepEqual(r.crear, []);
+    assert.deepEqual(r.omitidas, [{ institucionId: "a", motivo: "sin_cargo" }]);
+    assert.deepEqual(r.bonificar, []);
+    // Con un abono en cero también (las sedes adicionales descuentan de cero).
+    const abonoCero = planificarFacturas([{ ...inst("a", "colegio"), sedes: 3, acuerdo: { modalidad: "abono" as const, monto: 0 } }], historial, P, HOY);
+    assert.deepEqual(abonoCero.omitidas, [{ institucionId: "a", motivo: "sin_cargo" }]);
+    // Terminado el acuerdo, la lectura ya no lo trae (`acuerdosDePrecio` lo descarta): se factura la lista, como siempre.
+    const despues = planificarFacturas([inst("a", "colegio")], historial, "2027-01", "2027-01-07");
+    assert.equal(despues.crear.length, 1);
+    assert.equal(despues.crear[0]!.monto, 50_000);
+  });
+
+  it("un acuerdo con precio (no gratis) sí se factura, con ese precio", () => {
+    const promo = { modalidad: "total" as const, monto: 20_000, plan: "colegio", hasta: "2026-12" };
+    const r = planificarFacturas([{ ...inst("a", "colegio"), acuerdo: promo }], [f("a", "2026-09", "colegio", "pagada")], P, HOY);
+    assert.deepEqual(r.omitidas, []);
+    assert.equal(r.crear[0]!.monto, 20_000);
+  });
+
   it("no factura los meses cubiertos por un semestre pagado al contado, y retoma al terminar", () => {
     const semestre = (periodo: string, estado = "pagada"): FacturaReciente => ({ ...f("a", periodo, "colegio", estado), mesesCubiertos: 6 });
     // El semestre empezó en agosto: cubre hasta enero, así que ni octubre ni noviembre se facturan.

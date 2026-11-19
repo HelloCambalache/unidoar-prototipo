@@ -79,6 +79,10 @@ export async function cotizarSemestre(institucionId: string, ejecutor: EjecutorB
   }
   const acuerdo = await acuerdoDe(ejecutor, institucionId);
   if (!P.precioDefinido(inst.plan, acuerdo)) return { ok: false, error: "Tu plan se acuerda con el equipo: escribinos desde Contacto para coordinar el pago." };
+  // Con un precio acordado de $0 (sin cargo) no hay nada que pagar: nunca se arma un link de pago por cero.
+  if (P.montoDePlan(inst.plan, (await cantidadDeSedes(ejecutor, [institucionId])).get(institucionId) ?? 1, acuerdo) === 0) {
+    return { ok: false, error: "Tu plan no tiene cargo por ahora: no hay nada para pagar." };
+  }
 
   const { meses } = P.condiciones.pack;
   const actual = periodoActual();

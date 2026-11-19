@@ -274,14 +274,14 @@ describe("precio acordado con una institución", () => {
     assert.equal(P.packDe("deportiva", 1, abono(28_000)).conReferido, 112_000);
   });
 
-  it("el rango de un abono va de un peso a la lista: no hay precio mínimo", () => {
-    assert.deepEqual(P.rangoDeAbono("colegio"), { minimo: 1, maximo: 50_000 });
-    assert.deepEqual(P.rangoDeAbono("deportiva"), { minimo: 1, maximo: 30_000 });
-    assert.deepEqual(P.rangoDeAbono("multisede"), { minimo: 1, maximo: 15_000 });
+  it("el rango de un abono va de cero a la lista: no hay precio mínimo y puede no cobrarse nada", () => {
+    assert.deepEqual(P.rangoDeAbono("colegio"), { minimo: 0, maximo: 50_000 });
+    assert.deepEqual(P.rangoDeAbono("deportiva"), { minimo: 0, maximo: 30_000 });
+    assert.deepEqual(P.rangoDeAbono("multisede"), { minimo: 0, maximo: 15_000 });
   });
 
   it("acepta un abono de cualquier monto hasta la lista y rechaza el que la pasa", () => {
-    for (const monto of [1, 20_000, 28_000, 48_000, 49_999, 50_000]) assert.equal(P.errorDeAcuerdo("colegio", abono(monto)), null, String(monto));
+    for (const monto of [0, 1, 20_000, 28_000, 48_000, 49_999, 50_000]) assert.equal(P.errorDeAcuerdo("colegio", abono(monto)), null, String(monto));
     assert.match(P.errorDeAcuerdo("colegio", abono(50_001))!, /no puede pasar el precio de lista \(\$ 50\.000\)/);
     assert.equal(P.errorDeAcuerdo("multisede", abono(14_000)), null, "sin mínimo, también en un plan por sede");
     assert.ok(P.errorDeAcuerdo("multisede", abono(15_001)));
@@ -291,7 +291,51 @@ describe("precio acordado con una institución", () => {
   it("un convenio puede estar por arriba o por debajo del rango, pero tiene que ser un monto válido", () => {
     assert.equal(P.errorDeAcuerdo("colegio", convenio(400_000)), null);
     assert.equal(P.errorDeAcuerdo("colegio", convenio(20_000)), null);
-    for (const mal of [0, -5, 1000.5, 99_000_000]) assert.ok(P.errorDeAcuerdo("colegio", convenio(mal)), `${mal} no debería pasar`);
+    for (const mal of [-5, 1000.5, 99_000_000]) assert.ok(P.errorDeAcuerdo("colegio", convenio(mal)), `${mal} no debería pasar`);
+  });
+
+  it("un acuerdo en cero (sin cargo) es válido en un abono mensual, pero no en la búsqueda puntual", () => {
+    assert.equal(P.errorDeAcuerdo("colegio", convenio(0)), null);
+    assert.equal(P.errorDeAcuerdo("deportiva", abono(0)), null);
+    assert.equal(P.errorDeAcuerdo("multisede", convenio(0)), null);
+    // La búsqueda puntual se paga por búsqueda: no tiene un abono que dejar en cero.
+    assert.match(P.errorDeAcuerdo("puntual", convenio(0))!, /se paga por búsqueda/);
+    assert.equal(P.errorDeAcuerdo("puntual", convenio(95_000)), null);
+  });
+});
+
+describe("sin cargo: una institución que no paga nada", () => {
+  const abono = (monto: number): AcuerdoDePrecio => ({ modalidad: "abono", monto });
+  const convenio = (monto: number): AcuerdoDePrecio => ({ modalidad: "total", monto });
+
+  it("un acuerdo en cero deja el monto en cero, con las sedes que tenga", () => {
+    assert.equal(P.montoDePlan("colegio", 1, convenio(0)), 0);
+    assert.equal(P.montoDePlan("colegio", 4, convenio(0)), 0);
+    // Un abono de cero: las sedes adicionales se calculan sobre cero (descuento de cero es cero).
+    assert.equal(P.montoDePlan("colegio", 4, abono(0)), 0);
+    assert.equal(P.equivalenteMensual("colegio", 3, abono(0)), 0, "no suma al MRR");
+  });
+
+  it("sinCargo es verdadero solo cuando hoy no paga nada con un abono mensual", () => {
+    assert.equal(P.sinCargo("colegio", 1, convenio(0)), true);
+    assert.equal(P.sinCargo("deportiva", 3, abono(0)), true);
+    assert.equal(P.sinCargo("colegio", 1, convenio(1)), false);
+    assert.equal(P.sinCargo("colegio", 1, abono(20_000)), false);
+    assert.equal(P.sinCargo("colegio", 1, null), false, "sin acuerdo paga la lista");
+    assert.equal(P.sinCargo("puntual", 1, convenio(0)), false, "la búsqueda puntual no tiene abono");
+    assert.equal(P.sinCargo("multisede", 5, null), false, "una red sin convenio todavía no tiene precio: no es «sin cargo»");
+    assert.equal(P.sinCargo("multisede", 5, convenio(0)), true);
+  });
+
+  it("un acuerdo de otro plan no cuenta: paga la lista y no está sin cargo", () => {
+    assert.equal(P.sinCargo("colegio", 1, { modalidad: "total", monto: 0, plan: "deportiva" }), false);
+    assert.equal(P.sinCargo("deportiva", 1, { modalidad: "total", monto: 0, plan: "deportiva" }), true);
+  });
+
+  it("el desglose lo marca como acordado con total cero", () => {
+    const d = P.desgloseDeMonto("colegio", 2, convenio(0));
+    assert.equal(d.acordado, true);
+    assert.equal(d.total, 0);
   });
 });
 

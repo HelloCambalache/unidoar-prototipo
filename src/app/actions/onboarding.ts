@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { quitados } from "@/lib/archivos";
+import { encuadreParaGuardar } from "@/lib/encuadre";
 import { planes } from "@/lib/queries/planes";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
@@ -352,7 +353,7 @@ export async function actualizarPerfilInstitucion(_previo: EstadoFormulario, for
 
   const r = parsear(institucionPerfilSchema, formData);
   if (!r.ok) return conError(formData, r.error, r.campos);
-  const { descripcion, logoUrl, portadaUrl } = r.data;
+  const { descripcion, logoUrl, portadaUrl, portadaFoco } = r.data;
 
   // Solo se aceptan imágenes que subió esta misma cuenta (o la que ya estaba guardada).
   const campos: Record<string, string> = {};
@@ -366,7 +367,13 @@ export async function actualizarPerfilInstitucion(_previo: EstadoFormulario, for
 
   await getDb()
     .update(instituciones)
-    .set({ descripcion: orNull(descripcion), logoUrl: orNull(logoUrl), portadaUrl: orNull(portadaUrl) })
+    .set({
+      descripcion: orNull(descripcion),
+      logoUrl: orNull(logoUrl),
+      portadaUrl: orNull(portadaUrl),
+      // Sin portada no hay qué encuadrar; con portada, el encuadre que se eligió (null = el punto de siempre).
+      portadaFoco: encuadreParaGuardar(portadaFoco, Boolean(orNull(portadaUrl))),
+    })
     .where(eq(instituciones.id, institucion.id));
   await borrarArchivos(quitados([institucion.logoUrl, institucion.portadaUrl], [logoUrl, portadaUrl]));
 

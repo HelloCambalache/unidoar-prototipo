@@ -19,6 +19,7 @@ const antes: VitrinaAntes = {
   horarioAdministracion: null,
   logoUrl: null,
   portadaUrl: null,
+  portadaFoco: null,
   fotos: [{ url: "https://x.test/a.jpg", etiqueta: "Patio" }],
   novedades: [{ titulo: "Acto", texto: "Viernes", fecha: "2026-10-01" }],
 };
@@ -78,6 +79,25 @@ describe("cambiosDeVitrina (lo que queda en la actividad del equipo)", () => {
     assert.deepEqual(cambios, ["descripción"]);
     assert.ok(!cambios.join(" ").includes("secreto"));
   });
+
+  it("anota el encuadre de la portada cuando cambia (y no cuando sigue vacío)", () => {
+    assert.deepEqual(cambiosDeVitrina(antes, { ...igualQueAntes(), portadaFoco: "30% 62%" }), ["encuadre de la portada"]);
+    assert.deepEqual(cambiosDeVitrina({ ...antes, portadaFoco: "30% 62%" }, { ...igualQueAntes(), portadaFoco: "30% 62%" }), []);
+  });
+});
+
+describe("encuadre de la portada en el esquema", () => {
+  it("una pantalla que no lo manda (versión vieja) queda sin encuadre", () => {
+    assert.equal(igualQueAntes().portadaFoco, "");
+  });
+
+  it("acepta «x% y%» y vacío, y rechaza cualquier otra cosa", () => {
+    assert.equal(vitrinaSchema.safeParse({ ...igualQueAntes(), portadaFoco: "30% 62%" }).success, true);
+    assert.equal(vitrinaSchema.safeParse({ ...igualQueAntes(), portadaFoco: "" }).success, true);
+    for (const malo of ["30 62", "130% 20%", "30% 62%; background: red", "url(x)"]) {
+      assert.equal(vitrinaSchema.safeParse({ ...igualQueAntes(), portadaFoco: malo }).success, false, `«${malo}» no debería pasar`);
+    }
+  });
 });
 
 describe("huella del perfil público (detecta que otra persona guardó mientras tanto)", () => {
@@ -90,6 +110,7 @@ describe("huella del perfil público (detecta que otra persona guardó mientras 
     const base = huellaDeVitrina(antes);
     assert.notEqual(huellaDeVitrina({ ...antes, descripcion: "Otra descripción." }), base);
     assert.notEqual(huellaDeVitrina({ ...antes, alumnos: 421 }), base);
+    assert.notEqual(huellaDeVitrina({ ...antes, portadaFoco: "10% 80%" }), base);
     assert.notEqual(huellaDeVitrina({ ...antes, valores: ["Respeto"] }), base);
     assert.notEqual(huellaDeVitrina({ ...antes, fotos: [] }), base);
     assert.notEqual(huellaDeVitrina({ ...antes, fotos: [{ url: "https://x.test/a.jpg", etiqueta: "Cancha" }] }), base);

@@ -45,6 +45,9 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               p: "En [Mi perfil](/institucion/vitrina) editás lo que ven los profesionales en la página de tu institución: logo, portada, descripción, fotos, novedades y datos como alumnos, niveles o turnos. Solo el dueño y los administradores del equipo pueden editarlo.",
             },
             {
+              p: "**Encuadre de la portada:** la foto de portada se muestra en un marco más ancho que alto, así que siempre queda una parte afuera. Con la portada puesta, tocá **Ajustar encuadre** y arrastrá la foto dentro del marco (o usá las barras o las flechas del teclado) hasta que se vea lo que querés; **Centrar** la vuelve al medio y **Listo** cierra el ajuste. Después de **Guardar cambios**, así la ven los profesionales y quien entra a tu perfil público.",
+            },
+            {
               p: "**Compartir tu perfil:** arriba, junto a **Ver perfil público**, el botón **Compartir** te deja copiar el enlace de la página de tu institución o mandarlo por WhatsApp, Facebook, LinkedIn, X o mail. Cualquiera que tenga el enlace la ve, con o sin cuenta. Lo mismo pasa con cada una de tus búsquedas abiertas (ver [Publicar una búsqueda](/ayuda/instituciones/publicar-una-busqueda)).",
             },
             {

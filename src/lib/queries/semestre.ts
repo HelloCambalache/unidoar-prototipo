@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, gte, lte } from "drizzle-orm";
 import type { Tx } from "@/db";
 import { facturas, instituciones } from "@/db/schema";
+import { SIN_CARGO_NO_SE_COBRA } from "@/lib/acuerdos";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { avisoDeCobroEnMesBonificado, mesesTexto } from "@/lib/bonificacion";
 import { conflictosDeSemestre, etiquetaDeCobertura, etiquetaPeriodo, fechaCobroDelPeriodo, sumarMeses, type FacturaConCobertura } from "@/lib/cobros";
@@ -115,7 +116,11 @@ export async function registrarSemestre(tx: Tx, e: RegistroDeSemestre): Promise<
   const cercanas = await facturasDelSemestre(tx, institucionId, periodo, meses);
   const impedido = impedimentoDeSemestre(P, inst.plan, periodo, meses, cercanas);
   if (impedido) return { ok: false, error: impedido.error, campos: impedido.campos };
-  if (!P.precioDefinido(inst.plan, await acuerdoDe(tx, institucionId))) return { ok: false, error: SIN_CONVENIO };
+  const acuerdo = await acuerdoDe(tx, institucionId);
+  if (!P.precioDefinido(inst.plan, acuerdo)) return { ok: false, error: SIN_CONVENIO };
+  const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
+  // Sin cargo no hay semestre que cobrar. Si el pago ya se hizo por un monto acordado (`acordado`: lo pagó por Mercado Pago), se registra igual.
+  if (!e.acordado && P.sinCargo(inst.plan, sedes, acuerdo)) return { ok: false, error: SIN_CARGO_NO_SE_COBRA };
   const bonificados = await mesesBonificadosSinCobro(tx, institucionId, ventana);
   if (bonificados.length > 0 && !e.cobrarMesesBonificados) {
     const aviso = avisoDeCobroEnMesBonificado(bonificados.map(etiquetaPeriodo), "semestre");
@@ -139,8 +144,7 @@ export async function registrarSemestre(tx: Tx, e: RegistroDeSemestre): Promise<
     // cubre el semestre y el semestre se paga un mes menos (`mesesConReferido` en lugar de `mesesQueSePagan`).
     mesBonificado = await tomarMesParaSemestre(tx, institucionId, sumarMeses(periodo, meses - 1));
     mesesAPagar = mesBonificado ? Math.min(mesesConReferido, mesesQueSePagan) : mesesQueSePagan;
-    const sedes = (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1;
-    monto = P.montoDePlan(inst.plan, sedes, await acuerdoDe(tx, institucionId)) * mesesAPagar;
+    monto = P.montoDePlan(inst.plan, sedes, acuerdo) * mesesAPagar;
   }
 
   const existente = cercanas.find((f) => f.periodo === periodo);

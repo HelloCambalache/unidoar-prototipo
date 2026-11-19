@@ -118,13 +118,19 @@ export function PlanDebito({ datos, suscripcionDeLaVuelta }: { datos: DebitoVist
         </p>
       )}
 
-      {datos.planDebitable && !datos.sinConvenio && datos.montoBajo && (!suscripcion || estado === "cancelada") && (
+      {datos.planDebitable && datos.sinCargo && (!suscripcion || estado === "cancelada") && (
+        <p className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">
+          Tu plan no tiene cargo por ahora, así que no hay nada que debitar. Si más adelante tiene un valor, vas a poder activar el débito automático desde acá.
+        </p>
+      )}
+
+      {datos.planDebitable && !datos.sinConvenio && !datos.sinCargo && datos.montoBajo && (!suscripcion || estado === "cancelada") && (
         <p role="status" className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">
           {textoDeMontoBajoParaLaInstitucion(datos.montoActual ?? 0)}
         </p>
       )}
 
-      {datos.planDebitable && !datos.sinConvenio && !datos.montoBajo && (!suscripcion || estado === "cancelada") && (
+      {datos.planDebitable && !datos.sinConvenio && !datos.sinCargo && !datos.montoBajo && (!suscripcion || estado === "cancelada") && (
         <>
           {confirmando ? (
             <p role="status" aria-live="polite" className="m-0 max-w-[62ch] text-[13.5px] leading-normal text-apagado">

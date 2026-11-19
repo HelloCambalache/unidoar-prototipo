@@ -22,6 +22,12 @@ export function avisoDeSedes(e: { plan: string; acuerdo: AcuerdoDePrecio | null;
   if (P.esPuntual(plan)) {
     return "Tu plan es de búsqueda puntual: no tiene abono, así que sumar sedes no cambia lo que pagás. Cada búsqueda se publica en una sola sede.";
   }
+  // Sin cargo (precio acordado de $0): sumar sedes no cambia lo que pagás por ahora. Con un fin, después vale el precio de lista y cada sede suma lo suyo.
+  if (acuerdo && P.sinCargo(plan, 1, acuerdo)) {
+    return acuerdo.hasta
+      ? `Tu institución no paga abono hasta ${etiquetaPeriodo(acuerdo.hasta).toLowerCase()}: sumar sedes no cambia lo que pagás por ahora. Después se factura el precio de lista y cada sede adicional se suma con su descuento.`
+      : "Tu institución no paga abono: sumar sedes no cambia lo que pagás.";
+  }
   if (acuerdo?.modalidad === "total") return "Tu convenio con UNIDOAR es un monto fijo por mes: sumar sedes no cambia lo que pagás.";
   if (P.planDe(plan).porSede) return `Tu plan cobra cada sede: ${pesos(P.precioDeSedeExtra(plan, acuerdo))} por mes por sede, desde la próxima factura.`;
   if (descuentoSedeExtra >= 100) return "Las sedes adicionales no tienen costo: sumarlas no cambia lo que pagás.";

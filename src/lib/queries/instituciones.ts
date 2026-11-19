@@ -143,6 +143,7 @@ export async function perfilInstitucion(slug: string, usuarioId: string, docente
       lng: instituciones.lng,
       logoUrl: instituciones.logoUrl,
       portadaUrl: instituciones.portadaUrl,
+      portadaFoco: instituciones.portadaFoco,
       descripcion: instituciones.descripcion,
       alumnos: instituciones.alumnos,
       niveles: instituciones.niveles,

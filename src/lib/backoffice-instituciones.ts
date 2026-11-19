@@ -138,7 +138,7 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Armó el link para pagar el semestre por Mercado Pago${typeof d.monto === "number" ? ` · ${pesos(d.monto)}` : ""}`;
     case "institucion.precio_acordado": {
       // Solo montos (la nota del acuerdo es interna y no se anota): "precio de lista → abono acordado $ 48.000".
-      const acuerdo = (v: unknown) => (typeof v === "object" && v !== null ? paraCalcular(v as { modalidad: string; monto: number }) : null);
+      const acuerdo = (v: unknown) => (typeof v === "object" && v !== null ? paraCalcular(v as { modalidad: string; monto: number; hasta?: string | null }) : null);
       return `Cambió el precio acordado: ${describirCambioDeAcuerdo(acuerdo(d.antes), acuerdo(d.despues))}`;
     }
     case "busqueda_puntual.pago":

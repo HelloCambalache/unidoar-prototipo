@@ -34,6 +34,8 @@ export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: 
 
   const { institucion: i, facturas, proximo } = detalle;
   const esPuntual = P.esPuntual(plan);
+  // Un precio acordado de $0 (sin cargo): no hay pago en efectivo ni semestre que registrar (el servidor tampoco los acepta).
+  const sinCargo = !esPuntual && P.sinCargo(plan, sedes, acuerdo);
   const impagas = facturas.filter((f) => f.estado !== "pagada").sort((a, b) => a.fechaCobro.localeCompare(b.fechaCobro));
   // Primer mes sin factura: el siguiente al último cargado (o el actual si es más tarde).
   const ultimo = facturas.reduce((m, f) => (f.periodo > m ? f.periodo : m), "");
@@ -58,7 +60,12 @@ export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: 
           {`Registrar pago de ${etiquetaPeriodo(proximo.periodo)}`}
         </CobroPago>
       )}
-      {!esPuntual && (
+      {sinCargo && (
+        <p role="status" className="m-0 rounded-caja bg-superficie px-3.5 py-2.5 text-[13px] leading-normal text-tinta-2">
+          Esta institución no tiene cargo por su precio acordado ($0): no hay pagos para registrar. Si hay que cobrarle, cambiá su precio en «Precio» de sus cobros.
+        </p>
+      )}
+      {!esPuntual && !sinCargo && (
         <CobroPagoEfectivo
           institucionId={institucionId}
           sedes={sedes}
@@ -80,7 +87,7 @@ export async function RegistrarPagos({ institucionId, plan, P, debitoVigente }: 
           Eligió pagar por semestre: coordiná el pago y registralo con «Registrar semestre al contado».
         </p>
       )}
-      {P.planDe(plan).periodo === "mes" && (
+      {P.planDe(plan).periodo === "mes" && !sinCargo && (
         <CobroSemestre
           institucionId={institucionId}
           sedes={sedes}

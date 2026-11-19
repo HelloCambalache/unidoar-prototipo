@@ -26,6 +26,8 @@ export type DebitoVista = {
   planDebitable: boolean;
   /** Es una red de sedes (Multisede) sin convenio a medida: todavía no tiene un monto, así que no se ofrece el débito (ver `precioDefinido`). */
   sinConvenio: boolean;
+  /** Su precio acordado es $0 (sin cargo): no hay nada que debitar, así que no se ofrece el débito. */
+  sinCargo: boolean;
   /** Lo que cobraría por mes es menos que el mínimo de una suscripción de Mercado Pago (`MONTO_MINIMO_DE_DEBITO`): no se puede activar el débito. */
   montoBajo: boolean;
   puedeGestionar: boolean;
@@ -74,6 +76,8 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
   ]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
   const sinConvenio = !P.precioDefinido(institucion.plan, acuerdo);
+  // Con un precio acordado de $0 no hay nada que debitar: la tarjeta lo dice en lugar de ofrecer un débito (ni hablar del mínimo de Mercado Pago).
+  const sinCargo = !sinConvenio && monto === 0;
   // `susc.estado` ya está en nuestro vocabulario (autorizada…): no se traduce como los de Mercado Pago (authorized…). Con el traductor de
   // Mercado Pago, una suscripción autorizada se mostraba como cancelada.
   const estado = susc ? (estadoGuardado(susc.estado) ?? "cancelada") : null;
@@ -96,6 +100,7 @@ export async function datosDeDebito(institucion: Institucion, usuarioId: string)
     disponible: await debitoDisponiblePara(institucion),
     planDebitable: esPlanDebitable(institucion.plan),
     sinConvenio,
+    sinCargo,
     montoBajo: !sinConvenio && montoBajoParaDebito(monto),
     puedeGestionar: puedeGestionarPlan(rol),
     montoActual: !sinConvenio && Number.isInteger(monto) && monto > 0 ? monto : null,
@@ -138,7 +143,7 @@ export async function avisoDeDebito(institucion: Institucion, usuarioId: string)
   if (decision.accion === "esperar") return null;
   const sedes = await cantidadDeSedes(getDb(), [institucion.id]);
   const monto = P.montoDePlan(institucion.plan, sedes.get(institucion.id) ?? 1, acuerdo);
-  // Con un monto por debajo del mínimo de Mercado Pago no se puede activar: no se le propone.
-  if (montoBajoParaDebito(monto)) return null;
+  // Con un monto por debajo del mínimo de Mercado Pago no se puede activar: no se le propone. Sin cargo ($0) tampoco: no hay nada que debitar.
+  if (monto === 0 || montoBajoParaDebito(monto)) return null;
   return { monto: Number.isInteger(monto) && monto > 0 ? monto : null };
 }

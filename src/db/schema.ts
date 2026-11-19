@@ -89,6 +89,12 @@ export const instituciones = pgTable(
     lng: doublePrecision("lng"),
     logoUrl: text("logo_url"),
     portadaUrl: text("portada_url"),
+    /**
+     * Qué parte de la portada se ve: el encuadre que eligió la institución arrastrando la foto, como `object-position` ("30% 62%"; null = el
+     * punto de siempre, `focoDeFoto`). Reglas en src/lib/encuadre.ts. Agregada a mano con `pnpm db:portada-foco` (correrlo ANTES de desplegar:
+     * sin la columna fallan las consultas que piden toda la fila de `instituciones`).
+     */
+    portadaFoco: text("portada_foco"),
     descripcion: text("descripcion"),
     alumnos: integer("alumnos"),
     niveles: text("niveles"),
@@ -1131,6 +1137,12 @@ export const acuerdosPrecio = pgTable("acuerdos_precio", {
    * (vale con cualquier plan). Agregada a mano con `pnpm db:planes` (correrlo ANTES de desplegar).
    */
   plan: text("plan"),
+  /**
+   * El último mes en que rige el acuerdo ("2026-12", inclusive); null = sin fecha de fin. Pasado ese mes vuelve el precio de lista: la fila queda,
+   * pero las lecturas (`acuerdosDePrecio`) ya no la cuentan. Con un monto de 0 es un período sin cargo. Agregada a mano con `pnpm db:planes`
+   * (correrlo ANTES de desplegar: sin la columna fallan las lecturas de precios acordados).
+   */
+  hasta: text("hasta"),
   /** Qué se acordó y con quién (interno del equipo: la institución no lo ve). */
   nota: text("nota"),
   ...marcasDeTiempo,

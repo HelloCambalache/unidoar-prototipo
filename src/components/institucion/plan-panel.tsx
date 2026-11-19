@@ -10,6 +10,7 @@ import { useConfirmacion } from "@/components/ui/confirmacion";
 import { useToast } from "@/components/ui/toast";
 import { puedePagarSemestre, resumenDeSemestre, textoDeSemestre, type FormaDePago } from "@/lib/forma-de-pago";
 import type { FormaDeCobro } from "@/lib/pago-manual";
+import { etiquetaPeriodo } from "@/lib/cobros";
 import { crearPlanes, pesos, type AcuerdoDePrecio, type CatalogoDePlanes, type PlanClave } from "@/lib/planes";
 import { cn } from "@/lib/utils";
 
@@ -71,11 +72,15 @@ export function PlanPanel({
   const aConvenir = actual.porSede && !P.precioDefinido(plan, acuerdo);
   const conVariasSedes = desglose.sedes > 1;
   const sedesAdicionales = `${desglose.adicionales} ${desglose.adicionales === 1 ? "sede adicional" : "sedes adicionales"}`;
+  // Un precio acordado en cero: la institución no paga nada (una cortesía o un período sin cargo). Con un fin, lo que se factura después es el precio de lista.
+  const sinCargo = desglose.acordado && desglose.total === 0;
+  const finDelAcuerdo = acuerdo?.hasta ? etiquetaPeriodo(acuerdo.hasta).toLowerCase() : null;
+  const despuesDelAcuerdo = P.precioDefinido(plan, null) ? `${pesos(P.montoDePlan(plan, sedes))}${P.sufijoDePrecio(plan)}` : "a convenir según el volumen";
 
   // El pago por semestre (pagás 5 meses y usás 6) se elige acá mismo, junto con los planes: es una preferencia que el equipo coordina y registra.
-  // Solo con un abono mensual y mientras no haya un semestre ya pago.
+  // Solo con un abono mensual y mientras no haya un semestre ya pago (y no tenga un acuerdo sin cargo: no hay nada que pagar).
   // Quien paga solo con Mercado Pago no ve esta tarjeta: el semestre lo paga con la de «Pagar el semestre por adelantado», sin que el equipo coordine nada.
-  const ofreceSemestre = puedePagarSemestre(P, plan) && !semestrePagoHasta && formaDeCobro !== "solo-mercadopago";
+  const ofreceSemestre = puedePagarSemestre(P, plan) && !semestrePagoHasta && !sinCargo && formaDeCobro !== "solo-mercadopago";
   const resumenSemestre = ofreceSemestre ? resumenDeSemestre(P, plan, sedes, acuerdo) : null;
   const semestral = formaDePago === "semestral";
 
@@ -136,6 +141,8 @@ export function PlanPanel({
           <div className="text-[26px] leading-[1.2] font-semibold">
             {aConvenir ? (
               "A convenir según el volumen"
+            ) : sinCargo ? (
+              "Sin cargo"
             ) : (
               <>
                 {pesos(mostrarTotal ? desglose.total : actual.precio)}
@@ -154,9 +161,18 @@ export function PlanPanel({
           )}
           {desglose.acordado && (
             <div className="mt-1 text-[13px] leading-normal text-white/65">
-              {desglose.convenio
-                ? `Convenio acordado con UNIDOAR: un monto fijo, sin importar las sedes${conVariasSedes ? ` (${desglose.sedes} sedes)` : ""}.`
-                : `Precio acordado con UNIDOAR${conVariasSedes ? "" : " (el de lista era " + pesos(actual.precio) + ")"}.`}
+              {sinCargo
+                ? `Tu institución no paga abono por acuerdo con UNIDOAR${finDelAcuerdo ? `, hasta ${finDelAcuerdo}` : ""}.`
+                : desglose.convenio
+                  ? `Convenio acordado con UNIDOAR: un monto fijo, sin importar las sedes${conVariasSedes ? ` (${desglose.sedes} sedes)` : ""}.`
+                  : `Precio acordado con UNIDOAR${conVariasSedes ? "" : " (el de lista era " + pesos(actual.precio) + ")"}.`}
+            </div>
+          )}
+          {desglose.acordado && finDelAcuerdo && (
+            <div className="mt-1 text-[13px] leading-normal text-white/65">
+              {sinCargo
+                ? `Después se factura el precio de lista: ${despuesDelAcuerdo}.`
+                : `Este precio rige hasta ${finDelAcuerdo}; después vuelve el precio de lista (${despuesDelAcuerdo}).`}
             </div>
           )}
           {conVariasSedes && !desglose.convenio && !aConvenir && (

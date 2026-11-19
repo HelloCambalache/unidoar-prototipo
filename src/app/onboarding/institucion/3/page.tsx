@@ -18,6 +18,7 @@ export default async function PasoInstitucion3() {
           descripcion: institucion.descripcion ?? undefined,
           logoUrl: institucion.logoUrl ?? undefined,
           portadaUrl: institucion.portadaUrl ?? undefined,
+          portadaFoco: institucion.portadaFoco ?? undefined,
         }}
         almacenamientoDisponible={almacenamientoConfigurado()}
       />

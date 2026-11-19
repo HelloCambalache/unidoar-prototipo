@@ -40,6 +40,7 @@ import { borrarArchivos } from "@/lib/queries/archivos";
 import { quitarComprobanteDelPago } from "@/lib/queries/comprobantes";
 import { liberarMeses, mesesBonificadosSinCobro } from "@/lib/queries/bonificaciones";
 import type { Ejecutor } from "@/lib/queries/pipeline";
+import { SIN_CARGO_NO_SE_COBRA } from "@/lib/acuerdos";
 import { acuerdoDe } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 import { facturasDelSemestre, impedimentoDeSemestre, INSTITUCION_NO_ENCONTRADA, registrarSemestre, SIN_CONVENIO } from "@/lib/queries/semestre";
@@ -224,6 +225,8 @@ export async function registrarPagoEnEfectivo(institucionId: string, entrada: Pa
         const acuerdoDelPlan = await acuerdoParaPlan(tx, institucionId, plan);
         if (!P.precioDefinido(plan, acuerdoDelPlan)) return fallo(SIN_CONVENIO, { plan: SIN_CONVENIO });
         monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucionId])).get(institucionId) ?? 1, acuerdoDelPlan);
+        // Con un precio acordado de $0 no hay nada que cobrar: no se registra un pago en cero.
+        if (monto === 0) return fallo(SIN_CARGO_NO_SE_COBRA, { plan: SIN_CARGO_NO_SE_COBRA });
         const [nueva] = await tx
           .insert(facturas)
           .values({ institucionId, plan, monto, periodo, fechaCobro: fechaCobroDelPeriodo(periodo, inst.diaCobro), estado: "pagada", pagadaEn, medio: MEDIO })
@@ -340,7 +343,10 @@ export async function registrarSemestreAlContado(institucionId: string, entrada:
   if (!previa) return fallo(INSTITUCION_NO_ENCONTRADA);
   const impedimento = impedimentoDeSemestre(P, previa.plan, periodo, meses, await facturasDelSemestre(getDb(), institucionId, periodo, meses));
   if (impedimento) return fallo(impedimento.error, impedimento.campos);
-  if (!P.precioDefinido(previa.plan, await acuerdoDe(getDb(), institucionId))) return fallo(SIN_CONVENIO);
+  const acuerdoPrevio = await acuerdoDe(getDb(), institucionId);
+  if (!P.precioDefinido(previa.plan, acuerdoPrevio)) return fallo(SIN_CONVENIO);
+  // Sin cargo no hay semestre que cobrar (y no se canceló ningún débito todavía).
+  if (P.sinCargo(previa.plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, acuerdoPrevio)) return fallo(SIN_CARGO_NO_SE_COBRA);
   const bonificadosAntes = await mesesBonificadosSinCobro(getDb(), institucionId, ventana);
   if (bonificadosAntes.length > 0 && !cobrarMesesBonificados) {
     const aviso = avisoDeCobroEnMesBonificado(bonificadosAntes.map(etiquetaPeriodo), "semestre");
@@ -516,6 +522,8 @@ export async function cargarFactura(institucionId: string, entrada: FacturaNueva
   const acuerdoDelPlan = await acuerdoParaPlan(getDb(), institucionId, plan);
   if (!P.precioDefinido(plan, acuerdoDelPlan)) return fallo(SIN_CONVENIO, { plan: SIN_CONVENIO });
   const monto = P.montoDePlan(plan, (await cantidadDeSedes(getDb(), [institucionId])).get(institucionId) ?? 1, acuerdoDelPlan);
+  // Con un precio acordado de $0 no hay nada que facturar: una factura en cero no tiene sentido (y la institución recibiría el aviso de pago).
+  if (monto === 0) return fallo(SIN_CARGO_NO_SE_COBRA, { plan: SIN_CARGO_NO_SE_COBRA });
 
   try {
     const resultado = await transaccion(async (tx) => {
@@ -640,6 +648,7 @@ function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
   if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
   if (r.motivo === "bonificada") return " Este mes es un mes bonificado por recomendar a otra institución: no se te factura.";
   if (r.motivo === "sin_convenio") return " El valor de tu plan lo acordamos según el volumen: el equipo te pasa la propuesta antes de facturar nada.";
+  if (r.motivo === "sin_cargo") return " Tu plan no tiene cargo por el momento: no se te factura nada.";
   return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
 }
 

@@ -26,14 +26,22 @@ export async function motivoDelPlan(institucion: DeLaInstitucion): Promise<Motiv
   if (institucion.esDemo) return null;
   const [P, filas] = await Promise.all([planes(), facturasParaMora(institucion.id)]);
   const impagas = filas.filter((f) => f.estado !== "pagada");
-  // Solo un plan por sede (Multisede) necesita un convenio para tener un precio: no se lee el acuerdo si no hace falta.
-  const precioDefinido = P.planDe(institucion.plan).porSede ? P.precioDefinido(institucion.plan, await acuerdoDe(getDb(), institucion.id)) : true;
+  const facturasPagas = filas.length - impagas.length;
+  const mora = moraDe(impagas, hoyAR());
+  // El acuerdo de precio solo importa en dos casos: un plan por sede (Multisede) necesita un convenio para tener un precio, y una cuenta con un
+  // abono que todavía no pagó nada puede estar sin cargo (precio acordado de $0). En los demás no se lee (esta consulta corre en cada pantalla).
+  const porSede = P.planDe(institucion.plan).porSede;
+  const puedeEstarSinCargo = !mora.limitada && !P.esPuntual(institucion.plan) && facturasPagas === 0;
+  const acuerdo = porSede || puedeEstarSinCargo ? await acuerdoDe(getDb(), institucion.id) : null;
+  const precioDefinido = porSede ? P.precioDefinido(institucion.plan, acuerdo) : true;
+  const sinCargo = puedeEstarSinCargo && !!acuerdo && P.sinCargo(institucion.plan, (await cantidadDeSedes(getDb(), [institucion.id])).get(institucion.id) ?? 1, acuerdo);
   return motivoDePlanInactivo({
     esDemo: false,
     esPuntual: P.esPuntual(institucion.plan),
     precioDefinido,
-    facturasPagas: filas.length - impagas.length,
-    mora: moraDe(impagas, hoyAR()),
+    sinCargo,
+    facturasPagas,
+    mora,
   });
 }
 

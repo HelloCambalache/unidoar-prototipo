@@ -284,7 +284,7 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 export type ResultadoFacturaDelPeriodo =
   | { resultado: "creada"; periodo: string; monto: number }
   | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "bonificada" };
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "sin_cargo" | "bonificada" };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
@@ -309,6 +309,8 @@ export async function aplicarPlanAlPeriodoActual(
   // Una red de sedes (Multisede) sin convenio a medida todavía no tiene un precio: no se crea ni se ajusta ninguna factura (ver `precioDefinido`).
   if (!P.precioDefinido(plan, acuerdo)) return { resultado: "sin_cambios", motivo: "sin_convenio" };
   const monto = P.montoDePlan(plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, acuerdo);
+  // Con un precio acordado de $0 (sin cargo) no hay nada que facturar: no se crea una factura en cero ni se ajusta una impaga a cero.
+  if (monto === 0) return { resultado: "sin_cambios", motivo: "sin_cargo" };
 
   const [existente] = await tx
     .select()

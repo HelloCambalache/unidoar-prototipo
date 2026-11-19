@@ -107,6 +107,10 @@ export async function elegirFormaDePago(forma: string): Promise<Resultado> {
     if (forma === "semestral" && !puedePagarSemestre(P, vigente.plan)) {
       return fallo("El pago por semestre es para los planes con abono. Si lo necesitás, escribinos desde Contacto.");
     }
+    // Sin cargo (precio acordado de $0) no hay semestre que elegir: no hay nada que pagar.
+    if (forma === "semestral" && P.sinCargo(vigente.plan, (await cantidadDeSedes(tx, [institucion.id])).get(institucion.id) ?? 1, await acuerdoDe(tx, institucion.id))) {
+      return fallo("Tu plan no tiene cargo por ahora: no hay un semestre para pagar.");
+    }
 
     const cambio = await guardarFormaDePago(tx, institucion.id, forma);
     if (cambio && forma === "semestral" && esClavePlan(vigente.plan)) {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Institucion } from "@/db/schema";
+import { leerEncuadre } from "@/lib/encuadre";
 
 /*
  * Vitrina (perfil público) de una institución: esquema de lo que guarda "Mi perfil" y utilidades que
@@ -48,6 +49,8 @@ export type BusquedaAbierta = { id: string; puesto: string; postulantes: number 
 /** Valores iniciales de los campos editables del formulario (los números como texto, que es como los maneja un input). */
 export type DatosFormularioVitrina = {
   portadaUrl: string;
+  /** Qué parte de la portada se ve ("30% 62%", ver src/lib/encuadre.ts); vacío = el punto de siempre de esa foto. */
+  portadaFoco: string;
   logoUrl: string;
   nombre: string;
   tipo: string;
@@ -69,6 +72,7 @@ export type DatosFormularioVitrina = {
 export function datosInicialesDeVitrina(i: Institucion): DatosFormularioVitrina {
   return {
     portadaUrl: i.portadaUrl ?? "",
+    portadaFoco: i.portadaFoco ?? "",
     logoUrl: i.logoUrl ?? "",
     nombre: i.nombre,
     tipo: i.tipo,
@@ -140,6 +144,13 @@ export const vitrinaNovedadSchema = z.object({
 export const vitrinaSchema = z.object({
   /** Vacío: se quita la imagen. */
   portadaUrl: rutaArchivo,
+  /** El encuadre de la portada ("30% 62%"); vacío o ausente (una pantalla vieja) = el punto de siempre. Lo que no tiene esa forma se rechaza. */
+  portadaFoco: z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => v === "" || leerEncuadre(v) !== null, "Encuadre inválido")
+    .default(""),
   logoUrl: rutaArchivo,
   nombre: z.string().trim().min(2, "Poné el nombre de la institución").max(120, "Máximo 120 caracteres"),
   tipo: z.string().trim().min(2, "Elegí el tipo de institución").max(60),
@@ -199,6 +210,7 @@ export type VitrinaAntes = {
   horarioAdministracion: string | null;
   logoUrl: string | null;
   portadaUrl: string | null;
+  portadaFoco: string | null;
   fotos: { url: string; etiqueta: string }[];
   novedades: { titulo: string; texto: string; fecha: string }[];
 };
@@ -219,6 +231,7 @@ const CAMPOS_DE_VITRINA: [keyof VitrinaAntes & keyof DatosVitrina, string][] = [
   ["horarioAdministracion", "horario de administración"],
   ["logoUrl", "logo"],
   ["portadaUrl", "portada"],
+  ["portadaFoco", "encuadre de la portada"],
 ];
 
 const comoTexto = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());

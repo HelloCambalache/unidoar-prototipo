@@ -13,7 +13,7 @@ import { BotonCompartir } from "@/components/ui/compartir";
 import { Insignia } from "@/components/ui/insignia";
 import { EtiquetaSeccion, Tarjeta } from "@/components/ui/tarjeta";
 import { mensajeDeInstitucion, rutaDeInstitucion, rutaDeOferta, urlCompleta } from "@/lib/compartir";
-import { focoDeFoto } from "@/lib/fotos";
+import { posicionDePortada } from "@/lib/encuadre";
 import { sedesConUbicacion } from "@/lib/sedes";
 import { num, RUTA_REGISTRO_DOCENTE } from "@/lib/publico";
 import { institucionPublica } from "@/lib/queries/publico";
@@ -77,7 +77,7 @@ export default async function PerfilInstitucion({ params }: Props) {
                 <Imagen
                   src={inst.portadaUrl}
                   alt={`Foto de ${inst.nombre}`}
-                  style={{ objectPosition: focoDeFoto(inst.portadaUrl) }}
+                  style={{ objectPosition: posicionDePortada(inst.portadaUrl, inst.portadaFoco) }}
                   className="block aspect-[16/7] w-full object-cover"
                 />
               ) : (

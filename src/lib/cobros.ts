@@ -255,7 +255,7 @@ export type FacturaPorCrear = {
   fechaCobro: string;
   medio: string | null;
 };
-export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "bonificada" | "plan_desconocido";
+export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "sin_cargo" | "bonificada" | "plan_desconocido";
 
 /**
  * Qué facturas de `periodo` hay que crear. Mismas reglas que la carga manual y que el cambio de plan
@@ -265,6 +265,9 @@ export type MotivoOmision = "ya_tiene" | "cubierta_por_semestre" | "sin_abono" |
  *  - plan de búsqueda puntual: no tiene abono mensual, nunca se factura;
  *  - ya tiene factura de ese mes → no se toca;
  *  - Multisede sin convenio a medida: no hay un precio con el que facturar, se omite (`sin_convenio`) hasta que el equipo lo cargue;
+ *  - una institución con un precio acordado de $0 (sin cargo, una cortesía o un período sin cargo): no hay nada que facturar, se omite (`sin_cargo`)
+ *    sin crear una factura en cero ni mandar el mail, y sin gastar un mes bonificado por recomendar. Cuando el acuerdo termina, vuelve el precio de
+ *    lista y la factura del mes sale como siempre;
  *  - si un semestre pagado al contado (una factura paga que cubre varios meses) cubre el mes, no se cobra;
  *  - si el mes ya quedó bonificado por recomendar, no se factura (y no se gasta otro mes bonificado);
  *  - si tiene meses bonificados sin gastar y no tiene un débito automático autorizado, este mes se bonifica: no se factura y se devuelve en
@@ -302,6 +305,7 @@ export function planificarFacturas(
     else if (propias.some((f) => f.periodo === periodo)) omitir("ya_tiene");
     // Una red de sedes (Multisede) sin convenio a medida todavía no tiene un precio: no se factura hasta que el equipo lo cargue (ver `precioDefinido`).
     else if (!planes.precioDefinido(inst.plan, inst.acuerdo ?? null)) omitir("sin_convenio");
+    else if (planes.sinCargo(inst.plan, inst.sedes ?? 1, inst.acuerdo ?? null)) omitir("sin_cargo");
     else if (pagoHastaDeMes(periodo, propias.filter((f) => (f.mesesCubiertos ?? 1) > 1))) {
       omitir("cubierta_por_semestre");
     } else if (bonificados.some((b) => b.institucionId === inst.id && b.periodo === periodo)) {

@@ -5,19 +5,22 @@ import { eq } from "drizzle-orm";
 import { transaccion } from "@/db";
 import { acuerdosPrecio, instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
-import { acuerdoSchema, type AcuerdoCargado } from "@/lib/acuerdos";
+import { acuerdoSchema, errorDeHasta, type AcuerdoCargado } from "@/lib/acuerdos";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { esUuid } from "@/lib/busquedas";
+import { periodoActual } from "@/lib/cobros";
 import { resumenDeError } from "@/lib/errores";
 import { acuerdoConNota } from "@/lib/queries/acuerdos";
 import { planes, planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 
 /*
- * Precio acordado con una institución, del lado del equipo (solo admin). Un abono propio (cualquier monto hasta el de lista) o
- * un convenio a medida (un monto mensual fijo, para redes). Rige desde la próxima factura: las ya emitidas guardan su monto, y el débito
- * automático se pone al día con el cron diario. Queda en la actividad de la institución con los montos de antes y de después (la nota es
- * interna y no va a la auditoría). No se le avisa a la institución: es un acuerdo que ya conoce.
+ * Precio acordado con una institución, del lado del equipo (solo admin). Un abono propio (cualquier monto desde 0 hasta el de lista) o
+ * un convenio a medida (un monto mensual fijo de cualquier valor, para redes o para lo que se acuerde). Con un monto de 0 la institución no
+ * paga nada («sin cargo»), y con un fin (`hasta`, el último mes en que rige) vuelve sola al precio de lista pasado ese mes. Rige desde la
+ * próxima factura: las ya emitidas guardan su monto, y el débito automático se pone al día con el cron diario. Queda en la actividad de la
+ * institución con los montos de antes y de después (la nota es interna y no va a la auditoría). No se le avisa a la institución: es un acuerdo
+ * que ya conoce.
  */
 
 const NO_ENCONTRADA = "No encontramos esa institución.";
@@ -37,7 +40,10 @@ export async function guardarAcuerdoDePrecio(institucionId: string, entrada: Acu
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const datos = parsear(acuerdoSchema, typeof entrada === "object" && entrada !== null ? entrada : {});
   if (!datos.ok) return fallo(Object.values(datos.campos ?? {})[0] ?? datos.error, datos.campos);
-  const { modalidad, monto, nota } = datos.data;
+  const { modalidad, monto, nota, hasta } = datos.data;
+  // El fin del acuerdo no puede ser un mes que ya pasó (un acuerdo que ya terminó no tiene sentido guardarlo).
+  const errorDeFin = errorDeHasta(hasta, periodoActual());
+  if (errorDeFin) return fallo(errorDeFin, { hasta: errorDeFin });
   // El rango del abono se valida con los precios vigentes: con los de lanzamiento (si la base no respondió) se aceptaría un monto fuera de rango.
   const P = await planesParaCobrarOFallar();
   if (!P) return fallo(SIN_PRECIOS);
@@ -59,16 +65,24 @@ export async function guardarAcuerdoDePrecio(institucionId: string, entrada: Acu
       const previo = await acuerdoConNota(tx, institucionId);
       // El acuerdo queda atado al plan que tiene hoy la institución: solo rige con ese plan (ver `acuerdoQueRige`). Volver a guardar el mismo
       // monto sobre un acuerdo hecho para otro plan SÍ es un cambio: lo vuelve a poner en vigencia con el plan actual.
+      // Un acuerdo que ya terminó no cuenta como «el anterior» (la institución estaba pagando el de lista): se anota como que no había.
+      const vigente = previo && !previo.vencido ? previo : null;
       const igual =
-        previo && previo.acuerdo.modalidad === modalidad && previo.acuerdo.monto === monto && previo.acuerdo.plan === inst.plan && (previo.nota ?? undefined) === nota;
+        previo &&
+        !previo.vencido &&
+        previo.acuerdo.modalidad === modalidad &&
+        previo.acuerdo.monto === monto &&
+        previo.acuerdo.plan === inst.plan &&
+        (previo.acuerdo.hasta ?? undefined) === hasta &&
+        (previo.nota ?? undefined) === nota;
       if (igual) return ok({ cambio: false });
 
       await tx
         .insert(acuerdosPrecio)
-        .values({ institucionId, modalidad, monto, plan: inst.plan, nota: nota ?? null })
+        .values({ institucionId, modalidad, monto, plan: inst.plan, hasta: hasta ?? null, nota: nota ?? null })
         .onConflictDoUpdate({
           target: acuerdosPrecio.institucionId,
-          set: { modalidad, monto, plan: inst.plan, nota: nota ?? null, actualizadoEn: new Date() },
+          set: { modalidad, monto, plan: inst.plan, hasta: hasta ?? null, nota: nota ?? null, actualizadoEn: new Date() },
         });
       await registrarAuditoria(
         {
@@ -76,7 +90,7 @@ export async function guardarAcuerdoDePrecio(institucionId: string, entrada: Acu
           accion: ACCION_PRECIO_ACORDADO,
           entidad: "institucion",
           entidadId: institucionId,
-          detalle: { plan: inst.plan, antes: previo ? previo.acuerdo : null, despues: { modalidad, monto } },
+          detalle: { plan: inst.plan, antes: vigente ? vigente.acuerdo : null, despues: { modalidad, monto, ...(hasta ? { hasta } : {}) } },
         },
         tx,
       );
@@ -115,7 +129,8 @@ export async function quitarAcuerdoDePrecio(institucionId: string): Promise<Resu
           accion: ACCION_PRECIO_ACORDADO,
           entidad: "institucion",
           entidadId: institucionId,
-          detalle: { plan: inst.plan, antes: previo.acuerdo, despues: null, lista: P.abonoDe(inst.plan) },
+          // Uno que ya terminó no se anota como «el que había»: la institución ya pagaba el de lista.
+          detalle: { plan: inst.plan, antes: previo.vencido ? null : previo.acuerdo, despues: null, lista: P.abonoDe(inst.plan) },
         },
         tx,
       );

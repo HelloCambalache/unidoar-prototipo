@@ -341,6 +341,8 @@ export type PerfilInstitucionPublico = {
   descripcion: string | null;
   logoUrl: string | null;
   portadaUrl: string | null;
+  /** Qué parte de la portada se ve (el encuadre que eligió la institución, ver src/lib/encuadre.ts); null = el punto de siempre. */
+  portadaFoco: string | null;
   alumnos: number | null;
   niveles: string | null;
   turnos: string | null;
@@ -398,6 +400,7 @@ export const institucionPublica = cache(async (slug: string): Promise<PerfilInst
     descripcion: inst.descripcion,
     logoUrl: inst.logoUrl,
     portadaUrl: inst.portadaUrl,
+    portadaFoco: inst.portadaFoco,
     alumnos: inst.alumnos,
     niveles: inst.niveles,
     turnos: inst.turnos,
