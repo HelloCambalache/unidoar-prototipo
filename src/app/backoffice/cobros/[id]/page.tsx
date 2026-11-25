@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { EstadoVacio } from "@/components/app/estado-vacio";
 import { CobroNuevaFactura } from "@/components/backoffice/cobro-nueva-factura";
 import { CobroAnularPago } from "@/components/backoffice/cobro-anular-pago";
+import { CobroEliminarFactura } from "@/components/backoffice/cobro-eliminar-factura";
 import { CobroPago, type FacturaParaPago } from "@/components/backoffice/cobro-pago";
 import { CobroPagoEfectivo } from "@/components/backoffice/cobro-pago-efectivo";
 import { CobroPuntualAnular, CobroPuntualPago } from "@/components/backoffice/cobro-puntual";
@@ -306,7 +307,16 @@ export default async function CobrosDeInstitucion({ params }: { params: Promise<
                       </td>
                       <td className="text-right whitespace-nowrap">
                         {f.estado !== "pagada" ? (
-                          <CobroPago factura={paraPago(f)} medioInicial={f.medio ?? i.medioPago} />
+                          <div className="flex flex-wrap justify-end gap-1.5">
+                            <CobroPago factura={paraPago(f)} medioInicial={f.medio ?? i.medioPago} />
+                            <CobroEliminarFactura
+                              factura={paraPago(f)}
+                              periodo={f.periodo}
+                              periodoActual={actual}
+                              otrasFacturas={facturas.length - 1}
+                              sinPagos={!facturas.some((x) => x.estado === "pagada")}
+                            />
+                          </div>
                         ) : (
                           <CobroAnularPago factura={paraPago(f)} />
                         )}

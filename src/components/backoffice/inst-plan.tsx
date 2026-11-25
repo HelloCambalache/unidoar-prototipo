@@ -127,8 +127,8 @@ export function InstPlan({
           ({P.precioDePlan(elegido)}).
         </p>
         <p className="m-0 mb-4 text-sm leading-normal text-apagado">
-          Le avisamos a las personas de su equipo. Las facturas ya cargadas no se modifican: si hace falta, ajustalas desde
-          Cobros.
+          Le avisamos a las personas de su equipo. Las facturas ya cargadas no se modifican: si alguna quedó con el arancel
+          anterior, eliminala desde Cobros (Historial de cobros → Eliminar).
         </p>
         <div className="flex gap-2.5">
           <Boton disabled={pendiente} onClick={guardar}>

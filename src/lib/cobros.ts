@@ -467,6 +467,52 @@ export const anulacionSchema = z.object({
   avisar: z.boolean(),
 });
 
+/**
+ * Eliminar una factura IMPAGA (por ejemplo la deuda de una institución que se anotó en el arancel equivocado y nunca pagó): solo pide
+ * el motivo, que queda en el registro del equipo junto con una copia de lo que se borró.
+ */
+export const eliminacionSchema = z.object({
+  motivo: z.string().trim().min(3, "Contá el motivo: queda en el registro del equipo").max(300, "Máximo 300 caracteres"),
+});
+
+export const FACTURA_PAGA_NO_SE_ELIMINA = "Esa factura figura como paga: usá «Anular pago» primero. Solo se eliminan facturas impagas.";
+export const FACTURA_CON_COBRO_DE_MP =
+  "Mercado Pago tiene un cobro aprobado atado a esa factura (alguien le anuló el pago): borrarla perdería el vínculo. Revisalo desde Mercado Pago o escribinos antes de eliminarla.";
+
+/**
+ * Si una factura se puede eliminar. Solo las impagas; y no una que tiene un cobro APROBADO de Mercado Pago (el débito o el pago del
+ * semestre) atado, porque eso significa que Mercado Pago cobró y alguien anuló el pago: la fila es lo único que lo conecta con el cobro.
+ */
+export function errorAlEliminarFactura(factura: { estado: string }, { conCobroMp }: { conCobroMp: boolean }): string | null {
+  if (factura.estado === "pagada") return FACTURA_PAGA_NO_SE_ELIMINA;
+  if (conCobroMp) return FACTURA_CON_COBRO_DE_MP;
+  return null;
+}
+
+/**
+ * Lo que conviene saber antes de eliminar una factura impaga, para mostrarlo en el cuadro de confirmación:
+ *  - la del MES EN CURSO la vuelve a crear la tarea diaria (con el plan y el precio vigentes) mientras la institución conserve alguna otra
+ *    factura: borrarla sirve para que se rehaga con el arancel correcto, no para quitar la deuda de este mes;
+ *  - quitar la deuda NO habilita publicar a una institución que nunca pagó: queda «sin pago» hasta el primer pago.
+ */
+export function advertenciasAlEliminarFactura(
+  factura: { periodo: string },
+  { periodoActual: actual, otrasFacturas, sinPagos }: { periodoActual: string; otrasFacturas: number; sinPagos: boolean },
+): string[] {
+  const avisos: string[] = [];
+  if (factura.periodo === actual && otrasFacturas > 0) {
+    avisos.push(
+      "Es la factura del mes en curso: mañana el sistema la vuelve a crear con el plan y el precio vigentes, porque la institución tiene otras facturas. Sirve para rehacerla con el arancel correcto, no para quitar la deuda de este mes.",
+    );
+  }
+  if (sinPagos) {
+    avisos.push(
+      "La institución todavía no pagó nada: quitar la deuda no la habilita para publicar. Queda «sin pago» hasta que se registre su primer pago (o hasta que le acuerdes «Sin cargo» en Precio).",
+    );
+  }
+  return avisos;
+}
+
 export const rechazoSchema = z.object({
   nota: z.string().trim().min(3, "Contale a la institución por qué").max(500, "Máximo 500 caracteres"),
 });

@@ -64,6 +64,14 @@ describe("actividad del equipo al editar una institución", () => {
     assert.equal(describirAccion("factura.pagar", { periodo: "2026-10", mesesCubiertos: 1 }), "Registró el pago de Octubre 2026");
   });
 
+  it("una factura eliminada muestra el mes y el motivo", () => {
+    assert.equal(
+      describirAccion("factura.eliminar", { periodo: "2026-10", motivo: "Se anotó en el arancel equivocado" }),
+      "Eliminó la factura impaga de Octubre 2026 · Se anotó en el arancel equivocado",
+    );
+    assert.equal(describirAccion("factura.eliminar", {}), "Eliminó la factura impaga de un período");
+  });
+
   it("el beneficio de referidos dice cómo se aplicó: meses bonificados o pack (lo anterior no lo decía)", () => {
     assert.equal(
       describirAccion("referido.beneficio_aplicado", { nombre: "Colegio Norte", tipo: "meses", meses: 2 }),

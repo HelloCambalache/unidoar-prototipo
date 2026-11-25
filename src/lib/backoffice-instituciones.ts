@@ -151,6 +151,8 @@ export function describirAccion(accion: string, detalle: Record<string, unknown>
       return `Quitó el comprobante de un pago${d.tipo === "puntual" ? " de búsqueda puntual" : ""}`;
     case "factura.anular_pago":
       return `Anuló el pago de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "una factura"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
+    case "factura.eliminar":
+      return `Eliminó la factura impaga de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}${texto("motivo") ? ` · ${texto("motivo")}` : ""}`;
     case "factura.marcar_vencida":
       return `Marcó como vencida la factura de ${texto("periodo") ? etiquetaPeriodo(texto("periodo")!) : "un período"}`;
     default:

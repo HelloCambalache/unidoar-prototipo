@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, like, lte, or } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
-import { auditoria, comprobantesPago, facturas, instituciones, solicitudesPlan } from "@/db/schema";
+import { auditoria, cobrosMp, colaCorreos, comprobantesPago, facturas, instituciones, pagosSemestreMp, solicitudesPlan } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
@@ -11,6 +11,8 @@ import { esUuid } from "@/lib/busquedas";
 import {
   anulacionSchema,
   aprobacionSchema,
+  eliminacionSchema,
+  errorAlEliminarFactura,
   errorDeFechaDePago,
   errorDeInicioDeSemestre,
   esClavePlan,
@@ -503,6 +505,92 @@ export async function anularPago(facturaId: string, entrada: { motivo: string; a
     revalidatePath("/backoffice/cobros/pagos");
   }
   return resultado;
+}
+
+/**
+ * Elimina una factura IMPAGA (pedido del cliente, 2026-11-25: una institución se anotó en el arancel equivocado, nunca pagó y, al cambiarle
+ * el plan, le quedó adeudado el mes anterior; cambiar el plan no toca las facturas ya cargadas). Pide un motivo y deja en la auditoría una copia
+ * de lo que se borró. No se le avisa a la institución. Rechaza una factura paga (primero se anula el pago) y una con un cobro aprobado de
+ * Mercado Pago atado (ver `errorAlEliminarFactura`).
+ *
+ * La del MES EN CURSO la vuelve a crear la tarea diaria si la institución conserva alguna otra factura; la de un mes anterior no se regenera.
+ * La mora y el «plan activo» se calculan al mirar, así que se actualizan solos.
+ */
+export async function eliminarFactura(facturaId: string, entrada: { motivo: string }): Promise<Resultado<{ periodo: string }>> {
+  const admin = await requerirUsuario("admin");
+  if (!esUuid(facturaId)) return fallo(FACTURA_NO_ENCONTRADA);
+  const datos = parsear(eliminacionSchema, entrada);
+  if (!datos.ok) return fallo(datos.campos?.motivo ?? datos.error, datos.campos);
+
+  let institucionId: string | undefined;
+  try {
+    const resultado = await transaccion(async (tx) => {
+      const [factura] = await tx.select().from(facturas).where(eq(facturas.id, facturaId)).limit(1).for("update");
+      if (!factura) return fallo(FACTURA_NO_ENCONTRADA);
+      institucionId = factura.institucionId;
+
+      const [cobro] = await tx
+        .select({ id: cobrosMp.id })
+        .from(cobrosMp)
+        .where(and(eq(cobrosMp.facturaId, factura.id), eq(cobrosMp.resultado, "aprobado")))
+        .limit(1);
+      const [semestre] = cobro
+        ? [undefined]
+        : await tx
+            .select({ id: pagosSemestreMp.id })
+            .from(pagosSemestreMp)
+            .where(and(eq(pagosSemestreMp.facturaId, factura.id), eq(pagosSemestreMp.estado, "pagado")))
+            .limit(1);
+      const error = errorAlEliminarFactura(factura, { conCobroMp: !!cobro || !!semestre });
+      if (error) return fallo(error);
+
+      await tx.delete(facturas).where(eq(facturas.id, factura.id));
+      // Los mails de esa factura que todavía no salieron (aviso de factura nueva, recordatorios, aviso de mora) llevarían a una factura que ya no existe.
+      await tx
+        .delete(colaCorreos)
+        .where(
+          and(
+            eq(colaCorreos.estado, "pendiente"),
+            or(
+              eq(colaCorreos.clave, `M50:${factura.id}`),
+              eq(colaCorreos.clave, `M51:${factura.id}`),
+              like(colaCorreos.clave, `M52:${factura.id}:%`),
+              like(colaCorreos.clave, `M68:${factura.id}:%`),
+            ),
+          ),
+        );
+      // Una copia de lo que se borró: es lo único que queda de la factura. `institucionId` hace que figure en la actividad de la institución.
+      await registrarAuditoria(
+        {
+          usuarioId: admin.id,
+          accion: "factura.eliminar",
+          entidad: "factura",
+          entidadId: factura.id,
+          detalle: {
+            institucionId: factura.institucionId,
+            periodo: factura.periodo,
+            plan: factura.plan,
+            monto: factura.monto,
+            fechaCobro: factura.fechaCobro,
+            estado: factura.estado,
+            medio: factura.medio,
+            motivo: datos.data.motivo,
+          },
+        },
+        tx,
+      );
+      return ok({ periodo: factura.periodo });
+    });
+
+    if (resultado.ok) {
+      revalidarCobros(institucionId);
+      revalidatePath("/backoffice/cobros/pagos");
+    }
+    return resultado;
+  } catch (e) {
+    console.error("eliminarFactura:", resumenDeError(e));
+    return fallo("No pudimos eliminar la factura. Probá de nuevo.");
+  }
 }
 
 /**

@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  advertenciasAlEliminarFactura,
   conflictosDeSemestre,
   creditoDeSemestre,
+  eliminacionSchema,
+  errorAlEliminarFactura,
   errorDeFechaDePago,
   errorDeInicioDeSemestre,
   estadoEfectivo,
@@ -599,5 +602,44 @@ describe("facturas automáticas (planificarFacturas)", () => {
     const r = planificarFacturas([inst("a", "colegio"), inst("b", "colegio")], [f("a", P, "colegio", "pagada")], P, HOY);
     assert.deepEqual(r.crear.map((x) => x.institucionId), ["b"]);
     assert.deepEqual(r.omitidas.map((x) => x.institucionId), ["a"]);
+  });
+});
+
+describe("eliminar una factura impaga", () => {
+  it("deja eliminar una factura pendiente o vencida", () => {
+    assert.equal(errorAlEliminarFactura({ estado: "pendiente" }, { conCobroMp: false }), null);
+    assert.equal(errorAlEliminarFactura({ estado: "vencida" }, { conCobroMp: false }), null);
+  });
+
+  it("no deja eliminar una factura paga: hay que anular el pago primero", () => {
+    assert.match(errorAlEliminarFactura({ estado: "pagada" }, { conCobroMp: false }) ?? "", /Anular pago/);
+  });
+
+  it("no deja eliminar una factura con un cobro aprobado de Mercado Pago atado", () => {
+    assert.match(errorAlEliminarFactura({ estado: "pendiente" }, { conCobroMp: true }) ?? "", /Mercado Pago/);
+  });
+
+  it("pide el motivo, de 3 a 300 caracteres, sin espacios de más", () => {
+    assert.equal(eliminacionSchema.safeParse({ motivo: "  Arancel equivocado  " }).data?.motivo, "Arancel equivocado");
+    assert.equal(eliminacionSchema.safeParse({ motivo: "ab" }).success, false);
+    assert.equal(eliminacionSchema.safeParse({ motivo: "   " }).success, false);
+    assert.equal(eliminacionSchema.safeParse({ motivo: "x".repeat(301) }).success, false);
+    assert.equal(eliminacionSchema.safeParse({}).success, false);
+  });
+
+  it("avisa que la factura del mes en curso se vuelve a crear solo si la institución tiene otras facturas", () => {
+    const ctx = { periodoActual: "2026-11", otrasFacturas: 1, sinPagos: false };
+    assert.equal(advertenciasAlEliminarFactura({ periodo: "2026-11" }, ctx).length, 1);
+    assert.match(advertenciasAlEliminarFactura({ periodo: "2026-11" }, ctx)[0]!, /vuelve a crear/);
+    // Un mes anterior no se regenera; uno futuro tampoco hasta que llegue; sin otras facturas el cron no crea nada.
+    assert.deepEqual(advertenciasAlEliminarFactura({ periodo: "2026-10" }, ctx), []);
+    assert.deepEqual(advertenciasAlEliminarFactura({ periodo: "2026-12" }, ctx), []);
+    assert.deepEqual(advertenciasAlEliminarFactura({ periodo: "2026-11" }, { ...ctx, otrasFacturas: 0 }), []);
+  });
+
+  it("avisa que quitar la deuda no habilita a quien nunca pagó", () => {
+    const avisos = advertenciasAlEliminarFactura({ periodo: "2026-10" }, { periodoActual: "2026-11", otrasFacturas: 1, sinPagos: true });
+    assert.equal(avisos.length, 1);
+    assert.match(avisos[0]!, /sin pago/);
   });
 });
