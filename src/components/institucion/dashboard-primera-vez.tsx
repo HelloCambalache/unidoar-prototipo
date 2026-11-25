@@ -189,7 +189,7 @@ export function DashboardPrimeraVez({
             <GrillaCercanos docentes={cercanos} />
           ) : (
             <p className="m-0 rounded-tarjeta border border-dashed border-borde-fuerte bg-white/60 px-6 py-8 text-center text-[13.5px] text-apagado">
-              Todavía no hay profesionales verificados en tu zona. Publicá tu búsqueda y los avisamos apenas aparezcan.
+              Todavía no hay profesionales en tu zona. Publicá tu búsqueda y los avisamos apenas aparezcan.
             </p>
           )}
         </>

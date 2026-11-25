@@ -27,7 +27,7 @@ export const MANUAL_PROFESIONALES: ManualDeAyuda = {
                 "**Qué sos**: elegí si sos docente, entrenador/a o guardavidas (podés elegir más de una), las asignaturas o disciplinas que das y si ya te recibiste o todavía estás estudiando.",
                 "**Tu perfil**: fecha de nacimiento, DNI, teléfono o WhatsApp, domicilio y las zonas donde podés trabajar.",
                 "**Tu CV** (opcional): si lo subís, queda guardado para que te postules en dos toques. Si no lo tenés a mano, tocá **Continuar sin CV** y lo agregás después desde [Mi perfil](/docente/perfil).",
-                "**Niveles y horarios**: con qué niveles trabajás y en qué días y franjas podés.",
+                "**Niveles y horarios**: con qué niveles trabajás y en qué días y franjas podés. **Al terminar este paso tu perfil ya está armado**: figura entre los profesionales que ven las instituciones, como «Sin verificar», aunque todavía no hayas subido la documentación.",
                 "**Documentación**: las fotos de tu DNI (frente y dorso) y tu título (si sos de más de una categoría, uno por cada una, cada uno en su archivo) o, si todavía estudiás, la constancia de alumno regular. **Este paso es opcional**: si no tenés los archivos a mano, tocá **Terminar y subir después** y los cargás cuando quieras desde [Mi perfil](/docente/perfil); tu perfil figura como «Sin verificar» hasta que el equipo los revise. El certificado de buena conducta también se carga desde ahí.",
               ],
             },

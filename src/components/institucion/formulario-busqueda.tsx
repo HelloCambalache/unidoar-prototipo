@@ -93,7 +93,9 @@ export function FormularioBusqueda({
   const [venceEnHoras, setVenceEnHoras] = useState(plazoActual ? "" : "24");
   const [interruptores, setInterruptores] = useState<Interruptores>({
     ampliarZona: false,
-    incluirSinVerificar: false,
+    // Por defecto también se avisa a quienes todavía no se verificaron (los verificados van primero y el tope no cambia): hay pocos verificados y la
+    // búsqueda llegaría a poca gente. La institución lo puede apagar acá mismo.
+    incluirSinVerificar: true,
     turnoExtra: false,
   });
 

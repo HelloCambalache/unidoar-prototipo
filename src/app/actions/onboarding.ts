@@ -8,9 +8,10 @@ import { borrarArchivos } from "@/lib/queries/archivos";
 import { redirect } from "next/navigation";
 import { and, eq, like } from "drizzle-orm";
 import { getDb, transaccion } from "@/db";
-import { docenteDetalle, docentes, institucionMiembros, instituciones, type DocumentosDocente } from "@/db/schema";
+import { docenteDetalle, docentes, institucionMiembros, instituciones, type Docente, type DocumentosDocente } from "@/db/schema";
 import { parsear } from "@/lib/acciones";
-import { docenteDeUsuario, docenteEnAlta, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
+import { docenteDeUsuario, docenteEnAlta, docenteParaDocumentacion, institucionEnAlta, institucionPropia, usuarioParaAlta } from "@/lib/alta";
+import { pasoQueFaltaParaCerrarElAlta, subtituloDeAlta } from "@/lib/alta-completa";
 import { encolarParaEquipo } from "@/lib/correo/cola";
 import { avisarAAdmins } from "@/lib/queries/avisos";
 import { avisoAlEquipoDeSemestre, puedePagarSemestre, resumenDeSemestre } from "@/lib/forma-de-pago";
@@ -34,15 +35,13 @@ import {
   nivelesHorariosSchema,
   partirNombre,
   pathPrivadoSchema,
-  rutaPasoDocente,
-  rutaPasoPendienteDocente,
   type EstadoFormulario,
 } from "@/lib/onboarding";
 import { leerPorcentaje } from "@/lib/estudiantes";
 import { datosDeSesion } from "@/lib/sesion";
 import { notificar } from "@/lib/queries/notificaciones";
 import { validarAsignaturas } from "@/lib/asignaturas";
-import { decidirCategorias, etiquetaDeCategorias } from "@/lib/categorias-docente";
+import { decidirCategorias } from "@/lib/categorias-docente";
 import { CLAVES_DE_TITULO, compactarTitulos } from "@/lib/titulos";
 import { nombresDeAsignaturas, ubicarDocente, ubicarInstitucion, zonasConocidas } from "@/lib/queries/onboarding";
 import { ubicarPrimeraZona } from "@/lib/queries/ubicacion-zonas";
@@ -598,28 +597,43 @@ export async function guardarNivelesYHorarios(_previo: EstadoFormulario, formDat
       : ["Otro"]
     : [];
   const db = getDb();
-  await db
-    .update(docentes)
-    .set({ niveles: [...d.niveles, ...otros], disponibilidad: disponibilidadDesdeGrilla(d.grilla) })
-    .where(eq(docentes.id, docente.id));
+  const niveles = [...d.niveles, ...otros];
+  const disponibilidad = disponibilidadDesdeGrilla(d.grilla);
+  await db.update(docentes).set({ niveles, disponibilidad }).where(eq(docentes.id, docente.id));
   await db
     .insert(docenteDetalle)
     .values({ docenteId: docente.id, grillaDisponibilidad: d.grilla })
     .onConflictDoUpdate({ target: docenteDetalle.docenteId, set: { grillaDisponibilidad: d.grilla, actualizadoEn: new Date() } });
 
+  // El alta se da por completa acá: ya están todos los datos obligatorios y la documentación (el paso que sigue) es opcional. Así quien no la sube
+  // figura entre los profesionales como «Sin verificar» en lugar de quedar afuera (ver `src/lib/alta-completa.ts`). Si falta algo (el DNI, por
+  // ejemplo), el alta sigue abierta y se cierra en el último paso, que lo vuelve a pedir.
+  const [detalle] = await db.select({ dni: docenteDetalle.dni }).from(docenteDetalle).where(eq(docenteDetalle.docenteId, docente.id)).limit(1);
+  if (!pasoQueFaltaParaCerrarElAlta({ telefono: docente.telefono, niveles, disponibilidad }, detalle?.dni)) await cerrarAlta(docente);
+
   revalidatePath("/docente", "layout");
   redirect(destinoDe(formData) === "salir" ? "/" : "/onboarding/docente/4");
+}
+
+/** Da el alta por completa y deja el subtítulo por defecto si la persona no escribió uno. */
+async function cerrarAlta(docente: Docente) {
+  await getDb()
+    .update(docentes)
+    .set({ onboardingCompleto: true, subtitulo: subtituloDeAlta(docente) })
+    .where(eq(docentes.id, docente.id));
 }
 
 const DOCUMENTOS_DEL_ALTA = ["dniFrente", "dniDorso", ...CLAVES_DE_TITULO, "constancia"] as const;
 
 /**
- * "Subí tu documentación" (último paso): guarda los paths de lo que subió al bucket privado y cierra el alta
- * (`onboardingCompleto = true`). La verificación NO cambia: queda en "pendiente" hasta que el equipo la revise.
+ * "Subí tu documentación" (último paso, opcional): guarda los paths de lo que subió al bucket privado. La verificación NO cambia: queda en
+ * "pendiente" hasta que el equipo la revise. Normalmente el alta ya se cerró al terminar "Niveles y horarios" (ver `guardarNivelesYHorarios`);
+ * si todavía no (le faltaba algo, como el DNI), se cierra acá cuando esté todo.
  */
 export async function guardarDocumentacionDocente(_previo: EstadoFormulario, formData: FormData): Promise<EstadoFormulario> {
-  const { usuario, docente } = await docenteEnAlta();
+  const { usuario, docente } = await docenteParaDocumentacion();
   const destino = destinoDe(formData);
+  const yaCompleta = docente.onboardingCompleto;
 
   const db = getDb();
   const [detalle] = await db.select().from(docenteDetalle).where(eq(docenteDetalle.docenteId, docente.id)).limit(1);
@@ -655,49 +669,38 @@ export async function guardarDocumentacionDocente(_previo: EstadoFormulario, for
   // Un DNI o un título que se vuelve a subir no tiene por qué seguir guardado.
   await borrarArchivos(quitados(Object.values(previos), Object.values(finales)));
 
-  if (destino === "salir") {
-    revalidatePath("/docente", "layout");
-    redirect("/");
-  }
-
-  // No se cierra el alta sin lo básico: si falta algo de los pasos anteriores, se vuelve a ese paso.
-  const pendiente = rutaPasoPendienteDocente(docente);
-  if (pendiente !== "/onboarding/docente/4") redirect(pendiente);
-  // El DNI es lo que el equipo necesita para verificar a la persona: "Guardar borrador" o "Guardar y salir" en "Tu perfil" lo dejan pasar
-  // sin él, así que no se cierra el alta hasta que esté.
-  if (!detalle?.dni) redirect(`${rutaPasoDocente("3")}?falta=dni`);
-
-  const asignaturas = docente.asignaturas.slice(0, 2).join(", ");
-  await db
-    .update(docentes)
-    .set({
-      onboardingCompleto: true,
-      subtitulo: docente.subtitulo ?? (asignaturas ? `${etiquetaDeCategorias(docente)} · ${asignaturas}` : etiquetaDeCategorias(docente)),
-    })
-    .where(eq(docentes.id, docente.id));
-
-  if (Object.keys(finales).length > 0) {
+  // Qué se subió de nuevo (un archivo distinto del que ya estaba): con el alta ya completa, solo eso le avisa al equipo (guardar dos veces lo mismo no repite el aviso).
+  const documentacionNueva = Object.entries(finales).some(([clave, path]) => (previos as Record<string, string | undefined>)[clave] !== path);
+  const avisarDeLaDocumentacion = async (clave: string | undefined, detalleDelAviso: string) => {
     await notificar(usuario.id, {
       tipo: "verificacion",
       titulo: "Recibimos tu documentación.",
       texto: "Tu perfil figura como sin verificar hasta que la revisemos. Te avisamos por acá apenas esté lista.",
       enlace: "/docente/perfil",
     });
-    // El equipo se entera de que hay un alta con documentación para revisar.
+    // El equipo se entera de que hay documentación para revisar.
     const nombreCompleto = `${docente.nombre} ${docente.apellido}`.trim();
     await transaccion(async (tx) => {
-      await avisarAAdmins(tx, {
-        titulo: nombreCompleto,
-        texto: "terminó el alta y subió documentación para que la revisen.",
-        enlace: `/backoffice/docentes/${docente.id}`,
-      });
-      await encolarParaEquipo(
-        tx,
-        "M61",
-        { docente: nombreCompleto, detalle: "terminó el alta y subió documentación para que la revisen.", ruta: `/backoffice/docentes/${docente.id}` },
-        { clave: `M61:alta:${docente.id}` },
-      );
+      await avisarAAdmins(tx, { titulo: nombreCompleto, texto: detalleDelAviso, enlace: `/backoffice/docentes/${docente.id}` });
+      await encolarParaEquipo(tx, "M61", { docente: nombreCompleto, detalle: detalleDelAviso, ruta: `/backoffice/docentes/${docente.id}` }, clave ? { clave } : undefined);
     });
+  };
+
+  if (destino === "salir") {
+    // Con el alta ya completa, "Guardar y salir" puede ser el único momento en que se sube la documentación: el equipo tiene que enterarse ahora.
+    if (yaCompleta && documentacionNueva) await avisarDeLaDocumentacion(undefined, "subió documentación para que la revisen.");
+    revalidatePath("/docente", "layout");
+    redirect("/");
+  }
+
+  if (!yaCompleta) {
+    // No se cierra el alta sin lo básico: si falta algo de los pasos anteriores (el DNI, por ejemplo), se vuelve a ese paso.
+    const falta = pasoQueFaltaParaCerrarElAlta(docente, detalle?.dni);
+    if (falta) redirect(falta);
+    await cerrarAlta(docente);
+    if (Object.keys(finales).length > 0) await avisarDeLaDocumentacion(`M61:alta:${docente.id}`, "terminó el alta y subió documentación para que la revisen.");
+  } else if (documentacionNueva) {
+    await avisarDeLaDocumentacion(undefined, "subió documentación para que la revisen.");
   }
 
   revalidatePath("/docente", "layout");

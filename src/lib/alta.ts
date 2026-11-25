@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { docentes, instituciones, type Docente, type Institucion, type Usuario } from "@/db/schema";
 import { asegurarUsuario, sesionActual } from "@/lib/auth";
 import { destinoSiNoPuedeHacerElAlta, puedeHacerElAlta } from "@/lib/alta-rol";
+import { puedeAbrirLaDocumentacionDelAlta } from "@/lib/alta-completa";
 import { RUTA_INICIO } from "@/lib/catalogo";
 import type { RolAlta } from "@/lib/onboarding";
 
@@ -56,5 +57,19 @@ export async function docenteEnAlta() {
   const docente = await docenteDeUsuario(usuario.id);
   if (!docente) redirect("/onboarding/docente/categoria");
   if (docente.onboardingCompleto) redirect(RUTA_INICIO.docente);
+  return { usuario, docente };
+}
+
+/**
+ * Para el paso «Documentación» (el último, opcional): como `docenteEnAlta`, pero NO manda al inicio a quien ya tiene el alta completa. El
+ * alta se da por completa al terminar «Niveles y horarios» y este paso es la forma de subir la documentación al terminar (ver
+ * `src/lib/alta-completa.ts`). Con la verificación hecha, rechazada o con una corrección pedida, o con la cuenta suspendida, los documentos se
+ * tocan desde Mi perfil (que respeta esas reglas): acá se vuelve al inicio.
+ */
+export async function docenteParaDocumentacion() {
+  const usuario = await usuarioParaAlta("docente");
+  const docente = await docenteDeUsuario(usuario.id);
+  if (!docente) redirect("/onboarding/docente/categoria");
+  if (!puedeAbrirLaDocumentacionDelAlta(docente)) redirect(RUTA_INICIO.docente);
   return { usuario, docente };
 }

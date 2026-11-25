@@ -178,12 +178,15 @@ export type DocenteRecomendado = {
   motivos: string[];
   /** La búsqueda abierta de la institución con la que más coincide: a esa se lo invita. Null si no coincide con ninguna. */
   busquedaId: string | null;
+  /** Si el equipo ya verificó su identidad. Si no, la tarjeta dice «Sin verificar» (nunca se muestra la insignia de verificado a quien no lo está). */
+  verificado: boolean;
 };
 
 /**
- * Docentes verificados de la zona de la institución (y partidos linderos), de las categorías
- * de sus búsquedas abiertas, que todavía no se postularon a ninguna de ellas. Con varias sedes cuentan las zonas de todas
- * y la distancia es a la sede más cercana.
+ * Docentes de la zona de la institución (y partidos linderos), de las categorías de sus búsquedas abiertas, que todavía no se postularon a
+ * ninguna de ellas. Con varias sedes cuentan las zonas de todas y la distancia es a la sede más cercana. Desde 2026-11-25 salen también los
+ * que todavía no se verificaron (cualquiera con el alta completa que no esté rechazado, como en el buscador), con los verificados primero y
+ * su leyenda «Sin verificar»; antes eran solo verificados y, con pocos verificados, la columna quedaba vacía.
  */
 export async function docentesRecomendados(
   institucion: Institucion,
@@ -198,7 +201,7 @@ export async function docentesRecomendados(
   const c: SQL[] = [
     eq(docentes.onboardingCompleto, true),
     docenteVisible,
-    eq(docentes.verificacion, "verificado"),
+    ne(docentes.verificacion, "rechazado"),
     sql`not exists (
       select 1 from postulaciones p join busquedas b on b.id = p.busqueda_id
       where p.docente_id = ${docentes.id} and b.institucion_id = ${institucion.id} and b.estado <> 'cerrada'
@@ -212,7 +215,8 @@ export async function docentesRecomendados(
     .select()
     .from(docentes)
     .where(and(...c))
-    .orderBy(sql`${docentes.aniosExperiencia} desc nulls last`, desc(docentes.creadoEn))
+    // Los verificados primero: con el tope de candidatos, los que no se verificaron solo completan lo que falte.
+    .orderBy(verificadosPrimero, sql`${docentes.aniosExperiencia} desc nulls last`, desc(docentes.creadoEn))
     .limit(Math.max(limite * 3, 40));
 
   // Sin sedes (todavía sin crear), la ubicación de la ficha hace de única sede.
@@ -232,6 +236,7 @@ export async function docentesRecomendados(
           disponibilidad: d.disponibilidad,
           aniosExperiencia: d.aniosExperiencia,
           tituloVerificado: d.tituloVerificado,
+          verificado: d.verificacion === "verificado",
           km,
         },
         abiertas,
@@ -249,6 +254,7 @@ export async function docentesRecomendados(
           etiquetas: [d.niveles[0], d.disponibilidad[0]].filter((e): e is string => !!e),
           motivos,
           busquedaId,
+          verificado: d.verificacion === "verificado",
         } satisfies DocenteRecomendado,
       };
     });

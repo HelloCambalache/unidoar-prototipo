@@ -16,6 +16,8 @@ export type CandidatoRecomendable = ConCategorias & {
   disponibilidad: string[];
   aniosExperiencia: number | null;
   tituloVerificado: boolean;
+  /** Si el equipo ya verificó la identidad del profesional (la insignia «Verificado»). Sin decirlo, no suma. */
+  verificado?: boolean;
   /** Distancia a la sede más cercana; null si no se pudo calcular. */
   km: number | null;
 };
@@ -41,6 +43,9 @@ const igual = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLo
 
 /** Hasta 20 puntos por cercanía: dentro de 2 km es lo máximo y baja con la distancia. */
 export const puntosPorCercania = (km: number | null) => (km == null ? 0 : Math.max(0, Math.round(20 - Math.max(0, km - 2) * 0.9)));
+
+/** Lo que suma tener la identidad verificada por el equipo (igual que el título verificado). */
+export const PUNTOS_POR_VERIFICADO = 5;
 
 /** Un punto por año de experiencia, hasta 10. */
 export const puntosPorExperiencia = (anios: number | null) => Math.min(10, Math.max(0, anios ?? 0));
@@ -79,7 +84,9 @@ export function puntuarCandidato(c: CandidatoRecomendable, busquedas: BusquedaAb
   if (c.km != null && c.km <= 10 && cerca) motivos.push(`${cerca.charAt(0).toUpperCase()}${cerca.slice(1)} de tu sede`);
   if ((c.aniosExperiencia ?? 0) >= 3) motivos.push(`${c.aniosExperiencia} años de experiencia`);
   if (c.tituloVerificado) motivos.push("Título verificado");
-  const puntaje = mejor.puntos + puntosPorCercania(c.km) + puntosPorExperiencia(c.aniosExperiencia) + (c.tituloVerificado ? 5 : 0);
+  // Desde que se recomienda también a quienes todavía no se verificaron (ver `docentesRecomendados`), a igual coincidencia salen primero los verificados.
+  // No lleva motivo propio: la tarjeta ya muestra la insignia.
+  const puntaje = mejor.puntos + puntosPorCercania(c.km) + puntosPorExperiencia(c.aniosExperiencia) + (c.tituloVerificado ? 5 : 0) + (c.verificado ? PUNTOS_POR_VERIFICADO : 0);
   return { puntaje, motivos, busquedaId: mejor.puntos > 0 ? mejor.id : null };
 }
 

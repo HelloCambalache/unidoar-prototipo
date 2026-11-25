@@ -8,6 +8,15 @@ import type { DocenteRecomendado } from "@/lib/queries/coincidencias";
 const hrefPerfil = (id: string, busquedaId?: string) =>
   `/institucion/docente/${id}${busquedaId ? `?busqueda=${busquedaId}` : ""}`;
 
+/** La insignia de «Verificado» solo para quien lo está; el resto lleva su leyenda «Sin verificar» (igual que en el buscador). */
+function EstadoDeVerificacion({ docente, tamano }: { docente: Pick<DocenteRecomendado, "verificado" | "categoria">; tamano: number }) {
+  return docente.verificado ? (
+    <Verificado categoria={docente.categoria} tamano={tamano} />
+  ) : (
+    <Insignia className="flex-none px-2 py-1 text-[10px]">Sin verificar</Insignia>
+  );
+}
+
 /** Columna "Docentes recomendados para vos" del dashboard. */
 export function RecomendadosLateral({ docentes }: { docentes: DocenteRecomendado[] }) {
   return (
@@ -16,7 +25,7 @@ export function RecomendadosLateral({ docentes }: { docentes: DocenteRecomendado
       <p className="m-0 mb-4 text-[13px] leading-snug text-apagado">De tu zona y de tus búsquedas abiertas</p>
       {docentes.length === 0 ? (
         <p className="m-0 text-[13px] leading-normal text-sutil">
-          Todavía no hay profesionales verificados que coincidan con tu zona y tus búsquedas.
+          Todavía no hay profesionales que coincidan con tu zona y tus búsquedas.
         </p>
       ) : (
         <ul className="m-0 flex list-none flex-col gap-4 p-0">
@@ -33,7 +42,7 @@ export function RecomendadosLateral({ docentes }: { docentes: DocenteRecomendado
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-sm leading-tight font-semibold">
                     <span className="truncate">{d.nombre}</span>
-                    <Verificado categoria={d.categoria} tamano={14} />
+                    <EstadoDeVerificacion docente={d} tamano={14} />
                   </div>
                   <div className="mt-0.5 truncate text-xs leading-snug text-apagado">{d.detalle}</div>
                 </div>
@@ -82,7 +91,7 @@ export function GrillaCercanos({ docentes }: { docentes: DocenteRecomendado[] })
             <div className="flex flex-1 flex-col p-4">
               <div className="mb-[3px] flex items-center gap-1.5 text-[14.5px] leading-tight font-semibold">
                 <span className="truncate">{d.nombre}</span>
-                <Verificado categoria={d.categoria} tamano={14} />
+                <EstadoDeVerificacion docente={d} tamano={14} />
               </div>
               <div className="mb-2.5 text-[12.5px] leading-snug text-apagado">{d.detalle}</div>
               <div className="mb-3.5 flex flex-wrap gap-1.5">

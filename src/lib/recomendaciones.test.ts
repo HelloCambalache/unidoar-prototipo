@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   ordenarPorPuntaje,
+  PUNTOS_POR_VERIFICADO,
   puntosPorCercania,
   puntosPorExperiencia,
   puntuarCandidato,
@@ -20,6 +21,23 @@ const candidato: CandidatoRecomendable = {
 };
 
 const busqueda: BusquedaAbierta = { categoria: "educador", disciplina: "Inglés", nivel: "Secundario", turno: "Mañana" };
+
+describe("recomendar también a quienes no se verificaron", () => {
+  it("a igual coincidencia, el verificado suma más que quien todavía no se verificó", () => {
+    const sinVerificar = puntuarCandidato({ ...candidato, verificado: false }, [busqueda]);
+    const verificado = puntuarCandidato({ ...candidato, verificado: true }, [busqueda]);
+    assert.equal(verificado.puntaje - sinVerificar.puntaje, PUNTOS_POR_VERIFICADO);
+    // Sin decirlo (un llamado viejo), cuenta como sin verificar y los motivos no cambian.
+    assert.equal(puntuarCandidato(candidato, [busqueda]).puntaje, sinVerificar.puntaje);
+    assert.deepEqual(verificado.motivos, sinVerificar.motivos);
+  });
+
+  it("una coincidencia fuerte sin verificar le gana a una débil verificada", () => {
+    const fuerte = puntuarCandidato({ ...candidato, verificado: false }, [busqueda]);
+    const debil = puntuarCandidato({ ...candidato, asignaturas: ["Música"], niveles: [], disponibilidad: [], verificado: true }, [busqueda]);
+    assert.ok(fuerte.puntaje > debil.puntaje);
+  });
+});
 
 describe("puntos por cercanía y experiencia", () => {
   it("la cercanía baja con la distancia y no pasa de 20", () => {

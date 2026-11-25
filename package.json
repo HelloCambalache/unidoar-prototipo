@@ -28,6 +28,7 @@
     "db:semestral": "dotenv -e .env.local -- tsx src/db/semestral-base.ts",
     "db:testimonios": "dotenv -e .env.local -- tsx src/db/testimonios-base.ts",
     "db:planes-retirar": "dotenv -e .env.local -- tsx src/db/planes-retirar.ts",
+    "db:altas-sin-documentacion": "dotenv -e .env.local -- tsx src/db/altas-sin-documentacion.ts",
     "db:mercadopago": "dotenv -e .env.local -- tsx src/db/mercadopago-base.ts",
     "db:semestre-mp": "dotenv -e .env.local -- tsx src/db/semestre-mp-base.ts",
     "db:pago-manual": "dotenv -e .env.local -- tsx src/db/pago-manual-base.ts",

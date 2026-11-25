@@ -62,11 +62,17 @@ function Fila({
  * hasta que el equipo revise lo que haya. Acá se cierra el alta.
  */
 export function PasoDocumentacion({
+  altaCompleta,
   categorias,
   estudio,
   documentos,
   almacenamientoDisponible,
 }: {
+  /**
+   * Si el alta ya se cerró (al terminar «Niveles y horarios»): el perfil ya figura entre los profesionales como «Sin verificar» y no hay a qué
+   * paso volver (los datos se editan desde Mi perfil).
+   */
+  altaCompleta: boolean;
   /** Las categorías del perfil (la principal primero): con varias se pide un título por cada una. */
   categorias: CategoriaDocente[];
   estudio: SituacionEstudio;
@@ -114,9 +120,18 @@ export function PasoDocumentacion({
       <p className="m-0 mb-4 flex items-start gap-2 rounded-caja bg-verde-tint px-3.5 py-3 text-[13.5px] leading-[1.45] text-tinta-2">
         <Icono nombre="tilde" tamano={16} trazo={2} className="mt-px flex-none text-verde" />
         <span>
-          <b className="font-semibold text-tinta">No hace falta subir nada para terminar.</b> Ya podés postularte: tu perfil figura como{" "}
-          <b className="font-semibold text-tinta">Sin verificar</b> hasta que revisemos la documentación (normalmente en menos de 48 horas). Si no la tenés a
-          mano, la subís después desde Mi perfil.
+          <b className="font-semibold text-tinta">No hace falta subir nada para terminar.</b>{" "}
+          {altaCompleta ? (
+            <>
+              Tu perfil ya figura entre los profesionales que ven las instituciones, como <b className="font-semibold text-tinta">Sin verificar</b>, hasta
+              que revisemos la documentación (normalmente en menos de 48 horas). Si no la tenés a mano, la subís después desde Mi perfil.
+            </>
+          ) : (
+            <>
+              Ya podés postularte: tu perfil figura como <b className="font-semibold text-tinta">Sin verificar</b> hasta que revisemos la documentación
+              (normalmente en menos de 48 horas). Si no la tenés a mano, la subís después desde Mi perfil.
+            </>
+          )}
         </span>
       </p>
 
@@ -213,7 +228,11 @@ export function PasoDocumentacion({
 
       <AlertaError className="mt-3.5">{estado && !estado.ok && Object.keys(campos).length === 0 ? estado.error : undefined}</AlertaError>
       <div className="mt-[22px] flex flex-wrap items-center justify-between gap-3">
-        <EnlaceVolver href="/onboarding/docente/asignaturas" />
+        {altaCompleta ? (
+          <EnlaceVolver href="/docente/perfil">← Ir a mi perfil</EnlaceVolver>
+        ) : (
+          <EnlaceVolver href="/onboarding/docente/asignaturas" />
+        )}
         <div className="flex flex-[1_1_320px] flex-wrap justify-end gap-2.5">
           {/* Un solo botón que dice qué pasa: antes había «Lo subo después» y «Terminar y buscar trabajo», que hacían lo mismo y no dejaban claro que se podía terminar sin subir nada. */}
           <Boton type="submit" disabled={pendiente} className="flex-[1_1_auto]">

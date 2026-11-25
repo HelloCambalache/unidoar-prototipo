@@ -113,7 +113,7 @@ export const MANUAL_INSTITUCIONES: ManualDeAyuda = {
               ],
             },
             {
-              p: "Al publicar avisamos a los profesionales que encajan con tu búsqueda. Una **búsqueda urgente** vence en el plazo que elegís al publicarla («Responder antes de»: 24 horas si no lo cambiás) y les llega por campanita y por mail.",
+              p: "Al publicar avisamos a los profesionales que encajan con tu búsqueda: **primero a los verificados y, si queda lugar, también a quienes todavía no se verificaron** (figuran como «Sin verificar»). En el panel de la derecha podés apagar **Si aceptás perfiles sin verificar** y ves cuánto cambia el número. Una **búsqueda urgente** vence en el plazo que elegís al publicarla («Responder antes de»: 24 horas si no lo cambiás) y les llega por campanita y por mail.",
             },
             { nota: "Los textos sugeridos no inventan beneficios ni sueldos: solo usan lo que cargaste y las tareas y requisitos habituales de la categoría. Revisalos y ajustalos." },
             {
