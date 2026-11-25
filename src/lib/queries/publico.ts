@@ -4,6 +4,8 @@ import { and, asc, count, countDistinct, desc, eq, gt, isNotNull, isNull, or, sq
 import { getDb } from "@/db";
 import { asignaturas, busquedas, docentes, instituciones, testimonios, type CategoriaDocente } from "@/db/schema";
 import { CATEGORIAS } from "@/lib/catalogo";
+import { sinCifrasDeLaRed } from "@/lib/publico";
+import { cifrasPublicasVisibles } from "@/lib/queries/configuracion-sitio";
 import { esDeCategoria } from "@/lib/queries/categorias-sql";
 import { sedesDeInstitucion } from "@/lib/queries/sedes";
 import { fotosDeInstitucion, novedadesDeInstitucion } from "@/lib/queries/vitrina";
@@ -23,7 +25,7 @@ export type ConteoCategoria = {
   urgentes: number;
 };
 
-export type ResumenPublico = {
+export type ResumenReal = {
   docentesVerificados: number;
   institucionesVerificadas: number;
   busquedasActivas: number;
@@ -35,8 +37,26 @@ export type ResumenPublico = {
   categorias: Record<CategoriaDocente, ConteoCategoria>;
 };
 
-/** Contadores del hero, de las landings y de las tarjetas de categoría. Una vez por request. */
+export type ResumenPublico = ResumenReal & {
+  /**
+   * Si el equipo tiene prendido «Mostrar las cifras de la red» (Backoffice → Sitio). Apagado, todas las cifras de la red vienen EN CERO
+   * (`sinCifrasDeLaRed`): lo que ya oculta un número en cero (hero, tarjetas de categoría, tipos de institución) desaparece solo, y la franja de la
+   * portada y el aside de las landings preguntan por este valor. **Nada que sea público puede leer `resumenReal`.**
+   */
+  cifrasVisibles: boolean;
+};
+
+/**
+ * El resumen público: lo de `resumenReal` o, con las cifras ocultas, con las de la red en cero. Es lo único que leen la portada, las tarjetas de
+ * categoría y las landings. Una vez por request.
+ */
 export const resumenPublico = cache(async (): Promise<ResumenPublico> => {
+  const [real, cifrasVisibles] = await Promise.all([resumenReal(), cifrasPublicasVisibles()]);
+  return { ...(cifrasVisibles ? real : sinCifrasDeLaRed(real)), cifrasVisibles };
+});
+
+/** Los contadores de verdad, sin importar si el sitio los muestra. Solo para el backoffice (la pantalla «Sitio» los muestra al lado del interruptor). */
+export const resumenReal = cache(async (): Promise<ResumenReal> => {
   const db = getDb();
   const verificadosVisibles = and(eq(docentes.verificacion, "verificado"), eq(docentes.onboardingCompleto, true), docenteVisible);
   const [[filaTotal], filasDocentes, filasBusquedas, [filaInst], [filaDisc]] = await Promise.all([

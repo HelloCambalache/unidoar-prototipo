@@ -142,26 +142,32 @@ export async function LandingCategoria({ categoria }: { categoria: CategoriaDoce
               </div>
             </div>
 
-            <aside aria-label="La red en números" className="rounded-tarjeta bg-white p-6 text-tinta shadow-[0_18px_44px_rgba(2,4,45,.35)]">
-              <ul className="m-0 flex list-none flex-col p-0">
-                {cifras.map((c, i) => (
-                  <li key={c.etiqueta} className={"flex items-center gap-4 py-4 first:pt-0 " + (i > 0 ? "border-t border-linea" : "")}>
-                    <span
-                      aria-hidden
-                      style={{ background: info.tint, color: info.ink }}
-                      className="flex size-12 flex-none items-center justify-center rounded-caja"
-                    >
-                      <Icono nombre={c.icono} tamano={20} trazo={2} />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="font-display text-[30px] leading-none font-semibold tracking-[-0.03em] text-navy-900">{c.valor}</div>
-                      <p className="m-0 mt-1 text-[13.5px] leading-snug text-apagado">{c.etiqueta}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+            <aside
+              aria-label={resumen.cifrasVisibles ? "La red en números" : "Para instituciones"}
+              className="rounded-tarjeta bg-white p-6 text-tinta shadow-[0_18px_44px_rgba(2,4,45,.35)]"
+            >
+              {/* Las cifras se muestran solo si el equipo lo prendió (Backoffice → Sitio); sin ellas queda el texto y el enlace. */}
+              {resumen.cifrasVisibles && (
+                <ul className="m-0 flex list-none flex-col p-0">
+                  {cifras.map((c, i) => (
+                    <li key={c.etiqueta} className={"flex items-center gap-4 py-4 first:pt-0 " + (i > 0 ? "border-t border-linea" : "")}>
+                      <span
+                        aria-hidden
+                        style={{ background: info.tint, color: info.ink }}
+                        className="flex size-12 flex-none items-center justify-center rounded-caja"
+                      >
+                        <Icono nombre={c.icono} tamano={20} trazo={2} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="font-display text-[30px] leading-none font-semibold tracking-[-0.03em] text-navy-900">{c.valor}</div>
+                        <p className="m-0 mt-1 text-[13.5px] leading-snug text-apagado">{c.etiqueta}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {/* No se muestran personas: nadie aceptó aparecer en una página pública. Solo se cuenta cuántas hay. */}
-              <p className="m-0 border-t border-linea pt-4 text-[13px] leading-normal text-apagado">
+              <p className={"m-0 text-[13px] leading-normal text-apagado " + (resumen.cifrasVisibles ? "border-t border-linea pt-4" : "")}>
                 Las instituciones con cuenta ven los perfiles verificados: identidad y título revisados por el equipo.{" "}
                 <Link href={RUTA_REGISTRO_DOCENTE} className="font-semibold text-navy-700 underline">
                   Sumate como profesional

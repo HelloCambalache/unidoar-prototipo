@@ -39,34 +39,37 @@ export default async function Landing() {
     <>
       <HeroHome conteos={resumen.categorias} />
 
-      <FilaEstadisticas
-        items={[
-          {
-            valor: num(resumen.docentesVerificados),
-            etiqueta: resumen.docentesVerificados === 1 ? "profesional verificado" : "profesionales verificados",
-            color: "#16214F",
-            icono: "equipo",
-          },
-          {
-            valor: num(resumen.institucionesVerificadas),
-            etiqueta: resumen.institucionesVerificadas === 1 ? "institución verificada" : "instituciones verificadas",
-            color: "#DD553F",
-            icono: "instituciones",
-          },
-          {
-            valor: num(resumen.busquedasActivas),
-            etiqueta: resumen.busquedasActivas === 1 ? "búsqueda activa ahora" : "búsquedas activas ahora",
-            color: "#1B4B52",
-            icono: "reloj",
-          },
-          {
-            valor: num(resumen.disciplinas),
-            etiqueta: `${resumen.disciplinas === 1 ? "disciplina" : "disciplinas"}, de matemática a guardavidas`,
-            color: "#8A4B07",
-            icono: "cursos",
-          },
-        ]}
-      />
+      {/* Las cifras de la red se muestran solo si el equipo lo prendió (Backoffice → Sitio): con una red chica, los números chicos no suman. */}
+      {resumen.cifrasVisibles && (
+        <FilaEstadisticas
+          items={[
+            {
+              valor: num(resumen.docentesVerificados),
+              etiqueta: resumen.docentesVerificados === 1 ? "profesional verificado" : "profesionales verificados",
+              color: "#16214F",
+              icono: "equipo",
+            },
+            {
+              valor: num(resumen.institucionesVerificadas),
+              etiqueta: resumen.institucionesVerificadas === 1 ? "institución verificada" : "instituciones verificadas",
+              color: "#DD553F",
+              icono: "instituciones",
+            },
+            {
+              valor: num(resumen.busquedasActivas),
+              etiqueta: resumen.busquedasActivas === 1 ? "búsqueda activa ahora" : "búsquedas activas ahora",
+              color: "#1B4B52",
+              icono: "reloj",
+            },
+            {
+              valor: num(resumen.disciplinas),
+              etiqueta: `${resumen.disciplinas === 1 ? "disciplina" : "disciplinas"}, de matemática a guardavidas`,
+              color: "#8A4B07",
+              icono: "cursos",
+            },
+          ]}
+        />
+      )}
 
       <section className="bg-lienzo px-12 py-16 max-[900px]:px-6">
         <div className="mx-auto max-w-[1200px]">

@@ -1178,6 +1178,20 @@ export const habilitacionesPagoManual = pgTable("habilitaciones_pago_manual", {
 });
 
 /**
+ * Configuración del sitio público: una sola fila (`id = 1`), que el equipo edita en Backoffice → Sitio. Hoy tiene un solo interruptor:
+ * `mostrar_cifras` (las cifras de la red —profesionales e instituciones verificados, búsquedas activas, disciplinas— en la portada, las tarjetas de
+ * categoría y las landings; arranca en `false`, oculto: pedido del cliente, 2026-11-25, mientras la red es chica). Una columna nueva = otro ajuste.
+ * Creada con `pnpm db:configuracion-sitio` (correrlo ANTES de desplegar), con RLS. La lectura tolera que falte (se ve como «oculto»).
+ */
+export const configuracionSitio = pgTable("configuracion_sitio", {
+  id: integer("id").primaryKey().default(1),
+  mostrarCifras: boolean("mostrar_cifras").notNull().default(false),
+  /** Quién lo cambió por última vez (el admin); null si esa cuenta ya no existe o nadie lo tocó. */
+  actualizadoPor: uuid("actualizado_por").references(() => usuarios.id, { onDelete: "set null" }),
+  actualizadoEn: timestamp("actualizado_en", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * Búsquedas puntuales pagadas (el plan sin abono: se paga cada búsqueda). Cada fila es UNA búsqueda que la institución pagó: la carga el equipo
  * al registrar el pago y queda **disponible** (`usado_en` null) hasta que la institución publica una búsqueda, que la **consume** (guarda su id,
  * cuándo se usó y cuándo vence). Disponible o usada se decide por `usado_en`, nunca por el enlace: si se borrara la búsqueda, el crédito no

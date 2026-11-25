@@ -337,6 +337,33 @@ export const MANUAL_EQUIPO: ManualDeAyuda = {
           ],
         },
         {
+          slug: "sitio",
+          titulo: "Sitio: cifras de la red",
+          resumen: "Cómo mostrar u ocultar los números de la red en el sitio público.",
+          bloques: [
+            {
+              p: "En [Sitio](/backoffice/sitio) decidís si el sitio público muestra **las cifras de la red**: los profesionales verificados, las instituciones verificadas, las búsquedas activas y las disciplinas. Mientras la red es chica conviene dejarlas **ocultas**; **arrancan ocultas** y las prendés cuando quieras.",
+            },
+            {
+              lista: [
+                "**Qué se oculta:** la franja de números de la portada, el «N perfiles verificados» del mosaico de arriba, los números de las tarjetas de cada categoría (en la portada y en [Categorías](/categorias)), el contador de tipos de institución y el cuadro de números del costado de las páginas de docentes, entrenadores y guardavidas.",
+                "**Qué no se toca:** las búsquedas urgentes abiertas, los logos de las instituciones fundadoras y el resto del sitio.",
+                "**Cuándo rige:** en el momento. Ves abajo los números de hoy, aunque estén ocultos, para saber qué se mostraría antes de prender.",
+              ],
+            },
+            {
+              pasos: [
+                "Entrá a **Sitio** (grupo Contenido del menú).",
+                "En **Cifras de la red**, tocá **Mostrar las cifras** (o **Ocultar las cifras**) y confirmá.",
+                "Abrí la portada para comprobarlo. El cambio queda anotado en la actividad del equipo.",
+              ],
+            },
+            {
+              nota: "Estos números cuentan **solo a los profesionales verificados**, no a los que figuran como «Sin verificar» en el buscador de las instituciones: por eso pueden ser bastante menos que los profesionales que ven las instituciones.",
+            },
+          ],
+        },
+        {
           slug: "mensajes",
           titulo: "Mensajes",
           resumen: "Las consultas que llegan desde el formulario de Contacto.",

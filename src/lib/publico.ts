@@ -31,6 +31,33 @@ export const num = (n: number) => n.toLocaleString("es-AR");
 export const MINIMO_PARA_TIRA_EN_MOVIMIENTO = 6;
 export const logosEnMovimiento = (cantidad: number) => cantidad >= MINIMO_PARA_TIRA_EN_MOVIMIENTO;
 
+/**
+ * Las cifras de la red que el sitio público puede mostrar (portada, tarjetas de categoría, landings). Mientras el equipo las tiene ocultas
+ * (Backoffice → Sitio, pedido del cliente del 2026-11-25: la red todavía es chica) `sinCifrasDeLaRed` las pone en cero: los lugares que ya
+ * no dibujan un número en cero (el mosaico del hero, las tarjetas de categoría y la pastilla de tipos de institución) se ocultan solos, y los
+ * demás (la franja de la portada y el aside de las landings) preguntan por `cifrasVisibles`.
+ */
+export type CifrasDeLaRed = {
+  docentesVerificados: number;
+  institucionesVerificadas: number;
+  busquedasActivas: number;
+  /** Asignaturas y disciplinas del catálogo: no es un dato de la red, pero la franja de la portada la cuenta como una cifra más. */
+  disciplinas: number;
+  tiposInstitucion: number;
+  categorias: Record<CategoriaDocente, { verificados: number; busquedasActivas: number; institucionesBuscando: number }>;
+};
+
+/**
+ * El resumen con todas las cifras de la red en cero. **No toca lo que no es una cifra de la red**: las búsquedas urgentes abiertas (`urgentes`,
+ * del resumen y de cada categoría) siguen como están, porque la portada las muestra como una promesa de servicio y no hubo pedido de ocultarlas.
+ */
+export function sinCifrasDeLaRed<T extends CifrasDeLaRed>(resumen: T): T {
+  const categorias = Object.fromEntries(
+    Object.entries(resumen.categorias).map(([categoria, conteo]) => [categoria, { ...conteo, verificados: 0, busquedasActivas: 0, institucionesBuscando: 0 }]),
+  ) as T["categorias"];
+  return { ...resumen, docentesVerificados: 0, institucionesVerificadas: 0, busquedasActivas: 0, disciplinas: 0, tiposInstitucion: 0, categorias };
+}
+
 /** plural(1, "búsqueda", "búsquedas") → "1 búsqueda" · plural(12, …) → "12 búsquedas" */
 export const plural = (n: number, uno: string, otros: string) => `${num(n)} ${n === 1 ? uno : otros}`;
 

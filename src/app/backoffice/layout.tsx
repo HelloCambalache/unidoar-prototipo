@@ -13,6 +13,7 @@ const NAV: NavItem[] = [
   { href: "/backoffice/referidos", label: "Referidos", icono: "apreton", grupo: "Negocio" },
   { href: "/backoffice/categorias", label: "Categorías", icono: "etiqueta", grupo: "Contenido" },
   { href: "/backoffice/testimonios", label: "Testimonios", icono: "testimonio", grupo: "Contenido" },
+  { href: "/backoffice/sitio", label: "Sitio", icono: "vitrina", grupo: "Contenido" },
   { href: "/backoffice/mensajes", label: "Mensajes", icono: "mensaje", grupo: "Contenido" },
 ];
 

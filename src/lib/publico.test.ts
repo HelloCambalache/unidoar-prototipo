@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { enlaceWhatsapp } from "@/lib/pipeline";
-import { CONTACTO_SITIO, logosEnMovimiento, MINIMO_PARA_TIRA_EN_MOVIMIENTO } from "@/lib/publico";
+import { CONTACTO_SITIO, logosEnMovimiento, MINIMO_PARA_TIRA_EN_MOVIMIENTO, sinCifrasDeLaRed } from "@/lib/publico";
 
 describe("tira de logos de la portada", () => {
   it("con pocas fundadoras se muestran quietas, sin repetir ninguna; con varias, corre", () => {
@@ -9,6 +9,43 @@ describe("tira de logos de la portada", () => {
     assert.equal(logosEnMovimiento(MINIMO_PARA_TIRA_EN_MOVIMIENTO - 1), false);
     assert.equal(logosEnMovimiento(MINIMO_PARA_TIRA_EN_MOVIMIENTO), true);
     assert.equal(logosEnMovimiento(24), true);
+  });
+});
+
+describe("cifras de la red ocultas", () => {
+  const resumen = {
+    docentesVerificados: 16,
+    institucionesVerificadas: 1,
+    busquedasActivas: 7,
+    urgentes: 2,
+    disciplinas: 70,
+    tiposInstitucion: 3,
+    categorias: {
+      educador: { verificados: 11, busquedasActivas: 5, institucionesBuscando: 2, urgentes: 1 },
+      entrenador: { verificados: 3, busquedasActivas: 1, institucionesBuscando: 1, urgentes: 1 },
+      guardavidas: { verificados: 2, busquedasActivas: 1, institucionesBuscando: 1, urgentes: 0 },
+    },
+  };
+
+  it("pone en cero todas las cifras de la red, también las de cada categoría", () => {
+    const r = sinCifrasDeLaRed(resumen);
+    assert.deepEqual(
+      [r.docentesVerificados, r.institucionesVerificadas, r.busquedasActivas, r.disciplinas, r.tiposInstitucion],
+      [0, 0, 0, 0, 0],
+    );
+    for (const c of Object.values(r.categorias)) assert.deepEqual([c.verificados, c.busquedasActivas, c.institucionesBuscando], [0, 0, 0]);
+  });
+
+  it("no toca las búsquedas urgentes abiertas, que no son una cifra de la red", () => {
+    const r = sinCifrasDeLaRed(resumen);
+    assert.equal(r.urgentes, 2);
+    assert.deepEqual(Object.values(r.categorias).map((c) => c.urgentes), [1, 1, 0]);
+  });
+
+  it("no modifica el resumen que recibe", () => {
+    sinCifrasDeLaRed(resumen);
+    assert.equal(resumen.docentesVerificados, 16);
+    assert.equal(resumen.categorias.educador.verificados, 11);
   });
 });
 
