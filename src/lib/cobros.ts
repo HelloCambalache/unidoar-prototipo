@@ -513,6 +513,58 @@ export function advertenciasAlEliminarFactura(
   return avisos;
 }
 
+/**
+ * Qué pasó con la factura del mes en curso al cambiar el plan de una institución (ver `aplicarPlanAlPeriodoActual`). `sin_factura` solo ocurre
+ * cuando el cambio lo hace el equipo desde la ficha, que ajusta la factura impaga que ya existe pero no crea una (la primera de cada cuenta la
+ * carga el equipo a mano; el cambio por pedido de la institución sí la crea).
+ */
+export type ResultadoFacturaDelPeriodo =
+  | { resultado: "creada"; periodo: string; monto: number }
+  | { resultado: "actualizada"; periodo: string; monto: number }
+  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "sin_cargo" | "bonificada" | "sin_factura" };
+
+/** Lo que se le cuenta a la institución sobre su factura del mes, para sumar al aviso de un cambio de plan (con un espacio adelante; vacío si no hay nada que decir). */
+export function textoDeFactura(r: ResultadoFacturaDelPeriodo): string {
+  if (r.resultado === "creada") return ` Cargamos tu factura de ${etiquetaPeriodo(r.periodo).toLowerCase()} (${pesos(r.monto)}).`;
+  if (r.resultado === "actualizada") {
+    return ` Actualizamos tu factura de ${etiquetaPeriodo(r.periodo).toLowerCase()} al nuevo plan (${pesos(r.monto)}).`;
+  }
+  if (r.motivo === "sin_factura") return "";
+  if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
+  if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
+  if (r.motivo === "bonificada") return " Este mes es un mes bonificado por recomendar a otra institución: no se te factura.";
+  if (r.motivo === "sin_convenio") return " El valor de tu plan lo acordamos según el volumen: el equipo te pasa la propuesta antes de facturar nada.";
+  if (r.motivo === "sin_cargo") return " Tu plan no tiene cargo por el momento: no se te factura nada.";
+  return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
+}
+
+/**
+ * Lo que se le dice al EQUIPO después de cambiar el plan desde la ficha: qué pasó con la factura del mes y, si quedan facturas impagas de meses
+ * anteriores con el plan viejo (el cambio no las toca: la deuda vieja se resuelve a mano en Cobros), un recordatorio de revisarlas.
+ */
+export function resumenDeCambioDePlanParaElEquipo(r: ResultadoFacturaDelPeriodo, anterioresConPlanViejo: number): string {
+  const partes: string[] = [];
+  if (r.resultado === "actualizada" || r.resultado === "creada") {
+    partes.push(`La factura de ${etiquetaPeriodo(r.periodo).toLowerCase()} quedó con el nuevo plan (${pesos(r.monto)}).`);
+  } else if (r.motivo === "pagada") {
+    partes.push("La factura de este mes ya estaba paga: no se tocó y el nuevo plan rige desde el próximo período.");
+  } else if (r.motivo === "sin_factura") {
+    partes.push("No tenía factura de este mes para ajustar.");
+  } else if (r.motivo === "sin_convenio") {
+    partes.push("Sin un convenio a medida cargado no se factura: cargalo en Cobros → Precio.");
+  } else if (r.motivo === "sin_cargo") {
+    partes.push("Con su precio acordado en $0 no se factura: la factura del mes, si ya existía, quedó como estaba.");
+  } else if (r.motivo === "sin_abono") {
+    partes.push("La búsqueda puntual no tiene abono mensual: la factura del mes, si ya existía, quedó como estaba.");
+  }
+  if (anterioresConPlanViejo > 0) {
+    partes.push(
+      `Quedan ${anterioresConPlanViejo} ${anterioresConPlanViejo === 1 ? "factura impaga" : "facturas impagas"} de meses anteriores con el plan anterior: revisalas en Cobros (se pueden eliminar).`,
+    );
+  }
+  return partes.join(" ");
+}
+
 export const rechazoSchema = z.object({
   nota: z.string().trim().min(3, "Contale a la institución por qué").max(500, "Máximo 500 caracteres"),
 });

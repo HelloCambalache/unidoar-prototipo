@@ -29,8 +29,10 @@ import {
   semestreSchema,
   situacionDelMes,
   sumarMeses,
+  textoDeFactura,
   type FacturaNueva,
   type PagoEfectivo,
+  type ResultadoFacturaDelPeriodo,
   type SemestreAlContado,
 } from "@/lib/cobros";
 import { correoDeFacturaNueva, correoDePagoAnulado, correoDePagoRegistrado, correoDeResolucionDePlan } from "@/lib/correo/eventos";
@@ -51,11 +53,7 @@ import { cancelarSuscripcion } from "@/lib/queries/suscripcion-cancelar";
 import { cantidadDeSedes } from "@/lib/queries/sedes";
 import { avisarAVarios } from "@/lib/queries/avisos";
 import { avisarReferidorDePago } from "@/lib/queries/referidos";
-import {
-  aplicarPlanAlPeriodoActual,
-  facturasPendientesVencidas,
-  type ResultadoFacturaDelPeriodo,
-} from "@/lib/queries/backoffice-cobros";
+import { aplicarPlanAlPeriodoActual, facturasPendientesVencidas } from "@/lib/queries/backoffice-cobros";
 import { destinatariosDeFacturacion, destinatariosDeInstitucion } from "@/lib/queries/backoffice-instituciones";
 import { resumenDeError } from "@/lib/errores";
 
@@ -726,19 +724,6 @@ export async function marcarFacturasVencidas(): Promise<Resultado<{ cantidad: nu
 /* ───────────────────────────── Pedidos de cambio de plan ───────────────────────────── */
 
 type DataAprobacion = { factura: ResultadoFacturaDelPeriodo };
-
-function textoDeFactura(r: ResultadoFacturaDelPeriodo) {
-  if (r.resultado === "creada") return ` Cargamos tu factura de ${etiquetaPeriodo(r.periodo).toLowerCase()} (${pesos(r.monto)}).`;
-  if (r.resultado === "actualizada") {
-    return ` Actualizamos tu factura de ${etiquetaPeriodo(r.periodo).toLowerCase()} al nuevo plan (${pesos(r.monto)}).`;
-  }
-  if (r.motivo === "pagada") return " Tu factura de este mes ya estaba paga: el nuevo plan se cobra desde el próximo período.";
-  if (r.motivo === "cubierta_por_semestre") return " Tu semestre pago ya cubre este mes: no hay nada para pagar ahora.";
-  if (r.motivo === "bonificada") return " Este mes es un mes bonificado por recomendar a otra institución: no se te factura.";
-  if (r.motivo === "sin_convenio") return " El valor de tu plan lo acordamos según el volumen: el equipo te pasa la propuesta antes de facturar nada.";
-  if (r.motivo === "sin_cargo") return " Tu plan no tiene cargo por el momento: no se te factura nada.";
-  return " Tu plan es de búsqueda puntual: no tiene abono mensual, se paga cada búsqueda.";
-}
 
 /**
  * Aprueba un pedido: actualiza `instituciones.plan`, deja la factura del mes en curso con el nuevo plan

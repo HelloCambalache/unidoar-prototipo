@@ -14,6 +14,7 @@ import {
   type EstadoCobro,
   type EstadoFactura,
   type MotivoOmision,
+  type ResultadoFacturaDelPeriodo,
 } from "@/lib/cobros";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { correoDeFacturaNueva } from "@/lib/correo/eventos";
@@ -281,17 +282,17 @@ export async function detalleDeCobros(institucionId: string): Promise<DetalleCob
 
 /* ───────────────────────────── Cambio de plan y factura del período ───────────────────────────── */
 
-export type ResultadoFacturaDelPeriodo =
-  | { resultado: "creada"; periodo: string; monto: number }
-  | { resultado: "actualizada"; periodo: string; monto: number }
-  | { resultado: "sin_cambios"; motivo: "pagada" | "cubierta_por_semestre" | "sin_abono" | "sin_convenio" | "sin_cargo" | "bonificada" };
+export type { ResultadoFacturaDelPeriodo };
 
 /**
  * Deja la factura del mes en curso de acuerdo con el nuevo plan:
  *  - si ya está paga, no se toca (el nuevo plan rige desde el próximo período);
  *  - si está impaga, se le cambia plan y monto;
- *  - si no existe, se crea (salvo que un semestre pago cubra este mes).
- * Corre dentro de la transacción de la acción que aprueba el pedido.
+ *  - si no existe, se crea (salvo que un semestre pago cubra este mes, o que sea un mes bonificado), **a menos que `crear` sea false**: el cambio de
+ *    plan que hace el equipo desde la ficha solo ajusta la factura que ya existe. La primera factura de cada cuenta la carga el equipo a mano y
+ *    el cron no factura a quien no tiene ninguna: crearla de paso empezaría a cobrarle (y a contarle mora) sin que nadie lo haya decidido. El
+ *    cambio por pedido de la institución sí la crea (la institución pidió pasar a ese plan).
+ * Corre dentro de la transacción de la acción que cambia el plan.
  */
 export async function aplicarPlanAlPeriodoActual(
   tx: EjecutorBo,
@@ -299,7 +300,7 @@ export async function aplicarPlanAlPeriodoActual(
   plan: PlanClave,
   /** Los planes vigentes: de ahí sale el monto. */
   P: Planes,
-  ahora = new Date(),
+  { ahora = new Date(), crear = true }: { ahora?: Date; crear?: boolean } = {},
 ): Promise<ResultadoFacturaDelPeriodo> {
   // La búsqueda puntual no tiene abono mensual: no hay factura del mes (se paga cada búsqueda).
   if (P.esPuntual(plan)) return { resultado: "sin_cambios", motivo: "sin_abono" };
@@ -323,6 +324,9 @@ export async function aplicarPlanAlPeriodoActual(
     await tx.update(facturas).set({ plan, monto }).where(eq(facturas.id, existente.id));
     return { resultado: "actualizada", periodo, monto };
   }
+
+  // Sin factura este mes y sin permiso para crearla: no hay nada para ajustar.
+  if (!crear) return { resultado: "sin_cambios", motivo: "sin_factura" };
 
   // Un semestre pagado al contado (una factura paga que cubre varios meses) tampoco se vuelve a cobrar mes a mes.
   const semestres = await tx

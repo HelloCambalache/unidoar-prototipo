@@ -1,19 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, lt, ne } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, transaccion } from "@/db";
-import { instituciones } from "@/db/schema";
+import { facturas, instituciones } from "@/db/schema";
 import { fallo, ok, parsear, type Resultado } from "@/lib/acciones";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { requerirUsuario } from "@/lib/auth";
 import { datosDeCuentaSchema, planInstitucionSchema, suspensionSchema } from "@/lib/backoffice-instituciones";
 import { esUuid } from "@/lib/busquedas";
-import { hoyAR } from "@/lib/cobros";
+import { hoyAR, periodoActual, resumenDeCambioDePlanParaElEquipo, textoDeFactura } from "@/lib/cobros";
 import { encolarParaUsuarios } from "@/lib/correo/cola";
 import { bloquearCuposDeFundadoras, fundadorasActuales } from "@/lib/queries/fundadoras";
-import { planes } from "@/lib/queries/planes";
+import { aplicarPlanAlPeriodoActual } from "@/lib/queries/backoffice-cobros";
+import { planesParaCobrarOFallar, SIN_PRECIOS } from "@/lib/queries/planes";
 import { avisarReferidorDeVerificacion } from "@/lib/queries/referidos";
 import { borrarArchivos } from "@/lib/queries/archivos";
 import { avisarAVarios } from "@/lib/queries/avisos";
@@ -66,6 +67,8 @@ const institucionBloqueada = (tx: EjecutorBo, id: string) =>
       plan: instituciones.plan,
       verificada: instituciones.verificada,
       suspendida: instituciones.suspendida,
+      diaCobro: instituciones.diaCobro,
+      medioPago: instituciones.medioPago,
     })
     .from(instituciones)
     // Una institución dada de baja ya no admite cambios: para estas acciones es como si no existiera.
@@ -226,21 +229,27 @@ export async function actualizarDatosDeInstitucion(institucionId: string, entrad
 /* ───────────────────────────── Plan ───────────────────────────── */
 
 /**
- * Cambia el plan de la institución desde la ficha. No toca facturas: las ya emitidas quedan como están y
- * el equipo ajusta lo que haga falta desde Cobros (el cambio por pedido de la institución sí arma la factura).
+ * Cambia el plan de la institución desde la ficha y deja **la factura impaga del mes en curso** con el nuevo plan y su monto (2026-11-25: antes
+ * no tocaba ninguna factura y la que ya estaba cargada quedaba con el arancel anterior; ver `aplicarPlanAlPeriodoActual`). Lo que NO hace:
+ *  - crear la factura del mes si no la tiene (la primera de cada cuenta la carga el equipo; el cambio por pedido de la institución sí la crea);
+ *  - tocar una factura paga ni las de meses anteriores: esas son deuda histórica con el plan de ese momento y se resuelven a mano en Cobros
+ *    («Eliminar»). Si quedan impagas con el plan anterior, se le avisa al equipo en el resultado.
+ * Responde un resumen de lo que pasó con la factura para mostrarle al equipo. Para armar el monto usa los precios vigentes de la base (si no se
+ * pueden leer, no cambia nada en lugar de facturar con valores de lanzamiento).
  */
-export async function cambiarPlanInstitucion(institucionId: string, plan: string): Promise<Resultado> {
+export async function cambiarPlanInstitucion(institucionId: string, plan: string): Promise<Resultado<{ resumen: string }>> {
   const admin = await requerirUsuario("admin");
   if (!esUuid(institucionId)) return fallo(NO_ENCONTRADA);
   const datos = parsear(planInstitucionSchema, { plan });
   if (!datos.ok) return fallo(datos.campos?.plan ?? datos.error, datos.campos);
   const nuevo = datos.data.plan;
-  const P = await planes();
+  const P = await planesParaCobrarOFallar();
+  if (!P) return fallo(SIN_PRECIOS);
 
   const resultado = await transaccion(async (tx) => {
     const [inst] = await institucionBloqueada(tx, institucionId);
     if (!inst) return fallo(NO_ENCONTRADA);
-    if (inst.plan === nuevo) return ok();
+    if (inst.plan === nuevo) return ok({ resumen: "" });
 
     // El Plan Fundador es para las primeras N: no se asigna pasado el cupo (el turno se pide antes de contar, así dos asignaciones a la vez no se pasan).
     if (P.esFundador(nuevo)) {
@@ -257,23 +266,30 @@ export async function cambiarPlanInstitucion(institucionId: string, plan: string
       }
     }
     await tx.update(instituciones).set({ plan: nuevo }).where(eq(instituciones.id, inst.id));
+    // La factura impaga del mes en curso pasa al nuevo plan y monto; sin factura este mes no se crea ninguna (ver arriba).
+    const factura = await aplicarPlanAlPeriodoActual(tx, inst, nuevo, P, { crear: false });
+    // Las impagas de meses anteriores con el plan viejo no se tocan: se cuentan para avisarle al equipo que las revise.
+    const [{ n: anteriores }] = await tx
+      .select({ n: count() })
+      .from(facturas)
+      .where(and(eq(facturas.institucionId, inst.id), ne(facturas.estado, "pagada"), lt(facturas.periodo, periodoActual()), ne(facturas.plan, nuevo)));
     await registrarAuditoria(
       {
         usuarioId: admin.id,
         accion: "institucion.cambiar_plan",
         entidad: "institucion",
         entidadId: inst.id,
-        detalle: { institucionId: inst.id, nombre: inst.nombre, de: inst.plan, a: nuevo },
+        detalle: { institucionId: inst.id, nombre: inst.nombre, de: inst.plan, a: nuevo, factura, anterioresConPlanViejo: anteriores },
       },
       tx,
     );
     await avisarAVarios(tx, await destinatariosDeInstitucion(tx, inst.id), {
       tipo: "sistema",
       titulo: "UNIDOAR",
-      texto: `cambió el plan de ${inst.nombre} a ${P.planDe(nuevo).label} (${P.precioParaLaInstitucion(nuevo)}).`,
+      texto: `cambió el plan de ${inst.nombre} a ${P.planDe(nuevo).label} (${P.precioParaLaInstitucion(nuevo)}).${textoDeFactura(factura)}`,
       enlace: "/institucion/plan",
     });
-    return ok();
+    return ok({ resumen: resumenDeCambioDePlanParaElEquipo(factura, anteriores) });
   });
 
   if (resultado.ok) revalidarInstitucion(institucionId);

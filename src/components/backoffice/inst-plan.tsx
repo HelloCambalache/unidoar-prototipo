@@ -11,7 +11,8 @@ import { Icono } from "@/components/icons";
 
 /**
  * "Plan actual" de la ficha con el selector de plan del prototipo. Guardar pide confirmación; el cambio se
- * hace en el servidor (actualiza el plan, deja auditoría y avisa a la institución) y no toca facturas.
+ * hace en el servidor (actualiza el plan, ajusta la factura impaga del mes en curso si ya existe, deja auditoría y avisa a la institución) y
+ * después le cuenta al equipo qué pasó con la factura y si quedan impagas de meses anteriores con el plan viejo.
  */
 export function InstPlan({
   institucionId,
@@ -48,7 +49,7 @@ export function InstPlan({
           toast(r.error, "error");
           return;
         }
-        toast(`Plan cambiado a ${P.planDe(elegido).label}`);
+        toast(`Plan cambiado a ${P.planDe(elegido).label}.${r.data.resumen ? ` ${r.data.resumen}` : ""}`);
         cerrarTodo();
       } catch {
         toast("No pudimos cambiar el plan. Probá de nuevo.", "error");
@@ -127,8 +128,9 @@ export function InstPlan({
           ({P.precioDePlan(elegido)}).
         </p>
         <p className="m-0 mb-4 text-sm leading-normal text-apagado">
-          Le avisamos a las personas de su equipo. Las facturas ya cargadas no se modifican: si alguna quedó con el arancel
-          anterior, eliminala desde Cobros (Historial de cobros → Eliminar).
+          Le avisamos a las personas de su equipo. Si ya tiene la factura de este mes sin pagar, queda con el nuevo plan y su
+          monto (no se crea una si no la tiene). Las facturas pagas y las de meses anteriores no se tocan: si alguna quedó con
+          el arancel anterior, eliminala desde Cobros (Historial de cobros → Eliminar).
         </p>
         <div className="flex gap-2.5">
           <Boton disabled={pendiente} onClick={guardar}>

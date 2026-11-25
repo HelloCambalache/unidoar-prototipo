@@ -18,14 +18,17 @@ import {
   pagoPuntualSchema,
   pagoSchema,
   planificarFacturas,
+  resumenDeCambioDePlanParaElEquipo,
   semestreQueCubreElMes,
   semestreSchema,
   situacionDelMes,
   sumarMeses,
+  textoDeFactura,
   textoRecordatorio,
   ultimoMesCubierto,
   type FacturaReciente,
   type InstitucionFacturable,
+  type ResultadoFacturaDelPeriodo,
 } from "@/lib/cobros";
 import { CATALOGO_POR_DEFECTO, crearPlanes } from "@/lib/planes";
 
@@ -641,5 +644,42 @@ describe("eliminar una factura impaga", () => {
     const avisos = advertenciasAlEliminarFactura({ periodo: "2026-10" }, { periodoActual: "2026-11", otrasFacturas: 1, sinPagos: true });
     assert.equal(avisos.length, 1);
     assert.match(avisos[0]!, /sin pago/);
+  });
+});
+
+describe("cambio de plan y factura del mes", () => {
+  const sinCambios = (motivo: Extract<ResultadoFacturaDelPeriodo, { resultado: "sin_cambios" }>["motivo"]): ResultadoFacturaDelPeriodo => ({
+    resultado: "sin_cambios",
+    motivo,
+  });
+
+  it("a la institución le cuenta lo que pasó con su factura del mes", () => {
+    assert.equal(
+      textoDeFactura({ resultado: "actualizada", periodo: "2026-11", monto: 35000 }),
+      " Actualizamos tu factura de noviembre 2026 al nuevo plan ($ 35.000).",
+    );
+    assert.equal(textoDeFactura({ resultado: "creada", periodo: "2026-11", monto: 35000 }), " Cargamos tu factura de noviembre 2026 ($ 35.000).");
+    assert.match(textoDeFactura(sinCambios("pagada")), /ya estaba paga/);
+  });
+
+  it("si no había una factura para ajustar, no le dice nada a la institución", () => {
+    assert.equal(textoDeFactura(sinCambios("sin_factura")), "");
+  });
+
+  it("al equipo le dice qué pasó con la factura del mes", () => {
+    assert.equal(
+      resumenDeCambioDePlanParaElEquipo({ resultado: "actualizada", periodo: "2026-11", monto: 35000 }, 0),
+      "La factura de noviembre 2026 quedó con el nuevo plan ($ 35.000).",
+    );
+    assert.match(resumenDeCambioDePlanParaElEquipo(sinCambios("pagada"), 0), /ya estaba paga: no se tocó/);
+    assert.equal(resumenDeCambioDePlanParaElEquipo(sinCambios("sin_factura"), 0), "No tenía factura de este mes para ajustar.");
+    assert.match(resumenDeCambioDePlanParaElEquipo(sinCambios("sin_convenio"), 0), /Precio/);
+  });
+
+  it("avisa al equipo si quedan impagas de meses anteriores con el plan viejo, en singular y plural", () => {
+    const ajustada = { resultado: "actualizada", periodo: "2026-11", monto: 35000 } as const;
+    assert.match(resumenDeCambioDePlanParaElEquipo(ajustada, 1), /Quedan 1 factura impaga de meses anteriores con el plan anterior/);
+    assert.match(resumenDeCambioDePlanParaElEquipo(ajustada, 3), /Quedan 3 facturas impagas de meses anteriores/);
+    assert.equal(resumenDeCambioDePlanParaElEquipo(sinCambios("sin_factura"), 0).includes("Quedan"), false);
   });
 });
